@@ -107,7 +107,11 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
 
   object Secured {
     private val pathProjectIri          = "path projectIri"
+    private val pathProjectShortcode    = "path projectShortcode"
+    private val pathProjectShortname    = "path projectShortname"
     private val projectAdminRequirement = Policy.ProjectAdmin(pathProjectIri).requirement
+    private val shortcodeRequirement    = Policy.ProjectAdmin(pathProjectShortcode).requirement
+    private val shortnameRequirement    = Policy.ProjectAdmin(pathProjectShortname).requirement
 
     private val bodyProjectSetRestrictedViewSizeRequest =
       jsonBody[SetRestrictedViewRequest]
@@ -133,13 +137,13 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
       .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description(s"Sets the project's restricted view settings identified by the IRI. $projectAdminRequirement")
 
-    val postAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.post
+    val postAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectShortcode)
+      .post
       .in(projectsByShortcode / restrictedViewSettings)
       .in(bodyProjectSetRestrictedViewSizeRequest)
       .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
-      .description(
-        "Sets the project's restricted view settings identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.",
-      )
+      .description(s"Sets the project's restricted view settings identified by the shortcode. $shortcodeRequirement")
 
     private val deleteRestrictedViewSettingsDescription =
       "Removes the project's own restricted view setting, so it inherits the platform default " +
@@ -152,12 +156,12 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
       .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
       .description(s"$deleteRestrictedViewSettingsDescription $projectAdminRequirement")
 
-    val deleteAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.securedEndpoint.delete
+    val deleteAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectShortcode)
+      .delete
       .in(projectsByShortcode / restrictedViewSettings)
       .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
-      .description(
-        s"$deleteRestrictedViewSettingsDescription Requires SystemAdmin or ProjectAdmin permissions for the project.",
-      )
+      .description(s"$deleteRestrictedViewSettingsDescription $shortcodeRequirement")
 
     val getAdminProjectsByProjectIriMembers = baseEndpoints
       .projectAdminPolicyEndpoint(pathProjectIri)
@@ -166,18 +170,22 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
       .out(jsonBody[ProjectMembersGetResponseADM])
       .description(s"Returns all project members of a project identified by the IRI. $projectAdminRequirement")
 
-    val getAdminProjectsByProjectShortcodeMembers = baseEndpoints.securedEndpoint.get
+    val getAdminProjectsByProjectShortcodeMembers = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectShortcode)
+      .get
       .in(projectsByShortcode / members)
       .out(jsonBody[ProjectMembersGetResponseADM])
       .description(
-        "Returns all project members of a project identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+        s"Returns all project members of a project identified by the shortcode. $shortcodeRequirement",
       )
 
-    val getAdminProjectsByProjectShortnameMembers = baseEndpoints.securedEndpoint.get
+    val getAdminProjectsByProjectShortnameMembers = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectShortname)
+      .get
       .in(projectsByShortname / members)
       .out(jsonBody[ProjectMembersGetResponseADM])
       .description(
-        "Returns all project members of a project identified by the shortname. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+        s"Returns all project members of a project identified by the shortname. $shortnameRequirement",
       )
 
     val getAdminProjectsByProjectIriAdminMembers = baseEndpoints
@@ -187,18 +195,22 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
       .out(jsonBody[ProjectAdminMembersGetResponseADM])
       .description(s"Returns all admin members of a project identified by the IRI. $projectAdminRequirement")
 
-    val getAdminProjectsByProjectShortcodeAdminMembers = baseEndpoints.securedEndpoint.get
+    val getAdminProjectsByProjectShortcodeAdminMembers = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectShortcode)
+      .get
       .in(projectsByShortcode / adminMembers)
       .out(jsonBody[ProjectAdminMembersGetResponseADM])
       .description(
-        "Returns all admin members of a project identified by the shortcode. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+        s"Returns all admin members of a project identified by the shortcode. $shortcodeRequirement",
       )
 
-    val getAdminProjectsByProjectShortnameAdminMembers = baseEndpoints.securedEndpoint.get
+    val getAdminProjectsByProjectShortnameAdminMembers = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectShortname)
+      .get
       .in(projectsByShortname / adminMembers)
       .out(jsonBody[ProjectAdminMembersGetResponseADM])
       .description(
-        "Returns all admin members of a project identified by the shortname. Requires SystemAdmin or ProjectAdmin permissions for the project.",
+        s"Returns all admin members of a project identified by the shortname. $shortnameRequirement",
       )
 
     val deleteAdminProjectsByProjectShortcodeErase = baseEndpoints.systemAdminPolicyEndpoint.delete

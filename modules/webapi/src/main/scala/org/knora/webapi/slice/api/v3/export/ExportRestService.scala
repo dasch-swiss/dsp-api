@@ -21,7 +21,6 @@ final class ExportRestService(
   exportService: ExportService,
   projectService: KnoraProjectService,
   ontologyService: OntologyRepo,
-  authorizer: V3Authorizer,
 ) {
   def exportResources(
     user: User,
@@ -59,7 +58,6 @@ final class ExportRestService(
     request: ExportRequestOai,
   ): IO[V3ErrorInfo, String] =
     (for {
-      _       <- authorizer.ensureSystemAdmin(user)
       project <- projectService
                    .findByShortcode(request.shortcode)
                    .orDie

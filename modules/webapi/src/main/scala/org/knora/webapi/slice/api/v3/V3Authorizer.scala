@@ -7,17 +7,15 @@ package org.knora.webapi.slice.api.v3
 import zio.IO
 import zio.ZLayer
 
-import org.knora.webapi.slice.admin.domain.model.KnoraProject
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
+import org.knora.webapi.slice.common.api.ProjectCandidate
 
 final class V3Authorizer(auth: AuthorizationRestService) {
 
-  def ensureSystemAdmin(user: User): IO[Forbidden, Unit] =
-    auth.ensureSystemAdmin(user).mapError(e => Forbidden(e.message))
-
-  def ensureSystemAdminOrProjectAdmin(user: User, project: KnoraProject): IO[Forbidden, Unit] =
-    auth.ensureSystemAdminOrProjectAdmin(user, project).mapError(e => Forbidden(e.message))
+  def authorizeProjectAdminById(candidate: ProjectCandidate, projectIri: ProjectIri): IO[Forbidden, ProjectAdminGrant] =
+    auth.authorizeProjectAdminById(candidate, projectIri).mapError(e => Forbidden(e.message))
 }
 
 object V3Authorizer {

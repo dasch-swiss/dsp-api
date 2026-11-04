@@ -169,19 +169,23 @@ final class ProjectRestService(
 
   def getProjectMembersById(candidate: ProjectCandidate)(id: ProjectIri): Task[ProjectMembersGetResponseADM] =
     auth.authorizeProjectAdminById(candidate, id).flatMap(grant => findProjectMembers(grant.project))
-  def getProjectMembersByShortcode(user: User)(id: Shortcode): Task[ProjectMembersGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(findProjectMembers)
-  def getProjectMembersByShortname(user: User)(id: Shortname): Task[ProjectMembersGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminByShortname(user, id).flatMap(findProjectMembers)
+  def getProjectMembersByShortcode(candidate: ProjectCandidate)(id: Shortcode): Task[ProjectMembersGetResponseADM] =
+    auth.authorizeProjectAdminByShortcode(candidate, id).flatMap(grant => findProjectMembers(grant.project))
+  def getProjectMembersByShortname(candidate: ProjectCandidate)(id: Shortname): Task[ProjectMembersGetResponseADM] =
+    auth.authorizeProjectAdminByShortname(candidate, id).flatMap(grant => findProjectMembers(grant.project))
   private def findProjectMembers(project: KnoraProject) =
     userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.from).flatMap(format.toExternal)
 
   def getProjectAdminMembersById(candidate: ProjectCandidate)(id: ProjectIri): Task[ProjectAdminMembersGetResponseADM] =
     auth.authorizeProjectAdminById(candidate, id).flatMap(grant => findProjectAdminMembers(grant.project))
-  def getProjectAdminMembersByShortcode(user: User)(id: Shortcode): Task[ProjectAdminMembersGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(findProjectAdminMembers)
-  def getProjectAdminMembersByShortname(user: User)(id: Shortname): Task[ProjectAdminMembersGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminByShortname(user, id).flatMap(findProjectAdminMembers)
+  def getProjectAdminMembersByShortcode(candidate: ProjectCandidate)(
+    id: Shortcode,
+  ): Task[ProjectAdminMembersGetResponseADM] =
+    auth.authorizeProjectAdminByShortcode(candidate, id).flatMap(grant => findProjectAdminMembers(grant.project))
+  def getProjectAdminMembersByShortname(candidate: ProjectCandidate)(
+    id: Shortname,
+  ): Task[ProjectAdminMembersGetResponseADM] =
+    auth.authorizeProjectAdminByShortname(candidate, id).flatMap(grant => findProjectAdminMembers(grant.project))
   private def findProjectAdminMembers(project: KnoraProject) =
     userService
       .findByProjectAdminMembership(project)
@@ -243,11 +247,13 @@ final class ProjectRestService(
       external <- format.toExternal(ProjectRestrictedViewSettingsGetResponseADM.from(project.restrictedView))
     } yield external
 
-  def updateProjectRestrictedViewSettingsByShortcode(user: User)(
+  def updateProjectRestrictedViewSettingsByShortcode(candidate: ProjectCandidate)(
     id: Shortcode,
     req: SetRestrictedViewRequest,
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(updateRestrictedViewSettings(_, req))
+    auth
+      .authorizeProjectAdminByShortcode(candidate, id)
+      .flatMap(grant => updateRestrictedViewSettings(grant.project, req))
 
   def updateProjectRestrictedViewSettingsById(candidate: ProjectCandidate)(
     id: ProjectIri,
@@ -262,10 +268,10 @@ final class ProjectRestService(
       external       <- format.toExternal(ProjectRestrictedViewSettingsGetResponseADM.from(Some(newSettings)))
     } yield external
 
-  def clearProjectRestrictedViewSettingsByShortcode(user: User)(
+  def clearProjectRestrictedViewSettingsByShortcode(candidate: ProjectCandidate)(
     id: Shortcode,
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(clearRestrictedViewSettings)
+    auth.authorizeProjectAdminByShortcode(candidate, id).flatMap(grant => clearRestrictedViewSettings(grant.project))
 
   def clearProjectRestrictedViewSettingsById(candidate: ProjectCandidate)(
     id: ProjectIri,

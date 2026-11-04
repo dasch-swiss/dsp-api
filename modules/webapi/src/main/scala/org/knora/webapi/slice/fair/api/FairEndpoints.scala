@@ -10,52 +10,72 @@ import sttp.model.StatusCode
 import sttp.tapir.*
 import zio.ZLayer
 
+import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.NegotiatesOwnAccept
 import org.knora.webapi.slice.common.api.OwnAcceptNegotiation
-import org.knora.webapi.slice.common.api.RequiresMethod
+import org.knora.webapi.slice.common.api.Policy
 
 /**
  * The FAIR landing-page routes: the landing route, called by dsp-app's server rather than by clients, and the two public
  * representations. None of them has a security input, and each answers any `Accept` header itself.
  */
-final class FairEndpoints {
+final class FairEndpoints(baseEndpoints: BaseEndpoints) {
   import FairEndpoints.*
 
-  private def resourceIn = path[String]("shortcode") / path[String]("resourceId")
-  private val landing    = "internal" / "landing-pages" / "resources" / resourceIn
-  private val resource   = "fair" / "resources" / resourceIn
+  private def resourceIn  = path[String]("shortcode") / path[String]("resourceId")
+  private val landingBase =
+    baseEndpoints
+      .publicPolicyEndpoint(
+        internalError(header(HeaderNames.Vary, "Accept").and(header(HeaderNames.CacheControl, "no-store"))),
+        publicReason,
+      )
+
+  private val representationBase =
+    baseEndpoints
+      .publicPolicyEndpoint(internalError(emptyOutput), publicReason)
+  private val landing  = "internal" / "landing-pages" / "resources" / resourceIn
+  private val resource = "fair" / "resources" / resourceIn
 
   val getLanding = landingBase.get
+    .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation)
     .in(landing)
     .in(acceptIn)
     .out(withBody)
     .tag(Tag)
-    .description("The landing page of a public resource, or a 303 to a representation the `Accept` header asks for.")
+    .description(
+      s"The landing page of a public resource, or a 303 to a representation the `Accept` header asks for. $publicRequirement",
+    )
 
   val headLanding = landingBase.head
+    .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation)
     .in(landing)
     .in(acceptIn)
     .out(withoutBody)
     .tag(Tag)
-    .description("As the landing GET, without the body.")
+    .description(s"As the landing GET, without the body. $publicRequirement")
 
   val getJsonLd = representationBase.get
+    .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation)
     .in(resource / "metadata.jsonld")
     .out(withBody)
     .tag(Tag)
-    .description("The schema.org JSON-LD description of a public resource.")
+    .description(s"The schema.org JSON-LD description of a public resource. $publicRequirement")
 
   val getDataCite = representationBase.get
+    .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation)
     .in(resource / "metadata.datacite.json")
     .out(withBody)
     .tag(Tag)
-    .description("The DataCite JSON description of a public resource.")
+    .description(s"The DataCite JSON description of a public resource. $publicRequirement")
 }
 
 object FairEndpoints {
   val layer = ZLayer.derive[FairEndpoints]
 
   private val Tag = "FAIR"
+
+  private val publicReason      = "Serves only resources the anonymous user may see."
+  private val publicRequirement = Policy.Public(publicReason).requirement
 
   private val acceptIn = header[List[String]](HeaderNames.Accept)
     .description("Repeated header lines are combined into one comma-separated value.")
@@ -87,20 +107,4 @@ object FairEndpoints {
     statusCode(StatusCode.InternalServerError)
       .and(constantHeaders)
       .map(Mapping.from[Unit, FairInternalError.type](_ => FairInternalError)(_ => ()))
-
-  private val landingBase =
-    RequiresMethod(
-      endpoint
-        .errorOut(internalError(header(HeaderNames.Vary, "Accept").and(header(HeaderNames.CacheControl, "no-store"))))
-        .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation),
-      _.method(_),
-    )
-
-  private val representationBase =
-    RequiresMethod(
-      endpoint
-        .errorOut(internalError(emptyOutput))
-        .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation),
-      _.method(_),
-    )
 }

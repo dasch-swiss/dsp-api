@@ -17,6 +17,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.ontologies.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.DeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
@@ -182,12 +183,14 @@ final case class CardinalityHandler(
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
+   * @param requestingUser the user making the request.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
   def deleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri,
+    requestingUser: User,
   ): Task[ReadOntologyV2] = {
     val internalClassInfo = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
     for {
@@ -295,7 +298,7 @@ final case class CardinalityHandler(
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                     Set(internalClassIri),
                     allLanguages = true,
-                    deleteCardinalitiesFromClassRequest.requestingUser,
+                    requestingUser,
                   )
     } yield response
   }

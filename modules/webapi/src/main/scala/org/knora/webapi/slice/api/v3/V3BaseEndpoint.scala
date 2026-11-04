@@ -19,11 +19,19 @@ import zio.json.JsonEncoder
 
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.slice.common.api.RequiresMethod
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError.*
 
-final case class V3BaseEndpoint(private val authenticator: Authenticator) {
+final case class V3BaseEndpoint(
+  private val authenticator: Authenticator,
+  private val authorization: AuthorizationRestService,
+) {
+
+  private val policies = BaseEndpoints(authenticator, authorization)
 
   private type ErrorOut = EndpointOutput.OneOf[V3ErrorInfo, V3ErrorInfo]
   private val unauthorizedVariant = oneOfVariant(
@@ -62,6 +70,31 @@ final case class V3BaseEndpoint(private val authenticator: Authenticator) {
         },
       _.method(_),
     )
+
+  private def withAuthErrors(errorOut: ErrorOut): PublicEndpoint[Unit, V3ErrorInfo, Unit, Any] =
+    endpoint.errorOut(errorOut).errorOutVariantsPrepend(unauthorizedVariant, forbiddenVariant)
+
+  private def forbidden(e: dsp.errors.ForbiddenException): V3ErrorInfo = Forbidden(e.message)
+
+  /** Declares and enforces SystemAdmin in the security logic; see [[BaseEndpoints.bearerSystemAdminPolicyEndpoint]]. */
+  def systemAdminPolicy(
+    errorOut: ErrorOut,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, User, Unit, V3ErrorInfo, Unit, Any]] =
+    policies.bearerSystemAdminPolicyEndpoint(withAuthErrors(errorOut), handleBearerJwt, forbidden)
+
+  /** Declares ObjectAccess for a read; anonymous callers are admitted. */
+  def objectAccessPolicy(
+    errorOut: ErrorOut,
+    enforcedIn: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, Option[String], User, Unit, V3ErrorInfo, Unit, Any]] =
+    policies.bearerObjectAccessPolicyEndpoint(withAuthErrors(errorOut), enforcedIn, handleBearerJwt)
+
+  /** Declares ProjectAdmin; the handler must obtain a grant from [[V3Authorizer.authorizeProjectAdminById]]. */
+  def projectAdminPolicy(
+    errorOut: ErrorOut,
+    projectFrom: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, ProjectCandidate, Unit, V3ErrorInfo, Unit, Any]] =
+    policies.bearerProjectAdminPolicyEndpoint(withAuthErrors(errorOut), projectFrom, handleBearerJwt, forbidden)
 
   private def handleBearerJwt(jwt: String): IO[V3ErrorInfo, User] =
     authenticator.authenticate(jwt).mapError {

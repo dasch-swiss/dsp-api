@@ -21,11 +21,11 @@ import java.time.format.DateTimeFormatter
 import dsp.errors.BadRequestException
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v2.metadata.ExportFormat
 import org.knora.webapi.slice.api.v2.metadata.ExportFormat.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CsvService
 import org.knora.webapi.slice.resources.service.MetadataService
@@ -41,15 +41,15 @@ final class MetadataRestService(
     _.atZone(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmssX"))
 
   def getResourcesMetadata(
-    user: User,
+    candidate: ProjectCandidate,
   )(
     shortcode: Shortcode,
     format: ExportFormat,
     classIris: List[IriDto],
   ): IO[RequestRejectedException, (MediaType, String, String)] = for {
-    prj    <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
+    grant  <- auth.authorizeProjectAdminByShortcode(candidate, shortcode)
     iris   <- ZIO.foreach(classIris.map(_.value))(iriConverter.asResourceClassIri).mapError(BadRequestException.apply)
-    data   <- metadataService.getResourcesMetadata(prj, iris).orDie
+    data   <- metadataService.getResourcesMetadata(grant.project, iris).orDie
     result <- format match {
                 case JSON => ZIO.succeed(data.toJson)
                 case CSV  => ZIO.scoped(csvService.writeToString(data).orDie)

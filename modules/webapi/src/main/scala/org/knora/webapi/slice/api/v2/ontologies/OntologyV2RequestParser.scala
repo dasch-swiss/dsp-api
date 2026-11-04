@@ -63,7 +63,6 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
   def changeOntologyMetadataRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
-    requestingUser: User,
   ): IO[String, ChangeOntologyMetadataRequestV2] = ZIO.scoped {
     for {
       model <- ModelOps.fromJsonLd(jsonLd)
@@ -74,7 +73,6 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
       meta.comment,
       meta.lastModificationDate,
       apiRequestId,
-      requestingUser,
     )
   }
 
@@ -99,7 +97,6 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
   def createOntologyRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
-    requestingUser: User,
   ): IO[String, CreateOntologyRequestV2] =
     import ModelOps.*
     ZIO.scoped {
@@ -112,12 +109,12 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
             isShared   <- r.objectBooleanOption(KA.IsShared).map(_.getOrElse(false))
             label      <- r.objectString(RDFS.label)
             comment    <- ontologyRdfsComment(r)
-          } yield CreateOntologyRequestV2(name, projectIri, isShared, label, comment, apiRequestId, requestingUser)
+          } yield CreateOntologyRequestV2(name, projectIri, isShared, label, comment, apiRequestId)
         }
       }
     }
 
-  def createClassRequestV2(jsonLd: String, apiRequestId: UUID, requestingUser: User): IO[String, CreateClassRequestV2] =
+  def createClassRequestV2(jsonLd: String, apiRequestId: UUID): IO[String, CreateClassRequestV2] =
     ZIO.scoped {
       for {
         ds        <- DatasetOps.fromJsonLd(jsonLd)
@@ -133,7 +130,6 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
         classInfo,
         meta.lastModificationDate,
         apiRequestId,
-        requestingUser,
       )
     }
 
@@ -241,7 +237,6 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
   def changeClassLabelsOrCommentsRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
-    requestingUser: User,
   ): IO[String, ChangeClassLabelsOrCommentsRequestV2] =
     ZIO.scoped {
       for {
@@ -265,19 +260,16 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
         newValues,
         meta.lastModificationDate,
         apiRequestId,
-        requestingUser,
       )
     }
 
   def addCardinalitiesToClassRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
-    requestingUser: User,
   ): IO[String, AddCardinalitiesToClassRequestV2] =
     constructClassRelatedRequest(
       jsonLd,
       apiRequestId,
-      requestingUser,
       AddCardinalitiesToClassRequestV2.apply,
       (_, classInfo) => ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty).unit,
     )
@@ -285,33 +277,33 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
   def replaceClassCardinalitiesRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
-    requestingUser: User,
   ): IO[String, ReplaceClassCardinalitiesRequestV2] =
-    constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, ReplaceClassCardinalitiesRequestV2.apply)
+    constructClassRelatedRequest(jsonLd, apiRequestId, ReplaceClassCardinalitiesRequestV2.apply)
 
   def canDeleteCardinalitiesFromClassRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
     requestingUser: User,
   ): IO[String, CanDeleteCardinalitiesFromClassRequestV2] =
-    constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, CanDeleteCardinalitiesFromClassRequestV2.apply)
+    constructClassRelatedRequest(
+      jsonLd,
+      apiRequestId,
+      CanDeleteCardinalitiesFromClassRequestV2(_, _, _, requestingUser),
+    )
 
   def deleteCardinalitiesFromClassRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
-    requestingUser: User,
   ): IO[String, DeleteCardinalitiesFromClassRequestV2] =
-    constructClassRelatedRequest(jsonLd, apiRequestId, requestingUser, DeleteCardinalitiesFromClassRequestV2.apply)
+    constructClassRelatedRequest(jsonLd, apiRequestId, DeleteCardinalitiesFromClassRequestV2.apply)
 
   def changeGuiOrderRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
-    requestingUser: User,
   ): IO[String, ChangeGuiOrderRequestV2] =
     constructClassRelatedRequest(
       jsonLd,
       apiRequestId,
-      requestingUser,
       ChangeGuiOrderRequestV2.apply,
       (_, classInfo) => ZIO.fail("No cardinalities specified").when(classInfo.directCardinalities.isEmpty).unit,
     )
@@ -319,8 +311,7 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
   private def constructClassRelatedRequest[A](
     jsonLd: String,
     apiRequestId: UUID,
-    requestingUser: User,
-    f: (ClassInfoContentV2, Instant, UUID, User) => A,
+    f: (ClassInfoContentV2, Instant, UUID) => A,
     checkConstraints: (OntologyMetadata, ClassInfoContentV2) => IO[String, Unit] = (_, _) => ZIO.unit,
   ): IO[String, A] =
     ZIO.scoped {
@@ -329,17 +320,17 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
         meta      <- extractOntologyMetadata(ds.defaultModel)
         classInfo <- extractClassInfo(ds, meta)
         _         <- checkConstraints(meta, classInfo)
-      } yield f(classInfo, meta.lastModificationDate, apiRequestId, requestingUser)
+      } yield f(classInfo, meta.lastModificationDate, apiRequestId)
     }
 
-  def createPropertyRequestV2(jsonLd: String, apiRequestId: UUID, user: User): IO[String, CreatePropertyRequestV2] =
+  def createPropertyRequestV2(jsonLd: String, apiRequestId: UUID): IO[String, CreatePropertyRequestV2] =
     ZIO.scoped {
       for {
         ds           <- DatasetOps.fromJsonLd(jsonLd)
         meta         <- extractOntologyMetadata(ds.defaultModel)
         propertyInfo <- extractPropertyInfo(ds, meta)
         _            <- sanityCheckCreate(propertyInfo)
-      } yield CreatePropertyRequestV2(propertyInfo, meta.lastModificationDate, apiRequestId, user)
+      } yield CreatePropertyRequestV2(propertyInfo, meta.lastModificationDate, apiRequestId)
     }
 
   private def extractPropertyInfo(ds: Dataset, meta: OntologyMetadata): ZIO[Scope, String, PropertyInfoContentV2] =
@@ -469,7 +460,6 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
   def changePropertyGuiElementRequest(
     jsonLd: String,
     apiRequestId: UUID,
-    user: User,
   ): IO[String, ChangePropertyGuiElementRequest] = ZIO.scoped {
     for {
       ds           <- DatasetOps.fromJsonLd(jsonLd)
@@ -481,13 +471,12 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
       guiAttribute        <- iriConverter.asSmartIri(SalsahGui.External.GuiAttribute).orDie
       guiElement          <- ensureValidGuiObject(propertyInfo.predicates, guiElementProp, guiAttribute).toZIO
       lastModificationDate = meta.lastModificationDate
-    } yield ChangePropertyGuiElementRequest(propertyIri, guiElement, lastModificationDate, apiRequestId, user)
+    } yield ChangePropertyGuiElementRequest(propertyIri, guiElement, lastModificationDate, apiRequestId)
   }
 
   def changePropertyLabelsOrCommentsRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
-    user: User,
   ): IO[String, ChangePropertyLabelsOrCommentsRequestV2] = ZIO.scoped {
     for {
       ds                          <- DatasetOps.fromJsonLd(jsonLd)
@@ -505,7 +494,6 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
       newValues,
       meta.lastModificationDate,
       apiRequestId,
-      user,
     )
   }
 

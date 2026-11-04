@@ -19,25 +19,35 @@ import java.nio.file.Paths
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.messages.IriConversions.*
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.Rdfs
+import org.knora.webapi.messages.OntologyConstants.Xsd
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsGetResponseADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
 import org.knora.webapi.slice.api.EndpointPolicyE2ESpec.key
+import org.knora.webapi.slice.api.admin.CopyrightHolderAddRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupStatusUpdateRequest
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.api.admin.Requests.*
+import org.knora.webapi.slice.api.admin.ResourceSideLegalInfo
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.*
 import org.knora.webapi.slice.api.admin.model.*
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.*
 import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
+import org.knora.webapi.slice.api.v3.ontology.AddClassMappingsRequest
+import org.knora.webapi.slice.api.v3.ontology.AddPropertyMappingsRequest
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
@@ -58,6 +68,7 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
 
   override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/project_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    anythingRdfOntology,
   )
 
   /**
@@ -279,6 +290,35 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       readBack = None,
     )
 
+  private val anythingOntologyV2 = "http://0.0.0.0:3333/ontology/0001/anything/v2"
+  private val anythingThingV2    = s"$anythingOntologyV2#Thing"
+  private val anythingTextV2     = s"$anythingOntologyV2#hasText"
+  private val externalIri        = "https://schema.org/Thing"
+
+  private val classMappingUri    = uri"/v3/ontologies/$anythingOntologyV2/classes/$anythingThingV2/mapping"
+  private val propertyMappingUri =
+    uri"/v3/ontologies/$anythingOntologyV2/properties/$anythingTextV2/mapping"
+
+  private val classDefinitionUri    = uri"/v2/ontologies/classes/$anythingThingV2"
+  private val propertyDefinitionUri = uri"/v2/ontologies/properties/$anythingTextV2"
+
+  private def mappingParam(uri: Uri) = uri.addParam("mapping", externalIri)
+
+  private def addMapping[B: JsonEncoder](uri: Uri, body: B): RIO[env, Unit] =
+    TestApiClient.putJson[Json, B](uri, body, rootUser).flatMap(_.assert200).unit
+
+  private def removeMapping(uri: Uri): RIO[env, Unit] =
+    TestApiClient.deleteJson[Json](mappingParam(uri), rootUser).flatMap(_.assert200).unit
+
+  /** What the mapping endpoints change: the entity's definition as the ontology API shows it. */
+  private def definition(uri: Uri): RIO[env, String] =
+    TestApiClient.getJson[Json](uri, rootUser).map(_.body.toString)
+
+  private def mappingRow(key: String, definitionUri: Uri, prepare: RIO[env, Unit])(
+    send: Option[User] => RIO[env, StatusCode],
+  ) =
+    Row[Unit](key, projectAdminOutcomes, prepare, (_, user) => send(user), Some(_ => definition(definitionUri)))
+
   private val anythingPermissions          = uri"/admin/permissions"
   private def permissionsOf(kind: String*) =
     anythingPermissions.addPath(kind).addPath(anythingProjectIri.value)
@@ -297,8 +337,233 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       .getJson[Json](uri"/admin/groups", rootUser)
       .map(response => s"group $name exists: ${response.body.toString.contains(s"\"$name\"")}")
 
-  private val restrictedViewUri = anythingByIri.addPath("RestrictedViewSettings")
-  private val restrictedViewSet = SetRestrictedViewRequest(Some(RestrictedView.Size.unsafeFrom("!512,512")), None)
+  private val anythingByShortcode = uri"/admin/projects/shortcode/${anythingShortcode}"
+  private val anythingByShortname = uri"/admin/projects/shortname/anything"
+  private val legalInfo           = anythingByShortcode.addPath("legal-info")
+
+  /** A read of the anything project that any of its members may make; it writes nothing. */
+  private def anythingMemberRead(key: String, uri: Uri) =
+    Row[Unit](
+      key,
+      outcomes(unauthorized, forbidden, allowed, forbidden, allowed, allowed),
+      prepare = ZIO.unit,
+      send = (_, user) => get(uri)(user),
+      readBack = None,
+    )
+
+  private val freshName = Random.nextUUID.map(uuid => s"matrix-${uuid.toString.take(8)}")
+
+  private val projectAdminOutcomes = outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed)
+
+  private def copyrightHolderPresent(name: String): RIO[env, String] =
+    TestApiClient
+      .getJson[Json](legalInfo.addPath("copyright-holders"), rootUser)
+      .map(response => s"copyright holder $name present: ${response.body.toString.contains(name)}")
+
+  private val matrixLicense = LicenseIri.CC_BY_NC_4_0
+
+  private def licenseEnabled: RIO[env, String] =
+    TestApiClient
+      .getJson[Json](legalInfo.addPath("licenses").addParam("showOnlyEnabled", "true"), rootUser)
+      .map(response => s"license enabled: ${response.body.toString.contains(matrixLicense.value)}")
+
+  private def licenseRow(key: String, action: String, before: String) =
+    Row[Unit](
+      key,
+      projectAdminOutcomes,
+      prepare = put(legalInfo.addPath("licenses", matrixLicense.value, before), Json.Obj())(Some(rootUser))
+        .filterOrFail(_ == StatusCode.Ok)(Exception(s"could not $before the matrix license"))
+        .unit,
+      send = (_, user) => put(legalInfo.addPath("licenses", matrixLicense.value, action), Json.Obj())(user),
+      readBack = Some(_ => licenseEnabled),
+    )
+
+  private def groupUri(iri: GroupIri) = uri"/admin/groups/${iri.value}"
+
+  private val freshGroup: RIO[env, GroupIri] =
+    for {
+      name  <- freshName
+      group <- TestApiClient
+                 .postJson[GroupGetResponseADM, GroupCreateRequest](uri"/admin/groups", groupRequest(name), rootUser)
+                 .flatMap(_.assert200)
+    } yield GroupIri.unsafeFrom(group.group.id)
+
+  private def groupState(iri: GroupIri): RIO[env, String] =
+    TestApiClient.getJson[Json](groupUri(iri), rootUser).map(_.body.toString)
+
+  private def groupRow(key: String, readBack: Option[GroupIri => RIO[env, String]])(
+    send: GroupIri => Option[User] => RIO[env, StatusCode],
+  ) = Row[GroupIri](key, projectAdminOutcomes, freshGroup, (iri, user) => send(iri)(user), readBack)
+
+  private def groupMemberships(fixture: (UserIri, GroupIri)): RIO[env, String] =
+    TestApiClient
+      .getJson[Json](uri"/admin/users/iri/${fixture._1.value}/group-memberships", rootUser)
+      .map(_.body.toString)
+
+  private def groupMembershipUri(fixture: (UserIri, GroupIri)) =
+    uri"/admin/users/iri/${fixture._1.value}/group-memberships/${fixture._2.value}"
+
+  private def groupMembershipRow(key: String, joined: Boolean)(
+    send: ((UserIri, GroupIri)) => Option[User] => RIO[env, StatusCode],
+  ) = Row[(UserIri, GroupIri)](
+    key,
+    projectAdminOutcomes,
+    prepare = for {
+      user   <- freshUser
+      group  <- freshGroup
+      fixture = (user, group)
+      _      <- TestApiClient
+             .postJson[Json, Json](groupMembershipUri(fixture), Json.Obj(), rootUser)
+             .flatMap(_.assert200)
+             .when(joined)
+    } yield fixture,
+    send = (fixture, user) => send(fixture)(user),
+    readBack = Some(groupMemberships),
+  )
+
+  private def ontologyRequest(name: String) =
+    s"""{
+       |  "knora-api:ontologyName": "$name",
+       |  "knora-api:attachedToProject": { "@id": "${anythingProjectIri.value}" },
+       |  "rdfs:label": "matrix",
+       |  "@context": {
+       |    "rdfs": "${Rdfs.RdfsPrefixExpansion}",
+       |    "knora-api": "${KA.KnoraApiV2PrefixExpansion}"
+       |  }
+       |}""".stripMargin
+
+  private def postOntology(name: String)(user: Option[User]) =
+    TestApiClient.postJsonLdDocument(uri"/v2/ontologies", ontologyRequest(name), user, identity)
+
+  private val freshOntologyName = Random.nextUUID.map(uuid => s"mx${uuid.toString.filter(_.isLetter).take(10)}")
+
+  /** A fresh ontology in the anything project, as its IRI and last modification date. */
+  private final case class OntologyFixture(name: String, iri: String, lastModificationDate: String)
+
+  private val freshOntology: RIO[env, OntologyFixture] =
+    for {
+      name <- freshOntologyName
+      doc  <- postOntology(name)(Some(rootUser)).flatMap(_.assert200)
+      iri  <- ZIO.fromEither(doc.body.getRequiredString("@id")).mapError(Exception(_))
+    } yield OntologyFixture(name, iri, lastModificationOf(doc))
+
+  private def lastModificationOf(doc: JsonLDDocument): String =
+    doc.body.requireDatatypeValueInObject(KA.LastModificationDate, Xsd.DateTimeStamp.toSmartIri, (value, _) => value)
+
+  private def ontologyExists(name: String): RIO[env, String] =
+    TestApiClient
+      .getJsonLd(uri"/v2/ontologies/metadata/${anythingProjectIri.value}", rootUser)
+      .map(response => s"ontology $name exists: ${response.body.exists(_.contains(s"/$name/v2"))}")
+
+  private def ontologyBody(onto: OntologyFixture, topLevel: String = "", graph: Seq[String] = Seq.empty) = {
+    val graphField = if graph.isEmpty then "" else s""""@graph": [ ${graph.mkString(", ")} ],"""
+    s"""{
+       |  "@id": "${onto.iri}",
+       |  "@type": "owl:Ontology",
+       |  $topLevel
+       |  "knora-api:lastModificationDate": { "@type": "xsd:dateTimeStamp", "@value": "${onto.lastModificationDate}" },
+       |  $graphField
+       |  "@context": {
+       |    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+       |    "rdfs": "${Rdfs.RdfsPrefixExpansion}",
+       |    "owl": "http://www.w3.org/2002/07/owl#",
+       |    "xsd": "http://www.w3.org/2001/XMLSchema#",
+       |    "knora-api": "${KA.KnoraApiV2PrefixExpansion}",
+       |    "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
+       |    "${onto.name}": "${onto.iri}#"
+       |  }
+       |}""".stripMargin
+  }
+
+  private def langString(text: String) = s"""{ "@language": "en", "@value": "$text" }"""
+
+  private def classEntry(onto: OntologyFixture) =
+    s"""{
+       |  "@id": "${onto.name}:MatrixClass",
+       |  "@type": "owl:Class",
+       |  "rdfs:label": ${langString("matrix class")},
+       |  "rdfs:comment": ${langString("a matrix class")},
+       |  "rdfs:subClassOf": { "@id": "knora-api:Resource" }
+       |}""".stripMargin
+
+  private def propertyEntry(onto: OntologyFixture, withSubject: Boolean) = {
+    val subject = if withSubject then s""""knora-api:subjectType": { "@id": "${onto.name}:MatrixClass" },""" else ""
+    s"""{
+       |  "@id": "${onto.name}:hasMatrix",
+       |  "@type": "owl:ObjectProperty",
+       |  $subject
+       |  "knora-api:objectType": { "@id": "knora-api:TextValue" },
+       |  "rdfs:label": ${langString("has matrix")},
+       |  "rdfs:comment": ${langString("a matrix property")},
+       |  "rdfs:subPropertyOf": { "@id": "knora-api:hasValue" }
+       |}""".stripMargin
+  }
+
+  private def cardinality(onto: OntologyFixture, restriction: String) =
+    s"""{
+       |  "@id": "${onto.name}:MatrixClass",
+       |  "@type": "owl:Class",
+       |  "rdfs:subClassOf": {
+       |    "@type": "owl:Restriction",
+       |    $restriction
+       |    "owl:onProperty": { "@id": "${onto.name}:hasMatrix" }
+       |  }
+       |}""".stripMargin
+
+  private def classOf(onto: OntologyFixture)    = s"${onto.iri}#MatrixClass"
+  private def propertyOf(onto: OntologyFixture) = s"${onto.iri}#hasMatrix"
+
+  private def postJsonLd(uri: Uri, body: String)(user: Option[User]) =
+    TestApiClient.postJsonLdDocument(uri, body, user, identity).map(_.code)
+
+  private def putJsonLd(uri: Uri, body: String)(user: Option[User]) =
+    ZIO.serviceWithZIO[TestApiClient](_.putJsonLdDocument(uri, body, user, identity)).map(_.code)
+
+  private def patchJsonLd(uri: Uri, body: String)(user: Option[User]) =
+    ZIO.serviceWithZIO[TestApiClient](_.patchJsonLdDocument(uri, body, user, identity)).map(_.code)
+
+  private def createdBy(uri: Uri, onto: OntologyFixture, graph: Seq[String]): RIO[env, OntologyFixture] =
+    TestApiClient
+      .postJsonLdDocument(uri, ontologyBody(onto, graph = graph), rootUser)
+      .flatMap(_.assert200)
+      .map(doc => onto.copy(lastModificationDate = lastModificationOf(doc)))
+
+  private val ontologyWithComment: RIO[env, OntologyFixture] =
+    freshOntology.flatMap(onto =>
+      TestApiClient
+        .putJsonLdDocument(
+          uri"/v2/ontologies/metadata",
+          ontologyBody(onto, topLevel = """"rdfs:comment": "a matrix comment","""),
+          rootUser,
+        )
+        .flatMap(_.assert200)
+        .map(doc => onto.copy(lastModificationDate = lastModificationOf(doc))),
+    )
+
+  private val ontologyWithClass: RIO[env, OntologyFixture] =
+    freshOntology.flatMap(onto => createdBy(uri"/v2/ontologies/classes", onto, Seq(classEntry(onto))))
+
+  private val ontologyWithProperty: RIO[env, OntologyFixture] =
+    ontologyWithClass.flatMap(onto =>
+      createdBy(uri"/v2/ontologies/properties", onto, Seq(propertyEntry(onto, withSubject = true))),
+    )
+
+  private val ontologyWithCardinality: RIO[env, OntologyFixture] =
+    ontologyWithProperty.flatMap(onto =>
+      createdBy(uri"/v2/ontologies/cardinalities", onto, Seq(cardinality(onto, """"owl:maxCardinality": 1,"""))),
+    )
+
+  /** The whole ontology as the API shows it, including its last modification date: every write to it changes this. */
+  private def ontologyState(onto: OntologyFixture): RIO[env, String] =
+    TestApiClient.getJsonLd(uri"/v2/ontologies/allentities/${onto.iri}", rootUser).map(_.body.toString)
+
+  private def ontologyRow(key: String, prepare: RIO[env, OntologyFixture])(
+    send: OntologyFixture => Option[User] => RIO[env, StatusCode],
+  ) = Row[OntologyFixture](key, projectAdminOutcomes, prepare, (onto, user) => send(onto)(user), Some(ontologyState))
+
+  private val restrictedViewUri          = anythingByIri.addPath("RestrictedViewSettings")
+  private val shortcodeRestrictedViewUri = uri"/admin/projects/shortcode/${anythingShortcode}/RestrictedViewSettings"
+  private val restrictedViewSet          = SetRestrictedViewRequest(Some(RestrictedView.Size.unsafeFrom("!512,512")), None)
 
   private val anythingState: RIO[env, String] =
     TestApiClient.getJson[Json](anythingByIri, rootUser).map(_.body.toString)
@@ -455,6 +720,91 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
     membershipRow("DELETE /admin/users/iri/{userIri}/project-admin-memberships/{projectIri}", freshAdmin)(iri =>
       delete(membershipUri(iri, "project-admin-memberships")),
     ),
+    anythingRead("GET /admin/projects/shortcode/{projectShortcode}/members", anythingByShortcode.addPath("members")),
+    anythingRead(
+      "GET /admin/projects/shortcode/{projectShortcode}/admin-members",
+      anythingByShortcode.addPath("admin-members"),
+    ),
+    anythingRead("GET /admin/projects/shortname/{projectShortname}/members", anythingByShortname.addPath("members")),
+    anythingRead(
+      "GET /admin/projects/shortname/{projectShortname}/admin-members",
+      anythingByShortname.addPath("admin-members"),
+    ),
+    anythingRead(
+      "GET /v2/metadata/projects/{projectShortcode}/resources",
+      uri"/v2/metadata/projects/$anythingShortcode/resources",
+    ),
+    Row[Unit](
+      "POST /admin/projects/shortcode/{projectShortcode}/RestrictedViewSettings",
+      projectAdminOutcomes,
+      prepare = TestApiClient.deleteJson[Json](restrictedViewUri, rootUser).flatMap(_.assert200).unit,
+      send = (_, user) => post(shortcodeRestrictedViewUri, restrictedViewSet)(user),
+      readBack = Some(_ => restrictedViewState),
+    ),
+    Row[Unit](
+      "DELETE /admin/projects/shortcode/{projectShortcode}/RestrictedViewSettings",
+      projectAdminOutcomes,
+      prepare = TestApiClient
+        .postJson[Json, SetRestrictedViewRequest](restrictedViewUri, restrictedViewSet, rootUser)
+        .flatMap(_.assert200)
+        .unit,
+      send = (_, user) => delete(shortcodeRestrictedViewUri)(user),
+      readBack = Some(_ => restrictedViewState),
+    ),
+    groupRow("GET /admin/groups/{groupIri}/members", None)(iri => get(groupUri(iri).addPath("members"))),
+    groupRow("PUT /admin/groups/{groupIri}", Some(groupState))(iri =>
+      put(groupUri(iri), GroupUpdateRequest(name = Some(GroupName.unsafeFrom(s"renamed-${iri.value.split('/').last}")))),
+    ),
+    groupRow("PUT /admin/groups/{groupIri}/status", Some(groupState))(iri =>
+      put(groupUri(iri).addPath("status"), GroupStatusUpdateRequest(GroupStatus.inactive)),
+    ),
+    groupRow("DELETE /admin/groups/{groupIri}", Some(groupState))(iri => delete(groupUri(iri))),
+    groupMembershipRow("POST /admin/users/iri/{userIri}/group-memberships/{groupIri}", joined = false)(fixture =>
+      post(groupMembershipUri(fixture), Json.Obj()),
+    ),
+    groupMembershipRow("DELETE /admin/users/iri/{userIri}/group-memberships/{groupIri}", joined = true)(fixture =>
+      delete(groupMembershipUri(fixture)),
+    ),
+    anythingMemberRead(
+      "GET /admin/projects/shortcode/{projectShortcode}/legal-info/authorships",
+      legalInfo.addPath("authorships"),
+    ),
+    anythingMemberRead(
+      "GET /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders",
+      legalInfo.addPath("copyright-holders"),
+    ),
+    Row[String](
+      "POST /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders",
+      projectAdminOutcomes,
+      prepare = freshName,
+      send = (name, user) =>
+        post(
+          legalInfo.addPath("copyright-holders"),
+          CopyrightHolderAddRequest(Set(CopyrightHolder.unsafeFrom(name))),
+        )(user),
+      readBack = Some(copyrightHolderPresent),
+    ),
+    licenseRow(
+      "PUT /admin/projects/shortcode/{projectShortcode}/legal-info/licenses/{licenseIri}/enable",
+      "enable",
+      "disable",
+    ),
+    licenseRow(
+      "PUT /admin/projects/shortcode/{projectShortcode}/legal-info/licenses/{licenseIri}/disable",
+      "disable",
+      "enable",
+    ),
+    Row[String](
+      "PUT /admin/projects/shortcode/{projectShortcode}/legal-info/resource",
+      projectAdminOutcomes,
+      prepare = freshName,
+      send = (name, user) =>
+        put(
+          legalInfo.addPath("resource"),
+          ResourceSideLegalInfo(Some(LicenseIri.CC_BY_4_0), Some(CopyrightHolder.unsafeFrom(name)), List.empty),
+        )(user),
+      readBack = Some(_ => anythingState),
+    ),
     anythingRead("GET /admin/permissions/{projectIri}", permissionsOf()),
     anythingRead("GET /admin/permissions/ap/{projectIri}", permissionsOf("ap")),
     anythingRead(
@@ -470,6 +820,118 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       readBack = Some(groupExists),
     ),
     Row[String](
+      "POST /v2/ontologies",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = freshOntologyName,
+      send = (name, user) => postOntology(name)(user).map(_.code),
+      readBack = Some(ontologyExists),
+    ),
+    Row[OntologyFixture](
+      "DELETE /v2/ontologies/{ontologyIri}",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = freshOntology,
+      send =
+        (onto, user) => delete(uri"/v2/ontologies/${onto.iri}?lastModificationDate=${onto.lastModificationDate}")(user),
+      readBack = Some(onto => ontologyExists(onto.name)),
+    ),
+    ontologyRow("PUT /v2/ontologies/metadata", freshOntology)(onto =>
+      putJsonLd(
+        uri"/v2/ontologies/metadata",
+        ontologyBody(onto, topLevel = """"rdfs:label": "relabelled","""),
+      ),
+    ),
+    ontologyRow("DELETE /v2/ontologies/comment/{ontologyIri}", ontologyWithComment)(onto =>
+      delete(uri"/v2/ontologies/comment/${onto.iri}?lastModificationDate=${onto.lastModificationDate}"),
+    ),
+    ontologyRow("POST /v2/ontologies/classes", freshOntology)(onto =>
+      postJsonLd(uri"/v2/ontologies/classes", ontologyBody(onto, graph = Seq(classEntry(onto)))),
+    ),
+    ontologyRow("PUT /v2/ontologies/classes", ontologyWithClass)(onto =>
+      putJsonLd(
+        uri"/v2/ontologies/classes",
+        ontologyBody(
+          onto,
+          graph = Seq(s"""{ "@id": "${onto.name}:MatrixClass", "@type": "owl:Class", "rdfs:label": ${langString(
+              "relabelled",
+            )} }"""),
+        ),
+      ),
+    ),
+    ontologyRow("DELETE /v2/ontologies/classes/{resourceClassIri}", ontologyWithClass)(onto =>
+      delete(uri"/v2/ontologies/classes/${classOf(onto)}?lastModificationDate=${onto.lastModificationDate}"),
+    ),
+    ontologyRow("DELETE /v2/ontologies/classes/comment/{resourceClassIri}", ontologyWithClass)(onto =>
+      delete(uri"/v2/ontologies/classes/comment/${classOf(onto)}?lastModificationDate=${onto.lastModificationDate}"),
+    ),
+    ontologyRow("POST /v2/ontologies/properties", freshOntology)(onto =>
+      postJsonLd(
+        uri"/v2/ontologies/properties",
+        ontologyBody(onto, graph = Seq(propertyEntry(onto, withSubject = false))),
+      ),
+    ),
+    ontologyRow("PUT /v2/ontologies/properties", ontologyWithProperty)(onto =>
+      putJsonLd(
+        uri"/v2/ontologies/properties",
+        ontologyBody(
+          onto,
+          graph = Seq(
+            s"""{ "@id": "${onto.name}:hasMatrix", "@type": "owl:ObjectProperty", "rdfs:label": ${langString(
+                "relabelled",
+              )} }""",
+          ),
+        ),
+      ),
+    ),
+    ontologyRow("PUT /v2/ontologies/properties/guielement", ontologyWithProperty)(onto =>
+      putJsonLd(
+        uri"/v2/ontologies/properties/guielement",
+        ontologyBody(
+          onto,
+          graph = Seq(s"""{
+                         |  "@id": "${onto.name}:hasMatrix",
+                         |  "@type": "owl:ObjectProperty",
+                         |  "salsah-gui:guiElement": { "@id": "salsah-gui:Textarea" },
+                         |  "salsah-gui:guiAttribute": [ "cols=80", "rows=24" ]
+                         |}""".stripMargin),
+        ),
+      ),
+    ),
+    ontologyRow("DELETE /v2/ontologies/properties/{propertyIri}", ontologyWithProperty)(onto =>
+      delete(uri"/v2/ontologies/properties/${propertyOf(onto)}?lastModificationDate=${onto.lastModificationDate}"),
+    ),
+    ontologyRow("DELETE /v2/ontologies/properties/comment/{propertyIri}", ontologyWithProperty)(onto =>
+      delete(
+        uri"/v2/ontologies/properties/comment/${propertyOf(onto)}?lastModificationDate=${onto.lastModificationDate}",
+      ),
+    ),
+    ontologyRow("PUT /v2/ontologies/guiorder", ontologyWithCardinality)(onto =>
+      putJsonLd(
+        uri"/v2/ontologies/guiorder",
+        ontologyBody(
+          onto,
+          graph = Seq(cardinality(onto, """"owl:maxCardinality": 1, "salsah-gui:guiOrder": 2,""")),
+        ),
+      ),
+    ),
+    ontologyRow("POST /v2/ontologies/cardinalities", ontologyWithProperty)(onto =>
+      postJsonLd(
+        uri"/v2/ontologies/cardinalities",
+        ontologyBody(onto, graph = Seq(cardinality(onto, """"owl:maxCardinality": 1,"""))),
+      ),
+    ),
+    ontologyRow("PUT /v2/ontologies/cardinalities", ontologyWithCardinality)(onto =>
+      putJsonLd(
+        uri"/v2/ontologies/cardinalities",
+        ontologyBody(onto, graph = Seq(cardinality(onto, """"owl:minCardinality": 0,"""))),
+      ),
+    ),
+    ontologyRow("PATCH /v2/ontologies/cardinalities", ontologyWithCardinality)(onto =>
+      patchJsonLd(
+        uri"/v2/ontologies/cardinalities",
+        ontologyBody(onto, graph = Seq(cardinality(onto, """"owl:maxCardinality": 1,"""))),
+      ),
+    ),
+    Row[String](
       "POST /v2/standoff/canonicalize",
       outcomes(unauthorized, allowed, allowed, allowed, allowed, allowed),
       prepare = ZIO.attempt(FileUtil.readTextFile(Paths.get("test_data/test_route/texts/StandardHTML.xml"))),
@@ -478,6 +940,42 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
         val mediaType = MediaType("application", "xml")
         user
           .fold(TestApiClient.postString(uri, xml, mediaType))(u => TestApiClient.postString(uri, xml, mediaType, u))
+          .map(_.code)
+      },
+      readBack = None,
+    ),
+    mappingRow(
+      "PUT /v3/ontologies/{ontologyIri}/classes/{classIri}/mapping",
+      classDefinitionUri,
+      removeMapping(classMappingUri),
+    )(
+      put(classMappingUri, AddClassMappingsRequest(List(externalIri))),
+    ),
+    mappingRow(
+      "DELETE /v3/ontologies/{ontologyIri}/classes/{classIri}/mapping",
+      classDefinitionUri,
+      addMapping(classMappingUri, AddClassMappingsRequest(List(externalIri))),
+    )(delete(mappingParam(classMappingUri))),
+    mappingRow(
+      "PUT /v3/ontologies/{ontologyIri}/properties/{propertyIri}/mapping",
+      propertyDefinitionUri,
+      removeMapping(propertyMappingUri),
+    )(put(propertyMappingUri, AddPropertyMappingsRequest(List(externalIri)))),
+    mappingRow(
+      "DELETE /v3/ontologies/{ontologyIri}/properties/{propertyIri}/mapping",
+      propertyDefinitionUri,
+      addMapping(propertyMappingUri, AddPropertyMappingsRequest(List(externalIri))),
+    )(delete(mappingParam(propertyMappingUri))),
+    Row[Unit](
+      "POST /admin/sparql/query",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),
+      prepare = ZIO.unit,
+      send = (_, user) => {
+        val query = "SELECT * WHERE { ?s ?p ?o } LIMIT 1"
+        user
+          .fold(TestApiClient.postSparql(uri"/admin/sparql/query", query))(u =>
+            TestApiClient.postSparql(uri"/admin/sparql/query", query, u),
+          )
           .map(_.code)
       },
       readBack = None,
@@ -552,6 +1050,17 @@ object AuthorizationMatrixE2ESpec {
    */
   val exempt: Map[String, String] = Map(
     "POST /start-compaction"                                               -> "ManagementEndpointsE2ESpec",
+    "POST /v3/projects/{projectIri}/exports"                               -> "V3SystemAdminRoutesE2ESpec",
+    "GET /v3/projects/{projectIri}/exports/{exportId}"                     -> "V3SystemAdminRoutesE2ESpec",
+    "DELETE /v3/projects/{projectIri}/exports/{exportId}"                  -> "V3SystemAdminRoutesE2ESpec",
+    "GET /v3/projects/{projectIri}/exports/{exportId}/download"            -> "V3SystemAdminRoutesE2ESpec",
+    "POST /v3/projects/{projectIri}/imports"                               -> "V3SystemAdminRoutesE2ESpec",
+    "GET /v3/projects/{projectIri}/imports/{importId}"                     -> "V3SystemAdminRoutesE2ESpec",
+    "DELETE /v3/projects/{projectIri}/imports/{importId}"                  -> "V3SystemAdminRoutesE2ESpec",
+    "POST /v3/projects/{projectIri}/data-imports"                          -> "V3SystemAdminRoutesE2ESpec",
+    "GET /v3/projects/{projectIri}/data-imports/{importId}"                -> "V3SystemAdminRoutesE2ESpec",
+    "DELETE /v3/projects/{projectIri}/data-imports/{importId}"             -> "V3SystemAdminRoutesE2ESpec",
+    "POST /v3/export/resources/oai"                                        -> "V3SystemAdminRoutesE2ESpec",
     "POST /admin/maintenance/{action-name}"                                -> "MaintenanceBackfillValueHasXmlE2ESpec",
     "POST /admin/maintenance/users/replace-iri"                            -> "MaintenanceReplaceUserIriE2ESpec",
     "POST /admin/maintenance/projects/{projectShortcode}/replace-user-iri" -> "MaintenanceReplaceUserIriInProjectE2ESpec",

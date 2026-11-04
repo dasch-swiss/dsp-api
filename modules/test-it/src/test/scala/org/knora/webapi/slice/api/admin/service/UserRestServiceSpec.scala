@@ -353,10 +353,12 @@ class UserRestServiceSpec extends E2EZSpec {
         for {
           membershipsBeforeUpdate <-
             userService(_.findUserByIri(normalUser.userIri)).map(_.map(_.groups).getOrElse(Seq.empty))
-          _                      <- userRestService(_.addUserToGroup(rootUser)(normalUser.userIri, imagesReviewerGroup.groupIri))
+          _ <- userRestService(
+                 _.addUserToGroup(TestCandidates.of(rootUser))(normalUser.userIri, imagesReviewerGroup.groupIri),
+               )
           membershipsAfterUpdate <-
             userService(_.findUserByIri(normalUser.userIri)).map(_.map(_.groups).getOrElse(Seq.empty))
-          received <- groupRestService(_.getGroupMembers(rootUser)(imagesReviewerGroup.groupIri))
+          received <- groupRestService(_.getGroupMembers(TestCandidates.of(rootUser))(imagesReviewerGroup.groupIri))
         } yield assertTrue(
           membershipsBeforeUpdate == Seq(),
           membershipsAfterUpdate.map(_.id) == Seq(imagesReviewerGroup.id),
@@ -367,10 +369,12 @@ class UserRestServiceSpec extends E2EZSpec {
         for {
           membershipsBeforeUpdate <-
             userService(_.findUserByIri(normalUser.userIri).map(_.map(_.groups).getOrElse(Seq.empty)))
-          _                      <- userRestService(_.removeUserFromGroup(rootUser)(normalUser.userIri, imagesReviewerGroup.groupIri))
+          _ <- userRestService(
+                 _.removeUserFromGroup(TestCandidates.of(rootUser))(normalUser.userIri, imagesReviewerGroup.groupIri),
+               )
           membershipsAfterUpdate <-
             userService(_.findUserByIri(normalUser.userIri)).map(_.map(_.groups).getOrElse(Seq.empty))
-          received <- groupRestService(_.getGroupMembers(rootUser)(imagesReviewerGroup.groupIri))
+          received <- groupRestService(_.getGroupMembers(TestCandidates.of(rootUser))(imagesReviewerGroup.groupIri))
         } yield assertTrue(
           membershipsBeforeUpdate.map(_.id) == Seq(imagesReviewerGroup.id),
           membershipsAfterUpdate == Seq(),

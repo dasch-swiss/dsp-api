@@ -14,7 +14,6 @@ import scala.language.implicitConversions
 
 import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringLiteralV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 
@@ -26,7 +25,6 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
  * @param comment              the ontology's new comment.
  * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 case class ChangeOntologyMetadataRequestV2(
   ontologyIri: OntologyIri,
@@ -34,7 +32,6 @@ case class ChangeOntologyMetadataRequestV2(
   comment: Option[NonEmptyString] = None,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**
@@ -43,13 +40,11 @@ case class ChangeOntologyMetadataRequestV2(
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 case class CreateClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**
@@ -58,13 +53,11 @@ case class CreateClassRequestV2(
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the class definition.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 case class AddCardinalitiesToClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**
@@ -75,7 +68,6 @@ case class AddCardinalitiesToClassRequestV2(
  * @param newObjects           the property's new labels or comments.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 case class ChangePropertyLabelsOrCommentsRequestV2(
   propertyIri: PropertyIri,
@@ -83,7 +75,6 @@ case class ChangePropertyLabelsOrCommentsRequestV2(
   newObjects: Seq[LanguageTaggedStringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**
@@ -92,13 +83,11 @@ case class ChangePropertyLabelsOrCommentsRequestV2(
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 case class ChangeGuiOrderRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**
@@ -107,11 +96,9 @@ case class ChangeGuiOrderRequestV2(
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 case class ReplaceClassCardinalitiesRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
