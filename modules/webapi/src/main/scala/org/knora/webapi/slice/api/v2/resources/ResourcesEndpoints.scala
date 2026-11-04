@@ -35,9 +35,6 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
   private val searchResponder       = "SearchResponderV2, per resource"
   private val createResourceHandler = "CreateResourceV2Handler, on the project and resource class"
 
-  private val readRequirement  = Policy.ObjectAccess(readResources, admitsAnonymous = true).requirement
-  private val writeRequirement = Policy.ObjectAccess(resourcesResponder, admitsAnonymous = false).requirement
-
   private val base = "v2" / "resources"
 
   // Schema built from the running config so the batch cap (min 1, max = app.v2.resources.max-batch-size)
@@ -81,7 +78,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get a preview of one or more resources. $readRequirement",
+      s"Get a preview of one or more resources. ${Policy.objectReadRequirement}",
     )
 
   val getResourcesIiifManifest = baseEndpoints
@@ -92,7 +89,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get the IIIF manifest for a resource. $readRequirement",
+      s"Get the IIIF manifest for a resource. ${Policy.objectReadRequirement}",
     )
 
   val getResourcesProjectHistoryEvents = baseEndpoints
@@ -103,7 +100,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get history events for all resources in a project. Resources the requesting user cannot view are omitted. $readRequirement",
+      s"Get history events for all resources in a project. Resources the requesting user cannot view are omitted. ${Policy.objectReadRequirement}",
     )
 
   val getResourcesHistoryEvents = baseEndpoints
@@ -114,7 +111,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get history events for a specific resource. $readRequirement",
+      s"Get history events for a specific resource. ${Policy.objectReadRequirement}",
     )
 
   val getResourcesHistory = baseEndpoints
@@ -127,7 +124,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get the version history of a resource. $readRequirement",
+      s"Get the version history of a resource. ${Policy.objectReadRequirement}",
     )
 
   val getResources = baseEndpoints
@@ -139,7 +136,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get one or more resources. $readRequirement",
+      s"Get one or more resources. ${Policy.objectReadRequirement}",
     )
 
   val postResourcesBatch = baseEndpoints
@@ -156,7 +153,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
         "A POST alternative to GET /v2/resources for large IRI sets that would exceed URL-length limits. " +
         s"Between 1 and ${resourcesConfig.maxBatchSize} IRIs may be sent per request (this deployment's " +
         "configured limit; exceeding it is a 400). " +
-        readRequirement,
+        Policy.objectReadRequirement,
     )
 
   val getResourcesParams = baseEndpoints
@@ -171,7 +168,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Search for resources by class and project. $readRequirement",
+      s"Search for resources by class and project. ${Policy.objectReadRequirement}",
     )
 
   val getResourcesGraph = baseEndpoints
@@ -190,7 +187,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get a graph of resources starting from a specific resource. $readRequirement",
+      s"Get a graph of resources starting from a specific resource. ${Policy.objectReadRequirement}",
     )
 
   val getResourcesTei = baseEndpoints
@@ -204,7 +201,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get a resource as TEI/XML. $readRequirement",
+      s"Get a resource as TEI/XML. ${Policy.objectReadRequirement}",
     )
 
   val postResourcesErase = baseEndpoints.withUserEndpoint.post
@@ -226,7 +223,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Check if a resource can be deleted. $readRequirement",
+      s"Check if a resource can be deleted. ${Policy.objectReadRequirement}",
     )
 
   val postResourcesDelete = baseEndpoints
@@ -237,7 +234,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description(s"Mark a resource as deleted. $writeRequirement")
+    .description(s"Mark a resource as deleted. ${Policy.objectWriteRequirement}")
 
   val postResources = baseEndpoints
     .authenticatedObjectAccessPolicyEndpoint(createResourceHandler)
@@ -247,7 +244,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description(s"Create a new resource. $writeRequirement")
+    .description(s"Create a new resource. ${Policy.objectWriteRequirement}")
 
   val putResources = baseEndpoints.withUserEndpoint.put
     .in(base)
@@ -266,7 +263,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Update a resource's authorship (data side). Requires Modify object access permission on the resource. $writeRequirement",
+      s"Update a resource's authorship (data side). Requires Modify object access permission on the resource. ${Policy.objectWriteRequirement}",
     )
 
   val endpoints: Seq[AnyEndpoint] = Seq(

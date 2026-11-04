@@ -21,9 +21,6 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
   private val valuesResponder   = "ValuesResponderV2, per resource and value"
   private val valuesRestService = "ValuesRestService, on the resource"
 
-  private val readRequirement  = Policy.ObjectAccess(readResources, admitsAnonymous = true).requirement
-  private val writeRequirement = Policy.ObjectAccess(valuesResponder, admitsAnonymous = false).requirement
-
   private val base: EndpointInput[Unit] = "v2" / "values"
 
   private val resourceIri = path[String].name("resourceIri").description("The IRI of a Resource.")
@@ -42,7 +39,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get a value of a resource. $readRequirement $linkToValuesDocumentation",
+      s"Get a value of a resource. ${Policy.objectReadRequirement} $linkToValuesDocumentation",
     )
 
   val postValues = baseEndpoint
@@ -57,7 +54,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Create a new value for a resource. $writeRequirement $linkToValuesDocumentation",
+      s"Create a new value for a resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
   val putValuesOrder = baseEndpoint
@@ -76,7 +73,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     )
     .out(jsonBody[ReorderValuesResponse])
     .description(
-      s"Reorder values of a property on a resource. Requires modify permission on the resource. $writeRequirement $linkToValuesDocumentation",
+      s"Reorder values of a property on a resource. Requires modify permission on the resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
   val putValues = baseEndpoint
@@ -91,7 +88,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Update a value of a resource. Requires view permission on the resource and modify permission on the value, or change rights permission to change its permissions; a link update also requires modify permission on the resource. $writeRequirement $linkToValuesDocumentation",
+      s"Update a value of a resource. Requires view permission on the resource and modify permission on the value, or change rights permission to change its permissions; a link update also requires modify permission on the resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
   val deleteValues = baseEndpoint
@@ -102,7 +99,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Mark a value as deleted. Requires view permission on the resource and delete permission on the value. $writeRequirement $linkToValuesDocumentation",
+      s"Mark a value as deleted. Requires view permission on the resource and delete permission on the value. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
   val postValuesErase = baseEndpoint.securedEndpoint.post

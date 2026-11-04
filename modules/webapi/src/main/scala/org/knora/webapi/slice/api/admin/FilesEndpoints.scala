@@ -65,7 +65,6 @@ object AssetAccessResponse {
 
 final class FilesEndpoints(base: BaseEndpoints) {
   private val filesEnforcedIn = "AssetPermissionsResponder, on the file's resource"
-  private val readRequirement = Policy.ObjectAccess(filesEnforcedIn, admitsAnonymous = true).requirement
 
   val getAdminFilesShortcodeFileIri = base
     .objectAccessPolicyEndpoint(filesEnforcedIn)
@@ -74,7 +73,7 @@ final class FilesEndpoints(base: BaseEndpoints) {
     .out(jsonBody[AssetAccessResponse])
     .description(
       "Returns the access decision for a given filename: what the caller may receive for the original and " +
-        s"what it may receive for the derivative. $readRequirement The `{shortcode}` path segment is not " +
+        s"what it may receive for the derivative. ${Policy.objectReadRequirement} The `{shortcode}` path segment is not " +
         "authoritative and does not affect the result - the file is identified by its filename alone (internal " +
         "filenames are globally-unique asset IDs); the segment is retained only for URL compatibility.",
     )

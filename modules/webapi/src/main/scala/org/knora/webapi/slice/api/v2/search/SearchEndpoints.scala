@@ -63,7 +63,6 @@ object SearchEndpointsInputs {
 
 final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
   private val searchResponder = "SearchResponderV2, per resource"
-  private val readRequirement = Policy.ObjectAccess(searchResponder, admitsAnonymous = true).requirement
 
   private val gravsearchDescription =
     "The Gravsearch query. See https://docs.dasch.swiss/DSP-API/03-endpoints/api-v2/query-language/"
@@ -89,7 +88,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .errorOutVariantsPrepend(searchTimeoutVariant)
     .description(
-      s"Search for resources using a Gravsearch query. $readRequirement",
+      s"Search for resources using a Gravsearch query. ${Policy.objectReadRequirement}",
     )
 
   val getGravsearch = baseEndpoints
@@ -102,7 +101,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .errorOutVariantsPrepend(searchTimeoutVariant)
     .description(
-      s"Search for resources using a Gravsearch query. $readRequirement",
+      s"Search for resources using a Gravsearch query. ${Policy.objectReadRequirement}",
     )
 
   val postGravsearchCount = baseEndpoints.withUserEndpoint.post
@@ -138,7 +137,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Search for incoming links using a Gravsearch query with an offset. $readRequirement",
+      s"Search for incoming links using a Gravsearch query with an offset. ${Policy.objectReadRequirement}",
     )
 
   val getSearchStillImageRepresentations = baseEndpoints
@@ -155,7 +154,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Search for StillImageRepresentations using a Gravsearch query with an offset. $readRequirement",
+      s"Search for StillImageRepresentations using a Gravsearch query with an offset. ${Policy.objectReadRequirement}",
     )
 
   val getSearchStillImageRepresentationsCount = baseEndpoints.withUserEndpoint.get
@@ -185,7 +184,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Search for incoming regions using a Gravsearch query with an offset. $readRequirement",
+      s"Search for incoming regions using a Gravsearch query with an offset. ${Policy.objectReadRequirement}",
     )
 
   val getSearchByLabel = baseEndpoints
@@ -199,7 +198,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Search for resources by label. $readRequirement",
+      s"Search for resources by label. ${Policy.objectReadRequirement}",
     )
 
   val getSearchByLabelCount = baseEndpoints.withUserEndpoint.get
@@ -227,7 +226,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .errorOutVariantsPrepend(searchTimeoutVariant)
     .description(
-      s"Full-text search for resources. $readRequirement",
+      s"Full-text search for resources. ${Policy.objectReadRequirement}",
     )
 
   val getFullTextSearchCount = baseEndpoints.withUserEndpoint.get

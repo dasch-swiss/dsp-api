@@ -120,8 +120,9 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
     )
 
   /**
-   * Declares [[Policy.ObjectAccess]]; anonymous callers are admitted, the owning domain checks the object. Inactive
-   * users are refused by authentication only.
+   * Declares [[Policy.ObjectAccess]] for a read; anonymous callers are admitted, the owning domain checks the object.
+   * Inactive users are refused by authentication only. A route that changes data uses
+   * [[authenticatedObjectAccessPolicyEndpoint]].
    */
   def objectAccessPolicyEndpoint(
     enforcedIn: String,
@@ -133,7 +134,10 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       _.method(_),
     )
 
-  /** Declares [[Policy.ObjectAccess]] for a write: the security logic refuses anonymous and inactive users. */
+  /**
+   * Declares [[Policy.ObjectAccess]] for a route that changes data: the security logic refuses anonymous and inactive
+   * users, the owning domain checks the object.
+   */
   def authenticatedObjectAccessPolicyEndpoint(
     enforcedIn: String,
   ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =

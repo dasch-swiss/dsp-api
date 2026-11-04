@@ -38,6 +38,9 @@ class EndpointPolicyE2ESpec extends E2EZSpec {
 
   private def sortedLines(keys: Iterable[String]): String = keys.toList.sorted.mkString("\n")
 
+  // Reads that use POST because their query does not fit in a URL.
+  private val postReads = Set("POST /v2/resources/batch", "POST /v2/searchextended")
+
   // Pinned so that an appended baseline line fails; lowered in the same commit that removes lines.
   private val baselineSize = 121
 
@@ -57,7 +60,7 @@ class EndpointPolicyE2ESpec extends E2EZSpec {
       } yield assertTrue(missing.isEmpty) ??
         s"""These endpoints declare no Policy. Build them with a policy-declaring factory in BaseEndpoints
            |(publicPolicyEndpoint, authenticatedPolicyEndpoint, systemAdminPolicyEndpoint,
-           |projectAdminPolicyEndpoint, objectAccessPolicyEndpoint); never add them to $baselineResource:
+           |projectAdminPolicyEndpoint, objectAccessPolicyEndpoint, authenticatedObjectAccessPolicyEndpoint); never add them to $baselineResource:
            |${sortedLines(missing)}""".stripMargin
     },
     test("the baseline names only existing endpoints without a policy") {
@@ -86,6 +89,20 @@ class EndpointPolicyE2ESpec extends E2EZSpec {
           }
         }.map(key)
         assertTrue(withoutReason.isEmpty) ?? s"give these policies a non-blank reason:\n${sortedLines(withoutReason)}"
+      }
+    },
+    test("only reads admit anonymous callers to object access") {
+      endpoints.map { all =>
+        val anonymousWrites = all.filter { ep =>
+          ep.attribute(Policy.key).exists {
+            case Policy.ObjectAccess(_, true) => !ep.method.exists(_.method == "GET") && !postReads(key(ep))
+            case _                            => false
+          }
+        }.map(key)
+        assertTrue(anonymousWrites.isEmpty) ??
+          s"""these routes change data but admit anonymous callers; build them with
+             |authenticatedObjectAccessPolicyEndpoint, or add a POST read to postReads:
+             |${sortedLines(anonymousWrites)}""".stripMargin
       }
     },
     test("every endpoint with a policy states its requirement in its description") {

@@ -10,7 +10,8 @@ import sttp.tapir.AttributeKey
 /**
  * The function-level authorization an endpoint declares, carried as the tapir attribute [[Policy.key]] (ADR-0013).
  * Every authenticated caller must be active: authentication refuses inactive users, and the factories for
- * `Authenticated`, `SystemAdmin` and `ProjectAdmin` check it again. `ObjectAccess` also admits anonymous callers.
+ * `Authenticated`, `SystemAdmin` and `ProjectAdmin` check it again. `ObjectAccess` admits anonymous callers unless
+ * `admitsAnonymous` is false.
  */
 enum Policy {
 
@@ -43,11 +44,14 @@ enum Policy {
       s"Requires SystemAdmin or ProjectAdmin permissions for the project given by the $projectFrom."
     case ProjectMember(projectFrom) =>
       s"Requires SystemAdmin, ProjectAdmin or ProjectMember permissions for the project given by the $projectFrom."
-    case ObjectAccess(_, true)  => "Requires appropriate object access permissions."
-    case ObjectAccess(_, false) => "Requires authentication and appropriate object access permissions."
+    case ObjectAccess(_, true)  => Policy.objectReadRequirement
+    case ObjectAccess(_, false) => Policy.objectWriteRequirement
   }
 }
 
 object Policy {
   val key: AttributeKey[Policy] = AttributeKey[Policy]
+
+  val objectReadRequirement  = "Requires appropriate object access permissions."
+  val objectWriteRequirement = "Requires authentication and appropriate object access permissions."
 }
