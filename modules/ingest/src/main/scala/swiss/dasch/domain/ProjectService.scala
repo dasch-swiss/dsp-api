@@ -7,6 +7,7 @@ package swiss.dasch.domain
 
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.ProjectFolder
+import swiss.dasch.infrastructure.IngestExecutor
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Files.newDirectoryStream
@@ -15,7 +16,6 @@ import zio.prelude.ForEachOps
 import zio.stream.ZStream
 
 import java.io.IOException
-import java.sql.SQLException
 import scala.language.implicitConversions
 
 import org.knora.bagit.BagIt
@@ -27,7 +27,7 @@ final case class ProjectService(
   private val assetInfos: AssetInfoService,
   private val storage: StorageService,
   private val checksum: FileChecksumService,
-  private val projectRepo: ProjectRepository,
+  private val ingestExecutor: IngestExecutor,
 ) {
 
   def listAllProjects(): IO[IOException, Chunk[ProjectFolder]] =
@@ -60,9 +60,8 @@ final case class ProjectService(
       case Some(p) => projectIsNotEmpty(p)
     }
 
-  def findOrCreateProject(shortcode: ProjectShortcode): IO[IOException | SQLException, ProjectFolder] =
-    projectRepo.findByShortcode(shortcode).someOrElseZIO(projectRepo.addProject(shortcode)) *>
-      storage.createProjectFolder(shortcode)
+  def findOrCreateProject(shortcode: ProjectShortcode): IO[IOException, ProjectFolder] =
+    storage.createProjectFolder(shortcode)
 
   def findAssetInfosOfProject(shortcode: ProjectShortcode): ZStream[Any, Throwable, AssetInfo] =
     ZStream
@@ -87,23 +86,11 @@ final case class ProjectService(
       // Assets are already-compressed media; store them (DEFLATE level 0) instead of wasting CPU re-compressing.
       payloadEntries =
         List(PayloadEntry.Directory(prefix = "", sourcePath = projectPath.path, compression = Compression.Store))
-      resultPath <- BagIt.create(payloadEntries, outputPath, bagInfo = Some(bagInfo))
+      resultPath <- ingestExecutor.withPermit(BagIt.create(payloadEntries, outputPath, bagInfo = Some(bagInfo)))
     } yield Some(resultPath)
 
-  def deleteProject(shortcode: ProjectShortcode): IO[IOException | SQLException, Unit] =
-    findProject(shortcode).tapSome { case Some(folder) =>
-      val delete: IO[IOException | SQLException, Unit] =
-        Files.deleteRecursive(folder) *> projectRepo.deleteByShortcode(shortcode)
-      delete
-    }.unit
-
-  def addProjectToDb(shortcode: ProjectShortcode): IO[IOException | SQLException, Unit] = {
-    val zipped: IO[IOException | SQLException, (Option[ProjectFolder], Option[Project])] =
-      (findProject(shortcode) <&> projectRepo.findByShortcode(shortcode))
-    zipped.tapSome { case (Some(folder), None) =>
-      projectRepo.addProject(folder.shortcode).flatMap(p => ZIO.logInfo(s"Imported $folder as $p to database."))
-    }.unit
-  }
+  def deleteProject(shortcode: ProjectShortcode): IO[IOException, Unit] =
+    findProject(shortcode).tapSome { case Some(folder) => Files.deleteRecursive(folder) }.unit
 }
 
 object ProjectService {

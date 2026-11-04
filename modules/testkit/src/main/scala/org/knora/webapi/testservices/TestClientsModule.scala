@@ -8,7 +8,6 @@ import sttp.client4.httpclient.zio.HttpClientZioBackend
 import zio.URLayer
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.DspIngestConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.config.Sipi
 import org.knora.webapi.slice.infrastructure.JwtService
@@ -35,7 +34,6 @@ object TestClientsModule { self =>
     // format: off
     AppConfig &
     Authenticator &
-    DspIngestConfig &
     JwtService &
     KnoraApi &
     Sipi &

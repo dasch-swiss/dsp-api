@@ -35,7 +35,7 @@
               (writeShellScriptBin "bazel" ''exec ${bazelisk}/bin/bazelisk "$@"'')
 
               # JDK 25 for the Bazel-driven Scala build (rules_scala compiles
-              # knora-api + dsp-ingest on it) — direnv's `use flake` replaces the
+              # knora-api and its ingest library on it) — direnv's `use flake` replaces the
               # environment, which would otherwise hide the host JDK. Matches the
               # runtime base `eclipse-temurin:25-jre-noble`.
               # (`temurin-bin`/`jdk` default to 21; the `-25` suffix is required.)

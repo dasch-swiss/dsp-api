@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.testservices.TestApiClient
@@ -108,13 +109,17 @@ class FairEndpointsE2ESpec extends E2EZSpec {
         )
       }
     },
-    test("the JSON-LD representation lists the file with its ingest original URL") {
-      representation(visibleId, "metadata.jsonld").map { r =>
+    test("the JSON-LD representation lists the file with its original URL on the API host") {
+      for {
+        api <- ZIO.service[KnoraApi]
+        r   <- representation(visibleId, "metadata.jsonld")
+      } yield {
         val body = r.body.merge
         assertTrue(
           r.code == StatusCode.Ok,
           r.header("Content-Type").exists(_.startsWith("application/ld+json")),
           body.contains(""""@type":"DataDownload""""),
+          body.contains(s"${api.externalKnoraApiBaseUrl}/ingest/projects/0803/assets/"),
           body.contains("/original"),
           body.contains(""""isAccessibleForFree":true"""),
         )

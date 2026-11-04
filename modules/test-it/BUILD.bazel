@@ -1,8 +1,8 @@
 load("//tools/scalafmt:defs.bzl", "scala_junit_test")
 
-# Container-backed integration specs (Fuseki/Sipi/dsp-ingest via testcontainers). Requires the
+# Container-backed integration specs (Fuseki/Sipi via testcontainers). Requires the
 # `:latest` images preloaded into the local Docker daemon
-# (`bazel run //modules/{sipi,ingest}:load`) and a reachable Docker socket - these targets do not
+# (`bazel run //modules/{sipi,fuseki}:load`) and a reachable Docker socket - these targets do not
 # run on the RBE remote executor. `SearchResponderV2GravsearchSpanE2ESpec` asserts on OpenTelemetry
 # spans captured by an in-memory exporter wired as the application's own OTel layer; it must run in
 # its own JVM (own `scala_junit_test` target below) so no other spec's spans land in its exporter.
@@ -28,18 +28,18 @@ _DEPS = [
 _DATA = ["//test_data:integration_fixture_files"] + glob(["src/test/resources/**"])
 
 # "exclusive" is required on every Docker-testcontainers target (test-it,
-# test_gravsearch_span, test-e2e, test-ingest-integration), for two independent reasons - do not
+# test_gravsearch_span, test-e2e), for two independent reasons - do not
 # drop it from a target just because one of these doesn't apply to it:
 #  1. These specs (via E2EZSpec) start an in-process API server on a fixed port: two targets
 #     running concurrently on the same machine race for that port
 #     (io.netty.channel.unix.Errors$NativeIoException: bind(..) failed with error(-48): Address
-#     already in use). Does not apply to test-ingest-integration (no E2EZSpec there).
-#  2. SharedVolumes.Temp (this module's and test-ingest-integration's copy) is
+#     already in use).
+#  2. SharedVolumes.Temp is
 #     `ZLayer.succeed(Temp(System.getProperty("java.io.tmpdir")))` - unlike Images.layer, it is
 #     NOT a freshly-created unique-per-run directory, just the raw tmpdir path. Since every one of
 #     these targets pins java.io.tmpdir to the same stable directory (see _JVM_FLAGS below), any two
-#     of them running concurrently bind-mount and write to the *same* host tmpdir tree through
-#     different dsp-ingest containers - a real race. This DOES apply to test-ingest-integration.
+#     of them running concurrently write to the *same* host tmpdir tree through their in-process
+#     ingest - a real race.
 #
 # "requires-network" + "no-sandbox" + "no-remote": these specs drive Docker testcontainers through
 # the host Docker socket, so they cannot run in the Bazel sandbox or on the RBE remote executor -

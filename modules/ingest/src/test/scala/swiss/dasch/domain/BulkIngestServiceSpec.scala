@@ -7,12 +7,13 @@ package swiss.dasch.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
 import org.junit.runner.RunWith
+import swiss.dasch.api.SipiClientMock
 import swiss.dasch.domain.Asset.StillImageAsset
 import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPath_Path
 import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
 import swiss.dasch.domain.AugmentedPath.OrigFile
+import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.util.TestUtils
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -60,10 +61,11 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
         _           <- TestClock.adjust(700.second)
 
         // then
-        failed       <- failed.join.exit
-        ingestResult <- ingestFiber.join
-        project      <- ZIO.serviceWithZIO[ProjectRepository](_.findByShortcode(shortcode))
-      } yield assertTrue(ingestResult == IngestResult.success, failed.isFailure, project.nonEmpty)
+        failed        <- failed.join.exit
+        ingestResult  <- ingestFiber.join
+        projectDir    <- storageService(_.getProjectFolder(shortcode))
+        projectExists <- Files.isDirectory(projectDir.path)
+      } yield assertTrue(ingestResult == IngestResult.success, failed.isFailure, projectExists)
     },
     test("fail when import folder does not exist") {
       for {
@@ -146,10 +148,47 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     }
   }
 
+  private val failingSipiSuite = suite("bulk ingest with a failing Sipi transcode")(
+    test("counts the failed file in IngestResult.failed and ingests the others") {
+      for {
+        _         <- SipiClientMock.setQueryImageDimensions(Dimensions.unsafeFrom(6, 6))
+        _         <- SipiClientMock.failTranscoding(_.filename.toString.endsWith(".tif.orig"))
+        importDir <- storageService(_.getImportFolder(shortcode).tap(Files.createDirectories(_)))
+        _         <- ZIO.foreachDiscard(List("good.jpg", "broken.tif", "other.csv"))(name =>
+               Files.writeBytes(importDir / name, Chunk.fromArray(name.getBytes)),
+             )
+        fiber   <- bulkIngestService(_.startBulkIngest(shortcode))
+        result  <- fiber.join
+        mapping <- getBulkIngestMappingCsv(shortcode).some
+      } yield assertTrue(
+        result == IngestResult(success = 2, failed = 1),
+        mapping.contains("good.jpg"),
+        mapping.contains("other.csv"),
+        !mapping.contains("broken.tif"),
+      )
+    },
+  ).provide(
+    AssetInfoServiceLive.layer,
+    BulkIngestService.layer,
+    CommandExecutorMock.layer,
+    FileChecksumServiceLive.layer,
+    IngestService.layer,
+    MimeTypeGuesser.layer,
+    MovingImageService.layer,
+    OtherFilesService.layer,
+    ProjectService.layer,
+    SipiClientMock.layer,
+    SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.storageConfigLayer,
+    StillImageService.layer,
+    StorageServiceLive.layer,
+  )
+
   private val deleteProjectFolder =
     storageService(_.getProjectFolder(shortcode)).tap(p => Files.deleteRecursive(p).whenZIO(Files.exists(p)))
 
-  val spec = (suite("BulkIngestServiceLive")(
+  val spec = ((suite("BulkIngestServiceLive")(
     startBulkIngestSuite,
     finalizeBulkIngestSuite,
     getBulkIngestMappingCsvSuite,
@@ -161,11 +200,10 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     BulkIngestService.layer,
     FileChecksumServiceLive.layer,
     MockIngestServiceLayer,
-    ProjectRepositoryLive.layer,
     ProjectService.layer,
     SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.ingestExecutorLayer,
     SpecConfigurations.storageConfigLayer,
     StorageServiceLive.layer,
-    TestUtils.testDbLayerWithEmptyDb,
-  ) @@ TestAspect.timeout(10.seconds)
+  ) + failingSipiSuite) @@ TestAspect.timeout(10.seconds)
 }
