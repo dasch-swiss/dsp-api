@@ -74,16 +74,16 @@ Endpoints (7): Appendix A, phase 1.
 
 Endpoints (20): Appendix A, phase 2. The reason states why exposure is fine.
 
-- [ ] `Policy.Public`'s scaladoc says "needs no credentials" instead of "reads no credentials" (the authentication endpoints read credentials as regular inputs)
-- [ ] `AuthenticationEndpointsV2`: login, credential check and logout use `publicPolicyEndpoint`, reason "the endpoint is itself the credential check"
-- [ ] `GroupsEndpoints`: `GET /admin/groups` and `GET /admin/groups/{groupIri}` use `publicPolicyEndpoint`, reason "group names and descriptions are public project metadata"
-- [ ] `ProjectsEndpoints`: the 9 project, keyword and restricted-view-settings reads use `publicPolicyEndpoint`, reason "public project metadata"
-- [ ] `ProjectsLegalInfoEndpoints`: the 2 license reads use `publicPolicyEndpoint`, reason "the licenses a project allows are shown on its public data"
-- [ ] `ManagementEndpoints`: `GET /health` and `GET /version` use `publicPolicyEndpoint`, reason "operational status, no data"
-- [ ] `OntologiesEndpoints`: `GET /v2/ontologies/metadata` and `/metadata/*` use `publicPolicyEndpoint`, reason "ontologies are public"
-- [ ] Baseline: remove the 20 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*EndpointPolicyE2ESpec.*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `Policy.Public`'s scaladoc says "needs no credentials" instead of "reads no credentials" (the authentication endpoints read credentials as regular inputs)
+- [x] `AuthenticationEndpointsV2`: login, credential check and logout use `publicPolicyEndpoint`, reason "the endpoint is itself the credential check"
+- [x] `GroupsEndpoints`: `GET /admin/groups` and `GET /admin/groups/{groupIri}` use `publicPolicyEndpoint`, reason "group names and descriptions are public project metadata"
+- [x] `ProjectsEndpoints`: the 9 project, keyword and restricted-view-settings reads use `publicPolicyEndpoint`, reason "public project metadata"
+- [x] `ProjectsLegalInfoEndpoints`: the 2 license reads use `publicPolicyEndpoint`, reason "the licenses a project allows are shown on its public data"
+- [x] `ManagementEndpoints`: `GET /health` and `GET /version` use `publicPolicyEndpoint`, reason "operational status, no data"
+- [x] `OntologiesEndpoints`: `GET /v2/ontologies/metadata` and `/metadata/*` use `publicPolicyEndpoint`, reason "ontologies are public"
+- [x] Baseline: remove the 20 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*EndpointPolicyE2ESpec.*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 3: Declare object-access endpoints
 
