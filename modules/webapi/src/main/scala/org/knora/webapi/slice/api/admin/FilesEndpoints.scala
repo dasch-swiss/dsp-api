@@ -21,6 +21,7 @@ import org.knora.webapi.slice.admin.domain.model.RestrictedView
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.api.admin.FilesPathVar.filename
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 object FilesPathVar {
   val filename: PathCapture[InternalFilename] = path[InternalFilename]("filename")
@@ -63,12 +64,17 @@ object AssetAccessResponse {
 }
 
 final class FilesEndpoints(base: BaseEndpoints) {
-  val getAdminFilesShortcodeFileIri = base.withUserEndpoint.get
+  private val filesEnforcedIn = "AssetPermissionsResponder, on the file's resource"
+  private val readRequirement = Policy.ObjectAccess(filesEnforcedIn, admitsAnonymous = true).requirement
+
+  val getAdminFilesShortcodeFileIri = base
+    .objectAccessPolicyEndpoint(filesEnforcedIn)
+    .get
     .in("admin" / "files" / projectShortcode / filename)
     .out(jsonBody[AssetAccessResponse])
     .description(
       "Returns the access decision for a given filename: what the caller may receive for the original and " +
-        "what it may receive for the derivative. Publicly accessible. The `{shortcode}` path segment is not " +
+        s"what it may receive for the derivative. $readRequirement The `{shortcode}` path segment is not " +
         "authoritative and does not affect the result - the file is identified by its filename alone (internal " +
         "filenames are globally-unique asset IDs); the segment is retained only for URL compatibility.",
     )

@@ -433,11 +433,11 @@ object AuthorizationMatrixE2ESpec {
   def allowedBy(policy: Policy): Option[Set[Principal]] = {
     import Principal.*
     policy match {
-      case Policy.ProjectAdmin(_)                    => Some(Set(AnythingAdmin, Root))
-      case Policy.ProjectMember(_)                   => Some(Set(AnythingMember, AnythingAdmin, Root))
-      case Policy.Authenticated(_)                   => Some(Principal.values.toSet - Anonymous)
-      case Policy.SystemAdmin                        => Some(Set(Root))
-      case Policy.Public(_) | Policy.ObjectAccess(_) => None
+      case Policy.ProjectAdmin(_)                       => Some(Set(AnythingAdmin, Root))
+      case Policy.ProjectMember(_)                      => Some(Set(AnythingMember, AnythingAdmin, Root))
+      case Policy.Authenticated(_)                      => Some(Principal.values.toSet - Anonymous)
+      case Policy.SystemAdmin                           => Some(Set(Root))
+      case Policy.Public(_) | Policy.ObjectAccess(_, _) => None
     }
   }
 }

@@ -128,9 +128,18 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
   ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
     RequiresMethod(
       endpointWithBearerBasicAuthOptional
-        .attribute(Policy.key, Policy.ObjectAccess(enforcedIn))
+        .attribute(Policy.key, Policy.ObjectAccess(enforcedIn, admitsAnonymous = true))
         .zServerSecurityLogic(authenticateOrAnonymous),
       _.method(_),
+    )
+
+  /** Declares [[Policy.ObjectAccess]] for a write: the security logic refuses anonymous and inactive users. */
+  def authenticatedObjectAccessPolicyEndpoint(
+    enforcedIn: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    authorizingEndpoint(
+      Policy.ObjectAccess(enforcedIn, admitsAnonymous = false),
+      user => authorization.ensureUserIsNotAnonymous(user).as(user),
     )
 
   private def authorizingEndpoint[P](

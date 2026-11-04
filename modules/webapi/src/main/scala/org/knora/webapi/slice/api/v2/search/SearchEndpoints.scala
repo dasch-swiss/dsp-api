@@ -62,6 +62,8 @@ object SearchEndpointsInputs {
 }
 
 final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
+  private val searchResponder = "SearchResponderV2, per resource"
+  private val readRequirement = Policy.ObjectAccess(searchResponder, admitsAnonymous = true).requirement
 
   private val gravsearchDescription =
     "The Gravsearch query. See https://docs.dasch.swiss/DSP-API/03-endpoints/api-v2/query-language/"
@@ -76,7 +78,9 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       statusCode(StatusCode.ServiceUnavailable).and(jsonBody[SearchTimeoutException]),
     )
 
-  val postGravsearch = baseEndpoints.withUserEndpoint.post
+  val postGravsearch = baseEndpoints
+    .objectAccessPolicyEndpoint(searchResponder)
+    .post
     .in("v2" / "searchextended")
     .in(stringBody.description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
@@ -85,10 +89,12 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .errorOutVariantsPrepend(searchTimeoutVariant)
     .description(
-      "Search for resources using a Gravsearch query. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Search for resources using a Gravsearch query. $readRequirement",
     )
 
-  val getGravsearch = baseEndpoints.withUserEndpoint.get
+  val getGravsearch = baseEndpoints
+    .objectAccessPolicyEndpoint(searchResponder)
+    .get
     .in("v2" / "searchextended" / path[String].description(gravsearchDescription))
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.limitToProject)
@@ -96,7 +102,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .errorOutVariantsPrepend(searchTimeoutVariant)
     .description(
-      "Search for resources using a Gravsearch query. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Search for resources using a Gravsearch query. $readRequirement",
     )
 
   val postGravsearchCount = baseEndpoints.withUserEndpoint.post
@@ -122,7 +128,9 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       "Count resources using a Gravsearch query. Publicly accessible. Requires appropriate object access permissions on the resources.",
     )
 
-  val getSearchIncomingLinks = baseEndpoints.withUserEndpoint.get
+  val getSearchIncomingLinks = baseEndpoints
+    .objectAccessPolicyEndpoint(searchResponder)
+    .get
     .in("v2" / "searchIncomingLinks" / path[InputIri]("resourceIri").description("The IRI of the resource to retrieve"))
     .in(SearchEndpointsInputs.offset)
     .in(ApiV2.Inputs.formatOptions)
@@ -130,10 +138,12 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Search for incoming links using a Gravsearch query with an offset. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Search for incoming links using a Gravsearch query with an offset. $readRequirement",
     )
 
-  val getSearchStillImageRepresentations = baseEndpoints.withUserEndpoint.get
+  val getSearchStillImageRepresentations = baseEndpoints
+    .objectAccessPolicyEndpoint(searchResponder)
+    .get
     .in(
       "v2" / "searchStillImageRepresentations" / path[InputIri]("resourceIri").description(
         "The IRI of the resource to retrieve",
@@ -145,7 +155,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Search for StillImageRepresentations using a Gravsearch query with an offset. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Search for StillImageRepresentations using a Gravsearch query with an offset. $readRequirement",
     )
 
   val getSearchStillImageRepresentationsCount = baseEndpoints.withUserEndpoint.get
@@ -162,7 +172,9 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       "Count SearchStillImageRepresentations using a Gravsearch query. Publicly accessible. Requires appropriate object access permissions on the resources.",
     )
 
-  val getSearchIncomingRegions = baseEndpoints.withUserEndpoint.get
+  val getSearchIncomingRegions = baseEndpoints
+    .objectAccessPolicyEndpoint(searchResponder)
+    .get
     .in(
       ("v2" / "searchIncomingRegions" / path[InputIri]("resourceIri")
         .description("The IRI of the resource to retrieve")),
@@ -173,10 +185,12 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Search for incoming regions using a Gravsearch query with an offset. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Search for incoming regions using a Gravsearch query with an offset. $readRequirement",
     )
 
-  val getSearchByLabel = baseEndpoints.withUserEndpoint.get
+  val getSearchByLabel = baseEndpoints
+    .objectAccessPolicyEndpoint(searchResponder)
+    .get
     .in("v2" / "searchbylabel" / path[String]("searchTerm"))
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.offset)
@@ -185,7 +199,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Search for resources by label. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Search for resources by label. $readRequirement",
     )
 
   val getSearchByLabelCount = baseEndpoints.withUserEndpoint.get
@@ -199,7 +213,9 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
       "Count resources by label. Publicly accessible. Requires appropriate object access permissions on the resources.",
     )
 
-  val getFullTextSearch = baseEndpoints.withUserEndpoint.get
+  val getFullTextSearch = baseEndpoints
+    .objectAccessPolicyEndpoint(searchResponder)
+    .get
     .in("v2" / "search" / path[String]("searchTerm"))
     .in(ApiV2.Inputs.formatOptions)
     .in(SearchEndpointsInputs.offset)
@@ -211,7 +227,7 @@ final class SearchEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .errorOutVariantsPrepend(searchTimeoutVariant)
     .description(
-      "Full-text search for resources. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Full-text search for resources. $readRequirement",
     )
 
   val getFullTextSearchCount = baseEndpoints.withUserEndpoint.get

@@ -83,11 +83,11 @@ JWT **Scope**, and a grant is a proof of one authorization decision, not an **Ad
     | `SystemAdmin` | Active system administrators. |
     | `ProjectAdmin(projectFrom)` | Active system administrators, and active project administrators of the project named by `projectFrom` (for example "path projectIri", "list node"). |
     | `ProjectMember(projectFrom)` | Active system administrators, project administrators and members of the project named by `projectFrom`. |
-    | `ObjectAccess(enforcedIn)` | Anonymous callers included; decided per object where the owning domain loads it, and `enforcedIn` names that place. |
+    | `ObjectAccess(enforcedIn, admitsAnonymous)` | Decided per object where the owning domain loads it, and `enforcedIn` names that place. Anonymous callers are included when `admitsAnonymous` is true; a write sets it false, and the factory refuses anonymous callers in the security logic. |
 
     `ProjectAdmin` and `ProjectMember` keep the semantics of `isSystemOrProjectAdmin` and `isProjectMember`:
     a system administrator is included in both. The active-user check applies to every policy except `Public`: an
-    authenticated caller must be active, and `ObjectAccess` also admits anonymous callers. The built-in
+    authenticated caller must be active, and `ObjectAccess` with `admitsAnonymous` also admits anonymous callers. The built-in
     `SystemUser` passes every role case too; decision 7 covers it.
     `ProjectMember` gets its endpoint factory and candidate type with the first endpoint that migrates to it.
 
