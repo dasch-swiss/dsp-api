@@ -63,7 +63,7 @@ class GravsearchMainResourceE2ESpec extends E2EZSpec {
           withoutStatement <- count(thingQuery(mainThing, ""))
         } yield assertTrue(withStatement > 0, withStatement == withoutStatement)
       },
-      test("is ignored by a search query") {
+      test("is accepted by a search query") {
         TestApiClient.postSparql(searchUri, thingQuery(mainThing, mainThing)).map { response =>
           assertTrue(response.code.code == 200)
         }
@@ -75,6 +75,13 @@ class GravsearchMainResourceE2ESpec extends E2EZSpec {
             |WHERE { ?r knora-api:isMainResource true . ?r knora-api:hasStillImageFileValue ?d . }""".stripMargin
         TestApiClient.postSparql(searchUri, query).map(response => assertTrue(response.code.code == 200))
       },
+    ),
+    rejectedOnBothEndpoints(
+      "as the only statement in the WHERE clause",
+      """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+        |CONSTRUCT { ?thing knora-api:isMainResource true . }
+        |WHERE { ?thing knora-api:isMainResource true . }""".stripMargin,
+      "The WHERE clause contains no statements other than knora-api:isMainResource",
     ),
     rejectedOnBothEndpoints(
       "in the WHERE clause, marking a different variable than the CONSTRUCT clause",
@@ -89,7 +96,7 @@ class GravsearchMainResourceE2ESpec extends E2EZSpec {
     rejectedOnBothEndpoints(
       "in the WHERE clause, inside OPTIONAL",
       thingQuery(mainThing, "OPTIONAL { ?thing knora-api:isMainResource true . }"),
-      "knora-api:isMainResource can only be used at the top level of the WHERE clause",
+      "knora-api:isMainResource can only be used at the top level of the WHERE clause, not inside a nested block",
     ),
     rejectedOnBothEndpoints(
       "in the CONSTRUCT clause, with the object false",

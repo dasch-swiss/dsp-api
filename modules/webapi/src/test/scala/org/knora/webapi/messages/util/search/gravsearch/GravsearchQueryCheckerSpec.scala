@@ -75,7 +75,7 @@ class GravsearchQueryCheckerSpec extends ZIOSpecDefault {
           s"FILTER NOT EXISTS { $mainThing }",
         )
         val expected = "knora-api:isMainResource can only be used at the top level of the WHERE clause, " +
-          "not inside OPTIONAL, UNION, MINUS or FILTER NOT EXISTS"
+          "not inside a nested block such as OPTIONAL, UNION, MINUS or FILTER NOT EXISTS"
         assertTrue(nested.map(rejectionMessage(mainThing, _)).forall(_ == expected))
       },
     ),
