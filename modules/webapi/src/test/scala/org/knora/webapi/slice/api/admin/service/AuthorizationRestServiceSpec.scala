@@ -19,6 +19,9 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
@@ -69,6 +72,31 @@ class AuthorizationRestServiceSpec extends ZIOSpecDefault {
   private def authorizeProjectAdminById(user: User) =
     ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project)) *>
       authorizationRestService(_.authorizeProjectAdminById(TestCandidates.of(user), project.id))
+
+  private val unknownShortcode = Shortcode.unsafeFrom("9999")
+  private val unknownShortname = Shortname.unsafeFrom("unknown")
+
+  private def authorizeByShortcode(user: User, shortcode: Shortcode = project.shortcode) =
+    ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project)) *>
+      authorizationRestService(_.authorizeProjectAdminByShortcode(TestCandidates.of(user), shortcode))
+
+  private def authorizeByShortname(user: User, shortname: Shortname = project.shortname) =
+    ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project)) *>
+      authorizationRestService(_.authorizeProjectAdminByShortname(TestCandidates.of(user), shortname))
+
+  private def authorizeMemberByShortcode(user: User, shortcode: Shortcode = project.shortcode) =
+    ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project)) *>
+      authorizationRestService(_.authorizeProjectMemberByShortcode(TestCandidates.of(user), shortcode))
+
+  private val group = TestDataFactory.UserGroup.testUserGroup
+
+  private def authorizeOfGroup(user: User, groupIri: GroupIri = group.id) =
+    ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project)) *>
+      ZIO.serviceWithZIO[KnoraGroupRepoInMemory](_.save(group)) *>
+      authorizationRestService(_.authorizeProjectAdminOfGroup(TestCandidates.of(user), groupIri))
+
+  private def refusedBy[R](zio: ZIO[R, Throwable, Any]) =
+    zio.exit.map(exit => assert(exit)(failsWithA[ForbiddenException]))
 
   val spec: Spec[Any, Any] = suite("RestPermissionService")(
     suite("given an inactive system admin")(
@@ -180,6 +208,112 @@ class AuthorizationRestServiceSpec extends ZIOSpecDefault {
         authorizeProjectAdminById(inactiveSystemAdmin).exit.map(exit =>
           assertTrue(exit == Exit.fail(ForbiddenException("The account with username 'username' is not active."))),
         )
+      },
+    ),
+    suite("authorizeProjectAdminByShortcode")(
+      test("issues a grant for the project to an active system admin") {
+        authorizeByShortcode(activeSystemAdmin).map(grant =>
+          assertTrue(grant.user == activeSystemAdmin, grant.project == project),
+        )
+      },
+      test("issues a grant for the project to the project's admin") {
+        authorizeByShortcode(projectAdmin).map(grant =>
+          assertTrue(grant.user == projectAdmin, grant.project == project),
+        )
+      },
+      test("refuses a member of the project") {
+        refusedBy(authorizeByShortcode(projectMember))
+      },
+      test("refuses an admin of another project") {
+        refusedBy(authorizeByShortcode(otherProjectAdmin))
+      },
+      test("refuses an inactive system admin") {
+        authorizeByShortcode(inactiveSystemAdmin).exit.map(exit =>
+          assertTrue(exit == Exit.fail(ForbiddenException("The account with username 'username' is not active."))),
+        )
+      },
+      test("refuses an unknown project") {
+        refusedBy(authorizeByShortcode(activeSystemAdmin, unknownShortcode))
+      },
+    ),
+    suite("authorizeProjectAdminByShortname")(
+      test("issues a grant for the project to an active system admin") {
+        authorizeByShortname(activeSystemAdmin).map(grant =>
+          assertTrue(grant.user == activeSystemAdmin, grant.project == project),
+        )
+      },
+      test("issues a grant for the project to the project's admin") {
+        authorizeByShortname(projectAdmin).map(grant =>
+          assertTrue(grant.user == projectAdmin, grant.project == project),
+        )
+      },
+      test("refuses a member of the project") {
+        refusedBy(authorizeByShortname(projectMember))
+      },
+      test("refuses an admin of another project") {
+        refusedBy(authorizeByShortname(otherProjectAdmin))
+      },
+      test("refuses an inactive system admin") {
+        authorizeByShortname(inactiveSystemAdmin).exit.map(exit =>
+          assertTrue(exit == Exit.fail(ForbiddenException("The account with username 'username' is not active."))),
+        )
+      },
+      test("refuses an unknown project") {
+        refusedBy(authorizeByShortname(activeSystemAdmin, unknownShortname))
+      },
+    ),
+    suite("authorizeProjectAdminOfGroup")(
+      test("issues the group and a grant for its project to an active system admin") {
+        authorizeOfGroup(activeSystemAdmin).map((g, grant) =>
+          assertTrue(g == group, grant.user == activeSystemAdmin, grant.project == project),
+        )
+      },
+      test("issues the group and a grant for its project to the project's admin") {
+        authorizeOfGroup(projectAdmin).map((g, grant) =>
+          assertTrue(g == group, grant.user == projectAdmin, grant.project == project),
+        )
+      },
+      test("refuses a member of the group's project") {
+        refusedBy(authorizeOfGroup(projectMember))
+      },
+      test("refuses an admin of another project") {
+        refusedBy(authorizeOfGroup(otherProjectAdmin))
+      },
+      test("refuses an inactive system admin") {
+        refusedBy(authorizeOfGroup(inactiveSystemAdmin))
+      },
+      test("refuses an unknown group") {
+        refusedBy(authorizeOfGroup(activeSystemAdmin, GroupIri.unsafeFrom("http://rdfh.ch/groups/0001/unknown")))
+      },
+      test("refuses a built-in group, which has no project, even for a system admin") {
+        refusedBy(authorizeOfGroup(activeSystemAdmin, KnoraGroupRepo.builtIn.KnownUser.id))
+      },
+    ),
+    suite("authorizeProjectMemberByShortcode")(
+      test("issues a grant for the project to an active system admin") {
+        authorizeMemberByShortcode(activeSystemAdmin).map(grant =>
+          assertTrue(grant.user == activeSystemAdmin, grant.project == project),
+        )
+      },
+      test("issues a grant for the project to the project's admin") {
+        authorizeMemberByShortcode(projectAdmin).map(grant => assertTrue(grant.project == project))
+      },
+      test("issues a grant for the project to a member") {
+        authorizeMemberByShortcode(projectMember).map(grant =>
+          assertTrue(grant.user == projectMember, grant.project == project),
+        )
+      },
+      test("refuses an admin of another project") {
+        refusedBy(authorizeMemberByShortcode(otherProjectAdmin))
+      },
+      test("refuses a user without any membership") {
+        refusedBy(authorizeMemberByShortcode(activeNormalUser))
+      },
+      test("refuses an inactive system admin") {
+        refusedBy(authorizeMemberByShortcode(inactiveSystemAdmin))
+      },
+      test("refuses an unknown project") {
+        refusedBy(authorizeMemberByShortcode(activeSystemAdmin, unknownShortcode))
       },
     ),
   ).provide(

@@ -11,6 +11,7 @@ import zio.telemetry.opentelemetry.tracing.Tracing
 import org.knora.webapi.config.FairConfig
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.fair.domain.service.ResourceFactsBuilder
 import org.knora.webapi.slice.fair.infrastructure.AppShellLive
 import org.knora.webapi.slice.fair.ports.FairAssets
@@ -22,6 +23,7 @@ import org.knora.webapi.slice.fair.ports.FairResources
 object FairApiModule {
   type Dependencies =
     // format: off
+    BaseEndpoints &
     FairAssets &
     FairClasses &
     FairConfig &

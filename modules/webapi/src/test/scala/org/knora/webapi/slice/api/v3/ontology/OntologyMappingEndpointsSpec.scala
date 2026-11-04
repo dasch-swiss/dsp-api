@@ -15,6 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError
@@ -37,7 +38,7 @@ class OntologyMappingEndpointsSpec extends ZIOSpecDefault {
     def authenticate(jwtToken: String): IO[AuthenticatorError, User] = ZIO.fail(AuthenticatorError.BadCredentials)
   }
 
-  private val baseEndpoint = V3BaseEndpoint(stubAuthenticator)
+  private val baseEndpoint = V3BaseEndpoint(stubAuthenticator, new AuthorizationRestService(null, null))
   private val endpoints    = new OntologyMappingEndpoints(baseEndpoint)
 
   // Collect the Tapir endpoint show strings (method + path) for all four endpoints

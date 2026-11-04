@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.responders.v2.OntologyResponderV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.model.AdministrativePermissionPart
@@ -54,6 +53,8 @@ import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.UserCreateRequest
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.api.v2.ontologies.CreateOntologyRequestV2
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -217,9 +218,11 @@ class ProjectEraseIT extends E2EZSpec {
                     "some label",
                     None,
                     UUID.randomUUID(),
-                    KnoraSystemInstances.Users.SystemUser,
                   )
-            onto                <- ZIO.serviceWithZIO[OntologyResponderV2](_.createOntology(req))
+            grant <- ZIO.serviceWithZIO[AuthorizationRestService](
+                       _.authorizeProjectAdminById(TestCandidates.of(rootUser), project.id),
+                     )
+            onto                <- ZIO.serviceWithZIO[OntologyResponderV2](_.createOntology(req, grant))
             ontologyGraphName    = onto.ontologies.head.ontologyIri.toInternalIri
             ontologyGraphExists <- doesGraphExist(ontologyGraphName)
 

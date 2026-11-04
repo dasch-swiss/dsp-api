@@ -27,7 +27,6 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v2.ontologies.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.ChangeClassLabelsOrCommentsRequestV2
@@ -43,6 +42,7 @@ import org.knora.webapi.slice.api.v2.ontologies.ReplaceClassCardinalitiesRequest
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -97,7 +97,6 @@ final class OntologyResponderV2(
   ontologyCacheHelpers: OntologyCacheHelpers,
   ontologyTriplestoreHelpers: OntologyTriplestoreHelpers,
   ontologyRepo: OntologyRepo,
-  knoraProjectService: KnoraProjectService,
   triplestoreService: TriplestoreService,
 )(implicit val stringFormatter: StringFormatter) {
 
@@ -203,7 +202,10 @@ final class OntologyResponderV2(
    * @param createOntologyRequest the request message.
    * @return a [[SuccessResponseV2]].
    */
-  def createOntology(createOntologyRequest: CreateOntologyRequestV2): Task[ReadOntologyMetadataV2] = {
+  def createOntology(
+    createOntologyRequest: CreateOntologyRequestV2,
+    grant: ProjectAdminGrant,
+  ): Task[ReadOntologyMetadataV2] = {
     def makeTaskFuture(ontologyIri: OntologyIri): Task[ReadOntologyMetadataV2] =
       for {
         _ <- ontologyRepo
@@ -217,7 +219,7 @@ final class OntologyResponderV2(
         // If this is a shared ontology, make sure it's in the default shared ontologies project.
         _ <-
           ZIO.when(
-            createOntologyRequest.isShared && createOntologyRequest.projectIri != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+            createOntologyRequest.isShared && grant.project.id != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
           ) {
             val msg =
               s"Shared ontologies must be created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}>"
@@ -227,7 +229,7 @@ final class OntologyResponderV2(
         // If it's in the default shared ontologies project, make sure it's a shared ontology.
         _ <-
           ZIO.when(
-            !createOntologyRequest.isShared && createOntologyRequest.projectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
+            !createOntologyRequest.isShared && grant.project.id == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
           ) {
             val msg =
               s"Ontologies created in project <${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}> must be shared"
@@ -237,7 +239,7 @@ final class OntologyResponderV2(
         // Create the ontology.
         result <- CreateOntologyQuery.build(
                     ontologyIri = ontologyIri,
-                    projectIri = createOntologyRequest.projectIri,
+                    projectIri = grant.project.id,
                     isShared = createOntologyRequest.isShared,
                     ontologyLabel = createOntologyRequest.label,
                     ontologyComment = createOntologyRequest.comment,
@@ -248,7 +250,7 @@ final class OntologyResponderV2(
         Set(
           OntologyMetadataV2(
             ontologyIri = ontologyIri.smartIri,
-            projectIri = Some(createOntologyRequest.projectIri),
+            projectIri = Some(grant.project.id),
             label = Some(createOntologyRequest.label),
             comment = createOntologyRequest.comment,
             lastModificationDate = Some(lastModDate.value),
@@ -265,11 +267,13 @@ final class OntologyResponderV2(
           .filterOrFail(!_.isBuiltIn)(BadRequestException("A built in ontology cannot be created"))
 
       // Make the internal ontology IRI.
-      projectIri = createOntologyRequest.projectIri
-      project   <-
-        knoraProjectService.findById(projectIri).someOrFail(BadRequestException(s"Project not found: $projectIri"))
       ontologyIri: OntologyIri =
-        OntologyIri.makeNew(validOntologyName, createOntologyRequest.isShared, Some(project.shortcode), stringFormatter)
+        OntologyIri.makeNew(
+          validOntologyName,
+          createOntologyRequest.isShared,
+          Some(grant.project.shortcode),
+          stringFormatter,
+        )
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(createOntologyRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
@@ -287,7 +291,7 @@ final class OntologyResponderV2(
    * @param comment               The new comment for the ontology.
    * @param lastModificationDate  The last modification date of the ontology.
    * @param apiRequestID          The API request ID.
-   * @param requestingUser        The user making the request.
+   * @param grant                 The grant for the project the ontology belongs to.
    * @return a [[ReadOntologyMetadataV2]] containing the new metadata.
    */
   def changeOntologyMetadata(
@@ -296,12 +300,11 @@ final class OntologyResponderV2(
     comment: Option[NonEmptyString],
     lastModificationDate: Instant,
     apiRequestID: UUID,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
   ): Task[ReadOntologyMetadataV2] = IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
     for {
       _           <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
-      ontology    <- getOntologyOrFailNotFound(ontologyIri)
-      projectIri  <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
+      ontology    <- ensureOntologyBelongsToGrant(ontologyIri, grant)
       _           <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
       updateQuery <- UpdateOntologyMetadataQuery.build(
                        ontologyIri = ontologyIri,
@@ -314,7 +317,7 @@ final class OntologyResponderV2(
       Set(
         OntologyMetadataV2(
           ontologyIri = ontologyIri.toInternalSchema,
-          projectIri = Some(projectIri),
+          projectIri = Some(grant.project.id),
           label = label.orElse(ontology.ontologyMetadata.label),
           comment = comment.orElse(ontology.ontologyMetadata.comment),
           lastModificationDate = updated.ontologyLastModificationDate(ontologyIri).map(_.value),
@@ -326,25 +329,31 @@ final class OntologyResponderV2(
   private def getOntologyOrFailNotFound(iri: OntologyIri) =
     ontologyRepo.findById(iri).someOrFail(NotFoundException(s"Ontology not found: ${iri.toComplexSchema}"))
 
+  private def ensureOntologyBelongsToGrant(ontologyIri: OntologyIri, grant: ProjectAdminGrant): Task[ReadOntologyV2] =
+    getOntologyOrFailNotFound(ontologyIri).filterOrFail(_.ontologyMetadata.projectIri.contains(grant.project.id))(
+      ForbiddenException(
+        s"Ontology ${ontologyIri.toComplexSchema} does not belong to project ${grant.project.id.value}.",
+      ),
+    )
+
   def deleteOntologyComment(
     ontologyIri: OntologyIri,
     lastModificationDate: Instant,
     apiRequestID: UUID,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
   ): Task[ReadOntologyMetadataV2] = IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
     for {
       _           <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
-      projectIri  <- ontologyCacheHelpers.checkPermissionsForOntologyUpdate(ontologyIri, requestingUser)
+      ontology    <- ensureOntologyBelongsToGrant(ontologyIri, grant)
       lmd          = LastModificationDate.from(lastModificationDate)
       _           <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lmd)
-      ontology    <- getOntologyOrFailNotFound(ontologyIri)
       deleteQuery <- DeleteOntologyCommentQuery.build(ontologyIri, lmd)
       updated     <- save(deleteQuery)
     } yield ReadOntologyMetadataV2(
       Set(
         OntologyMetadataV2(
           ontologyIri = ontologyIri.toInternalSchema,
-          projectIri = Some(projectIri),
+          projectIri = Some(grant.project.id),
           label = ontology.ontologyMetadata.label,
           comment = None,
           lastModificationDate = updated.ontologyLastModificationDate(ontologyIri).map(_.value),
@@ -357,28 +366,23 @@ final class OntologyResponderV2(
    * Creates a class in an existing ontology.
    *
    * @param createClassRequest the request to create the class.
+   * @param grant              the grant for the project the ontology belongs to.
    * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new class.
    */
-  def createClass(createClassRequest: CreateClassRequestV2): Task[ReadOntologyV2] = {
+  def createClass(createClassRequest: CreateClassRequestV2, grant: ProjectAdminGrant): Task[ReadOntologyV2] = {
     val task =
       for {
-        requestingUser <- ZIO.succeed(createClassRequest.requestingUser)
-
         predicates          = createClassRequest.classInfoContent.predicates.values
         externalClassIri    = createClassRequest.classInfoContent.classIri
         externalOntologyIri = externalClassIri.getOntologyFromEntity
 
-        _ <-
-          ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-            externalOntologyIri,
-            externalClassIri,
-            requestingUser,
-          )
+        _ <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri)
 
         internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
         internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
         // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
+        _ <- ensureOntologyBelongsToGrant(OntologyIri.unsafeFrom(internalOntologyIri), grant)
         _ <- Validation
                .validate(
                  PredicateInfoV2.checkRequiredStringLiteralWithLanguageTag(Rdfs.Label, predicates),
@@ -474,7 +478,7 @@ final class OntologyResponderV2(
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
-                      requestingUser = createClassRequest.requestingUser,
+                      requestingUser = grant.user,
                     )
       } yield response
     IriLocker.runWithIriLock(createClassRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(task)
@@ -484,11 +488,13 @@ final class OntologyResponderV2(
    * Changes GUI orders in cardinalities in a class definition.
    *
    * @param changeGuiOrderRequest the request message.
+   * @param grant                 the grant for the project the ontology belongs to.
    * @return the updated class definition.
    */
-  def changeGuiOrder(changeGuiOrderRequest: ChangeGuiOrderRequestV2): Task[ReadOntologyV2] = {
+  def changeGuiOrder(changeGuiOrderRequest: ChangeGuiOrderRequestV2, grant: ProjectAdminGrant): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] =
       for {
+        _                                   <- ensureOntologyBelongsToGrant(OntologyIri.unsafeFrom(internalOntologyIri), grant)
         cacheData                           <- ontologyCache.getCacheData
         internalClassDef: ClassInfoContentV2 = changeGuiOrderRequest.classInfoContent.toOntologySchema(InternalSchema)
 
@@ -574,18 +580,15 @@ final class OntologyResponderV2(
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(internalClassIri),
                       allLanguages = true,
-                      requestingUser = changeGuiOrderRequest.requestingUser,
+                      requestingUser = grant.user,
                     )
       } yield response
 
     for {
-      requestingUser <- ZIO.succeed(changeGuiOrderRequest.requestingUser)
-
-      externalClassIri    = changeGuiOrderRequest.classInfoContent.classIri
+      externalClassIri   <- ZIO.succeed(changeGuiOrderRequest.classInfoContent.classIri)
       externalOntologyIri = externalClassIri.getOntologyFromEntity
 
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
+      _ <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri)
 
       internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -601,17 +604,20 @@ final class OntologyResponderV2(
    * Adds cardinalities to an existing class definition.
    *
    * @param addCardinalitiesRequest the request to add the cardinalities.
+   * @param grant                   the grant for the project the ontology belongs to.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  def addCardinalitiesToClass(addCardinalitiesRequest: AddCardinalitiesToClassRequestV2): Task[ReadOntologyV2] = {
+  def addCardinalitiesToClass(
+    addCardinalitiesRequest: AddCardinalitiesToClassRequestV2,
+    grant: ProjectAdminGrant,
+  ): Task[ReadOntologyV2] = {
     val task = for {
-      requestingUser <- ZIO.succeed(addCardinalitiesRequest.requestingUser)
-
-      classInfo        = addCardinalitiesRequest.classInfoContent
+      classInfo       <- ZIO.succeed(addCardinalitiesRequest.classInfoContent)
       resourceClassIri = classInfo.resourceClassIri
       ontologyIri      = resourceClassIri.ontologyIri
 
-      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(resourceClassIri, requestingUser)
+      _ <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(resourceClassIri)
+      _ <- ensureOntologyBelongsToGrant(ontologyIri, grant)
 
       cacheData                           <- ontologyCache.getCacheData
       internalClassDef: ClassInfoContentV2 = classInfo.toOntologySchema(InternalSchema)
@@ -733,7 +739,7 @@ final class OntologyResponderV2(
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                     classIris = Set(resourceClassIri.toInternalSchema),
                     allLanguages = true,
-                    requestingUser = addCardinalitiesRequest.requestingUser,
+                    requestingUser = grant.user,
                   )
     } yield response
     IriLocker.runWithIriLock(addCardinalitiesRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(task)
@@ -745,22 +751,23 @@ final class OntologyResponderV2(
    * Fails if any of the new cardinalities is not consistent with the ontology or if persistent data is not compatible.
    *
    * @param request the [[ReplaceClassCardinalitiesRequestV2]] defining the cardinalities.
+   * @param grant   the grant for the project the ontology belongs to.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  def replaceClassCardinalities(request: ReplaceClassCardinalitiesRequestV2): Task[ReadOntologyV2] = {
+  def replaceClassCardinalities(
+    request: ReplaceClassCardinalitiesRequestV2,
+    grant: ProjectAdminGrant,
+  ): Task[ReadOntologyV2] = {
     val task = for {
+      _          <- ensureOntologyBelongsToGrant(request.classInfoContent.resourceClassIri.ontologyIri, grant)
       newModel   <- makeUpdatedClassModel(request)
       validModel <- checkLastModificationDateAndCanCardinalitiesBeSet(request, newModel)
-      response   <- replaceClassCardinalitiesInPersistence(request, validModel)
+      response   <- replaceClassCardinalitiesInPersistence(request, validModel, grant.user)
     } yield response
     val classIriExternal    = request.classInfoContent.classIri
     val ontologyIriExternal = classIriExternal.getOntologyFromEntity
     for {
-      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-             ontologyIriExternal,
-             classIriExternal,
-             request.requestingUser,
-           )
+      _        <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(ontologyIriExternal, classIriExternal)
       response <- IriLocker.runWithIriLock(request.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(task)
     } yield response
   }
@@ -885,6 +892,7 @@ final class OntologyResponderV2(
   private def replaceClassCardinalitiesInPersistence(
     request: ReplaceClassCardinalitiesRequestV2,
     newReadClassInfo: ReadClassInfoV2,
+    requestingUser: User,
   ): Task[ReadOntologyV2] = {
     val timeOfUpdate = Instant.now()
     val classIri     = request.classInfoContent.classIri.toOntologySchema(InternalSchema)
@@ -894,7 +902,7 @@ final class OntologyResponderV2(
       response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                     classIris = Set(classIri),
                     allLanguages = true,
-                    requestingUser = request.requestingUser,
+                    requestingUser = requestingUser,
                   )
     } yield response
   }
@@ -953,30 +961,31 @@ final class OntologyResponderV2(
    * Removes cardinalities (from class to properties) from class if properties are not used inside data.
    *
    * @param deleteCardinalitiesFromClassRequest the request to remove cardinalities.
+   * @param grant                               the grant for the project the ontology belongs to.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
   def deleteCardinalitiesFromClass(
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
+    grant: ProjectAdminGrant,
   ): Task[ReadOntologyV2] =
     for {
-      requestingUser <- ZIO.succeed(deleteCardinalitiesFromClassRequest.requestingUser)
-
-      externalClassIri    = deleteCardinalitiesFromClassRequest.classInfoContent.classIri
+      externalClassIri   <- ZIO.succeed(deleteCardinalitiesFromClassRequest.classInfoContent.classIri)
       externalOntologyIri = externalClassIri.getOntologyFromEntity
 
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
+      _ <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri)
 
       internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(deleteCardinalitiesFromClassRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
-                      cardinalityHandler.deleteCardinalitiesFromClass(
-                        deleteCardinalitiesFromClassRequest = deleteCardinalitiesFromClassRequest,
-                        internalClassIri = internalClassIri,
-                        internalOntologyIri = internalOntologyIri,
-                      ),
+                      ensureOntologyBelongsToGrant(OntologyIri.unsafeFrom(internalOntologyIri), grant) *>
+                        cardinalityHandler.deleteCardinalitiesFromClass(
+                          deleteCardinalitiesFromClassRequest = deleteCardinalitiesFromClassRequest,
+                          internalClassIri = internalClassIri,
+                          internalOntologyIri = internalOntologyIri,
+                          requestingUser = grant.user,
+                        ),
                     )
     } yield taskResult
 
@@ -999,7 +1008,7 @@ final class OntologyResponderV2(
     classIri: ResourceClassIri,
     lastModificationDate: Instant,
     apiRequestID: UUID,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
   ): Task[ReadOntologyMetadataV2] = {
     val internalClassIri    = classIri.toInternalSchema
     val internalOntologyIri = internalClassIri.getOntologyFromEntity
@@ -1007,19 +1016,13 @@ final class OntologyResponderV2(
     val externalOntologyIri = externalClassIri.getOntologyFromEntity
 
     val deleteClassTask = for {
-      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-             externalOntologyIri,
-             externalClassIri,
-             requestingUser,
-           )
+      _        <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri)
+      ontology <- ensureOntologyBelongsToGrant(classIri.ontologyIri, grant)
 
-      // Check that the ontology exists and has not been updated by another user since the client last read it.
+      // Check that the ontology has not been updated by another user since the client last read it.
       _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
 
       // Check that the class exists.
-      ontology <- ontologyRepo
-                    .findById(classIri.ontologyIri)
-                    .someOrFail(BadRequestException(s"Ontology ${classIri.ontologyIri} does not exist"))
       _ <- ZIO
              .fromOption(ontology.classes.get(classIri.toInternalSchema))
              .orElseFail(BadRequestException(s"Class $classIri does not exist"))
@@ -1081,14 +1084,14 @@ final class OntologyResponderV2(
    * @param propertyIri          the IRI of the property to be deleted.
    * @param lastModificationDate the ontology's last modification date.
    * @param apiRequestID         the ID of the API request.
-   * @param requestingUser       the user making the request.
+   * @param grant                the grant for the project the ontology belongs to.
    * @return a [[ReadOntologyMetadataV2]].
    */
   def deleteProperty(
     propertyIri: PropertyIri,
     lastModificationDate: Instant,
     apiRequestID: UUID,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
   ): Task[ReadOntologyMetadataV2] = {
     val internalPropertyIri = propertyIri.toInternalSchema
     val externalPropertyIri = propertyIri.toComplexSchema
@@ -1096,11 +1099,8 @@ final class OntologyResponderV2(
     val internalOntologyIri = externalOntologyIri.toInternalSchema
 
     val deleteTask: Task[ReadOntologyMetadataV2] = for {
-      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-             externalOntologyIri,
-             externalPropertyIri,
-             requestingUser,
-           )
+      _         <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalPropertyIri)
+      _         <- ensureOntologyBelongsToGrant(propertyIri.ontologyIri, grant)
       cacheData <- ontologyCache.getCacheData
       _         <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(internalOntologyIri, lastModificationDate)
       // Check that the property exists.
@@ -1181,11 +1181,12 @@ final class OntologyResponderV2(
     ontologyIri: OntologyIri,
     lastModificationDate: Instant,
     apiRequestID: UUID,
+    grant: ProjectAdminGrant,
   ): Task[SuccessResponseV2] = {
     val deleteTask: Task[SuccessResponseV2] =
       for {
         _                     <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
-        ontology              <- getOntologyOrFailNotFound(ontologyIri)
+        ontology              <- ensureOntologyBelongsToGrant(ontologyIri, grant)
         _                     <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
         subjectsUsingOntology <- ontologyTriplestoreHelpers.getSubjectsUsingOntology(ontology)
         _                     <- ZIO.when(subjectsUsingOntology.nonEmpty) {
@@ -1202,21 +1203,23 @@ final class OntologyResponderV2(
   /**
    * Creates a property in an existing ontology.
    *
-   * @param req the request to create the property.
+   * @param req   the request to create the property.
+   * @param grant the grant for the project the ontology belongs to.
    * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new property.
    */
-  def createProperty(req: CreatePropertyRequestV2): Task[ReadOntologyV2] =
-    createProperty(req.propertyInfoContent, req.lastModificationDate, req.apiRequestID, req.requestingUser)
+  def createProperty(req: CreatePropertyRequestV2, grant: ProjectAdminGrant): Task[ReadOntologyV2] =
+    createProperty(req.propertyInfoContent, req.lastModificationDate, req.apiRequestID, grant)
 
   def createProperty(
     propertyInfoContent: PropertyInfoContentV2,
     lastModificationDate: Instant,
     apiRequestID: UUID,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = {
       val predicates = propertyInfoContent.predicates.values
       for {
+        _ <- ensureOntologyBelongsToGrant(OntologyIri.unsafeFrom(internalOntologyIri), grant)
         _ <- Validation
                .validate(
                  PredicateInfoV2.checkRequiredStringLiteralWithLanguageTag(Rdfs.Label, predicates),
@@ -1409,22 +1412,16 @@ final class OntologyResponderV2(
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(internalPropertyIri),
                       allLanguages = true,
-                      requestingUser = requestingUser,
+                      requestingUser = grant.user,
                     )
       } yield response
     }
 
     for {
-      requestingUser <- ZIO.succeed(requestingUser)
+      externalPropertyIri <- ZIO.succeed(propertyInfoContent.propertyIri)
+      externalOntologyIri  = externalPropertyIri.getOntologyFromEntity
 
-      externalPropertyIri = propertyInfoContent.propertyIri
-      externalOntologyIri = externalPropertyIri.getOntologyFromEntity
-
-      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-             externalOntologyIri,
-             externalPropertyIri,
-             requestingUser,
-           )
+      _ <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalPropertyIri)
 
       internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -1440,12 +1437,15 @@ final class OntologyResponderV2(
    * Changes the values of `salsah-gui:guiElement` and `salsah-gui:guiAttribute` in a property definition.
    *
    * @param changePropertyGuiElementRequest the request to change the property's GUI element and GUI attribute.
+   * @param grant                           the grant for the project the ontology belongs to.
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
   def changePropertyGuiElement(
     changePropertyGuiElementRequest: ChangePropertyGuiElementRequest,
+    grant: ProjectAdminGrant,
   ): Task[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Task[ReadOntologyV2] = for {
+      _         <- ensureOntologyBelongsToGrant(OntologyIri.unsafeFrom(internalOntologyIri), grant)
       cacheData <- ontologyCache.getCacheData
 
       ontology = cacheData.ontologies(internalOntologyIri)
@@ -1498,21 +1498,15 @@ final class OntologyResponderV2(
       response <- getPropertyDefinitionsFromOntologyV2(
                     propertyIris = Set(internalPropertyIri),
                     allLanguages = true,
-                    requestingUser = changePropertyGuiElementRequest.requestingUser,
+                    requestingUser = grant.user,
                   )
     } yield response
 
     for {
-      requestingUser <- ZIO.succeed(changePropertyGuiElementRequest.requestingUser)
+      externalPropertyIri <- ZIO.succeed(changePropertyGuiElementRequest.propertyIri.smartIri)
+      externalOntologyIri  = externalPropertyIri.getOntologyFromEntity
 
-      externalPropertyIri = changePropertyGuiElementRequest.propertyIri.smartIri
-      externalOntologyIri = externalPropertyIri.getOntologyFromEntity
-
-      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-             externalOntologyIri,
-             externalPropertyIri,
-             requestingUser,
-           )
+      _ <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalPropertyIri)
 
       internalPropertyIri = externalPropertyIri.toInternalSchema
       internalOntologyIri = externalOntologyIri.toInternalSchema
@@ -1528,18 +1522,18 @@ final class OntologyResponderV2(
    * Changes the values of `rdfs:label` or `rdfs:comment` in a property definition.
    *
    * @param changeReq the request to change the property's labels or comments.
+   * @param grant     the grant for the project the ontology belongs to.
    * @return a [[ReadOntologyV2]] containing the modified property definition.
    */
-  def changePropertyLabelsOrComments(changeReq: ChangePropertyLabelsOrCommentsRequestV2): Task[ReadOntologyV2] =
+  def changePropertyLabelsOrComments(
+    changeReq: ChangePropertyLabelsOrCommentsRequestV2,
+    grant: ProjectAdminGrant,
+  ): Task[ReadOntologyV2] =
     IriLocker.runWithIriLock(changeReq.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
       val ontologyIri = changeReq.propertyIri.ontologyIri
       for {
-        ontology <- getOntologyOrFailNotFound(ontologyIri)
-        _        <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-               ontologyIri.toComplexSchema,
-               changeReq.propertyIri.toComplexSchema,
-               changeReq.requestingUser,
-             )
+        _        <- ontologyCacheHelpers.validateOntologyAndPropertyIrisForUpdate(ontologyIri, changeReq.propertyIri)
+        ontology <- ensureOntologyBelongsToGrant(ontologyIri, grant)
 
         currentReadPropertyInfo <-
           ZIO
@@ -1578,7 +1572,7 @@ final class OntologyResponderV2(
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(changeReq.propertyIri.toInternalSchema),
                       allLanguages = true,
-                      requestingUser = changeReq.requestingUser,
+                      requestingUser = grant.user,
                     )
       } yield response
     }
@@ -1586,14 +1580,19 @@ final class OntologyResponderV2(
   /**
    * Changes the values of `rdfs:label` or `rdfs:comment` in a class definition.
    *
-   * @param req the request to change the class's labels or comments.
+   * @param req   the request to change the class's labels or comments.
+   * @param grant the grant for the project the ontology belongs to.
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
-  def changeClassLabelsOrComments(req: ChangeClassLabelsOrCommentsRequestV2): Task[ReadOntologyV2] =
+  def changeClassLabelsOrComments(
+    req: ChangeClassLabelsOrCommentsRequestV2,
+    grant: ProjectAdminGrant,
+  ): Task[ReadOntologyV2] =
     IriLocker.runWithIriLock(req.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
       val lmd = LastModificationDate.from(req.lastModificationDate)
       for {
-        _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(req.classIri, req.requestingUser)
+        _ <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(req.classIri)
+        _ <- ensureOntologyBelongsToGrant(req.classIri.ontologyIri, grant)
         _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(req.classIri.ontologyIri, lmd)
 
         // Do the update.
@@ -1604,7 +1603,7 @@ final class OntologyResponderV2(
         response <- ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
                       classIris = Set(req.classIri.toInternalSchema),
                       allLanguages = true,
-                      requestingUser = req.requestingUser,
+                      requestingUser = grant.user,
                     )
       } yield response
     }
@@ -1613,12 +1612,13 @@ final class OntologyResponderV2(
     propertyIri: PropertyIri,
     lastModificationDate: LastModificationDate,
     apiRequestID: UUID,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
   ): Task[ReadOntologyV2] = IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
     val ontologyIri = propertyIri.ontologyIri
     for {
+      _                <- ontologyCacheHelpers.validateOntologyAndPropertyIrisForUpdate(ontologyIri, propertyIri)
+      _                <- ensureOntologyBelongsToGrant(ontologyIri, grant)
       _                <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(ontologyIri, lastModificationDate)
-      _                <- ontologyCacheHelpers.checkOntologyAndPropertyIrisForUpdate(ontologyIri, propertyIri, requestingUser)
       propertyToUpdate <- ontologyRepo
                             .findProperty(propertyIri)
                             .someOrFail(NotFoundException(s"Ontology ${ontologyIri.toComplexSchema.toIri} not found"))
@@ -1626,7 +1626,7 @@ final class OntologyResponderV2(
       query     <- DeletePropertyCommentsQuery.build(propertyIri, propertyToUpdate.linkValueProperty, lastModificationDate)
       _         <- save(Update(query)).when(hasComment)
       response  <-
-        getPropertiesFromOntologyV2(Set(propertyIri), allLanguages = true, requestingUser = requestingUser)
+        getPropertiesFromOntologyV2(Set(propertyIri), allLanguages = true, requestingUser = grant.user)
     } yield response
   }
 
@@ -1636,7 +1636,7 @@ final class OntologyResponderV2(
    * @param classIri             the IRI of the class to be modified.
    * @param lastModificationDate the last modification date of the ontology.
    * @param apiRequestID         the api request ID.
-   * @param requestingUser       the user making the request.
+   * @param grant                the grant for the project the ontology belongs to.
    *
    * @return a [[ReadOntologyV2]] containing the modified class definition.
    */
@@ -1644,22 +1644,19 @@ final class OntologyResponderV2(
     classIri: ResourceClassIri,
     lastModificationDate: LastModificationDate,
     apiRequestID: UUID,
-    requestingUser: User,
+    grant: ProjectAdminGrant,
   ): Task[ReadOntologyV2] = IriLocker.runWithIriLock(apiRequestID, ONTOLOGY_CACHE_LOCK_IRI) {
     for {
-      _ <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(classIri.ontologyIri, lastModificationDate)
-      _ <- ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(
-             classIri.ontologyIri.toComplexSchema,
-             classIri.toComplexSchema,
-             requestingUser,
-           )
+      _             <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(classIri)
+      _             <- ensureOntologyBelongsToGrant(classIri.ontologyIri, grant)
+      _             <- ontologyTriplestoreHelpers.checkOntologyLastModificationDate(classIri.ontologyIri, lastModificationDate)
       classToUpdate <- ontologyRepo
                          .findClassBy(classIri)
                          .someOrFail(NotFoundException(s"Class ${classIri.toComplexSchema} not found"))
       hasComment = classToUpdate.entityInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)
       query     <- DeleteClassCommentsQuery.build(classIri, lastModificationDate)
       _         <- save(Update(query)).when(hasComment)
-      response  <- ontologyCacheHelpers.getClassAsReadOntologyV2(classIri, allLanguages = true, requestingUser)
+      response  <- ontologyCacheHelpers.getClassAsReadOntologyV2(classIri, allLanguages = true, grant.user)
     } yield response
   }
 }

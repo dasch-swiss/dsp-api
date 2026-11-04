@@ -253,34 +253,32 @@ final case class UserRestService(
       response <- asExternalUserResponse(grant.user, updatedUser)
     } yield response
 
-  def addUserToGroup(requestingUser: User)(
+  def addUserToGroup(candidate: ProjectCandidate)(
     userIri: UserIri,
     groupIri: GroupIri,
   ): Task[UserResponse] =
     for {
-      _     <- ensureNotABuiltInUser(userIri)
-      _     <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
-      kUser <- getKnoraUserOrNotFound(userIri)
-      group <- groupService
-                 .findById(groupIri)
-                 .someOrFail(BadRequestException(s"Group with IRI: ${groupIri.value} not found."))
-      updatedKUser <- knoraUserService.addUserToGroup(kUser, group).mapError(BadRequestException.apply)
-      external     <- asExternalUserResponse(requestingUser, updatedKUser)
+      _                  <- ensureNotABuiltInUser(userIri)
+      groupAndGrant      <- auth.authorizeProjectAdminOfGroup(candidate, groupIri)
+      (knoraGroup, grant) = groupAndGrant
+      kUser              <- getKnoraUserOrNotFound(userIri)
+      group              <- groupService.toGroup(knoraGroup)
+      updatedKUser       <- knoraUserService.addUserToGroup(kUser, group).mapError(BadRequestException.apply)
+      external           <- asExternalUserResponse(grant.user, updatedKUser)
     } yield external
 
-  def removeUserFromGroup(requestingUser: User)(
+  def removeUserFromGroup(candidate: ProjectCandidate)(
     userIri: UserIri,
     groupIri: GroupIri,
   ): Task[UserResponse] =
     for {
-      _     <- ensureNotABuiltInUser(userIri)
-      _     <- auth.ensureSystemAdminOrProjectAdminOfGroup(requestingUser, groupIri)
-      user  <- getKnoraUserOrNotFound(userIri)
-      group <- groupService
-                 .findById(groupIri)
-                 .someOrFail(BadRequestException(s"Group with IRI: ${groupIri.value} not found."))
-      updateUser <- knoraUserService.removeUserFromGroup(user, group).mapError(BadRequestException.apply)
-      response   <- asExternalUserResponse(requestingUser, updateUser)
+      _                  <- ensureNotABuiltInUser(userIri)
+      groupAndGrant      <- auth.authorizeProjectAdminOfGroup(candidate, groupIri)
+      (knoraGroup, grant) = groupAndGrant
+      user               <- getKnoraUserOrNotFound(userIri)
+      group              <- groupService.toGroup(knoraGroup)
+      updateUser         <- knoraUserService.removeUserFromGroup(user, group).mapError(BadRequestException.apply)
+      response           <- asExternalUserResponse(grant.user, updateUser)
     } yield response
 }
 

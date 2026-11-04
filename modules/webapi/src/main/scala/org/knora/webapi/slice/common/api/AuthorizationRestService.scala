@@ -95,6 +95,32 @@ final class AuthorizationRestService(
   ): IO[ForbiddenException, ProjectAdminGrant] =
     ensureSystemAdminOrProjectAdminById(candidate.user, projectIri).map(ProjectAdminGrant(candidate.user, _))
 
+  def authorizeProjectAdminByShortcode(
+    candidate: ProjectCandidate,
+    shortcode: Shortcode,
+  ): IO[ForbiddenException, ProjectAdminGrant] =
+    ensureSystemAdminOrProjectAdminByShortcode(candidate.user, shortcode).map(ProjectAdminGrant(candidate.user, _))
+
+  def authorizeProjectAdminByShortname(
+    candidate: ProjectCandidate,
+    shortname: Shortname,
+  ): IO[ForbiddenException, ProjectAdminGrant] =
+    ensureSystemAdminOrProjectAdminByShortname(candidate.user, shortname).map(ProjectAdminGrant(candidate.user, _))
+
+  def authorizeProjectAdminOfGroup(
+    candidate: ProjectCandidate,
+    groupIri: GroupIri,
+  ): IO[ForbiddenException, (KnoraGroup, ProjectAdminGrant)] =
+    ensureSystemAdminOrProjectAdminOfGroup(candidate.user, groupIri).map { case (group, project) =>
+      (group, ProjectAdminGrant(candidate.user, project))
+    }
+
+  def authorizeProjectMemberByShortcode(
+    candidate: ProjectCandidate,
+    shortcode: Shortcode,
+  ): IO[ForbiddenException, ProjectMemberGrant] =
+    ensureProjectMember(candidate.user, shortcode).map(ProjectMemberGrant(candidate.user, _))
+
   def ensureSystemAdminOrProjectAdminInAnyProject(requestingUser: User): IO[ForbiddenException, Unit] = {
     val msg = "ProjectAdmin or SystemAdmin permissions are required."
     checkActiveUser(requestingUser, isSystemAdminOrProjectAdminInAnyProject, msg)

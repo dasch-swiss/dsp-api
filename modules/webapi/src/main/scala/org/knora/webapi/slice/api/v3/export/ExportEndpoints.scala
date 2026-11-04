@@ -19,23 +19,23 @@ import org.knora.webapi.slice.api.v3.ApiV3
 import org.knora.webapi.slice.api.v3.EndpointHelper
 import org.knora.webapi.slice.api.v3.V3BaseEndpoint
 import org.knora.webapi.slice.api.v3.V3ErrorCode.*
+import org.knora.webapi.slice.common.api.Policy
 
 final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends EndpointHelper {
 
   val postExportResources = baseEndpoints
-    .withUser(
+    .objectAccessPolicy(
       oneOf(
         notFoundVariant(project_not_found),
         notFoundVariant(ontology_not_found),
         notFoundVariant(resourceClass_not_found),
         badRequestVariant,
       ),
+      "ExportService, per resource",
     )
     .post
     .in(ApiV3.basePath / "export" / "resources")
-    .description(
-      "Export resources to CSV format. Publicly accessible. Requires appropriate object access permissions on the resources.",
-    )
+    .description(s"Export resources to CSV format. Publicly accessible. ${Policy.objectReadRequirement}")
     .in(
       jsonBody[ExportRequest].example(
         ExportRequest(
@@ -51,14 +51,14 @@ final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends Endpoint
     .out(streamBinaryBody(ZioStreams)(ExportEndpoints.Csv()))
 
   val postExportResourcesOai = baseEndpoints
-    .withUser(
+    .systemAdminPolicy(
       oneOf(
         notFoundVariant(project_not_found),
       ),
     )
     .post
     .in(ApiV3.basePath / "export" / "resources" / "oai")
-    .description("Export the resources of a project for OAI. Requires SystemAdmin permissions.")
+    .description(s"Export the resources of a project for OAI. ${Policy.SystemAdmin.requirement}")
     .in(jsonBody[ExportRequestOai].example(ExportRequestOai(shortcode = Shortcode.unsafeFrom("0803"))))
     .out(stringBody)
 }

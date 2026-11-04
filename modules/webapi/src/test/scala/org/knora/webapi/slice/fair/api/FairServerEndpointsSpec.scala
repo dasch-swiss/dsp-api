@@ -10,6 +10,7 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.config.FairConfig
+import org.knora.webapi.slice.common.api.BaseEndpoints
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class FairServerEndpointsSpec extends ZIOSpecDefault {
@@ -18,7 +19,7 @@ class FairServerEndpointsSpec extends ZIOSpecDefault {
   private def serverEndpoints(baseUrl: Option[String]) =
     FairServerEndpoints(
       FairConfig(baseUrl, "https://app.example.org/index.html", "https://example.org/oai", ""),
-      FairEndpoints(),
+      FairEndpoints(BaseEndpoints(null, null)),
       null,
     ).serverEndpoints
 

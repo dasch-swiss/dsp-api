@@ -66,145 +66,145 @@ Endpoints (2): `POST /v2/ontologies` (`projectFrom` = "body attachedToProject") 
 `DELETE /v2/ontologies/{ontologyIri}` (`projectFrom` = "path ontology's project"). The parser change is the
 machinery Phases 16 and 17 reuse.
 
-- [ ] `OntologyV2RequestParser`: each parse method returns the request without the requesting user, and the RestService completes it with `grant.user` after the grant; the parser tests are adjusted
-- [ ] `OntologiesEndpoints`: both routes use `projectAdminPolicyEndpoint`
-- [ ] `OntologiesRestService`: both methods take a `ProjectCandidate` and obtain the grant in place of `ensureSystemAdminOrProjectAdminById`
-- [ ] `OntologyResponderV2.createOntology` takes the grant and creates in `grant.project`; any responder-level re-check is removed
-- [ ] `OntologyResponderV2.deleteOntology` takes the grant and asserts, inside the ontology lock, that the ontology belongs to `grant.project` (403 otherwise); an unknown ontology still answers 404 before any 403
-- [ ] Responder test: deleting with a grant for another project answers 403 and deletes nothing
-- [ ] Matrix rows for both endpoints (fresh ontology per cell)
-- [ ] Baseline: remove the 2 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Ontolog).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `OntologyV2RequestParser`: each parse method returns the request without the requesting user, and the RestService completes it with `grant.user` after the grant; the parser tests are adjusted
+- [x] `OntologiesEndpoints`: both routes use `projectAdminPolicyEndpoint`
+- [x] `OntologiesRestService`: both methods take a `ProjectCandidate` and obtain the grant in place of `ensureSystemAdminOrProjectAdminById`
+- [x] `OntologyResponderV2.createOntology` takes the grant and creates in `grant.project`; any responder-level re-check is removed
+- [x] `OntologyResponderV2.deleteOntology` takes the grant and asserts, inside the ontology lock, that the ontology belongs to `grant.project` (403 otherwise); an unknown ontology still answers 404 before any 403
+- [x] Responder test: deleting with a grant for another project answers 403 and deletes nothing
+- [x] Matrix rows for both endpoints (fresh ontology per cell)
+- [x] Baseline: remove the 2 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Ontolog).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 9: Grants by shortcode and shortname
 
 Endpoints (11): Appendix A, phase 9.
 
-- [ ] `AuthorizationRestService.authorizeProjectAdminByShortcode(candidate, shortcode)` and `...ByShortname(candidate, shortname)`, built on the existing `ensure...By{Shortcode,Shortname}`
-- [ ] `AuthorizationRestServiceSpec`: SystemAdmin, ProjectAdmin, other-project admin, member, inactive user and unknown project, for both methods
-- [ ] `ProjectsEndpoints` and `ProjectRestService`: the 6 shortcode and shortname routes in phase 9 use `projectAdminPolicyEndpoint` and the new grants
-- [ ] `ProjectsLegalInfoEndpoints` and `ProjectsLegalInfoRestService`: `POST copyright-holders`, `PUT licenses/{licenseIri}/enable` and `/disable`, and `PUT legal-info/resource` use `projectAdminPolicyEndpoint` and the shortcode grant
-- [ ] `MetadataEndpoints` and `MetadataRestService`: `GET /v2/metadata/projects/{projectShortcode}/resources` uses `projectAdminPolicyEndpoint` and the shortcode grant
-- [ ] Matrix rows for the 11 endpoints
-- [ ] Baseline: remove the 11 lines and lower `baselineSize`
-- [ ] Run `just test-unit`; it passes
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Project|LegalInfo|Metadata).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `AuthorizationRestService.authorizeProjectAdminByShortcode(candidate, shortcode)` and `...ByShortname(candidate, shortname)`, built on the existing `ensure...By{Shortcode,Shortname}`
+- [x] `AuthorizationRestServiceSpec`: SystemAdmin, ProjectAdmin, other-project admin, member, inactive user and unknown project, for both methods
+- [x] `ProjectsEndpoints` and `ProjectRestService`: the 6 shortcode and shortname routes in phase 9 use `projectAdminPolicyEndpoint` and the new grants
+- [x] `ProjectsLegalInfoEndpoints` and `ProjectsLegalInfoRestService`: `POST copyright-holders`, `PUT licenses/{licenseIri}/enable` and `/disable`, and `PUT legal-info/resource` use `projectAdminPolicyEndpoint` and the shortcode grant
+- [x] `MetadataEndpoints` and `MetadataRestService`: `GET /v2/metadata/projects/{projectShortcode}/resources` uses `projectAdminPolicyEndpoint` and the shortcode grant
+- [x] Matrix rows for the 11 endpoints
+- [x] Baseline: remove the 11 lines and lower `baselineSize`
+- [x] Run `just test-unit`; it passes
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Project|LegalInfo|Metadata).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 10: Group-scoped grant
 
 Endpoints (6): Appendix A, phase 10. `projectFrom` = "path groupIri's project".
 
-- [ ] `AuthorizationRestService.authorizeProjectAdminOfGroup(candidate, groupIri): IO[ForbiddenException, (KnoraGroup, ProjectAdminGrant)]`; a built-in group (no project) answers 403, as today
-- [ ] `AuthorizationRestServiceSpec` cases for the new method, including a built-in group
-- [ ] `GroupsEndpoints` and `GroupRestService`: `PUT /{groupIri}`, `PUT /{groupIri}/status`, `DELETE /{groupIri}` and `GET /{groupIri}/members` use `projectAdminPolicyEndpoint` and the group grant
-- [ ] `UsersEndpoints` and `UserRestService`: `POST`/`DELETE group-memberships/{groupIri}` use `projectAdminPolicyEndpoint` and the group grant; `ensureNotABuiltInUser` stays before the grant, and the `Group` overloads with the `IsGroupMember`/`NotGroupMember` 400s stay in use
-- [ ] Matrix rows for the 6 endpoints (fresh group per cell)
-- [ ] Baseline: remove the 6 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Group|User).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `AuthorizationRestService.authorizeProjectAdminOfGroup(candidate, groupIri): IO[ForbiddenException, (KnoraGroup, ProjectAdminGrant)]`; a built-in group (no project) answers 403, as today
+- [x] `AuthorizationRestServiceSpec` cases for the new method, including a built-in group
+- [x] `GroupsEndpoints` and `GroupRestService`: `PUT /{groupIri}`, `PUT /{groupIri}/status`, `DELETE /{groupIri}` and `GET /{groupIri}/members` use `projectAdminPolicyEndpoint` and the group grant
+- [x] `UsersEndpoints` and `UserRestService`: `POST`/`DELETE group-memberships/{groupIri}` use `projectAdminPolicyEndpoint` and the group grant; `ensureNotABuiltInUser` stays before the grant, and the `Group` overloads with the `IsGroupMember`/`NotGroupMember` 400s stay in use
+- [x] Matrix rows for the 6 endpoints (fresh group per cell)
+- [x] Baseline: remove the 6 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Group|User).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 11: ProjectMember policy
 
 Endpoints (2): `GET legal-info/authorships` and `GET legal-info/copyright-holders`. `projectFrom` = "path shortcode".
 
-- [ ] `ProjectMemberGrant` in `ProjectAdminGrant.scala` (constructor `private[api]`), and `AuthorizationRestService.authorizeProjectMemberByShortcode(candidate, shortcode)`; `ProjectCandidate` is reused, since it means "authenticated, not yet authorized for a project"
-- [ ] `BaseEndpoints.projectMemberPolicyEndpoint(projectFrom)`, declaring `Policy.ProjectMember` and handing over a `ProjectCandidate`
-- [ ] `BaseEndpointsSpec` and the compile-negative test cover the new factory and grant
-- [ ] `ProjectsLegalInfoEndpoints` and `ProjectsLegalInfoRestService`: both reads use the factory and the member grant
-- [ ] The ProjectMember sentence in ADR-0013 decision 4 records that the candidate type is shared
-- [ ] Matrix rows for both endpoints (members allowed)
-- [ ] Baseline: remove the 2 lines and lower `baselineSize`
-- [ ] Run `just test-unit`; it passes
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|LegalInfo).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `ProjectMemberGrant` in `ProjectAdminGrant.scala` (constructor `private[api]`), and `AuthorizationRestService.authorizeProjectMemberByShortcode(candidate, shortcode)`; `ProjectCandidate` is reused, since it means "authenticated, not yet authorized for a project"
+- [x] `BaseEndpoints.projectMemberPolicyEndpoint(projectFrom)`, declaring `Policy.ProjectMember` and handing over a `ProjectCandidate`
+- [x] `BaseEndpointsSpec` and the compile-negative test cover the new factory and grant
+- [x] `ProjectsLegalInfoEndpoints` and `ProjectsLegalInfoRestService`: both reads use the factory and the member grant
+- [x] The ProjectMember sentence in ADR-0013 decision 4 records that the candidate type is shared
+- [x] Matrix rows for both endpoints (members allowed)
+- [x] Baseline: remove the 2 lines and lower `baselineSize`
+- [x] Run `just test-unit`; it passes
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|LegalInfo).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 12: Public endpoints that read the optional user
 
 Endpoints (6): Appendix A, phase 12. These are public, but they read the caller for the preferred language.
 
-- [ ] `BaseEndpoints.publicPolicyEndpointWithUser(reason)`: declares `Policy.Public`, authenticates optionally (bad credentials 401, none = anonymous), and hands over a `User`
-- [ ] `BaseEndpointsSpec` covers the factory
-- [ ] `OntologiesEndpoints`: `allentities`, `classes/{classIri}` and `properties/{propertyIri}` reads use it, reason "ontologies are public"
-- [ ] `OntologiesEndpoints`: `GET /ontology/*` uses it, reason "ontology IRI dereferencing"
-- [ ] `ListsEndpointsV2`: `GET /v2/lists/{listIri}` and `GET /v2/node/{listIri}` use it, reason "lists are public"
-- [ ] Baseline: remove the 6 lines and lower `baselineSize`
-- [ ] Run `just test-unit`; it passes
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|Ontolog|Lists).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `BaseEndpoints.publicPolicyEndpointWithUser(reason)`: declares `Policy.Public`, authenticates optionally (bad credentials 401, none = anonymous), and hands over a `User`
+- [x] `BaseEndpointsSpec` covers the factory
+- [x] `OntologiesEndpoints`: `allentities`, `classes/{classIri}` and `properties/{propertyIri}` reads use it, reason "ontologies are public"
+- [x] `OntologiesEndpoints`: `GET /ontology/*` uses it, reason "ontology IRI dereferencing"
+- [x] `ListsEndpointsV2`: `GET /v2/lists/{listIri}` and `GET /v2/node/{listIri}` use it, reason "lists are public"
+- [x] Baseline: remove the 6 lines and lower `baselineSize`
+- [x] Run `just test-unit`; it passes
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|Ontolog|Lists).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 13: Policies for endpoints built outside the standard bases
 
 Endpoints (5): the four FAIR and landing-page routes, and `POST /admin/sparql/query`.
 
-- [ ] `bearerSystemAdminEndpoint` declares `Policy.SystemAdmin`; its "Declares no Policy" note is removed; `SparqlPassthroughEndpoints`' description contains the requirement sentence
-- [ ] `BaseEndpoints.publicPolicyEndpoint[E](errorOut, reason)`: an overload that declares `Policy.Public` on a caller-supplied error output and reads no credentials (the FAIR routes never read the caller, so their answer does not depend on it, which is `Public`, not `ObjectAccess`)
-- [ ] `FairEndpoints` injects `BaseEndpoints`; `landingBase` and `representationBase` build on the overload, keeping their error outputs and the `NegotiatesOwnAccept` attribute, reason "serves only resources the anonymous user may see"; the four descriptions contain the requirement sentence
-- [ ] `BaseEndpointsSpec` covers both changes
-- [ ] Matrix row for `POST /admin/sparql/query` (a read-only `SELECT`)
-- [ ] Baseline: remove the 5 lines and lower `baselineSize`
-- [ ] Run `just test-unit`; it passes
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Fair|Sparql).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `bearerSystemAdminEndpoint` declares `Policy.SystemAdmin`; its "Declares no Policy" note is removed; `SparqlPassthroughEndpoints`' description contains the requirement sentence
+- [x] `BaseEndpoints.publicPolicyEndpoint[E](errorOut, reason)`: an overload that declares `Policy.Public` on a caller-supplied error output and reads no credentials (the FAIR routes never read the caller, so their answer does not depend on it, which is `Public`, not `ObjectAccess`)
+- [x] `FairEndpoints` injects `BaseEndpoints`; `landingBase` and `representationBase` build on the overload, keeping their error outputs and the `NegotiatesOwnAccept` attribute, reason "serves only resources the anonymous user may see"; the four descriptions contain the requirement sentence
+- [x] `BaseEndpointsSpec` covers both changes
+- [x] Matrix row for `POST /admin/sparql/query` (a read-only `SELECT`)
+- [x] Baseline: remove the 5 lines and lower `baselineSize`
+- [x] Run `just test-unit`; it passes
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Fair|Sparql).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 14: v3 policy factories
 
 Endpoints (12): the 11 v3 SystemAdmin routes and `POST /v3/export/resources`.
 
-- [ ] `slice.common.api`: a bearer-only `authorizingEndpoint` generic over the error output and the error mapping, with v3 policy factories on it: `systemAdmin` (SystemAdmin in the security logic), `objectAccess(enforcedIn)`, and `projectAdmin(projectFrom)`, which hands over a `ProjectCandidate`; each sets `Policy.key`
-- [ ] `V3BaseEndpoint` exposes them with the v3 `Unauthorized`/`Forbidden` variants; the compile-negative test still passes unchanged
-- [ ] `V3Authorizer.authorizeProjectAdminById(candidate, projectIri): IO[Forbidden, ProjectAdminGrant]`
-- [ ] Unit tests for the three V3 factories, mirroring `BaseEndpointsSpec`
-- [ ] `V3ProjectsEndpoints`: the 10 import, export and data-import routes use `systemAdminPolicy`; the `V3Authorizer.ensureSystemAdmin` calls in `V3ProjectsRestService` are removed
-- [ ] `ExportEndpoints`: `POST /v3/export/resources/oai` uses `systemAdminPolicy` (anonymous now answers 401, was 403; its v3 docs say so); `POST /v3/export/resources` uses `objectAccessPolicy`
-- [ ] The v3 import, export and data-import runs: `exempt` entries, plus the 403/401 e2e tests
-- [ ] Baseline: remove the 12 lines and lower `baselineSize`
-- [ ] Run `just test-unit`; it passes
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|V3|Export|Import).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `slice.common.api`: a bearer-only `authorizingEndpoint` generic over the error output and the error mapping, with v3 policy factories on it: `systemAdmin` (SystemAdmin in the security logic), `objectAccess(enforcedIn)`, and `projectAdmin(projectFrom)`, which hands over a `ProjectCandidate`; each sets `Policy.key`
+- [x] `V3BaseEndpoint` exposes them with the v3 `Unauthorized`/`Forbidden` variants; the compile-negative test still passes unchanged
+- [x] `V3Authorizer.authorizeProjectAdminById(candidate, projectIri): IO[Forbidden, ProjectAdminGrant]`
+- [x] Unit tests for the three V3 factories, mirroring `BaseEndpointsSpec`
+- [x] `V3ProjectsEndpoints`: the 10 import, export and data-import routes use `systemAdminPolicy`; the `V3Authorizer.ensureSystemAdmin` calls in `V3ProjectsRestService` are removed
+- [x] `ExportEndpoints`: `POST /v3/export/resources/oai` uses `systemAdminPolicy` (anonymous now answers 401, was 403; its v3 docs say so); `POST /v3/export/resources` uses `objectAccessPolicy`
+- [x] The v3 import, export and data-import runs: `exempt` entries, plus the 403/401 e2e tests
+- [x] Baseline: remove the 12 lines and lower `baselineSize`
+- [x] Run `just test-unit`; it passes
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|V3|Export|Import).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 15: v3 ontology mappings through a grant
 
 Endpoints (4): `PUT`/`DELETE` class and property mappings. `projectFrom` = "path ontology's project".
 
-- [ ] `OntologyMappingEndpoints`: the four routes use `projectAdminPolicy`
-- [ ] `OntologyMappingRestService`: `authorizeByProject` becomes "a system ontology answers 403 'Cannot modify a system ontology.' to everyone, root included (unchanged); otherwise `V3Authorizer.authorizeProjectAdminById` on the ontology's project", and the writes take the grant; the existing mappings-count-before-auth order is kept
-- [ ] The class or property still must belong to the path ontology (unchanged), and the ontology must belong to `grant.project` (test with a grant for another project)
-- [ ] Matrix rows for the 4 endpoints
-- [ ] Baseline: remove the 4 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|OntologyMapping).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `OntologyMappingEndpoints`: the four routes use `projectAdminPolicy`
+- [x] `OntologyMappingRestService`: `authorizeByProject` becomes "a system ontology answers 403 'Cannot modify a system ontology.' to everyone, root included (unchanged); otherwise `V3Authorizer.authorizeProjectAdminById` on the ontology's project", and the writes take the grant; the existing mappings-count-before-auth order is kept
+- [x] The class or property still must belong to the path ontology (unchanged), and the ontology must belong to `grant.project` (test with a grant for another project)
+- [x] Matrix rows for the 4 endpoints
+- [x] Baseline: remove the 4 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|OntologyMapping).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 16: v2 ontology metadata and class writes through a grant
 
 Endpoints (6): `PUT /v2/ontologies/metadata`, `DELETE /v2/ontologies/comment/{ontologyIri}`, `POST`/`PUT /v2/ontologies/classes`,
 `DELETE classes/{resourceClassIri}` and `DELETE classes/comment/{resourceClassIri}`. `projectFrom` = "ontology's project".
 
-- [ ] `OntologiesRestService`: a private `authorizeForOntology(candidate, ontologyIri)` that resolves the ontology's project from the cache (404 for an unknown ontology, as today) and obtains the grant; the ontology IRI comes from the path, or from the body parsed without a user (Phase 8)
-- [ ] `OntologiesEndpoints`: the 6 routes use `projectAdminPolicyEndpoint` (anonymous answers 401, was 403)
-- [ ] `OntologyCacheHelpers.checkOntologyAndEntityIrisForUpdate` is split: the IRI validation stays, and a variant without the permission part (no `requestingUser`) is what grant-taking methods call
-- [ ] `OntologyResponderV2`: the 6 methods take a `ProjectAdminGrant` in place of the requesting user's authorization, and assert inside the ontology lock that the ontology belongs to `grant.project`; their direct `checkPermissionsForOntologyUpdate` calls are removed
-- [ ] Responder test per method family (metadata, class create/change, class delete): a grant for another project answers 403 and writes nothing
-- [ ] `docs/03-endpoints/api-v2/ontology-information.md` (or the ontology editing page) records the 401 for anonymous callers
-- [ ] Matrix rows for the 6 endpoints (fresh ontology per cell)
-- [ ] Baseline: remove the 6 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*OntologyResponderV2.*'`; it passes
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Ontolog).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `OntologiesRestService`: a private `authorizeForOntology(candidate, ontologyIri)` that resolves the ontology's project from the cache (404 for an unknown ontology, as today) and obtains the grant; the ontology IRI comes from the path, or from the body parsed without a user (Phase 8)
+- [x] `OntologiesEndpoints`: the 6 routes use `projectAdminPolicyEndpoint` (anonymous answers 401, was 403)
+- [x] `OntologyCacheHelpers.checkOntologyAndEntityIrisForUpdate` is split: the IRI validation stays, and a variant without the permission part (no `requestingUser`) is what grant-taking methods call
+- [x] `OntologyResponderV2`: the 6 methods take a `ProjectAdminGrant` in place of the requesting user's authorization, and assert inside the ontology lock that the ontology belongs to `grant.project`; their direct `checkPermissionsForOntologyUpdate` calls are removed
+- [x] Responder test per method family (metadata, class create/change, class delete): a grant for another project answers 403 and writes nothing
+- [x] `docs/03-endpoints/api-v2/ontology-information.md` (or the ontology editing page) records the 401 for anonymous callers
+- [x] Matrix rows for the 6 endpoints (fresh ontology per cell)
+- [x] Baseline: remove the 6 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-it:test --test_filter='.*OntologyResponderV2.*'`; it passes
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Ontolog).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 17: v2 ontology property and cardinality writes through a grant
 
 Endpoints (9): Appendix A, phase 17.
 
-- [ ] `OntologiesEndpoints`: the 9 routes use `projectAdminPolicyEndpoint`, and `OntologiesRestService` obtains the grant through `authorizeForOntology`
-- [ ] `OntologyResponderV2`: the property, GUI-element, GUI-order and cardinality methods take the grant, call the permission-free IRI check from Phase 16, and assert inside the lock that the ontology belongs to `grant.project`
-- [ ] Responder test per method family (property create/change, property delete, cardinalities): a grant for another project answers 403
-- [ ] Matrix rows for the 9 endpoints
-- [ ] Baseline: remove the 9 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-it:test --test_filter='.*OntologyResponderV2.*'`; it passes
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Ontolog|Cardinalit).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `OntologiesEndpoints`: the 9 routes use `projectAdminPolicyEndpoint`, and `OntologiesRestService` obtains the grant through `authorizeForOntology`
+- [x] `OntologyResponderV2`: the property, GUI-element, GUI-order and cardinality methods take the grant, call the permission-free IRI check from Phase 16, and assert inside the lock that the ontology belongs to `grant.project`
+- [x] Responder test per method family (property create/change, property delete, cardinalities): a grant for another project answers 403
+- [x] Matrix rows for the 9 endpoints
+- [x] Baseline: remove the 9 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-it:test --test_filter='.*OntologyResponderV2.*'`; it passes
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Ontolog|Cardinalit).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Human Actions
 
@@ -215,12 +215,12 @@ Endpoints (9): Appendix A, phase 17.
 
 ## Acceptance Criteria
 
-- [ ] Every endpoint of phases 8-17 in Appendix A declares the phase's policy and is gone from the baseline
-- [ ] `baselineSize` is 37
-- [ ] Every project-scoped endpoint of this batch obtains its grant from the PDP, and its domain write takes the grant or `grant.project`
-- [ ] Every responder that checks an object against `grant.project` has a wrong-project test
-- [ ] Every role-based endpoint of this batch has a matrix row or an `exempt` entry with the 403/401 tests
-- [ ] The status-code changes below are in the PR body and in the endpoint docs
+- [x] Every endpoint of phases 8-17 in Appendix A declares the phase's policy and is gone from the baseline
+- [x] `baselineSize` is 37
+- [x] Every project-scoped endpoint of this batch obtains its grant from the PDP, and its domain write takes the grant or `grant.project`
+- [x] Every responder that checks an object against `grant.project` has a wrong-project test
+- [x] Every role-based endpoint of this batch has a matrix row or an `exempt` entry with the 403/401 tests
+- [x] The status-code changes below are in the PR body and in the endpoint docs
 - [ ] `just check`, `just test-unit` and `just test-e2e` pass
 
 ### Status-code changes
