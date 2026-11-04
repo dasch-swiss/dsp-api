@@ -110,15 +110,15 @@ admitting anonymous callers.
 
 Endpoints (12): Appendix A, phase 4. `projectFrom` = "path projectIri".
 
-- [ ] `ProjectsEndpoints`: `AllData`, `members`, `admin-members`, `PUT /iri/{projectIri}` and `POST`/`DELETE RestrictedViewSettings` (by IRI) use `projectAdminPolicyEndpoint`
-- [ ] `ProjectRestService`: the six methods take a `ProjectCandidate`, obtain the grant, and act on `grant.project`; the separate project lookup in `PUT /iri/{projectIri}` is removed
-- [ ] `ViewRestrictionsEndpoints` and `ViewRestrictionsByPropertyEndpoints`: the 6 `view-restrictions/*` routes use `projectAdminPolicyEndpoint`
-- [ ] `ViewRestrictionsRestService` and `ViewRestrictionsByPropertyRestService` take a `ProjectCandidate` and act on `grant.project`
-- [ ] e2e test: `PUT /admin/projects/iri/{unknown}` answers 403 (was 404); `docs/03-endpoints/api-admin/projects.md` says so
-- [ ] Matrix rows for the 12 endpoints
-- [ ] Baseline: remove the 12 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Project|ViewRestriction).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `ProjectsEndpoints`: `AllData`, `members`, `admin-members`, `PUT /iri/{projectIri}` and `POST`/`DELETE RestrictedViewSettings` (by IRI) use `projectAdminPolicyEndpoint`
+- [x] `ProjectRestService`: the six methods take a `ProjectCandidate`, obtain the grant, and act on `grant.project`; the separate project lookup in `PUT /iri/{projectIri}` is removed
+- [x] `ViewRestrictionsEndpoints` and `ViewRestrictionsByPropertyEndpoints`: the 6 `view-restrictions/*` routes use `projectAdminPolicyEndpoint`
+- [x] `ViewRestrictionsRestService` and `ViewRestrictionsByPropertyRestService` take a `ProjectCandidate` and act on `grant.project`
+- [x] e2e test: `PUT /admin/projects/iri/{unknown}` answers 403 (was 404); `docs/03-endpoints/api-admin/projects.md` says so
+- [x] Matrix rows for the 12 endpoints
+- [x] Baseline: remove the 12 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Project|ViewRestriction).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 5: Admin user project memberships
 

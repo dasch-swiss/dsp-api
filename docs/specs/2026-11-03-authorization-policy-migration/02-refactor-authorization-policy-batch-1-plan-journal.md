@@ -21,6 +21,7 @@ status: in-progress
 | dsp-api | 984f74c95 | feature/dev-7725-migrate-remaining-endpoints-to-declared-authorization | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4415> |
 | dsp-api (stacked, Phase 2) | 64657ad50 | feature/dev-7725-declare-public-endpoint-policies | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4416> |
 | dsp-api (stacked, Phase 3) | e2884b80c | feature/dev-7725-declare-object-access-endpoint-policies | squash | in-progress | <https://github.com/dasch-swiss/dsp-api/pull/4417> |
+| dsp-api (stacked, Phase 4) | 5cac68fe9 | feature/dev-7725-declare-project-admin-by-iri-policies | squash | in-progress | |
 
 ## Phases
 
@@ -29,6 +30,7 @@ status: in-progress
 | 1 | reviewed | dsp-api@4d8713c48 | 1 |
 | 2 | reviewed | dsp-api@64657ad50 | 1 |
 | 3 | reviewed | dsp-api@e2884b80c | 1 |
+| 4 | reviewed | dsp-api@5cac68fe9 | 0 |
 
 ## Chunk queue
 
@@ -46,6 +48,7 @@ status: in-progress
 | 2.2 | dsp-api | complete | c6a28d1ad | review fixes: logout gets its own reason; project and ontology-metadata reasons say what is exposed | none |
 | 3.1 | dsp-api | complete | b31114720, e92601140 | 27 routes on object-access factories; ObjectAccess.admitsAnonymous + authenticatedObjectAccessPolicyEndpoint; 7 writes answer anonymous 401; AnonymousWritesE2ESpec; docs; baseline 121 | none |
 | 3.2 | dsp-api | complete | 2d86f52c5 | review fixes: shared requirement constants on Policy, ratchet guard against anonymous object-access writes (mutation-checked), factory scaladoc | none |
+| 4.1 | dsp-api | complete | 8bd1e6654, 4fd22ca4c | 12 by-IRI project routes on projectAdminPolicyEndpoint acting on grant.project; 12 matrix rows; PUT unknown project 403 test and docs; members/admin-members docs corrected to 403; baseline 109 | none |
 
 ## Deferrals
 
@@ -66,6 +69,9 @@ status: in-progress
 - Phase 2 review (not fixed): `publicPolicyEndpoint` could append the requirement to the description itself, so the two cannot drift (DUNE-003, structural); the pilot's `readReason` name differs from `publicReason`.
 - Phase 2 review (refuted): DUNE-002's claim that ProjectsEndpoints' public block includes member/admin reads; those are in `Secured`.
 - Phase 3: the test Fuseki container twice dropped connections mid-run ("Failed to connect to triplestore"); the affected specs passed when re-run alone.
+- Phase 4: PR #4415's Build and IT Test failed because the runner ran out of disk ("No space left on device"); re-run.
+- Phase 4: the members and admin-members docs said 404 for an unknown project; the routes already answered 403.
+- Phase 4 review (not fixed): each endpoint file defines its own `pathProjectIri`/requirement vals, as the pilot does; the view-restrictions RestService class docs argue the 403 choice at length (pre-existing).
 - Phase 3 review (kept): `CreateResourceV2Handler`'s anonymous 403 is now unreachable over HTTP; kept as a backstop. Files `enforcedIn` names AssetPermissionsResponder, which AssetPermissionsCache delegates to.
 
 ## Closeout
