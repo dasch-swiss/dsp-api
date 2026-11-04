@@ -444,6 +444,15 @@ class AdminUsersEndpointsE2ESpec extends E2EZSpec {
           badResponse.code == StatusCode.BadRequest,
         )
       },
+      test("answer 403 to a non-admin changing the system user's system admin membership status") {
+        TestApiClient
+          .putJson[UserResponse, SystemAdminChangeRequest](
+            uri"/admin/users/iri/${KnoraSystemInstances.Users.SystemUser.id}/SystemAdmin",
+            SystemAdminChangeRequest(SystemAdmin.IsSystemAdmin),
+            normalUser,
+          )
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
       test("not allow updating the system user's system admin membership status") {
         TestApiClient
           .putJson[UserResponse, SystemAdminChangeRequest](

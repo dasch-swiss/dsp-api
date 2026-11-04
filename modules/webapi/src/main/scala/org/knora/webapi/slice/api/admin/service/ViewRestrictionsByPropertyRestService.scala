@@ -11,13 +11,13 @@ import zio.ZIO
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsByPropertyService
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.admin.ViewRestrictionsByPropertyEndpoints.*
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectCandidate
 
 /**
  * Application service for the property-grouped view-restrictions report.
@@ -26,7 +26,7 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
  * or system admin**, matching the class-grouped report.
  *
  * As there, a well-formed but non-existent `projectIri` yields 403 rather than 404. That is deliberate and
- * not specific to this report: `ensureSystemAdminOrProjectAdminById` is the shared admin-API authorization
+ * not specific to this report: `authorizeProjectAdminById` is the shared admin-API authorization
  * gate and does not leak project existence to non-admins.
  */
 final case class ViewRestrictionsByPropertyRestService(
@@ -35,35 +35,35 @@ final case class ViewRestrictionsByPropertyRestService(
 ) {
 
   /** Step 1: the property list. No filter, so nothing to validate beyond authorization. */
-  def getProperties(user: User)(projectIri: ProjectIri): Task[ViewRestrictionsProperties] =
+  def getProperties(candidate: ProjectCandidate)(projectIri: ProjectIri): Task[ViewRestrictionsProperties] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      result  <- service.properties(project)
+      grant  <- auth.authorizeProjectAdminById(candidate, projectIri)
+      result <- service.properties(grant.project)
     } yield result
 
   /** Step 2: one property's counts. */
-  def getPropertyValues(user: User)(
+  def getPropertyValues(candidate: ProjectCandidate)(
     projectIri: ProjectIri,
     property: String,
     itemType: ValueItemType,
   ): Task[ViewRestrictionsPropertyValues] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      _       <- validateProperty(property)
-      result  <- service.propertyValues(project, property, itemType)
+      grant  <- auth.authorizeProjectAdminById(candidate, projectIri)
+      _      <- validateProperty(property)
+      result <- service.propertyValues(grant.project, property, itemType)
     } yield result
 
   /** The drill-down: resources carrying a restricted value of the property. */
-  def getPropertyItems(user: User)(
+  def getPropertyItems(candidate: ProjectCandidate)(
     projectIri: ProjectIri,
     property: String,
     itemType: ValueItemType,
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedPropertyResource]] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      _       <- validateProperty(property)
-      result  <- service.propertyItems(project, property, itemType, pageAndSize)
+      grant  <- auth.authorizeProjectAdminById(candidate, projectIri)
+      _      <- validateProperty(property)
+      result <- service.propertyItems(grant.project, property, itemType, pageAndSize)
     } yield result
 
   /**

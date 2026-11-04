@@ -38,7 +38,6 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotPr
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.Errors.NotProjectMember
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService.UserChangeRequest
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.UserCreateRequest
-import org.knora.webapi.slice.api.admin.model.Project
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.domain.LanguageCode
 
@@ -160,12 +159,10 @@ case class KnoraUserService(
   def removeUserFromKnoraGroup(user: KnoraUser, groupIri: GroupIri): UIO[KnoraUser] =
     userRepo.save(user.copy(isInGroup = user.isInGroup.filterNot(_ == groupIri))).orDie
 
-  def addUserToProject(user: KnoraUser, project: Project): IO[IsProjectMember, KnoraUser] = for {
+  def addUserToProject(user: KnoraUser, project: KnoraProject): IO[IsProjectMember, KnoraUser] = for {
     _    <- ZIO.fail(IsProjectMember(user.id, project.id)).when(user.isInProject.contains(project.id))
     user <- addUserToProject(user, project.id)
   } yield user
-
-  def addUserToProject(user: KnoraUser, project: KnoraProject): UIO[KnoraUser] = addUserToProject(user, project.id)
 
   private def addUserToProject(user: KnoraUser, projectIri: ProjectIri): UIO[KnoraUser] =
     updateUser(user, UserChangeRequest(projects = Some(user.isInProject :+ projectIri))).orDie
@@ -178,7 +175,7 @@ case class KnoraUserService(
    * @param project The project to remove the user from
    * @return        The updated user. If the user is not a member of the project, an error is returned.
    */
-  def removeUserFromProject(user: KnoraUser, project: Project): IO[NotProjectMember, KnoraUser] =
+  def removeUserFromProject(user: KnoraUser, project: KnoraProject): IO[NotProjectMember, KnoraUser] =
     removeUserFromProject(user, project.id)
 
   def removeUsersFromProject(users: Seq[KnoraUser], project: KnoraProject): UIO[Unit] =
@@ -200,12 +197,6 @@ case class KnoraUserService(
    * @param project The project to which the user is to be added as project admin.
    * @return        The updated user. If the user is not a regular member of the project, an error is returned.
    */
-  def addUserToProjectAsAdmin(
-    user: KnoraUser,
-    project: Project,
-  ): IO[IsProjectAdminMember | NotProjectMember, KnoraUser] =
-    addUserToProjectAsAdmin(user, project.id)
-
   def addUserToProjectAsAdmin(
     user: KnoraUser,
     project: KnoraProject,
@@ -230,7 +221,7 @@ case class KnoraUserService(
    * @param project The project from which the user is to be removed as project admin.
    * @return        The updated user. If the user is not an admin member of the project, an error is returned.
    */
-  def removeUserFromProjectAsAdmin(user: KnoraUser, project: Project): IO[NotProjectAdminMember, KnoraUser] =
+  def removeUserFromProjectAsAdmin(user: KnoraUser, project: KnoraProject): IO[NotProjectAdminMember, KnoraUser] =
     removeUserFromProjectIriAsAdmin(user, project.id)
 
   def removeUsersFromProjectAsAdmin(users: Seq[KnoraUser], project: KnoraProject): IO[NotProjectAdminMember, Unit] =

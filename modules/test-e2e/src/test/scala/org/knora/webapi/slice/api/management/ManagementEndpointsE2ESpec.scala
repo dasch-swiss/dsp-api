@@ -9,6 +9,7 @@ import org.junit.runner.RunWith
 import sttp.client4.*
 import sttp.model.*
 import zio.*
+import zio.json.ast.Json
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
@@ -57,5 +58,20 @@ class ManagementEndpointsE2ESpec extends E2EZSpec {
       },
     )
   }
-  override val e2eSpec = suite("Health and Version Endpoints E2E")(versionSuite, healthSuite)
+  private val compactionSuite = suite("The Start Compaction Route")(
+    test("answer 401 to an anonymous caller") {
+      TestApiClient
+        .postJson[Json, Json](uri"/start-compaction", Json.Obj())
+        .map(r => assertTrue(r.code == StatusCode.Unauthorized))
+    },
+    test("answer 403 with the authorization refusal to a caller who is not a system admin") {
+      TestApiClient
+        .postJson[Json](uri"/start-compaction", normalUser)
+        .map(r =>
+          assertTrue(r.code == StatusCode.Forbidden, r.body.merge.toString.contains("only a system administrator")),
+        )
+    },
+  )
+
+  override val e2eSpec = suite("Health and Version Endpoints E2E")(versionSuite, healthSuite, compactionSuite)
 }

@@ -29,6 +29,7 @@ import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.UserCreateReques
 import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
 import org.knora.webapi.slice.api.admin.service.UserRestService.UsersResponse
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.slice.common.domain.LanguageCode
 
 object PathVars {
@@ -55,6 +56,9 @@ object PathVars {
 final class UsersEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "users"
+
+  private val pathProjectIri          = "path projectIri"
+  private val projectAdminRequirement = Policy.ProjectAdmin(pathProjectIri).requirement
 
   object get {
     val users = baseEndpoints.securedEndpoint.get
@@ -110,19 +114,19 @@ final class UsersEndpoints(baseEndpoints: BaseEndpoints) {
         "Create a new user. Requires SystemAdmin permissions to create a system administrator. Requires SystemAdmin or ProjectAdmin permissions in any project to create a regular user.",
       )
 
-    val usersByIriProjectMemberShips = baseEndpoints.securedEndpoint.post
+    val usersByIriProjectMemberShips = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectIri)
+      .post
       .in(base / "iri" / PathVars.userIriPathVar / "project-memberships" / AdminPathVariables.projectIri)
       .out(jsonBody[UserResponse])
-      .description(
-        "Add a user to a project identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
-      )
+      .description(s"Add a user to a project identified by IRI. $projectAdminRequirement")
 
-    val usersByIriProjectAdminMemberShips = baseEndpoints.securedEndpoint.post
+    val usersByIriProjectAdminMemberShips = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectIri)
+      .post
       .in(base / "iri" / PathVars.userIriPathVar / "project-admin-memberships" / AdminPathVariables.projectIri)
       .out(jsonBody[UserResponse])
-      .description(
-        "Add a user as an admin to a project identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
-      )
+      .description(s"Add a user as an admin to a project identified by IRI. $projectAdminRequirement")
 
     val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.post
       .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)
@@ -157,11 +161,11 @@ final class UsersEndpoints(baseEndpoints: BaseEndpoints) {
         "Change a user's status identified by IRI. Users can update their own status. SystemAdmin can update any user's status.",
       )
 
-    val usersIriSystemAdmin = baseEndpoints.securedEndpoint.put
+    val usersIriSystemAdmin = baseEndpoints.systemAdminPolicyEndpoint.put
       .in(base / "iri" / PathVars.userIriPathVar / "SystemAdmin")
       .in(jsonBody[SystemAdminChangeRequest])
       .out(jsonBody[UserResponse])
-      .description("Change a user's SystemAdmin status identified by IRI. Requires SystemAdmin permissions.")
+      .description(s"Change a user's SystemAdmin status identified by IRI. ${Policy.SystemAdmin.requirement}")
   }
 
   object delete {
@@ -172,19 +176,19 @@ final class UsersEndpoints(baseEndpoints: BaseEndpoints) {
         "Delete a user identified by IRI (change status to false). Users can delete themselves. SystemAdmin can delete any user.",
       )
 
-    val usersByIriProjectMemberShips = baseEndpoints.securedEndpoint.delete
+    val usersByIriProjectMemberShips = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectIri)
+      .delete
       .in(base / "iri" / PathVars.userIriPathVar / "project-memberships" / AdminPathVariables.projectIri)
       .out(jsonBody[UserResponse])
-      .description(
-        "Remove a user from a project membership identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
-      )
+      .description(s"Remove a user from a project membership identified by IRI. $projectAdminRequirement")
 
-    val usersByIriProjectAdminMemberShips = baseEndpoints.securedEndpoint.delete
+    val usersByIriProjectAdminMemberShips = baseEndpoints
+      .projectAdminPolicyEndpoint(pathProjectIri)
+      .delete
       .in(base / "iri" / PathVars.userIriPathVar / "project-admin-memberships" / AdminPathVariables.projectIri)
       .out(jsonBody[UserResponse])
-      .description(
-        "Remove a user form an admin project membership identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the project.",
-      )
+      .description(s"Remove a user form an admin project membership identified by IRI. $projectAdminRequirement")
 
     val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.delete
       .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)

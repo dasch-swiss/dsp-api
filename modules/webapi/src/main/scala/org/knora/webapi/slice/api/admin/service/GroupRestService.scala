@@ -16,20 +16,19 @@ import org.knora.webapi.slice.admin.domain.model.GroupStatus
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.common.api.ProjectCandidate
 
 final case class GroupRestService(
   private val auth: AuthorizationRestService,
   private val format: KnoraResponseRenderer,
   private val groupService: GroupService,
   private val knoraGroupService: KnoraGroupService,
-  private val knoraProjectService: KnoraProjectService,
   private val userService: UserService,
 ) {
 
@@ -57,13 +56,10 @@ final case class GroupRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def postGroup(user: User)(request: GroupCreateRequest): Task[GroupGetResponseADM] =
+  def postGroup(candidate: ProjectCandidate)(request: GroupCreateRequest): Task[GroupGetResponseADM] =
     for {
-      _       <- auth.ensureSystemAdminOrProjectAdminById(user, request.project)
-      project <- knoraProjectService
-                   .findById(request.project)
-                   .someOrFail(NotFoundException(s"Project <${request.project}> not found."))
-      internal <- groupService.createGroup(request, project).map(GroupGetResponseADM.apply)
+      grant    <- auth.authorizeProjectAdminById(candidate, request.project)
+      internal <- groupService.createGroup(request, grant.project).map(GroupGetResponseADM.apply)
       external <- format.toExternal(internal)
     } yield external
 

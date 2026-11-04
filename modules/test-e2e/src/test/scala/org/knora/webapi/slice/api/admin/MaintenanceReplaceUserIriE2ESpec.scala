@@ -60,6 +60,16 @@ class MaintenanceReplaceUserIriE2ESpec extends E2EZSpec {
         .postJson[Json, Json](endpoint, replaceBody(normalUser.id, "http://rdfh.ch/users/new-iri"), normalUser)
         .map(response => assertTrue(response.code == StatusCode.Forbidden))
     } @@ TestAspect.timeout(30.seconds) @@ TestAspect.flaky,
+    test("returns 403 and replaces nothing when the authenticated user is not SystemAdmin") {
+      val oldIri = UserIri.unsafeFrom("http://rdfh.ch/users/maintenance-test-403-old")
+      val newIri = UserIri.unsafeFrom("http://rdfh.ch/users/maintenance-test-403-new")
+      for {
+        _         <- insertUserInAdminGraph(oldIri)
+        response  <- TestApiClient.postJson[Json, Json](endpoint, replaceBody(oldIri.value, newIri.value), normalUser)
+        oldExists <- existsInAdminGraph(oldIri)
+        newExists <- existsInAdminGraph(newIri)
+      } yield assertTrue(response.code == StatusCode.Forbidden, oldExists, !newExists)
+    },
     test("returns 400 when oldIri is a built-in user IRI") {
       TestApiClient
         .postJson[Json, Json](endpoint, replaceBody(builtInUserIri, "http://rdfh.ch/users/new-iri"), rootUser)

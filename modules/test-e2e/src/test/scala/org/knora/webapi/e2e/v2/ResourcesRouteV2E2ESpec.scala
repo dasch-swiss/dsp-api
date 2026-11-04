@@ -46,6 +46,7 @@ import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaQueryParam
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
+import org.knora.webapi.testservices.ResponseOps.assert401
 import org.knora.webapi.testservices.ResponseOps.assert403
 import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
@@ -723,9 +724,9 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
       for {
         error <- TestApiClient
                    .postJsonLdDocument(uri"/v2/resources", createResourceWithCustomIRI(customIRI))
-                   .flatMap(_.assert403)
+                   .flatMap(_.assert401)
         _ <- TestApiClient.getJsonLd(uri"/v2/resources/$customIRI", anythingAdminUser).flatMap(_.assert404)
-      } yield assertTrue(error.contains("Anonymous users aren't allowed to create resources"))
+      } yield assertTrue(error.contains("No credentials provided."))
     },
     test("return a DuplicateValueException during resource creation when the supplied resource IRI is not unique") {
       // duplicate resource IRI

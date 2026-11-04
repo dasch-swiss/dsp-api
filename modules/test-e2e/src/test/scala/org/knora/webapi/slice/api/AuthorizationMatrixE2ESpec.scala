@@ -28,10 +28,16 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.EndpointPolicyE2ESpec.key
+import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.api.admin.Requests.*
+import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.*
+import org.knora.webapi.slice.api.admin.model.*
+import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.*
+import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
@@ -165,6 +171,141 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       .flatMap(iri => ZIO.serviceWithZIO[IriService](_.checkIriExists(iri.value)))
       .map(exists => s"mapping $mappingName exists: $exists")
 
+  /** A project of a fresh shortname and shortcode; neither collides with the loaded data or another cell. */
+  private final case class ProjectFixture(shortname: String, shortcode: String)
+
+  private val freshProjectFixture: UIO[ProjectFixture] =
+    Random.nextIntBetween(0xf000, 0x10000).zip(Random.nextUUID).map { case (code, uuid) =>
+      ProjectFixture(s"mx-${uuid.toString.take(8)}", f"$code%04x")
+    }
+
+  private def projectRequest(fixture: ProjectFixture) =
+    ProjectCreateRequest(
+      None,
+      Shortname.unsafeFrom(fixture.shortname),
+      Shortcode.unsafeFrom(fixture.shortcode),
+      None,
+      List(Description.unsafeFrom(StringLiteralV2.from("matrix", EN))),
+      List(Keyword.unsafeFrom("matrix")),
+      None,
+      SelfJoin.CannotJoin,
+      None,
+      Some(Set(LicenseIri.CC_BY_4_0)),
+    )
+
+  private val freshProject: RIO[env, ProjectFixture] =
+    for {
+      fixture <- freshProjectFixture
+      _       <- TestApiClient
+             .postJson[ProjectOperationResponseADM, ProjectCreateRequest](
+               uri"/admin/projects",
+               projectRequest(fixture),
+               rootUser,
+             )
+             .flatMap(_.assert200)
+    } yield fixture
+
+  private def projectExists(fixture: ProjectFixture): RIO[env, String] =
+    TestApiClient
+      .getJson[Json](uri"/admin/projects/shortcode/${fixture.shortcode}", rootUser)
+      .map(response => s"project ${fixture.shortcode} exists: ${response.code == StatusCode.Ok}")
+
+  private val freshUser: RIO[env, UserIri] =
+    for {
+      uuid <- Random.nextUUID
+      name  = s"matrix-${uuid.toString.take(8)}"
+      user <- TestApiClient
+                .postJson[UserResponse, UserCreateRequest](
+                  uri"/admin/users",
+                  UserCreateRequest(
+                    id = None,
+                    username = Username.unsafeFrom(name),
+                    email = Email.unsafeFrom(s"$name@example.org"),
+                    givenName = GivenName.unsafeFrom("matrix"),
+                    familyName = FamilyName.unsafeFrom("matrix"),
+                    password = Password.unsafeFrom("test"),
+                    status = UserStatus.Active,
+                    lang = EN,
+                    systemAdmin = SystemAdmin.IsNotSystemAdmin,
+                  ),
+                  rootUser,
+                )
+                .flatMap(_.assert200)
+    } yield UserIri.unsafeFrom(user.user.id)
+
+  private def userState(iri: UserIri): RIO[env, String] =
+    TestApiClient.getJson[Json](uri"/admin/users/iri/${iri.value}", rootUser).map(_.body.toString)
+
+  private def memberships(iri: UserIri): RIO[env, String] =
+    ZIO
+      .foreach(List("project-memberships", "project-admin-memberships"))(kind =>
+        TestApiClient.getJson[Json](uri"/admin/users/iri/${iri.value}/$kind", rootUser).map(_.body.toString),
+      )
+      .map(_.mkString("\n"))
+
+  private def membershipUri(iri: UserIri, kind: String) =
+    uri"/admin/users/iri/${iri.value}/$kind/${anythingProjectIri.value}"
+
+  private def joinAnything(kind: String)(iri: UserIri): RIO[env, UserIri] =
+    TestApiClient.postJson[Json, Json](membershipUri(iri, kind), Json.Obj(), rootUser).flatMap(_.assert200).as(iri)
+
+  private val freshMember = freshUser.flatMap(joinAnything("project-memberships"))
+  private val freshAdmin  = freshMember.flatMap(joinAnything("project-admin-memberships"))
+
+  private def membershipRow(key: String, prepare: RIO[env, UserIri])(
+    send: UserIri => Option[User] => RIO[env, StatusCode],
+  ) = Row[UserIri](
+    key,
+    outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+    prepare,
+    (iri, user) => send(iri)(user),
+    Some(memberships),
+  )
+
+  private def get(uri: Uri)(user: Option[User]) =
+    user.fold(TestApiClient.getJson[Json](uri))(u => TestApiClient.getJson[Json](uri, u)).map(_.code)
+
+  private val anythingByIri = uri"/admin/projects/iri/${anythingProjectIri.value}"
+  private val anythingThing = "http://www.knora.org/ontology/0001/anything#Thing"
+  private val anythingText  = "http://www.knora.org/ontology/0001/anything#hasText"
+
+  /** A read of the anything project, which an admin of it may make; it writes nothing. */
+  private def anythingRead(key: String, uri: Uri) =
+    Row[Unit](
+      key,
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = ZIO.unit,
+      send = (_, user) => get(uri)(user),
+      readBack = None,
+    )
+
+  private val anythingPermissions          = uri"/admin/permissions"
+  private def permissionsOf(kind: String*) =
+    anythingPermissions.addPath(kind).addPath(anythingProjectIri.value)
+
+  private def groupRequest(name: String) =
+    GroupCreateRequest(
+      name = GroupName.unsafeFrom(name),
+      descriptions = GroupDescriptions.unsafeFrom(Seq(StringLiteralV2.from("matrix", EN))),
+      project = anythingProjectIri,
+      status = GroupStatus.active,
+      selfjoin = GroupSelfJoin.disabled,
+    )
+
+  private def groupExists(name: String): RIO[env, String] =
+    TestApiClient
+      .getJson[Json](uri"/admin/groups", rootUser)
+      .map(response => s"group $name exists: ${response.body.toString.contains(s"\"$name\"")}")
+
+  private val restrictedViewUri = anythingByIri.addPath("RestrictedViewSettings")
+  private val restrictedViewSet = SetRestrictedViewRequest(Some(RestrictedView.Size.unsafeFrom("!512,512")), None)
+
+  private val anythingState: RIO[env, String] =
+    TestApiClient.getJson[Json](anythingByIri, rootUser).map(_.body.toString)
+
+  private val restrictedViewState: RIO[env, String] =
+    TestApiClient.getJson[Json](restrictedViewUri, rootUser).map(_.body.toString)
+
   // The oracle. Columns: anonymous, normalUser, anythingUser1, incunabulaProjectAdminUser, anythingAdminUser, rootUser.
   private val rows: List[Row[?]] = List(
     listRow("POST /admin/lists", outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed))(_ =>
@@ -216,6 +357,28 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       "DELETE /admin/lists/comments/{param1}",
       outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
     )(fixture => delete(uri"/admin/lists/comments/${fixture.first.value}")),
+    Row[ProjectFixture](
+      "POST /admin/projects",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),
+      prepare = freshProjectFixture,
+      send = (fixture, user) => post(uri"/admin/projects", projectRequest(fixture))(user),
+      readBack = Some(projectExists),
+    ),
+    Row[ProjectFixture](
+      "DELETE /admin/projects/shortcode/{projectShortcode}/erase",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),
+      prepare = freshProject,
+      send = (fixture, user) => delete(uri"/admin/projects/shortcode/${fixture.shortcode}/erase")(user),
+      readBack = Some(projectExists),
+    ),
+    Row[UserIri](
+      "PUT /admin/users/iri/{userIri}/SystemAdmin",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),
+      prepare = freshUser,
+      send = (iri, user) =>
+        put(uri"/admin/users/iri/${iri.value}/SystemAdmin", SystemAdminChangeRequest(SystemAdmin.IsSystemAdmin))(user),
+      readBack = Some(userState),
+    ),
     Row[String](
       "POST /v2/mapping",
       outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
@@ -227,6 +390,84 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
           )
           .map(_.code),
       readBack = Some(mappingExists),
+    ),
+    anythingRead("GET /admin/projects/iri/{projectIri}/AllData", anythingByIri.addPath("AllData")),
+    anythingRead("GET /admin/projects/iri/{projectIri}/members", anythingByIri.addPath("members")),
+    anythingRead("GET /admin/projects/iri/{projectIri}/admin-members", anythingByIri.addPath("admin-members")),
+    anythingRead(
+      "GET /admin/projects/iri/{projectIri}/view-restrictions/classes",
+      anythingByIri.addPath("view-restrictions", "classes"),
+    ),
+    anythingRead(
+      "GET /admin/projects/iri/{projectIri}/view-restrictions/values",
+      anythingByIri.addPath("view-restrictions", "values").addParam("resourceClass", anythingThing),
+    ),
+    anythingRead(
+      "GET /admin/projects/iri/{projectIri}/view-restrictions/items",
+      anythingByIri.addPath("view-restrictions", "items").addParam("resourceClass", anythingThing),
+    ),
+    anythingRead(
+      "GET /admin/projects/iri/{projectIri}/view-restrictions/properties",
+      anythingByIri.addPath("view-restrictions", "properties"),
+    ),
+    anythingRead(
+      "GET /admin/projects/iri/{projectIri}/view-restrictions/property-values",
+      anythingByIri.addPath("view-restrictions", "property-values").addParam("property", anythingText),
+    ),
+    anythingRead(
+      "GET /admin/projects/iri/{projectIri}/view-restrictions/property-items",
+      anythingByIri.addPath("view-restrictions", "property-items").addParam("property", anythingText),
+    ),
+    Row[Longname](
+      "PUT /admin/projects/iri/{projectIri}",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = Random.nextUUID.map(uuid => Longname.unsafeFrom(s"matrix $uuid")),
+      send = (longname, user) => put(anythingByIri, ProjectUpdateRequest(longname = Some(longname)))(user),
+      readBack = Some(_ => anythingState),
+    ),
+    // The two restricted-view writes start from the opposite state, so an allowed cell always changes it.
+    Row[Unit](
+      "POST /admin/projects/iri/{projectIri}/RestrictedViewSettings",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = TestApiClient.deleteJson[Json](restrictedViewUri, rootUser).flatMap(_.assert200).unit,
+      send = (_, user) => post(restrictedViewUri, restrictedViewSet)(user),
+      readBack = Some(_ => restrictedViewState),
+    ),
+    Row[Unit](
+      "DELETE /admin/projects/iri/{projectIri}/RestrictedViewSettings",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = TestApiClient
+        .postJson[Json, SetRestrictedViewRequest](restrictedViewUri, restrictedViewSet, rootUser)
+        .flatMap(_.assert200)
+        .unit,
+      send = (_, user) => delete(restrictedViewUri)(user),
+      readBack = Some(_ => restrictedViewState),
+    ),
+    membershipRow("POST /admin/users/iri/{userIri}/project-memberships/{projectIri}", freshUser)(iri =>
+      post(membershipUri(iri, "project-memberships"), Json.Obj()),
+    ),
+    membershipRow("POST /admin/users/iri/{userIri}/project-admin-memberships/{projectIri}", freshMember)(iri =>
+      post(membershipUri(iri, "project-admin-memberships"), Json.Obj()),
+    ),
+    membershipRow("DELETE /admin/users/iri/{userIri}/project-memberships/{projectIri}", freshMember)(iri =>
+      delete(membershipUri(iri, "project-memberships")),
+    ),
+    membershipRow("DELETE /admin/users/iri/{userIri}/project-admin-memberships/{projectIri}", freshAdmin)(iri =>
+      delete(membershipUri(iri, "project-admin-memberships")),
+    ),
+    anythingRead("GET /admin/permissions/{projectIri}", permissionsOf()),
+    anythingRead("GET /admin/permissions/ap/{projectIri}", permissionsOf("ap")),
+    anythingRead(
+      "GET /admin/permissions/ap/{projectIri}/{groupIri}",
+      permissionsOf("ap").addPath("http://www.knora.org/ontology/knora-admin#ProjectMember"),
+    ),
+    anythingRead("GET /admin/permissions/doap/{projectIri}", permissionsOf("doap")),
+    Row[String](
+      "POST /admin/groups",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = Random.nextUUID.map(uuid => s"matrix-${uuid.toString.take(8)}"),
+      send = (name, user) => post(uri"/admin/groups", groupRequest(name))(user),
+      readBack = Some(groupExists),
     ),
     Row[String](
       "POST /v2/standoff/canonicalize",
@@ -265,7 +506,10 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
     test("the table allows exactly the principals each declared policy allows, for every role-based endpoint") {
       for {
         endpoints  <- ZIO.serviceWith[Endpoints](_.serverEndpoints.map(_.endpoint))
-        declared    = endpoints.flatMap(ep => ep.attribute(Policy.key).flatMap(allowedBy).map(key(ep) -> _)).toMap
+        allDeclared = endpoints.flatMap(ep => ep.attribute(Policy.key).flatMap(allowedBy).map(key(ep) -> _)).toMap
+        declared    = allDeclared -- exempt.keySet
+        staleExempt = (exempt.keySet -- allDeclared.keySet).toList.sorted
+        rowedExempt = (exempt.keySet & rows.map(_.key).toSet).toList.sorted
         table       = rows.map(row => row.key -> row.expected.collect { case (p, Allowed) => p }.toSet).toMap
         duplicates  = rows.groupBy(_.key).collect { case (k, rs) if rs.size > 1 => k }.toList.sorted
         missing     = (declared.keySet -- table.keySet).toList.sorted
@@ -281,11 +525,16 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
                         s"endpoint must allow, never from allowedBy: ${missing.mkString(", ")}"
         wrongPolicy = "the row states the requirement: change the endpoint's policy, and change the row only when " +
                         s"the requirement itself changed:\n${disagreeing.mkString("\n")}"
+        exemptGone =
+          s"remove these exemptions, whose endpoints no longer exist or lost their role-based policy: ${staleExempt.mkString(", ")}"
+        exemptRowed   = s"remove these exemptions, which now have a row: ${rowedExempt.mkString(", ")}"
         duplicateRows = s"merge or delete the duplicate rows of: ${duplicates.mkString(", ")}"
         goneRows      = s"remove the rows of these endpoints, which no longer exist: ${gone.mkString(", ")}"
         lostPolicy    =
           s"these endpoints lost their role-based policy; restore it and keep the row: ${unlabelled.mkString(", ")}"
       } yield (assertTrue(duplicates.isEmpty) ?? duplicateRows) &&
+        (assertTrue(staleExempt.isEmpty) ?? exemptGone) &&
+        (assertTrue(rowedExempt.isEmpty) ?? exemptRowed) &&
         (assertTrue(missing.isEmpty) ?? missingRows) &&
         (assertTrue(gone.isEmpty) ?? goneRows) &&
         (assertTrue(unlabelled.isEmpty) ?? lostPolicy) &&
@@ -296,6 +545,17 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
 }
 
 object AuthorizationMatrixE2ESpec {
+
+  /**
+   * Role-based endpoints without a matrix row (no repeatable, side-effect-free valid request), each mapped to the
+   * spec that proves its 401 and 403.
+   */
+  val exempt: Map[String, String] = Map(
+    "POST /start-compaction"                                               -> "ManagementEndpointsE2ESpec",
+    "POST /admin/maintenance/{action-name}"                                -> "MaintenanceBackfillValueHasXmlE2ESpec",
+    "POST /admin/maintenance/users/replace-iri"                            -> "MaintenanceReplaceUserIriE2ESpec",
+    "POST /admin/maintenance/projects/{projectShortcode}/replace-user-iri" -> "MaintenanceReplaceUserIriInProjectE2ESpec",
+  )
 
   enum Principal(val user: Option[User]) {
     case Anonymous       extends Principal(None)
@@ -322,11 +582,11 @@ object AuthorizationMatrixE2ESpec {
   def allowedBy(policy: Policy): Option[Set[Principal]] = {
     import Principal.*
     policy match {
-      case Policy.ProjectAdmin(_)                    => Some(Set(AnythingAdmin, Root))
-      case Policy.ProjectMember(_)                   => Some(Set(AnythingMember, AnythingAdmin, Root))
-      case Policy.Authenticated(_)                   => Some(Principal.values.toSet - Anonymous)
-      case Policy.SystemAdmin                        => Some(Set(Root))
-      case Policy.Public(_) | Policy.ObjectAccess(_) => None
+      case Policy.ProjectAdmin(_)                       => Some(Set(AnythingAdmin, Root))
+      case Policy.ProjectMember(_)                      => Some(Set(AnythingMember, AnythingAdmin, Root))
+      case Policy.Authenticated(_)                      => Some(Principal.values.toSet - Anonymous)
+      case Policy.SystemAdmin                           => Some(Set(Root))
+      case Policy.Public(_) | Policy.ObjectAccess(_, _) => None
     }
   }
 }

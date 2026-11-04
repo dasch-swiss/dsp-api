@@ -14,8 +14,12 @@ import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.api.v2.ValueUuid
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
+  private val readResources     = "ReadResourcesService, per resource and value"
+  private val valuesResponder   = "ValuesResponderV2, per resource and value"
+  private val valuesRestService = "ValuesRestService, on the resource"
 
   private val base: EndpointInput[Unit] = "v2" / "values"
 
@@ -26,17 +30,21 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
   private val linkToValuesDocumentation =
     """Find detailed documentation on <a href="https://docs.dasch.swiss/DSP-API/03-endpoints/api-v2/editing-values/">docs.dasch.swiss</a>."""
 
-  val getValue = baseEndpoint.withUserEndpoint.get
+  val getValue = baseEndpoint
+    .objectAccessPolicyEndpoint(readResources)
+    .get
     .in(base / resourceIri / valueUuid)
     .in(version)
     .in(ApiV2.Inputs.formatOptions)
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Get a value of a resource. Publicly accessible. Requires appropriate object access permissions on the resource. $linkToValuesDocumentation",
+      s"Get a value of a resource. ${Policy.objectReadRequirement} $linkToValuesDocumentation",
     )
 
-  val postValues = baseEndpoint.withUserEndpoint.post
+  val postValues = baseEndpoint
+    .authenticatedObjectAccessPolicyEndpoint(valuesResponder)
+    .post
     .in(base)
     .in(
       stringJsonBody.example(
@@ -46,10 +54,12 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Create a new value for a resource. Requires appropriate object access permissions on the resource. $linkToValuesDocumentation",
+      s"Create a new value for a resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
-  val putValuesOrder = baseEndpoint.withUserEndpoint.put
+  val putValuesOrder = baseEndpoint
+    .authenticatedObjectAccessPolicyEndpoint(valuesRestService)
+    .put
     .in(base / "order")
     .in(
       jsonBody[ReorderValuesRequest].example(
@@ -63,10 +73,12 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     )
     .out(jsonBody[ReorderValuesResponse])
     .description(
-      s"Reorder values of a property on a resource. Requires modify permission on the resource. $linkToValuesDocumentation",
+      s"Reorder values of a property on a resource. Requires modify permission on the resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
-  val putValues = baseEndpoint.withUserEndpoint.put
+  val putValues = baseEndpoint
+    .authenticatedObjectAccessPolicyEndpoint(valuesResponder)
+    .put
     .in(base)
     .in(
       stringJsonBody.example(
@@ -76,16 +88,18 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Update a value of a resource. Requires view permission on the resource and modify permission on the value, or change rights permission to change its permissions; a link update also requires modify permission on the resource. $linkToValuesDocumentation",
+      s"Update a value of a resource. Requires view permission on the resource and modify permission on the value, or change rights permission to change its permissions; a link update also requires modify permission on the resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
-  val deleteValues = baseEndpoint.withUserEndpoint.post
+  val deleteValues = baseEndpoint
+    .authenticatedObjectAccessPolicyEndpoint(valuesResponder)
+    .post
     .in(base / "delete")
     .in(stringJsonBody.example(ValuesEndpoints.Examples.deleteValue))
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Mark a value as deleted. Requires view permission on the resource and delete permission on the value. $linkToValuesDocumentation",
+      s"Mark a value as deleted. Requires view permission on the resource and delete permission on the value. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
   val postValuesErase = baseEndpoint.securedEndpoint.post

@@ -87,7 +87,7 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
    * set it again. A factory that decides its policy does so in the security logic, before the body is decoded.
    */
 
-  /** Declares [[Policy.Public]]; reads no credentials. */
+  /** Declares [[Policy.Public]]; needs no credentials. */
   def publicPolicyEndpoint(reason: String): RequiresMethod[PublicEndpoint[Unit, Throwable, Unit, Any]] =
     RequiresMethod(endpoint.errorOut(errorOutputs).attribute(Policy.key, Policy.Public(reason)), _.method(_))
 
@@ -97,7 +97,11 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
   ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
     authorizingEndpoint(Policy.Authenticated(reason), user => authorization.ensureUserIsNotAnonymous(user).as(user))
 
-  /** Declares and enforces [[Policy.SystemAdmin]]: an active system administrator. */
+  /**
+   * Declares and enforces [[Policy.SystemAdmin]]: an active system administrator. Only here may a handler drop the
+   * principal (`serverLogic(_ => ...)`), because the security logic already decided; project-scoped and authenticated
+   * endpoints must use theirs.
+   */
   val systemAdminPolicyEndpoint
     : RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
     authorizingEndpoint(Policy.SystemAdmin, user => authorization.ensureSystemAdmin(user).as(user))
@@ -116,17 +120,30 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
     )
 
   /**
-   * Declares [[Policy.ObjectAccess]]; anonymous callers are admitted, the owning domain checks the object. Inactive
-   * users are refused by authentication only.
+   * Declares [[Policy.ObjectAccess]] for a read; anonymous callers are admitted, the owning domain checks the object.
+   * Inactive users are refused by authentication only. A route that changes data uses
+   * [[authenticatedObjectAccessPolicyEndpoint]].
    */
   def objectAccessPolicyEndpoint(
     enforcedIn: String,
   ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
     RequiresMethod(
       endpointWithBearerBasicAuthOptional
-        .attribute(Policy.key, Policy.ObjectAccess(enforcedIn))
+        .attribute(Policy.key, Policy.ObjectAccess(enforcedIn, admitsAnonymous = true))
         .zServerSecurityLogic(authenticateOrAnonymous),
       _.method(_),
+    )
+
+  /**
+   * Declares [[Policy.ObjectAccess]] for a route that changes data: the security logic refuses anonymous and inactive
+   * users, the owning domain checks the object.
+   */
+  def authenticatedObjectAccessPolicyEndpoint(
+    enforcedIn: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    authorizingEndpoint(
+      Policy.ObjectAccess(enforcedIn, admitsAnonymous = false),
+      user => authorization.ensureUserIsNotAnonymous(user).as(user),
     )
 
   private def authorizingEndpoint[P](

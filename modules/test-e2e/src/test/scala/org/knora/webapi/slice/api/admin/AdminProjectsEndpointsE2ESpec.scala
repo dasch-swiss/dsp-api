@@ -10,6 +10,7 @@ import sttp.client4.*
 import sttp.model.*
 import zio.*
 import zio.json.*
+import zio.json.ast.Json
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
@@ -90,6 +91,13 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
           .flatMap(_.assert200)
           .map(_.settings)
           .map(settings => assertTrue(settings.size.contains("!512,512"), !settings.watermark))
+      },
+    ),
+    suite("given a caller who is not a system admin")(
+      test("answer 403 to CREATE a project with a malformed body") {
+        TestApiClient
+          .postJson[Json, Json](uri"/admin/projects", Json.Obj("shortname" -> Json.Num(1)), normalUser)
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
     ),
     suite("given a custom Iri")(
@@ -256,6 +264,15 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
               result.description.contains(StringLiteralV2.from("Test Projekt", DE)),
             ),
           )
+      },
+      test("answer 403 to UPDATE an unknown project, even to a SystemAdmin") {
+        TestApiClient
+          .putJson[Json, ProjectUpdateRequest](
+            uri"/admin/projects/iri/${"http://rdfh.ch/projects/notexisting"}",
+            ProjectUpdateRequest(longname = Some(Longname.unsafeFrom("unknown"))),
+            rootUser,
+          )
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
       },
     ),
     suite("used to query members [FUNCTIONALITY]")(

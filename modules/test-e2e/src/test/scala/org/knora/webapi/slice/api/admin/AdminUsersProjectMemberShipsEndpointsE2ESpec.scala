@@ -160,6 +160,21 @@ class AdminUsersProjectMemberShipsEndpointsE2ESpec extends E2EZSpec {
         } yield assertTrue(adminMemberships.projects == Seq.empty)
       } @@ TestAspect.timeout(5.seconds) @@ TestAspect.flaky,
     ),
+    suite("used by a ProjectAdmin of the project")(
+      test("answer 400 to adding a user who is already a member") {
+        for {
+          newUser  <- createNewUser
+          _        <- addUserToProject(newUser.userIri, anythingProjectIri, anythingAdminUser).flatMap(_.assert200)
+          response <- addUserToProject(newUser.userIri, anythingProjectIri, anythingAdminUser)
+        } yield assertTrue(response.code == StatusCode.BadRequest)
+      },
+      test("answer 400 to removing a user who is not a member") {
+        for {
+          newUser  <- createNewUser
+          response <- removeUserFromProject(newUser.userIri, anythingProjectIri, anythingAdminUser)
+        } yield assertTrue(response.code == StatusCode.BadRequest)
+      },
+    ),
   )
 
   private def getProjectMemberships(userIri: UserIri, requestingUser: User = rootUser) =

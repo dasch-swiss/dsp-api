@@ -163,7 +163,7 @@ If permissions are not given, configurable default permissions are used (see
 ).
 
 To create a resource, the user must have permission to create resources of that class in that project.
-Anonymous users cannot create resources; the request is refused with 403 Forbidden.
+Anonymous users cannot create resources; the request is refused with 401 Unauthorized.
 
 The predicate `knora-api:attachedToUser` can be used to specify a creator other than the requesting user only if the
 requesting user is an administrator of the project or a system administrator. The specified creator must also have
