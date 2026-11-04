@@ -235,6 +235,32 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
   private def userState(iri: UserIri): RIO[env, String] =
     TestApiClient.getJson[Json](uri"/admin/users/iri/${iri.value}", rootUser).map(_.body.toString)
 
+  private def get(uri: Uri)(user: Option[User]) =
+    user.fold(TestApiClient.getJson[Json](uri))(u => TestApiClient.getJson[Json](uri, u)).map(_.code)
+
+  private val anythingByIri = uri"/admin/projects/iri/${anythingProjectIri.value}"
+  private val anythingThing = "http://www.knora.org/ontology/0001/anything#Thing"
+  private val anythingText  = "http://www.knora.org/ontology/0001/anything#hasText"
+
+  /** A read of the anything project, which an admin of it may make; it writes nothing. */
+  private def anythingRead(key: String, path: String*)(params: (String, String)*) =
+    Row[Unit](
+      key,
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = ZIO.unit,
+      send = (_, user) => get(anythingByIri.addPath(path).addParams(params*))(user),
+      readBack = None,
+    )
+
+  private val restrictedViewUri = anythingByIri.addPath("RestrictedViewSettings")
+  private val restrictedViewSet = SetRestrictedViewRequest(Some(RestrictedView.Size.unsafeFrom("!512,512")), None)
+
+  private val anythingState: RIO[env, String] =
+    TestApiClient.getJson[Json](anythingByIri, rootUser).map(_.body.toString)
+
+  private val restrictedViewState: RIO[env, String] =
+    TestApiClient.getJson[Json](restrictedViewUri, rootUser).map(_.body.toString)
+
   // The oracle. Columns: anonymous, normalUser, anythingUser1, incunabulaProjectAdminUser, anythingAdminUser, rootUser.
   private val rows: List[Row[?]] = List(
     listRow("POST /admin/lists", outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed))(_ =>
@@ -319,6 +345,56 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
           )
           .map(_.code),
       readBack = Some(mappingExists),
+    ),
+    anythingRead("GET /admin/projects/iri/{projectIri}/AllData", "AllData")(),
+    anythingRead("GET /admin/projects/iri/{projectIri}/members", "members")(),
+    anythingRead("GET /admin/projects/iri/{projectIri}/admin-members", "admin-members")(),
+    anythingRead("GET /admin/projects/iri/{projectIri}/view-restrictions/classes", "view-restrictions", "classes")(),
+    anythingRead("GET /admin/projects/iri/{projectIri}/view-restrictions/values", "view-restrictions", "values")(
+      "resourceClass" -> anythingThing,
+    ),
+    anythingRead("GET /admin/projects/iri/{projectIri}/view-restrictions/items", "view-restrictions", "items")(
+      "resourceClass" -> anythingThing,
+    ),
+    anythingRead(
+      "GET /admin/projects/iri/{projectIri}/view-restrictions/properties",
+      "view-restrictions",
+      "properties",
+    )(),
+    anythingRead(
+      "GET /admin/projects/iri/{projectIri}/view-restrictions/property-values",
+      "view-restrictions",
+      "property-values",
+    )("property" -> anythingText),
+    anythingRead(
+      "GET /admin/projects/iri/{projectIri}/view-restrictions/property-items",
+      "view-restrictions",
+      "property-items",
+    )("property" -> anythingText),
+    Row[Longname](
+      "PUT /admin/projects/iri/{projectIri}",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = Random.nextUUID.map(uuid => Longname.unsafeFrom(s"matrix $uuid")),
+      send = (longname, user) => put(anythingByIri, ProjectUpdateRequest(longname = Some(longname)))(user),
+      readBack = Some(_ => anythingState),
+    ),
+    // The two restricted-view writes start from the opposite state, so an allowed cell always changes it.
+    Row[Unit](
+      "POST /admin/projects/iri/{projectIri}/RestrictedViewSettings",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = TestApiClient.deleteJson[Json](restrictedViewUri, rootUser).flatMap(_.assert200).unit,
+      send = (_, user) => post(restrictedViewUri, restrictedViewSet)(user),
+      readBack = Some(_ => restrictedViewState),
+    ),
+    Row[Unit](
+      "DELETE /admin/projects/iri/{projectIri}/RestrictedViewSettings",
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+      prepare = TestApiClient
+        .postJson[Json, SetRestrictedViewRequest](restrictedViewUri, restrictedViewSet, rootUser)
+        .flatMap(_.assert200)
+        .unit,
+      send = (_, user) => delete(restrictedViewUri)(user),
+      readBack = Some(_ => restrictedViewState),
     ),
     Row[String](
       "POST /v2/standoff/canonicalize",

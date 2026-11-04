@@ -2,7 +2,6 @@
 # a new endpoint uses a policy-declaring factory in BaseEndpoints instead of being listed here.
 DELETE /admin/groups/{groupIri}
 DELETE /admin/permissions/{permissionIri}
-DELETE /admin/projects/iri/{projectIri}/RestrictedViewSettings
 DELETE /admin/projects/shortcode/{projectShortcode}/RestrictedViewSettings
 DELETE /admin/users/iri/{userIri}
 DELETE /admin/users/iri/{userIri}/group-memberships/{groupIri}
@@ -24,15 +23,6 @@ GET /admin/permissions/ap/{projectIri}
 GET /admin/permissions/ap/{projectIri}/{groupIri}
 GET /admin/permissions/doap/{projectIri}
 GET /admin/permissions/{projectIri}
-GET /admin/projects/iri/{projectIri}/AllData
-GET /admin/projects/iri/{projectIri}/admin-members
-GET /admin/projects/iri/{projectIri}/members
-GET /admin/projects/iri/{projectIri}/view-restrictions/classes
-GET /admin/projects/iri/{projectIri}/view-restrictions/items
-GET /admin/projects/iri/{projectIri}/view-restrictions/properties
-GET /admin/projects/iri/{projectIri}/view-restrictions/property-items
-GET /admin/projects/iri/{projectIri}/view-restrictions/property-values
-GET /admin/projects/iri/{projectIri}/view-restrictions/values
 GET /admin/projects/shortcode/{projectShortcode}/admin-members
 GET /admin/projects/shortcode/{projectShortcode}/legal-info/authorships
 GET /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders
@@ -75,7 +65,6 @@ PATCH /v2/ontologies/cardinalities
 POST /admin/groups
 POST /admin/permissions/ap
 POST /admin/permissions/doap
-POST /admin/projects/iri/{projectIri}/RestrictedViewSettings
 POST /admin/projects/shortcode/{projectShortcode}/RestrictedViewSettings
 POST /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders
 POST /admin/sparql/query
@@ -104,7 +93,6 @@ PUT /admin/permissions/{permissionIri}/group
 PUT /admin/permissions/{permissionIri}/hasPermissions
 PUT /admin/permissions/{permissionIri}/property
 PUT /admin/permissions/{permissionIri}/resourceClass
-PUT /admin/projects/iri/{projectIri}
 PUT /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders
 PUT /admin/projects/shortcode/{projectShortcode}/legal-info/licenses/{licenseIri}/disable
 PUT /admin/projects/shortcode/{projectShortcode}/legal-info/licenses/{licenseIri}/enable

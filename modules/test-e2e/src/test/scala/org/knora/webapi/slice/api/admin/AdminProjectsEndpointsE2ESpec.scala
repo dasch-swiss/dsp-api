@@ -265,6 +265,15 @@ class AdminProjectsEndpointsE2ESpec extends E2EZSpec {
             ),
           )
       },
+      test("answer 403 to UPDATE an unknown project, even to a SystemAdmin") {
+        TestApiClient
+          .putJson[Json, ProjectUpdateRequest](
+            uri"/admin/projects/iri/${"http://rdfh.ch/projects/notexisting"}",
+            ProjectUpdateRequest(longname = Some(Longname.unsafeFrom("unknown"))),
+            rootUser,
+          )
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
     ),
     suite("used to query members [FUNCTIONALITY]")(
       test("return all members of a project identified by iri") {

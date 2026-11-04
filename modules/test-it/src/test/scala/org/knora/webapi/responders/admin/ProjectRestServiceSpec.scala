@@ -29,6 +29,7 @@ import org.knora.webapi.slice.api.admin.model.*
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectCreateRequest
 import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndResponses.ProjectUpdateRequest
 import org.knora.webapi.slice.api.admin.service.ProjectRestService
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.util.MutableTestIri
 
@@ -320,36 +321,37 @@ class ProjectRestServiceSpec extends E2EZSpec {
           Some(Logo.unsafeFrom("/fu/bar/baz-updated.jpg")),
           Some(SelfJoin.CanJoin),
         )
-        projectRestService(_.updateProject(rootUser)(newProjectIri.asProjectIri, updateRequest)).map(received =>
-          assertTrue(
-            received.project.shortname.value == "newproject",
-            received.project.shortcode.value == "111C",
-            received.project.longname.map(_.value).contains("updated project longname"),
-            received.project.description ==
-              Seq(
-                StringLiteralV2.from(
-                  value = """updated project description with "quotes" and <html tags>""",
-                  EN,
+        projectRestService(_.updateProject(TestCandidates.of(rootUser))(newProjectIri.asProjectIri, updateRequest)).map(
+          received =>
+            assertTrue(
+              received.project.shortname.value == "newproject",
+              received.project.shortcode.value == "111C",
+              received.project.longname.map(_.value).contains("updated project longname"),
+              received.project.description ==
+                Seq(
+                  StringLiteralV2.from(
+                    value = """updated project description with "quotes" and <html tags>""",
+                    EN,
+                  ),
                 ),
-              ),
-            received.project.keywords.sorted == Seq("updated", "keywords").sorted,
-            received.project.logo.map(_.value).contains("/fu/bar/baz-updated.jpg"),
-            received.project.selfjoin == SelfJoin.CanJoin,
-          ),
+              received.project.keywords.sorted == Seq("updated", "keywords").sorted,
+              received.project.logo.map(_.value).contains("/fu/bar/baz-updated.jpg"),
+              received.project.selfjoin == SelfJoin.CanJoin,
+            ),
         )
       },
-      test("return 'NotFound' if a not existing project IRI is submitted during update") {
+      test("return 'Forbidden' if a not existing project IRI is submitted during update") {
         val updateRequest = ProjectUpdateRequest(longname = Some(Longname.unsafeFrom("longname")))
-        projectRestService(_.updateProject(rootUser)(notExistingProjectIri, updateRequest)).exit.map(
+        projectRestService(_.updateProject(TestCandidates.of(rootUser))(notExistingProjectIri, updateRequest)).exit.map(
           assert(_)(
-            E2EZSpec.failsWithMessageEqualTo[NotFoundException](s"Project '$notExistingProjectIri' not found."),
+            E2EZSpec.failsWithMessageEqualTo[ForbiddenException](s"Project with id $notExistingProjectIri not found."),
           ),
         )
       },
     ),
     suite("used to query members")(
       test("return all members of a project identified by IRI") {
-        projectRestService(_.getProjectMembersById(rootUser)(imagesProject.id)).map { actual =>
+        projectRestService(_.getProjectMembersById(TestCandidates.of(rootUser))(imagesProject.id)).map { actual =>
           assert(actual.members.map(_.id))(
             hasSameElements(Seq(imagesUser01.id, imagesUser02.id, multiuserUser.id, imagesReviewerUser.id)),
           )
@@ -370,7 +372,7 @@ class ProjectRestServiceSpec extends E2EZSpec {
         }
       },
       test("return 'Forbidden' when the project IRI is unknown (project membership)") {
-        projectRestService(_.getProjectMembersById(rootUser)(notExistingProjectIri)).exit.map(
+        projectRestService(_.getProjectMembersById(TestCandidates.of(rootUser))(notExistingProjectIri)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
               s"Project with id $notExistingProjectIri not found.",
@@ -397,7 +399,7 @@ class ProjectRestServiceSpec extends E2EZSpec {
         )
       },
       test("return all project admin members of a project identified by IRI") {
-        projectRestService(_.getProjectAdminMembersById(rootUser)(imagesProject.id)).map { actual =>
+        projectRestService(_.getProjectAdminMembersById(TestCandidates.of(rootUser))(imagesProject.id)).map { actual =>
           assert(actual.members.map(_.id))(hasSameElements(Seq(imagesUser01.id, multiuserUser.id)))
         }
       },
@@ -412,7 +414,7 @@ class ProjectRestServiceSpec extends E2EZSpec {
         }
       },
       test("return 'Forbidden' when the project IRI is unknown (project admin membership)") {
-        projectRestService(_.getProjectAdminMembersById(rootUser)(notExistingProjectIri)).exit.map(
+        projectRestService(_.getProjectAdminMembersById(TestCandidates.of(rootUser))(notExistingProjectIri)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
               s"Project with id $notExistingProjectIri not found.",
