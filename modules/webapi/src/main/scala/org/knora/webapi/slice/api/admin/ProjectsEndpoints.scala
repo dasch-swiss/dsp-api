@@ -35,52 +35,73 @@ final class ProjectsEndpoints(baseEndpoints: BaseEndpoints) {
   private val adminMembers           = "admin-members"
   private val restrictedViewSettings = "RestrictedViewSettings"
 
+  private val publicReason      = "Public project metadata."
+  private val publicRequirement = Policy.Public(publicReason).requirement
+
   object Public {
 
-    val getAdminProjects = baseEndpoints.publicEndpoint.get
+    val getAdminProjects = baseEndpoints
+      .publicPolicyEndpoint(publicReason)
+      .get
       .in(projectsBase)
       .out(jsonBody[ProjectsGetResponse])
-      .description("Returns all projects. Publicly accessible.")
+      .description(s"Returns all projects. $publicRequirement")
 
-    val getAdminProjectsKeywords = baseEndpoints.publicEndpoint.get
+    val getAdminProjectsKeywords = baseEndpoints
+      .publicPolicyEndpoint(publicReason)
+      .get
       .in(projectsBase / keywords)
       .out(jsonBody[ProjectsKeywordsGetResponse])
-      .description("Returns all unique keywords for all projects as a list. Publicly accessible.")
+      .description(s"Returns all unique keywords for all projects as a list. $publicRequirement")
 
-    val getAdminProjectsByProjectIri = baseEndpoints.publicEndpoint.get
+    val getAdminProjectsByProjectIri = baseEndpoints
+      .publicPolicyEndpoint(publicReason)
+      .get
       .in(projectsByIri)
       .out(jsonBody[ProjectGetResponse])
-      .description("Returns a single project identified by the IRI. Publicly accessible.")
+      .description(s"Returns a single project identified by the IRI. $publicRequirement")
 
-    val getAdminProjectsByProjectShortcode = baseEndpoints.publicEndpoint.get
+    val getAdminProjectsByProjectShortcode = baseEndpoints
+      .publicPolicyEndpoint(publicReason)
+      .get
       .in(projectsByShortcode)
       .out(jsonBody[ProjectGetResponse])
-      .description("Returns a single project identified by the shortcode. Publicly accessible.")
+      .description(s"Returns a single project identified by the shortcode. $publicRequirement")
 
-    val getAdminProjectsByProjectShortname = baseEndpoints.publicEndpoint.get
+    val getAdminProjectsByProjectShortname = baseEndpoints
+      .publicPolicyEndpoint(publicReason)
+      .get
       .in(projectsByShortname)
       .out(jsonBody[ProjectGetResponse])
-      .description("Returns a single project identified by the shortname. Publicly accessible.")
+      .description(s"Returns a single project identified by the shortname. $publicRequirement")
 
-    val getAdminProjectsKeywordsByProjectIri = baseEndpoints.publicEndpoint.get
+    val getAdminProjectsKeywordsByProjectIri = baseEndpoints
+      .publicPolicyEndpoint(publicReason)
+      .get
       .in(projectsByIri / keywords)
       .out(jsonBody[ProjectKeywordsGetResponse])
-      .description("Returns all keywords for a single project. Publicly accessible.")
+      .description(s"Returns all keywords for a single project. $publicRequirement")
 
-    val getAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints.publicEndpoint.get
+    val getAdminProjectsByProjectIriRestrictedViewSettings = baseEndpoints
+      .publicPolicyEndpoint(publicReason)
+      .get
       .in(projectsByIri / restrictedViewSettings)
       .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
-      .description("Returns the project's restricted view settings identified by the IRI. Publicly accessible.")
+      .description(s"Returns the project's restricted view settings identified by the IRI. $publicRequirement")
 
-    val getAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints.publicEndpoint.get
+    val getAdminProjectsByProjectShortcodeRestrictedViewSettings = baseEndpoints
+      .publicPolicyEndpoint(publicReason)
+      .get
       .in(projectsByShortcode / restrictedViewSettings)
       .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
-      .description("Returns the project's restricted view settings identified by the shortcode. Publicly accessible.")
+      .description(s"Returns the project's restricted view settings identified by the shortcode. $publicRequirement")
 
-    val getAdminProjectsByProjectShortnameRestrictedViewSettings = baseEndpoints.publicEndpoint.get
+    val getAdminProjectsByProjectShortnameRestrictedViewSettings = baseEndpoints
+      .publicPolicyEndpoint(publicReason)
+      .get
       .in(projectsByShortname / restrictedViewSettings)
       .out(jsonBody[ProjectRestrictedViewSettingsGetResponseADM])
-      .description("Returns the project's restricted view settings identified by the shortname. Publicly accessible.")
+      .description(s"Returns the project's restricted view settings identified by the shortname. $publicRequirement")
   }
 
   object Secured {

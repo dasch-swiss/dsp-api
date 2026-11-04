@@ -21,23 +21,31 @@ import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "groups"
 
+  private val publicReason      = "Group names and descriptions are public project metadata."
+  private val publicRequirement = Policy.Public(publicReason).requirement
+
   private val groupGetResponse =
     jsonBody[GroupGetResponseADM].example(Examples.GroupEndpointsExample.groupGetResponseADM)
 
-  val getGroups = baseEndpoints.publicEndpoint.get
+  val getGroups = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in(base)
     .out(jsonBody[GroupsGetResponseADM].example(Examples.GroupEndpointsExample.groupsGetResponseADM))
-    .description("Return all groups. Publicly accessible.")
+    .description(s"Return all groups. $publicRequirement")
 
-  val getGroupByIri = baseEndpoints.publicEndpoint.get
+  val getGroupByIri = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in(base / groupIriPathVar)
     .out(groupGetResponse)
-    .description("Return a single group identified by its IRI. Publicly accessible.")
+    .description(s"Return a single group identified by its IRI. $publicRequirement")
 
   val getGroupMembers = baseEndpoints.securedEndpoint.get
     .in(base / groupIriPathVar / "members")

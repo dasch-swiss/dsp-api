@@ -87,7 +87,7 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
    * set it again. A factory that decides its policy does so in the security logic, before the body is decoded.
    */
 
-  /** Declares [[Policy.Public]]; reads no credentials. */
+  /** Declares [[Policy.Public]]; needs no credentials. */
   def publicPolicyEndpoint(reason: String): RequiresMethod[PublicEndpoint[Unit, Throwable, Unit, Any]] =
     RequiresMethod(endpoint.errorOut(errorOutputs).attribute(Policy.key, Policy.Public(reason)), _.method(_))
 

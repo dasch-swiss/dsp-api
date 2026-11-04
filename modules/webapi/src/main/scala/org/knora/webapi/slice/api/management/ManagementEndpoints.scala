@@ -67,16 +67,23 @@ object HealthResponse {
 
 final case class ManagementEndpoints(baseEndpoints: BaseEndpoints) {
 
-  val getVersion = baseEndpoints.publicEndpoint.get
+  private val publicReason      = "Operational status, no data."
+  private val publicRequirement = Policy.Public(publicReason).requirement
+
+  val getVersion = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in("version")
     .out(jsonBody[VersionResponse].example(VersionResponse.current))
-    .description("Get version information. Publicly accessible.")
+    .description(s"Get version information. $publicRequirement")
 
-  val getHealth = baseEndpoints.publicEndpoint.get
+  val getHealth = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in("health")
     .out(jsonBody[HealthResponse])
     .out(statusCode)
-    .description("Get health status. Publicly accessible.")
+    .description(s"Get health status. $publicRequirement")
 
   val postStartCompaction = baseEndpoints.systemAdminPolicyEndpoint.post
     .in("start-compaction")
