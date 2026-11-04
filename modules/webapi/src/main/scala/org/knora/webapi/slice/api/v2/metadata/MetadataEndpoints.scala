@@ -17,6 +17,7 @@ import java.time.Instant
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.slice.infrastructure.ColumnDef
 import org.knora.webapi.slice.infrastructure.CsvRowBuilder
 
@@ -60,7 +61,11 @@ object ExportFormat {
 final class MetadataEndpoints(baseEndpoints: BaseEndpoints) {
   val base = "v2" / "metadata"
 
-  val getResourcesMetadata = baseEndpoints.securedEndpoint.get
+  private val pathProjectShortcode = "path projectShortcode"
+
+  val getResourcesMetadata = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectShortcode)
+    .get
     .in(base / "projects" / projectShortcode / "resources")
     .in(query[ExportFormat]("format").default(ExportFormat.CSV).description("The format of the response."))
     .in(
@@ -97,7 +102,7 @@ final class MetadataEndpoints(baseEndpoints: BaseEndpoints) {
     .description(
       "Get metadata of all resources in a project. " +
         "The metadata is returned with complex schema IRIs in the payload. " +
-        "This endpoint is only available for system and project admins.",
+        Policy.ProjectAdmin(pathProjectShortcode).requirement,
     )
 }
 

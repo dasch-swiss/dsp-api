@@ -27,6 +27,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.Permission.ObjectAccess
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.fair.api.FairEndpoints
 import org.knora.webapi.slice.fair.api.FairRestService
 import org.knora.webapi.slice.fair.api.FairServerEndpoints
@@ -137,8 +138,12 @@ class FairEndpointsHttpSpec extends ZIOSpecDefault {
                override def get: UIO[Option[String]] =
                  calls.update(_ + 1) *> up.get.map(isUp => if (isUp) shellText.orElse(Some(shell)) else None)
              }
-      endpoints = FairServerEndpoints(fairConfig, FairEndpoints(), FairRestService(builder, stub, fairConfig, api))
-      app       = ZioHttpInterpreter(DspApiServer.serverOptions(ctxStore)).toHttp(endpoints.serverEndpoints)
+      endpoints = FairServerEndpoints(
+                    fairConfig,
+                    FairEndpoints(BaseEndpoints(null, null)),
+                    FairRestService(builder, stub, fairConfig, api),
+                  )
+      app = ZioHttpInterpreter(DspApiServer.serverOptions(ctxStore)).toHttp(endpoints.serverEndpoints)
     } yield Harness(
       request =>
         ZIO.scoped(

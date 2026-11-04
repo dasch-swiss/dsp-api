@@ -28,7 +28,6 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.v3.BadRequest
 import org.knora.webapi.slice.api.v3.Conflict
 import org.knora.webapi.slice.api.v3.NotFound
-import org.knora.webapi.slice.api.v3.V3Authorizer
 import org.knora.webapi.slice.api.v3.V3ErrorCode.Conflicts
 import org.knora.webapi.slice.api.v3.V3ErrorCode.NotFounds
 import org.knora.webapi.slice.api.v3.V3ErrorCode.data_graph_exists
@@ -45,7 +44,6 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode.project_ontologies_missing
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
 
 final class V3ProjectsRestService(
-  auth: V3Authorizer,
   exportService: ProjectMigrationExportService,
   importService: ProjectMigrationImportService,
   dataImportService: ProjectDataImportService,
@@ -53,9 +51,8 @@ final class V3ProjectsRestService(
   userService: UserService,
 ) {
 
-  private def ensureSystemAdminAndProjectExists(user: User, projectIri: ProjectIri) =
-    auth.ensureSystemAdmin(user) *>
-      projectService.findById(projectIri).orDie.someOrFail(NotFound.from(projectIri))
+  private def ensureProjectExists(projectIri: ProjectIri) =
+    projectService.findById(projectIri).orDie.someOrFail(NotFound.from(projectIri))
 
   private def conflict(code: Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
     Conflict(
@@ -75,7 +72,7 @@ final class V3ProjectsRestService(
     user: User,
   )(projectIri: ProjectIri, skipAssets: Boolean): IO[V3ErrorInfo, DataTaskStatusResponse] =
     for {
-      project <- ensureSystemAdminAndProjectExists(user, projectIri)
+      project <- ensureProjectExists(projectIri)
       state   <-
         exportService
           .createExport(project, user, skipAssets)
@@ -86,19 +83,14 @@ final class V3ProjectsRestService(
   // task slot. Their `projectIri` is unvalidated path input, echoed into the error payload and never checked
   // against the export, so it must stay unresolved here: re-adding an existence gate reproduces DEV-6766, where
   // an erased project's export becomes unreachable and wedges the one global slot for every project.
-  def getProjectExportStatus(
-    user: User,
-  )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] = for {
-    _     <- auth.ensureSystemAdmin(user)
-    state <-
-      exportService.getExportStatus(exportId).orElseFail(notFound(export_not_found, projectIri, exportId))
-  } yield DataTaskStatusResponse.from(state)
+  def getProjectExportStatus(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
+    for {
+      state <-
+        exportService.getExportStatus(exportId).orElseFail(notFound(export_not_found, projectIri, exportId))
+    } yield DataTaskStatusResponse.from(state)
 
   // `projectIri` is unvalidated path input here — see getProjectExportStatus above.
-  def deleteProjectExport(
-    user: User,
-  )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, Unit] = for {
-    _ <- auth.ensureSystemAdmin(user)
+  def deleteProjectExport(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, Unit] = for {
     _ <- exportService
            .deleteExport(exportId)
            .mapError {
@@ -110,13 +102,10 @@ final class V3ProjectsRestService(
   // Download the export as a zip stream. Annotated to match the tapir endpoint (stream + media type + filename).
   // `projectIri` is unvalidated path input here — see getProjectExportStatus above.
   def downloadProjectExport(
-    user: User,
-  )(
     projectIri: ProjectIri,
     exportId: DataTaskId,
   ): IO[V3ErrorInfo, (String, ZioStreams.BinaryStream)] =
     for {
-      _                 <- auth.ensureSystemAdmin(user)
       filenameAndStream <- exportService.downloadExport(exportId).mapError {
                              case Some(ExportInProgressError(t)) => conflict(export_in_progress, t.projectIri, t.id)
                              case Some(ExportFailedError(t))     => conflict(export_failed, t.projectIri, t.id)
@@ -135,28 +124,23 @@ final class V3ProjectsRestService(
     user: User,
   )(projectIri: ProjectIri, stream: ZStream[Any, Throwable, Byte]): IO[V3ErrorInfo, DataTaskStatusResponse] =
     failImportFeatureMissing.zipRight(for {
-      _     <- auth.ensureSystemAdmin(user)
       state <-
         importService
           .importDataExport(projectIri, user, stream)
           .mapError { case ImportExistsError(t) => conflict(import_exists, t.projectIri, t.id) }
     } yield DataTaskStatusResponse.from(state))
 
-  def getProjectImportStatus(
-    user: User,
-  )(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
+  def getProjectImportStatus(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
     failImportFeatureMissing.zipRight {
       for {
-        _     <- auth.ensureSystemAdmin(user)
         state <-
           importService.getImportStatus(importId).orElseFail(notFound(import_not_found, projectIri, importId))
       } yield DataTaskStatusResponse.from(state)
     }
 
-  def deleteProjectImport(user: User)(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
+  def deleteProjectImport(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
     failImportFeatureMissing.zipRight {
       for {
-        _ <- auth.ensureSystemAdmin(user)
         _ <- importService
                .deleteImport(importId)
                .mapError {
@@ -235,7 +219,7 @@ final class V3ProjectsRestService(
     onBehalfOfUser: String,
   ): IO[V3ErrorInfo, DataTaskStatusResponse] =
     failDataImportFeatureMissing.zipRight(for {
-      project <- ensureSystemAdminAndProjectExists(user, projectIri)
+      project <- ensureProjectExists(projectIri)
       // On-behalf-of user: malformed identifier (400), then not-found (404), then eligibility (400). Runs after the
       // project-exists check and before the create-only precondition (G1 order).
       onBehalfOf <- resolveOnBehalfOfUser(projectIri, onBehalfOfUser)
@@ -270,20 +254,19 @@ final class V3ProjectsRestService(
     } yield DataTaskStatusResponse.from(state))
 
   def getProjectDataImportStatus(
-    user: User,
-  )(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
+    projectIri: ProjectIri,
+    importId: DataTaskId,
+  ): IO[V3ErrorInfo, DataTaskStatusResponse] =
     failDataImportFeatureMissing.zipRight {
       for {
-        _     <- auth.ensureSystemAdmin(user)
         state <-
           dataImportService.getImportStatus(importId).orElseFail(notFound(import_not_found, projectIri, importId))
       } yield DataTaskStatusResponse.from(state)
     }
 
-  def deleteProjectDataImport(user: User)(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
+  def deleteProjectDataImport(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
     failDataImportFeatureMissing.zipRight {
       for {
-        _ <- auth.ensureSystemAdmin(user)
         _ <- dataImportService
                .deleteImport(importId)
                .mapError {

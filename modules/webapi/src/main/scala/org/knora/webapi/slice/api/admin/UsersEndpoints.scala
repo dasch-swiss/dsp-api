@@ -59,6 +59,8 @@ final class UsersEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val pathProjectIri          = "path projectIri"
   private val projectAdminRequirement = Policy.ProjectAdmin(pathProjectIri).requirement
+  private val pathGroupProject        = "path groupIri's project"
+  private val groupAdminRequirement   = Policy.ProjectAdmin(pathGroupProject).requirement
 
   object get {
     val users = baseEndpoints.securedEndpoint.get
@@ -128,12 +130,12 @@ final class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .out(jsonBody[UserResponse])
       .description(s"Add a user as an admin to a project identified by IRI. $projectAdminRequirement")
 
-    val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.post
+    val usersByIriGroupMemberShips = baseEndpoints
+      .projectAdminPolicyEndpoint(pathGroupProject)
+      .post
       .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)
       .out(jsonBody[UserResponse])
-      .description(
-        "Add a user to a group identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
-      )
+      .description(s"Add a user to a group identified by IRI. $groupAdminRequirement")
   }
 
   object put {
@@ -190,12 +192,12 @@ final class UsersEndpoints(baseEndpoints: BaseEndpoints) {
       .out(jsonBody[UserResponse])
       .description(s"Remove a user form an admin project membership identified by IRI. $projectAdminRequirement")
 
-    val usersByIriGroupMemberShips = baseEndpoints.securedEndpoint.delete
+    val usersByIriGroupMemberShips = baseEndpoints
+      .projectAdminPolicyEndpoint(pathGroupProject)
+      .delete
       .in(base / "iri" / PathVars.userIriPathVar / "group-memberships" / AdminPathVariables.groupIriPathVar)
       .out(jsonBody[UserResponse])
-      .description(
-        "Remove a user form an group membership identified by IRI. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
-      )
+      .description(s"Remove a user form an group membership identified by IRI. $groupAdminRequirement")
   }
 }
 

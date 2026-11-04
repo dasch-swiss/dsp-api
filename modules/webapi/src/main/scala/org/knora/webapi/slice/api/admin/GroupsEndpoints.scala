@@ -47,12 +47,15 @@ final class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .out(groupGetResponse)
     .description(s"Return a single group identified by its IRI. $publicRequirement")
 
-  val getGroupMembers = baseEndpoints.securedEndpoint.get
+  private val pathGroupProject      = "path groupIri's project"
+  private val groupAdminRequirement = Policy.ProjectAdmin(pathGroupProject).requirement
+
+  val getGroupMembers = baseEndpoints
+    .projectAdminPolicyEndpoint(pathGroupProject)
+    .get
     .in(base / groupIriPathVar / "members")
     .out(jsonBody[GroupMembersGetResponseADM].example(Examples.GroupEndpointsExample.groupGetMembersResponse))
-    .description(
-      "Return all members of a single group. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
-    )
+    .description(s"Return all members of a single group. $groupAdminRequirement")
 
   private val bodyProject = "body project"
   val postGroup           = baseEndpoints
@@ -64,26 +67,28 @@ final class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
     .name("Create new group")
     .description(s"Create new group. ${Policy.ProjectAdmin(bodyProject).requirement}")
 
-  val putGroup = baseEndpoints.securedEndpoint.put
+  val putGroup = baseEndpoints
+    .projectAdminPolicyEndpoint(pathGroupProject)
+    .put
     .in(base / groupIriPathVar)
     .in(jsonBody[GroupUpdateRequest].example(Examples.GroupEndpointsExample.groupUpdateRequest))
     .out(groupGetResponse)
-    .description(
-      "Update a group's basic information. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
-    )
+    .description(s"Update a group's basic information. $groupAdminRequirement")
 
-  val putGroupStatus = baseEndpoints.securedEndpoint.put
+  val putGroupStatus = baseEndpoints
+    .projectAdminPolicyEndpoint(pathGroupProject)
+    .put
     .in(base / groupIriPathVar / "status")
     .in(jsonBody[GroupStatusUpdateRequest])
     .out(groupGetResponse)
-    .description("Updates a group's status. Requires SystemAdmin or ProjectAdmin permissions for the group's project.")
+    .description(s"Updates a group's status. $groupAdminRequirement")
 
-  val deleteGroup = baseEndpoints.securedEndpoint.delete
+  val deleteGroup = baseEndpoints
+    .projectAdminPolicyEndpoint(pathGroupProject)
+    .delete
     .in(base / groupIriPathVar)
     .out(groupGetResponse)
-    .description(
-      "Deletes a group by changing its status to 'false'. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
-    )
+    .description(s"Deletes a group by changing its status to 'false'. $groupAdminRequirement")
 }
 
 object GroupsRequests {

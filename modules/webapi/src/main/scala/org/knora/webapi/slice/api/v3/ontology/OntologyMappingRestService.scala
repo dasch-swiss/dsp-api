@@ -14,13 +14,13 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.responders.IriLocker
-import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v3.*
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
+import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.OntologyMappingExternalIri
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -37,7 +37,6 @@ final class OntologyMappingRestService(
   ontologyRepo: OntologyRepo,
   ontologyCache: OntologyCache,
   triplestore: TriplestoreService,
-  projectService: KnoraProjectService,
 )(implicit val sf: StringFormatter) {
 
   private val MaxMappingsPerRequest = 100
@@ -47,7 +46,7 @@ final class OntologyMappingRestService(
 
   /** PUT class mapping */
   def putClassMapping(
-    user: User,
+    candidate: ProjectCandidate,
   )(
     ontologyIriDto: IriDto,
     classIriDto: IriDto,
@@ -68,7 +67,7 @@ final class OntologyMappingRestService(
       ontologyIri <- iriConverter.asOntologyIriApiV2Complex(ontologyIriDto.value).mapError(BadRequest(_))
       classIri    <- iriConverter.asResourceClassIriApiV2Complex(classIriDto.value).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
-      _           <- authorizeByProject(user, ontology)
+      _           <- authorizeByProject(candidate, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
       // lookupClass and IRI validation all run inside the lock so
       // the entity-existence check and validation snapshot are atomic with the write.
@@ -97,13 +96,13 @@ final class OntologyMappingRestService(
 
   /** DELETE class mapping */
   def deleteClassMapping(
-    user: User,
+    candidate: ProjectCandidate,
   )(ontologyIriDto: IriDto, classIriDto: IriDto, mappingIriDto: IriDto): IO[V3ErrorInfo, ClassMappingResponse] =
     for {
       ontologyIri <- iriConverter.asOntologyIriApiV2Complex(ontologyIriDto.value).mapError(BadRequest(_))
       classIri    <- iriConverter.asResourceClassIriApiV2Complex(classIriDto.value).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
-      _           <- authorizeByProject(user, ontology)
+      _           <- authorizeByProject(candidate, ontology)
       _           <- ZIO.fail(classNotFound(classIri, ontologyIri)).unless(classIri.ontologyIri == ontologyIri)
       // lookupClass and IRI validation all run inside the lock so
       // the entity-existence check and validation snapshot are atomic with the write.
@@ -126,7 +125,7 @@ final class OntologyMappingRestService(
 
   /** PUT property mapping */
   def putPropertyMapping(
-    user: User,
+    candidate: ProjectCandidate,
   )(
     ontologyIriDto: IriDto,
     propertyIriDto: IriDto,
@@ -147,7 +146,7 @@ final class OntologyMappingRestService(
       ontologyIri <- iriConverter.asOntologyIriApiV2Complex(ontologyIriDto.value).mapError(BadRequest(_))
       propertyIri <- iriConverter.asPropertyIriApiV2Complex(propertyIriDto.value).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
-      _           <- authorizeByProject(user, ontology)
+      _           <- authorizeByProject(candidate, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
       // lookupProperty and IRI validation all run inside the lock so
       // the entity-existence check and validation snapshot are atomic with the write.
@@ -176,7 +175,7 @@ final class OntologyMappingRestService(
 
   /** DELETE property mapping */
   def deletePropertyMapping(
-    user: User,
+    candidate: ProjectCandidate,
   )(
     ontologyIriDto: IriDto,
     propertyIriDto: IriDto,
@@ -186,7 +185,7 @@ final class OntologyMappingRestService(
       ontologyIri <- iriConverter.asOntologyIriApiV2Complex(ontologyIriDto.value).mapError(BadRequest(_))
       propertyIri <- iriConverter.asPropertyIriApiV2Complex(propertyIriDto.value).mapError(BadRequest(_))
       ontology    <- lookupOntology(ontologyIri)
-      _           <- authorizeByProject(user, ontology)
+      _           <- authorizeByProject(candidate, ontology)
       _           <- ZIO.fail(propertyNotFound(propertyIri, ontologyIri)).unless(propertyIri.ontologyIri == ontologyIri)
       // lookupProperty and IRI validation all run inside the lock so
       // the entity-existence check and validation snapshot are atomic with the write.
@@ -234,14 +233,14 @@ final class OntologyMappingRestService(
     // Repository failures are infrastructure errors; escalate to fiber defect (HTTP 500).
     ontologyRepo.findProperty(propertyIri).orDie.someOrFail(propertyNotFound(propertyIri, ontologyIri))
 
-  private def authorizeByProject(user: User, ontology: ReadOntologyV2): IO[V3ErrorInfo, Unit] =
+  private def authorizeByProject(
+    candidate: ProjectCandidate,
+    ontology: ReadOntologyV2,
+  ): IO[V3ErrorInfo, ProjectAdminGrant] =
     ontology.projectIri match {
       case None             => ZIO.fail(Forbidden("Cannot modify a system ontology."))
       case Some(projectIri) =>
-        projectService.findById(projectIri).orDie.flatMap {
-          case None          => ZIO.fail(Forbidden("Cannot modify this ontology."))
-          case Some(project) => auth.ensureSystemAdminOrProjectAdmin(user, project)
-        }
+        auth.authorizeProjectAdminById(candidate, projectIri)
     }
 
   private def classNotFound(classIri: ResourceClassIri, ontologyIri: OntologyIri): NotFound = {

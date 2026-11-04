@@ -69,6 +69,10 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
   private val publicReason      = "The licenses a project allows are shown on its public data."
   private val publicRequirement = Policy.Public(publicReason).requirement
 
+  private val pathProjectShortcode = "path projectShortcode"
+  private val adminRequirement     = Policy.ProjectAdmin(pathProjectShortcode).requirement
+  private val memberRequirement    = Policy.ProjectMember(pathProjectShortcode).requirement
+
   private final val base = "admin" / "projects" / "shortcode" / projectShortcode / "legal-info"
 
   private final val licenseIriPath = path[LicenseIri](using TapirCodec.stringCodec(LicenseIri.from))
@@ -76,7 +80,9 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .description("The IRI of the license. Must be URL-encoded.")
     .example(LicenseIri.CC_BY_NC_4_0)
 
-  val getProjectAuthorships = baseEndpoints.securedEndpoint.get
+  val getProjectAuthorships = baseEndpoints
+    .projectMemberPolicyEndpoint(pathProjectShortcode)
+    .get
     .in(base / "authorships")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
@@ -91,10 +97,7 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         ),
       ),
     )
-    .description(
-      "Get the allowed authorships for use within this project. " +
-        "The user must be project member, project admin or system admin.",
-    )
+    .description(s"Get the allowed authorships for use within this project. $memberRequirement")
 
   val getProjectLicenses = baseEndpoints
     .publicPolicyEndpoint(publicReason)
@@ -116,15 +119,21 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     .out(jsonBody[ProjectLicenseDto])
     .description(s"Get a specific license by its IRI for use within this project. $publicRequirement")
 
-  val putProjectLicensesEnable = baseEndpoints.securedEndpoint.put
+  val putProjectLicensesEnable = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectShortcode)
+    .put
     .in(base / "licenses" / licenseIriPath / "enable")
-    .description("Enable a license for use within this project. The user must be project admin or system admin.")
+    .description(s"Enable a license for use within this project. $adminRequirement")
 
-  val putProjectLicensesDisable = baseEndpoints.securedEndpoint.put
+  val putProjectLicensesDisable = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectShortcode)
+    .put
     .in(base / "licenses" / licenseIriPath / "disable")
-    .description("Disable a license for use within this project. The user must be project admin or system admin.")
+    .description(s"Disable a license for use within this project. $adminRequirement")
 
-  val getProjectCopyrightHolders = baseEndpoints.securedEndpoint.get
+  val getProjectCopyrightHolders = baseEndpoints
+    .projectMemberPolicyEndpoint(pathProjectShortcode)
+    .get
     .in(base / "copyright-holders")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
@@ -133,21 +142,17 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         Examples.PagedResponse.fromSlice(Chunk("DaSCH", "University of Zurich").map(CopyrightHolder.unsafeFrom)),
       ),
     )
-    .description(
-      "Get the allowed copyright holders for use within this project. " +
-        "The user must be project member, project admin or system admin.",
-    )
+    .description(s"Get the allowed copyright holders for use within this project. $memberRequirement")
 
-  val postProjectCopyrightHolders = baseEndpoints.securedEndpoint.post
+  val postProjectCopyrightHolders = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectShortcode)
+    .post
     .in(base / "copyright-holders")
     .in(
       jsonBody[CopyrightHolderAddRequest]
         .example(CopyrightHolderAddRequest(Set("DaSCH", "University of Zurich").map(CopyrightHolder.unsafeFrom))),
     )
-    .description(
-      "Add new allowed copyright holders for use within this project. " +
-        "The user must be a system or project admin.",
-    )
+    .description(s"Add new allowed copyright holders for use within this project. $adminRequirement")
 
   val putProjectCopyrightHolders = baseEndpoints.securedEndpoint.put
     .in(base / "copyright-holders")
@@ -165,14 +170,16 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         "The user must be a system admin.",
     )
 
-  val putProjectLegalInfoResourceSide = baseEndpoints.securedEndpoint.put
+  val putProjectLegalInfoResourceSide = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectShortcode)
+    .put
     .in(base / "resource")
     .in(jsonBody[ResourceSideLegalInfo].example(ResourceSideLegalInfo.example))
     .out(jsonBody[ResourceSideLegalInfo].example(ResourceSideLegalInfo.example))
     .description(
       "Set the resource-side (data) legal info for this project: the data license (Creative Commons only), " +
         "the copyright holder and the default authorship, each applied to every resource record in the project. " +
-        "Returns the saved values. The user must be a system or project admin.",
+        s"Returns the saved values. $adminRequirement",
     )
 }
 

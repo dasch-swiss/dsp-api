@@ -273,19 +273,31 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
     } yield response
   }
 
-  def checkOntologyAndEntityIrisForUpdate(
-    resourceClassIri: ResourceClassIri,
-    requestingUser: User,
-  ): Task[Unit] =
-    checkOntologyAndEntityIrisForUpdate(
+  def validateOntologyAndEntityIrisForUpdate(resourceClassIri: ResourceClassIri): Task[Unit] =
+    validateOntologyAndEntityIrisForUpdate(
       resourceClassIri.ontologyIri.toComplexSchema,
       resourceClassIri.toComplexSchema,
-      requestingUser,
     )
+
+  def validateOntologyAndPropertyIrisForUpdate(ontologyIri: OntologyIri, propertyIri: PropertyIri): Task[Unit] =
+    validateOntologyAndEntityIrisForUpdate(ontologyIri.toComplexSchema, propertyIri.toComplexSchema)
 
   /**
    * Before an update of an ontology entity, checks that the entity's external IRI, and that of its ontology,
-   * are valid, and checks that the user has permission to update the ontology.
+   * are valid.
+   *
+   * @param externalOntologyIri the external IRI of the ontology.
+   * @param externalEntityIri   the external IRI of the entity.
+   */
+  def validateOntologyAndEntityIrisForUpdate(externalOntologyIri: SmartIri, externalEntityIri: SmartIri): Task[Unit] =
+    for {
+      _ <- OntologyHelpers.checkExternalOntologyIriForUpdate(externalOntologyIri)
+      _ <- OntologyHelpers.checkExternalEntityIriForUpdate(externalEntityIri)
+    } yield ()
+
+  /**
+   * Like [[validateOntologyAndEntityIrisForUpdate]], and also checks that the user has permission to update the
+   * ontology.
    *
    * @param externalOntologyIri the external IRI of the ontology.
    * @param externalEntityIri   the external IRI of the entity.
@@ -297,23 +309,12 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
     requestingUser: User,
   ): Task[Unit] =
     for {
-      _ <- OntologyHelpers.checkExternalOntologyIriForUpdate(externalOntologyIri)
-      _ <- OntologyHelpers.checkExternalEntityIriForUpdate(externalEntityIri)
+      _ <- validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalEntityIri)
       _ <- checkPermissionsForOntologyUpdate(
              internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
              requestingUser = requestingUser,
            )
     } yield ()
-
-  def checkOntologyAndPropertyIrisForUpdate(
-    ontologyIri: OntologyIri,
-    propertyIri: PropertyIri,
-    requestingUser: User,
-  ): Task[Unit] =
-    checkOntologyAndEntityIrisForUpdate(ontologyIri.toComplexSchema, propertyIri.toComplexSchema, requestingUser)
-
-  def checkPermissionsForOntologyUpdate(ontologyIri: OntologyIri, requestingUser: User): Task[ProjectIri] =
-    checkPermissionsForOntologyUpdate(ontologyIri.toInternalSchema, requestingUser)
 
   /**
    * Throws an exception if the requesting user does not have permission to update an ontology.

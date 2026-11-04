@@ -27,6 +27,7 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.BaseEndpoints.Rejection
 import org.knora.webapi.slice.common.api.NegotiatesOwnAccept
 import org.knora.webapi.slice.common.api.OwnAcceptNegotiation
+import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughException
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughOverloadedException
 import org.knora.webapi.store.triplestore.errors.SparqlPassthroughTimedOutException
@@ -119,7 +120,7 @@ final class SparqlPassthroughEndpoints(baseEndpoints: BaseEndpoints, appConfig: 
     .attribute(NegotiatesOwnAccept.key, OwnAcceptNegotiation)
     .description(
       "Run a read-only SPARQL 1.1 query against the triplestore and receive the store's response unchanged. " +
-        "Requires SystemAdmin permissions and a bearer token; HTTP basic and session cookies are not accepted. " +
+        s"${Policy.SystemAdmin.requirement} A bearer token is required; HTTP basic and session cookies are not accepted. " +
         "Only registered when the deployment sets allow-sparql-passthrough. The query is forwarded without being " +
         "parsed, validated or rewritten, and the store's status, Content-Type and body are relayed verbatim - so a " +
         "malformed query yields the store's own error response, not this API's error envelope. Send the query as " +

@@ -41,9 +41,18 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     "Ontology metadata (label, comment, project, last modification) is part of the public data model."
   private val publicRequirement = Policy.Public(publicReason).requirement
 
+  private val entitiesReason      = "Ontologies are public."
+  private val entitiesRequirement = Policy.Public(entitiesReason).requirement
+
+  private val dereferenceReason      = "An ontology IRI resolves to its public data model."
+  private val dereferenceRequirement = Policy.Public(dereferenceReason).requirement
+
   private val base = "v2" / "ontologies"
 
   private val requiresOntologyAdmin = "Requires SystemAdmin or ProjectAdmin permissions for the ontology's project."
+
+  private val adminProjectFrom = "ontology's project"
+  private val adminRequirement = Policy.ProjectAdmin(adminProjectFrom).requirement
 
   private val ontologyIriPath      = path[IriDto].name("ontologyIri")
   private val propertyIriPath      = path[IriDto].name("propertyIri")
@@ -52,7 +61,9 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
   private val lastModificationDate = query[LastModificationDate]("lastModificationDate")
   private val allLanguages         = ApiV2.Inputs.allLanguages
 
-  val getOntologyPathSegments = baseEndpoints.withUserEndpoint.get
+  val getOntologyPathSegments = baseEndpoints
+    .publicPolicyEndpointWithUser(dereferenceReason)
+    .get
     .in("ontology" / paths)
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
@@ -62,7 +73,8 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .description(
       "This is the route used to dereference an actual ontology IRI. " +
         "If the URL path looks like it belongs to a built-in API ontology (which has to contain \"knora-api\"), prefix it with http://api.knora.org to get the ontology IRI. " +
-        "Otherwise, if it looks like it belongs to a project-specific API ontology, prefix it with routeData.appConfig.externalOntologyIriHostAndPort to get the ontology IRI.",
+        "Otherwise, if it looks like it belongs to a project-specific API ontology, prefix it with routeData.appConfig.externalOntologyIriHostAndPort to get the ontology IRI. " +
+        dereferenceRequirement,
     )
 
   val getOntologiesMetadataProject = baseEndpoints
@@ -75,14 +87,16 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(s"Get the metadata of an ontology. $publicRequirement")
 
-  val putOntologiesMetadata = baseEndpoints.securedEndpoint.put
+  val putOntologiesMetadata = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .put
     .in(base / "metadata")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Change the metadata of an ontology. " + requiresOntologyAdmin,
+      "Change the metadata of an ontology. " + adminRequirement,
     )
 
   val getOntologiesMetadataProjects = baseEndpoints
@@ -94,43 +108,53 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(s"Get the metadata of ontologies for specific projects. $publicRequirement")
 
-  val getOntologiesAllentities = baseEndpoints.withUserEndpoint.get
+  val getOntologiesAllentities = baseEndpoints
+    .publicPolicyEndpointWithUser(entitiesReason)
+    .get
     .in(base / "allentities" / ontologyIriPath)
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Get all entities of an ontology. Publicly accessible.")
+    .description(s"Get all entities of an ontology. $entitiesRequirement")
 
-  val postOntologiesClasses = baseEndpoints.withUserEndpoint.post
+  val postOntologiesClasses = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .post
     .in(base / "classes")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Create a new class. " + requiresOntologyAdmin)
+    .description("Create a new class. " + adminRequirement)
 
-  val putOntologiesClasses = baseEndpoints.withUserEndpoint.put
+  val putOntologiesClasses = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .put
     .in(base / "classes")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Change the labels or comments of a class. " + requiresOntologyAdmin,
+      "Change the labels or comments of a class. " + adminRequirement,
     )
 
-  val deleteOntologiesClassesComment = baseEndpoints.withUserEndpoint.delete
+  val deleteOntologiesClassesComment = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .delete
     .in(base / "classes" / "comment" / resourceClassIriPath)
     .in(lastModificationDate)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Delete the comment of a class definition. " + requiresOntologyAdmin,
+      "Delete the comment of a class definition. " + adminRequirement,
     )
 
-  val postOntologiesCardinalities = baseEndpoints.withUserEndpoint.post
+  val postOntologiesCardinalities = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .post
     .in(base / "cardinalities")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
@@ -138,7 +162,7 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       "Add cardinalities to a class. " +
-        requiresOntologyAdmin + " " +
+        adminRequirement + " " +
         "For more info check out the <a href=\"https://docs.dasch.swiss/DSP-API/03-endpoints/api-v2/ontology-information/#adding-cardinalities-to-a-class\">documentation</a>.",
     )
 
@@ -165,14 +189,16 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
         "Fails if the user does not have write access to the ontology of the class.",
     )
 
-  val putOntologiesCardinalities = baseEndpoints.withUserEndpoint.put
+  val putOntologiesCardinalities = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .put
     .in(base / "cardinalities")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Update cardinalities of a class. " + requiresOntologyAdmin,
+      "Update cardinalities of a class. " + adminRequirement,
     )
 
   val postOntologiesCandeletecardinalities = baseEndpoints.withUserEndpoint.post
@@ -186,33 +212,39 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
         requiresOntologyAdmin,
     )
 
-  val patchOntologiesCardinalities = baseEndpoints.withUserEndpoint.patch
+  val patchOntologiesCardinalities = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .patch
     .in(base / "cardinalities")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Delete cardinalities from a class. " + requiresOntologyAdmin,
+      "Delete cardinalities from a class. " + adminRequirement,
     )
 
-  val putOntologiesGuiorder = baseEndpoints.withUserEndpoint.put
+  val putOntologiesGuiorder = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .put
     .in(base / "guiorder")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Update the GUI order of properties in a class. " + requiresOntologyAdmin,
+      "Update the GUI order of properties in a class. " + adminRequirement,
     )
 
-  val getOntologiesClassesIris = baseEndpoints.withUserEndpoint.get
+  val getOntologiesClassesIris = baseEndpoints
+    .publicPolicyEndpointWithUser(entitiesReason)
+    .get
     .in(base / "classes" / classIriPath)
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Get a class definition by IRI. Publicly accessible.")
+    .description(s"Get a class definition by IRI. $entitiesRequirement")
 
   val getOntologiesCandeleteclass = baseEndpoints.withUserEndpoint.get
     .in(base / "candeleteclass" / resourceClassIriPath)
@@ -221,71 +253,85 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Check if a class can be deleted. Publicly accessible.")
 
-  val deleteOntologiesClasses = baseEndpoints.withUserEndpoint.delete
+  val deleteOntologiesClasses = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .delete
     .in(base / "classes" / resourceClassIriPath)
     .in(lastModificationDate)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Delete a class from an ontology. " + requiresOntologyAdmin,
+      "Delete a class from an ontology. " + adminRequirement,
     )
 
-  val deleteOntologiesComment = baseEndpoints.withUserEndpoint.delete
+  val deleteOntologiesComment = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .delete
     .in(base / "comment" / ontologyIriPath)
     .in(lastModificationDate)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Delete the comment of an ontology. " + requiresOntologyAdmin,
+      "Delete the comment of an ontology. " + adminRequirement,
     )
 
-  val postOntologiesProperties = baseEndpoints.withUserEndpoint.post
+  val postOntologiesProperties = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .post
     .in(base / "properties")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Create a new property. " + requiresOntologyAdmin)
+    .description("Create a new property. " + adminRequirement)
 
-  val putOntologiesProperties = baseEndpoints.withUserEndpoint.put
+  val putOntologiesProperties = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .put
     .in(base / "properties")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Update a property's labels or comments. " + requiresOntologyAdmin,
+      "Update a property's labels or comments. " + adminRequirement,
     )
 
-  val deletePropertiesComment = baseEndpoints.withUserEndpoint.delete
+  val deletePropertiesComment = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .delete
     .in(base / "properties" / "comment" / propertyIriPath)
     .in(lastModificationDate)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Delete the comment of a property definition. " + requiresOntologyAdmin,
+      "Delete the comment of a property definition. " + adminRequirement,
     )
 
-  val putOntologiesPropertiesGuielement = baseEndpoints.withUserEndpoint.put
+  val putOntologiesPropertiesGuielement = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .put
     .in(base / "properties" / "guielement")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Update the GUI element of a property. " + requiresOntologyAdmin,
+      "Update the GUI element of a property. " + adminRequirement,
     )
 
-  val getOntologiesProperties = baseEndpoints.withUserEndpoint.get
+  val getOntologiesProperties = baseEndpoints
+    .publicPolicyEndpointWithUser(entitiesReason)
+    .get
     .in(base / "properties" / propertyIriPath)
     .in(allLanguages)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Get a property definition by IRI. Publicly accessible.")
+    .description(s"Get a property definition by IRI. $entitiesRequirement")
 
   val getOntologiesCandeleteproperty = baseEndpoints.withUserEndpoint.get
     .in(base / "candeleteproperty" / propertyIriPath)
@@ -294,23 +340,28 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Check if a property can be deleted. Publicly accessible.")
 
-  val deleteOntologiesProperty = baseEndpoints.securedEndpoint.delete
+  val deleteOntologiesProperty = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .delete
     .in(base / "properties" / propertyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .in(lastModificationDate)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Delete a property from an ontology. " + requiresOntologyAdmin,
+      "Delete a property from an ontology. " + adminRequirement,
     )
 
-  val postOntologies = baseEndpoints.securedEndpoint.post
+  private val bodyAttachedToProject = "body attachedToProject"
+  val postOntologies                = baseEndpoints
+    .projectAdminPolicyEndpoint(bodyAttachedToProject)
+    .post
     .in(base)
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Create a new ontology. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+    .description(s"Create a new ontology. ${Policy.ProjectAdmin(bodyAttachedToProject).requirement}")
 
   val getOntologiesCandeleteontology = baseEndpoints.securedEndpoint.get
     .in(base / "candeleteontology" / ontologyIriPath)
@@ -319,13 +370,16 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Check if an ontology can be deleted. Requires authentication.")
 
-  val deleteOntologies = baseEndpoints.securedEndpoint.delete
+  private val ontologyProject = "path ontology's project"
+  val deleteOntologies        = baseEndpoints
+    .projectAdminPolicyEndpoint(ontologyProject)
+    .delete
     .in(base / ontologyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .in(lastModificationDate)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Delete an ontology. " + requiresOntologyAdmin)
+    .description(s"Delete an ontology. ${Policy.ProjectAdmin(ontologyProject).requirement}")
 }
 
 object OntologiesEndpoints {

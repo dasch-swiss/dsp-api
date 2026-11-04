@@ -26,6 +26,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.api.v2.ontologies.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
@@ -70,7 +72,11 @@ class AddCardinalitiesToClassSpec extends E2EZSpec {
 
         // add additional cardinality to the class
         ontologyLastModificationDate <- OntologyTestHelper.lastModificationDate(freetestOntologyIri)
-        _                            <- ontologyResponder(
+        grant                        <-
+          ZIO.serviceWithZIO[AuthorizationRestService](
+            _.authorizeProjectAdminById(TestCandidates.of(SharedTestDataADM.anythingAdminUser), anythingProjectIri),
+          )
+        _ <- ontologyResponder(
                _.addCardinalitiesToClass(
                  AddCardinalitiesToClassRequestV2(
                    classInfoContent = ClassInfoContentV2(
@@ -87,8 +93,8 @@ class AddCardinalitiesToClassSpec extends E2EZSpec {
                    ),
                    lastModificationDate = ontologyLastModificationDate,
                    apiRequestID = UUID.randomUUID,
-                   requestingUser = SharedTestDataADM.anythingAdminUser,
                  ),
+                 grant,
                ),
              )
 

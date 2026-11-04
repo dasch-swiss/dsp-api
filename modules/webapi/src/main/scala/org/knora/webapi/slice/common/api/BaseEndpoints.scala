@@ -91,6 +91,27 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
   def publicPolicyEndpoint(reason: String): RequiresMethod[PublicEndpoint[Unit, Throwable, Unit, Any]] =
     RequiresMethod(endpoint.errorOut(errorOutputs).attribute(Policy.key, Policy.Public(reason)), _.method(_))
 
+  /** As [[publicPolicyEndpoint]], for a surface that answers its errors with its own output instead of the shared one. */
+  def publicPolicyEndpoint[E](
+    errorOut: EndpointOutput[E],
+    reason: String,
+  ): RequiresMethod[PublicEndpoint[Unit, E, Unit, Any]] =
+    RequiresMethod(endpoint.errorOut(errorOut).attribute(Policy.key, Policy.Public(reason)), _.method(_))
+
+  /**
+   * Declares [[Policy.Public]] and hands the handler the caller: the anonymous user without credentials, the
+   * authenticated user with valid ones. Invalid credentials are refused with 401 rather than treated as anonymous.
+   */
+  def publicPolicyEndpointWithUser(
+    reason: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    RequiresMethod(
+      endpointWithBearerBasicAuthOptional
+        .attribute(Policy.key, Policy.Public(reason))
+        .zServerSecurityLogic(authenticateOrAnonymous),
+      _.method(_),
+    )
+
   /** Declares and enforces [[Policy.Authenticated]]: an active, non-anonymous user. */
   def authenticatedPolicyEndpoint(
     reason: String,
@@ -116,6 +137,18 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
   ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, ProjectCandidate, Unit, Throwable, Unit, Any]] =
     authorizingEndpoint(
       Policy.ProjectAdmin(projectFrom),
+      user => authorization.ensureUserIsNotAnonymous(user).as(new ProjectCandidate(user)),
+    )
+
+  /**
+   * Declares [[Policy.ProjectMember]]. Like [[projectAdminPolicyEndpoint]], the handler gets a [[ProjectCandidate]] and
+   * must obtain a [[ProjectMemberGrant]] from [[AuthorizationRestService.authorizeProjectMemberByShortcode]].
+   */
+  def projectMemberPolicyEndpoint(
+    projectFrom: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, ProjectCandidate, Unit, Throwable, Unit, Any]] =
+    authorizingEndpoint(
+      Policy.ProjectMember(projectFrom),
       user => authorization.ensureUserIsNotAnonymous(user).as(new ProjectCandidate(user)),
     )
 
@@ -157,13 +190,80 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       _.method(_),
     )
 
+  /*
+   * Bearer-only counterparts of the factories above for a surface with its own error type `E` (the v3 API). `base`
+   * carries the surface's error output, `authenticate` its mapping of a failed authentication, and `forbidden` its
+   * mapping of a refused authorization. They live here because only this package can mint a [[ProjectCandidate]].
+   */
+
+  /** Declares and enforces [[Policy.SystemAdmin]] in the security logic; the credential is a bearer JWT. */
+  def bearerSystemAdminPolicyEndpoint[E](
+    base: PublicEndpoint[Unit, E, Unit, Any],
+    authenticate: String => IO[E, User],
+    forbidden: ForbiddenException => E,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, User, Unit, E, Unit, Any]] =
+    bearerAuthorizingEndpoint(
+      base,
+      Policy.SystemAdmin,
+      authenticate,
+      user => authorization.ensureSystemAdmin(user).as(user).mapError(forbidden),
+    )
+
+  /**
+   * Declares [[Policy.ProjectAdmin]] for a bearer JWT. The handler gets a [[ProjectCandidate]], as with
+   * [[projectAdminPolicyEndpoint]].
+   */
+  def bearerProjectAdminPolicyEndpoint[E](
+    base: PublicEndpoint[Unit, E, Unit, Any],
+    projectFrom: String,
+    authenticate: String => IO[E, User],
+    forbidden: ForbiddenException => E,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, ProjectCandidate, Unit, E, Unit, Any]] =
+    bearerAuthorizingEndpoint(
+      base,
+      Policy.ProjectAdmin(projectFrom),
+      authenticate,
+      user => authorization.ensureUserIsNotAnonymous(user).as(new ProjectCandidate(user)).mapError(forbidden),
+    )
+
+  /** Declares [[Policy.ObjectAccess]] for a read: no bearer means the anonymous user; the owning domain checks. */
+  def bearerObjectAccessPolicyEndpoint[E](
+    base: PublicEndpoint[Unit, E, Unit, Any],
+    enforcedIn: String,
+    authenticate: String => IO[E, User],
+  ): RequiresMethod[ZPartialServerEndpoint[Any, Option[String], User, Unit, E, Unit, Any]] =
+    RequiresMethod(
+      base
+        .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
+        .attribute(Policy.key, Policy.ObjectAccess(enforcedIn, admitsAnonymous = true))
+        .zServerSecurityLogic {
+          case Some(jwt) => authenticate(jwt)
+          case _         => ZIO.succeed(AnonymousUser)
+        },
+      _.method(_),
+    )
+
+  private def bearerAuthorizingEndpoint[E, P](
+    base: PublicEndpoint[Unit, E, Unit, Any],
+    policy: Policy,
+    authenticate: String => IO[E, User],
+    authorize: User => IO[E, P],
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, P, Unit, E, Unit, Any]] =
+    RequiresMethod(
+      base
+        .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
+        .attribute(Policy.key, policy)
+        .zServerSecurityLogic(jwt => authenticate(jwt).flatMap(authorize)),
+      _.method(_),
+    )
+
   /**
    * A narrowing of [[securedEndpoint]] that accepts a bearer JWT and nothing else -- no HTTP basic, and (like every
    * endpoint here) no cookie -- and that authorizes the caller as a SystemAdmin **in the security logic**. Use it for a
    * route where accepting basic credentials would be a liability rather than a convenience, and where an unauthorized
    * caller must not be able to cause work.
    *
-   * Declares no [[Policy]]; use [[systemAdminPolicyEndpoint]] unless bearer-only is required.
+   * Declares [[Policy.SystemAdmin]]; use [[systemAdminPolicyEndpoint]] unless bearer-only is required.
    *
    * Both narrowings turn on the same framework ordering: an endpoint's security logic is evaluated before its request
    * body is decoded, and its server logic only afterwards.
@@ -195,6 +295,7 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
     RequiresMethod(
       endpoint
         .errorOut(errorOutputs)
+        .attribute(Policy.key, Policy.SystemAdmin)
         .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
         .zServerSecurityLogic {
           case Some(jwtToken) =>

@@ -20,3 +20,9 @@ final class ProjectCandidate private[api] (private[api] val user: User)
  * are public: after authorization the domain acts on them.
  */
 final case class ProjectAdminGrant private[api] (user: User, project: KnoraProject)
+
+/**
+ * Proof that `user` passed the ProjectMember rule (SystemAdmin, ProjectAdmin or member) for `project`; only
+ * [[AuthorizationRestService]] issues it.
+ */
+final case class ProjectMemberGrant private[api] (user: User, project: KnoraProject)
