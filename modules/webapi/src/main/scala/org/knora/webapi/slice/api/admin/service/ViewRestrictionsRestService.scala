@@ -11,21 +11,21 @@ import zio.ZIO
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.ViewRestrictionsService
 import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectCandidate
 
 /**
  * Application service for the "view restrictions" report (design screen 1h).
  *
  * Authorization: both routes require the requesting user to be **project admin on the target
- * project or system admin** (`auth.ensureSystemAdminOrProjectAdminById`), matching the 1h header.
+ * project or system admin** (`auth.authorizeProjectAdminById`), matching the 1h header.
  *
  * Note (AC5): a well-formed but non-existent `projectIri` yields 403, not 404 — deliberately, because
- * `ensureSystemAdminOrProjectAdminById` is the shared admin-API authorization gate and every admin route
+ * `authorizeProjectAdminById` is the shared admin-API authorization gate and every admin route
  * behaves this way (it does not leak project existence to non-admins). Diverging only here would be
  * inconsistent, so we keep the convention.
  */
@@ -35,40 +35,40 @@ final case class ViewRestrictionsRestService(
 ) {
 
   /** Step 1: the whole class table. No filter, so nothing to validate beyond authorization. */
-  def getClasses(user: User)(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
+  def getClasses(candidate: ProjectCandidate)(projectIri: ProjectIri): Task[ViewRestrictionsClasses] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-      classes <- service.classSummaries(project)
+      grant   <- auth.authorizeProjectAdminById(candidate, projectIri)
+      classes <- service.classSummaries(grant.project)
     } yield classes
 
   /** Step 2: one class's value counts. */
-  def getValues(user: User)(
+  def getValues(candidate: ProjectCandidate)(
     projectIri: ProjectIri,
     resourceClass: String,
     itemType: ValueItemType,
   ): Task[ViewRestrictionsValues] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      grant <- auth.authorizeProjectAdminById(candidate, projectIri)
       // `resourceClass` is a class IRI chosen from the step-1 response. Validate it is a well-formed IRI
       // at the boundary: a malformed value is a client error (400), not a 500, and it must never reach the
       // SPARQL builder unvalidated (see the sibling `projectIri`, which is a typed value object).
       _      <- ZIO.fail(BadRequestException.invalidQueryParamValue("resourceClass")).unless(Iri.isIri(resourceClass))
-      counts <- service.valueCounts(project, resourceClass, itemType)
+      counts <- service.valueCounts(grant.project, resourceClass, itemType)
     } yield counts
 
-  def getItems(user: User)(
+  def getItems(candidate: ProjectCandidate)(
     projectIri: ProjectIri,
     resourceClass: String,
     itemType: ItemType,
     pageAndSize: PageAndSize,
   ): Task[PagedResponse[RestrictedResource]] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
+      grant <- auth.authorizeProjectAdminById(candidate, projectIri)
       // `resourceClass` is a class IRI chosen from the step-1 response. Validate it is a well-formed
       // IRI at the boundary: a malformed value is a client error (400), not a 500, and it must never reach
       // the SPARQL builder unvalidated (see the sibling `projectIri`, which is a typed value object).
       _     <- ZIO.fail(BadRequestException.invalidQueryParamValue("resourceClass")).unless(Iri.isIri(resourceClass))
-      items <- service.items(project, resourceClass, itemType, pageAndSize)
+      items <- service.items(grant.project, resourceClass, itemType, pageAndSize)
     } yield items
 }
 

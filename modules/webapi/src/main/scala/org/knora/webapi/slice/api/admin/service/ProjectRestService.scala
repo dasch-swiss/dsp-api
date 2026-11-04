@@ -33,6 +33,7 @@ import org.knora.webapi.slice.api.admin.model.ProjectsEndpointsRequestsAndRespon
 import org.knora.webapi.slice.common.Value.StringValue
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 final class ProjectRestService(
@@ -80,16 +81,13 @@ final class ProjectRestService(
    * Creates a project from the given payload.
    *
    * @param createReq the [[ProjectCreateRequest]] from which to create the project
-   * @param user      the [[User]] making the request
    * @return
    *     '''success''': information about the created project as a [[ProjectOperationResponseADM]]
    *
    *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]]
    *                    can be found, if one was provided with the [[ProjectCreateRequest]]
-   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
    */
-  def createProject(user: User)(createReq: ProjectCreateRequest): Task[ProjectOperationResponseADM] = for {
-    _ <- auth.ensureSystemAdmin(user)
+  def createProject(createReq: ProjectCreateRequest): Task[ProjectOperationResponseADM] = for {
     _ <- ZIO.fail(BadRequestException("Project description is required.")).when(createReq.description.isEmpty)
     _ <- ZIO
            .fail(
@@ -113,7 +111,6 @@ final class ProjectRestService(
 
   def eraseProject(user: User)(shortcode: Shortcode, keepAssets: Boolean): Task[ProjectOperationResponseADM] =
     for {
-      _ <- auth.ensureSystemAdmin(user)
       _ <- ZIO.unlessZIO(AppConfig.features(_.allowEraseProjects))(
              ZIO.fail(ForbiddenException("The feature to erase projects is not enabled.")),
            )
@@ -132,47 +129,46 @@ final class ProjectRestService(
   /**
    * Updates a project, identified by its [[ProjectIri]].
    *
-   * @param user       the [[User]] making the request
+   * @param candidate  the caller, not yet authorized for the project
    * @param projectIri the [[ProjectIri]] of the project
    * @param updateReq  the [[ProjectUpdateRequest]]
    * @return
    *     '''success''': information about the project as a [[ProjectOperationResponseADM]]
    *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[ProjectIri]] can be found
-   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
+   *     '''failure''': [[dsp.errors.ForbiddenException]] when the project does not exist or the caller is not
+   *                    allowed to perform the operation
    */
-  def updateProject(user: User)(
+  def updateProject(candidate: ProjectCandidate)(
     projectIri: ProjectIri,
     updateReq: ProjectUpdateRequest,
   ): Task[ProjectOperationResponseADM] = for {
-    project <- knoraProjectService
-                 .findById(projectIri)
-                 .someOrFail(NotFoundException(s"Project '${projectIri.value}' not found."))
-    _        <- auth.ensureSystemAdminOrProjectAdmin(user, project)
-    internal <- projectService.updateProject(project, updateReq).map(ProjectOperationResponseADM.apply)
+    grant    <- auth.authorizeProjectAdminById(candidate, projectIri)
+    internal <- projectService.updateProject(grant.project, updateReq).map(ProjectOperationResponseADM.apply)
     external <- format.toExternal(internal)
   } yield external
 
   /**
    * Returns all data of a specific project, identified by its [[ProjectIri]].
    *
-   * @param id   the [[IriIdentifier]] of the project
-   * @param user the [[User]] making the request
+   * @param candidate the caller, not yet authorized for the project
+   * @param id        the [[ProjectIri]] of the project
    * @return
    *     '''success''': data of the project for download as a stream of bytes, along with a suggested filename and a MIME type
    *
-   *     '''failure''': [[dsp.errors.NotFoundException]] when no project for the given [[IriIdentifier]] can be found
-   *                    [[dsp.errors.ForbiddenException]] when the requesting user is not allowed to perform the operation
+   *     '''failure''': [[dsp.errors.ForbiddenException]] when the project does not exist or the caller is not
+   *                    allowed to perform the operation
    */
-  def getAllProjectData(user: User)(id: ProjectIri): Task[(String, String, ZStream[Any, Throwable, Byte])] =
+  def getAllProjectData(
+    candidate: ProjectCandidate,
+  )(id: ProjectIri): Task[(String, String, ZStream[Any, Throwable, Byte])] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminById(user, id)
-      path    <- projectExportService.exportProjectTriples(project)
-      stream   = ZStream.fromPath(path.toFile.toPath).ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
+      grant <- auth.authorizeProjectAdminById(candidate, id)
+      path  <- projectExportService.exportProjectTriples(grant.project)
+      stream = ZStream.fromPath(path.toFile.toPath).ensuringWith(_ => ZIO.attempt(Files.deleteIfExists(path)).ignore)
     } yield (s"attachment; filename=project-data.trig", "application/octet-stream", stream)
 
-  def getProjectMembersById(user: User)(id: ProjectIri): Task[ProjectMembersGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectMembers)
+  def getProjectMembersById(candidate: ProjectCandidate)(id: ProjectIri): Task[ProjectMembersGetResponseADM] =
+    auth.authorizeProjectAdminById(candidate, id).flatMap(grant => findProjectMembers(grant.project))
   def getProjectMembersByShortcode(user: User)(id: Shortcode): Task[ProjectMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(findProjectMembers)
   def getProjectMembersByShortname(user: User)(id: Shortname): Task[ProjectMembersGetResponseADM] =
@@ -180,8 +176,8 @@ final class ProjectRestService(
   private def findProjectMembers(project: KnoraProject) =
     userService.findByProjectMembership(project).map(ProjectMembersGetResponseADM.from).flatMap(format.toExternal)
 
-  def getProjectAdminMembersById(user: User)(id: ProjectIri): Task[ProjectAdminMembersGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(findProjectAdminMembers)
+  def getProjectAdminMembersById(candidate: ProjectCandidate)(id: ProjectIri): Task[ProjectAdminMembersGetResponseADM] =
+    auth.authorizeProjectAdminById(candidate, id).flatMap(grant => findProjectAdminMembers(grant.project))
   def getProjectAdminMembersByShortcode(user: User)(id: Shortcode): Task[ProjectAdminMembersGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(findProjectAdminMembers)
   def getProjectAdminMembersByShortname(user: User)(id: Shortname): Task[ProjectAdminMembersGetResponseADM] =
@@ -253,11 +249,11 @@ final class ProjectRestService(
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(updateRestrictedViewSettings(_, req))
 
-  def updateProjectRestrictedViewSettingsById(user: User)(
+  def updateProjectRestrictedViewSettingsById(candidate: ProjectCandidate)(
     id: ProjectIri,
     req: SetRestrictedViewRequest,
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(updateRestrictedViewSettings(_, req))
+    auth.authorizeProjectAdminById(candidate, id).flatMap(grant => updateRestrictedViewSettings(grant.project, req))
 
   private def updateRestrictedViewSettings(project: KnoraProject, req: SetRestrictedViewRequest) =
     for {
@@ -271,10 +267,10 @@ final class ProjectRestService(
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
     auth.ensureSystemAdminOrProjectAdminByShortcode(user, id).flatMap(clearRestrictedViewSettings)
 
-  def clearProjectRestrictedViewSettingsById(user: User)(
+  def clearProjectRestrictedViewSettingsById(candidate: ProjectCandidate)(
     id: ProjectIri,
   ): Task[ProjectRestrictedViewSettingsGetResponseADM] =
-    auth.ensureSystemAdminOrProjectAdminById(user, id).flatMap(clearRestrictedViewSettings)
+    auth.authorizeProjectAdminById(candidate, id).flatMap(grant => clearRestrictedViewSettings(grant.project))
 
   private def clearRestrictedViewSettings(project: KnoraProject) =
     knoraProjectService.clearProjectRestrictedView(project) *>

@@ -18,6 +18,7 @@ import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 /**
  * Request body for `POST /v2/resources/batch`: the resource IRIs to fetch. Plain JSON
@@ -29,6 +30,10 @@ object ResourcesBatchRequest {
 }
 
 final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphRoute, resourcesConfig: Resources) {
+  private val readResources         = "ReadResourcesService, per resource and value"
+  private val resourcesResponder    = "ResourcesResponderV2, per resource"
+  private val searchResponder       = "SearchResponderV2, per resource"
+  private val createResourceHandler = "CreateResourceV2Handler, on the project and resource class"
 
   private val base = "v2" / "resources"
 
@@ -65,43 +70,53 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
       case _            => None
     }(d => (d, d))
 
-  val getResourcesPreview = baseEndpoints.withUserEndpoint.get
+  val getResourcesPreview = baseEndpoints
+    .objectAccessPolicyEndpoint(readResources)
+    .get
     .in("v2" / "resourcespreview" / paths)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Get a preview of one or more resources. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Get a preview of one or more resources. ${Policy.objectReadRequirement}",
     )
 
-  val getResourcesIiifManifest = baseEndpoints.withUserEndpoint.get
+  val getResourcesIiifManifest = baseEndpoints
+    .objectAccessPolicyEndpoint(resourcesResponder)
+    .get
     .in(base / "iiifmanifest" / path[IriDto].name("resourceIri"))
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Get the IIIF manifest for a resource. Publicly accessible. Requires appropriate object access permissions on the resource.",
+      s"Get the IIIF manifest for a resource. ${Policy.objectReadRequirement}",
     )
 
-  val getResourcesProjectHistoryEvents = baseEndpoints.withUserEndpoint.get
+  val getResourcesProjectHistoryEvents = baseEndpoints
+    .objectAccessPolicyEndpoint(resourcesResponder)
+    .get
     .in(base / "projectHistoryEvents" / path[ProjectIri].name("projectIri"))
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Get history events for all resources in a project. Publicly accessible. Resources the requesting user cannot view are omitted.",
+      s"Get history events for all resources in a project. Resources the requesting user cannot view are omitted. ${Policy.objectReadRequirement}",
     )
 
-  val getResourcesHistoryEvents = baseEndpoints.withUserEndpoint.get
+  val getResourcesHistoryEvents = baseEndpoints
+    .objectAccessPolicyEndpoint(resourcesResponder)
+    .get
     .in(base / "resourceHistoryEvents" / path[IriDto].name("resourceIri"))
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Get history events for a specific resource. Publicly accessible. Requires appropriate object access permissions on the resource.",
+      s"Get history events for a specific resource. ${Policy.objectReadRequirement}",
     )
 
-  val getResourcesHistory = baseEndpoints.withUserEndpoint.get
+  val getResourcesHistory = baseEndpoints
+    .objectAccessPolicyEndpoint(resourcesResponder)
+    .get
     .in(base / "history" / path[IriDto].name("resourceIri"))
     .in(ApiV2.Inputs.formatOptions)
     .in(startDateQuery)
@@ -109,20 +124,24 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Get the version history of a resource. Publicly accessible. Requires appropriate object access permissions on the resource.",
+      s"Get the version history of a resource. ${Policy.objectReadRequirement}",
     )
 
-  val getResources = baseEndpoints.withUserEndpoint.get
+  val getResources = baseEndpoints
+    .objectAccessPolicyEndpoint(readResources)
+    .get
     .in(base / paths)
     .in(ApiV2.Inputs.formatOptions)
     .in(versionQuery)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Get one or more resources. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Get one or more resources. ${Policy.objectReadRequirement}",
     )
 
-  val postResourcesBatch = baseEndpoints.withUserEndpoint.post
+  val postResourcesBatch = baseEndpoints
+    .objectAccessPolicyEndpoint(readResources)
+    .post
     .in(base / "batch")
     .in(jsonBody[ResourcesBatchRequest])
     .in(ApiV2.Inputs.formatOptions)
@@ -133,11 +152,13 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
       s"Fetch one or more resources by IRI, supplied as a JSON body `{\"resourceIris\": [...]}`. " +
         "A POST alternative to GET /v2/resources for large IRI sets that would exceed URL-length limits. " +
         s"Between 1 and ${resourcesConfig.maxBatchSize} IRIs may be sent per request (this deployment's " +
-        "configured limit; exceeding it is a 400). Publicly accessible. Requires appropriate object access " +
-        "permissions on the resources.",
+        "configured limit; exceeding it is a 400). " +
+        Policy.objectReadRequirement,
     )
 
-  val getResourcesParams = baseEndpoints.withUserEndpoint.get
+  val getResourcesParams = baseEndpoints
+    .objectAccessPolicyEndpoint(searchResponder)
+    .get
     .in(base)
     .in(query[IriDto]("resourceClass"))
     .in(query[Option[IriDto]]("orderByProperty"))
@@ -147,10 +168,12 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Search for resources by class and project. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Search for resources by class and project. ${Policy.objectReadRequirement}",
     )
 
-  val getResourcesGraph = baseEndpoints.withUserEndpoint.get
+  val getResourcesGraph = baseEndpoints
+    .objectAccessPolicyEndpoint(resourcesResponder)
+    .get
     .in("v2" / "graph" / path[IriDto].name("resourceIri"))
     .in(ApiV2.Inputs.formatOptions)
     .in(
@@ -164,10 +187,12 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Get a graph of resources starting from a specific resource. Publicly accessible. Requires appropriate object access permissions on the resources.",
+      s"Get a graph of resources starting from a specific resource. ${Policy.objectReadRequirement}",
     )
 
-  val getResourcesTei = baseEndpoints.withUserEndpoint.get
+  val getResourcesTei = baseEndpoints
+    .objectAccessPolicyEndpoint(resourcesResponder)
+    .get
     .in("v2" / "tei" / path[IriDto].name("resourceIri"))
     .in(query[Option[IriDto]]("mappingIri"))
     .in(query[IriDto]("textProperty"))
@@ -176,7 +201,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Get a resource as TEI/XML. Publicly accessible. Requires appropriate object access permissions on the resource.",
+      s"Get a resource as TEI/XML. ${Policy.objectReadRequirement}",
     )
 
   val postResourcesErase = baseEndpoints.withUserEndpoint.post
@@ -189,31 +214,37 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
       "Erase a Resource and all of its values from the database completely. Requires SystemAdmin or ProjectAdmin permissions for the resource's project.",
     )
 
-  val getResourcesCanDelete = baseEndpoints.withUserEndpoint.get
+  val getResourcesCanDelete = baseEndpoints
+    .objectAccessPolicyEndpoint(resourcesResponder)
+    .get
     .in(base / "candelete")
     .in(ApiV2.Inputs.formatOptions)
     .in(query[String]("jsonLd"))
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Check if a resource can be deleted. Publicly accessible. Requires appropriate object access permissions on the resource.",
+      s"Check if a resource can be deleted. ${Policy.objectReadRequirement}",
     )
 
-  val postResourcesDelete = baseEndpoints.withUserEndpoint.post
+  val postResourcesDelete = baseEndpoints
+    .authenticatedObjectAccessPolicyEndpoint(resourcesResponder)
+    .post
     .in(base / "delete")
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Mark a resource as deleted. Requires appropriate object access permissions on the resource.")
+    .description(s"Mark a resource as deleted. ${Policy.objectWriteRequirement}")
 
-  val postResources = baseEndpoints.withUserEndpoint.post
+  val postResources = baseEndpoints
+    .authenticatedObjectAccessPolicyEndpoint(createResourceHandler)
+    .post
     .in(base)
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Create a new resource. Anonymous users are refused. Requires appropriate object access permissions.")
+    .description(s"Create a new resource. ${Policy.objectWriteRequirement}")
 
   val putResources = baseEndpoints.withUserEndpoint.put
     .in(base)
@@ -223,14 +254,16 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.contentTypeHeader)
     .description("Update resource metadata. Requires appropriate object access permissions on the resource.")
 
-  val putResourcesAuthorship = baseEndpoints.withUserEndpoint.put
+  val putResourcesAuthorship = baseEndpoints
+    .authenticatedObjectAccessPolicyEndpoint(resourcesResponder)
+    .put
     .in(base / "authorship")
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Update a resource's authorship (data side). Requires Modify object access permission on the resource.",
+      s"Update a resource's authorship (data side). Requires Modify object access permission on the resource. ${Policy.objectWriteRequirement}",
     )
 
   val endpoints: Seq[AnyEndpoint] = Seq(

@@ -21,6 +21,7 @@ import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.RestrictionCou
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.ValueItemType
 import org.knora.webapi.slice.api.admin.ViewRestrictionsEndpoints.Visibility
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 /**
  * Read-only "view restrictions" reporting for a project, **grouped by property**.
@@ -44,6 +45,9 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "projects" / "iri" / projectIri / "view-restrictions"
 
+  private val pathProjectIri          = "path projectIri"
+  private val projectAdminRequirement = Policy.ProjectAdmin(pathProjectIri).requirement
+
   private val propertyQuery = query[String]("property")
     .description("The IRI of the value property whose restrictions to report.")
 
@@ -51,7 +55,9 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
     .description("Restrict the counts to a single value type, or `All` for every value type.")
     .default(ValueItemType.All)
 
-  val getProperties = baseEndpoints.securedEndpoint.get
+  val getProperties = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(base / "properties")
     .out(jsonBody[ViewRestrictionsProperties].example(ViewRestrictionsProperties.example))
     .description(
@@ -62,10 +68,12 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
         "inside it, a property only ever has values, so there is nothing step 1 could count that step 2 does " +
         "not. Every value property is listed, including ones no resource uses — such a row settles at zero, " +
         "which is a fact worth showing. Takes no filter. " +
-        "The user must be project admin or system admin.",
+        projectAdminRequirement,
     )
 
-  val getPropertyValues = baseEndpoints.securedEndpoint.get
+  val getPropertyValues = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(base / "property-values")
     .in(propertyQuery)
     .in(itemTypeQuery)
@@ -80,10 +88,12 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
         "true denominator: the counts beside it are in the same unit, so \"94 of 66,484 are hidden\" is a " +
         "sound statement. A value of a resource typed with two classes counts once for each class, so " +
         "`totalValues` can exceed the number of distinct values the drill-down lists. " +
-        "The user must be project admin or system admin.",
+        projectAdminRequirement,
     )
 
-  val getPropertyItems = baseEndpoints.securedEndpoint.get
+  val getPropertyItems = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(base / "property-items")
     .in(propertyQuery)
     .in(itemTypeQuery)
@@ -97,7 +107,7 @@ final class ViewRestrictionsByPropertyEndpoints(baseEndpoints: BaseEndpoints) {
         "Ordered by label then IRI, so paging is stable across requests. " +
         "The restricted literals come from the cached counts, so an object whose permissions changed after " +
         "the last refresh by `/classes` (at most 60 minutes) can be missing until the next refresh. " +
-        "The user must be project admin or system admin.",
+        projectAdminRequirement,
     )
 }
 

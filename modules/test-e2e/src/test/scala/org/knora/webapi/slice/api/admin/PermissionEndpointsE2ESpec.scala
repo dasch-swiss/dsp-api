@@ -6,6 +6,7 @@
 package org.knora.webapi.slice.api.admin
 
 import org.junit.runner.RunWith
+import sttp.model.StatusCode
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
@@ -58,6 +59,15 @@ class PermissionEndpointsE2ESpec extends E2EZSpec {
                         .getAdminPermissions(imageProjectIri, rootUser)
                         .flatMap(_.assert200)
         } yield assertTrue(response.permissions.size == 6)
+      },
+      test("answer 403 for an unknown project, even to a SystemAdmin") {
+        val unknown = ProjectIri.unsafeFrom("http://rdfh.ch/projects/notexisting")
+        for {
+          all  <- TestAdminApiClient.getAdminPermissions(unknown, rootUser)
+          ap   <- TestAdminApiClient.getAdministrativePermissions(unknown, rootUser)
+          apOf <- TestAdminApiClient.getAdministrativePermissions(unknown, ProjectMember.id, rootUser)
+          doap <- TestAdminApiClient.getDefaultObjectAccessPermissions(unknown, rootUser)
+        } yield assertTrue(List(all.code, ap.code, apOf.code, doap.code).forall(_ == StatusCode.Forbidden))
       },
     ),
     suite("creating permissions")(

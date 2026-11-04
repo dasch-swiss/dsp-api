@@ -25,6 +25,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.*
 import org.knora.webapi.slice.api.admin.model.UserDto
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.security.Authenticator
 
@@ -253,9 +254,9 @@ class UserRestServiceSpec extends E2EZSpec {
       test("ADD user to project") {
         for {
           membershipsBeforeUpdate <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
-          _                       <- userRestService(_.addUserToProject(rootUser)(normalUser.userIri, imagesProject.id))
+          _                       <- userRestService(_.addUserToProject(TestCandidates.of(rootUser))(normalUser.userIri, imagesProject.id))
           membershipsAfterUpdate  <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
-          received                <- projectRestService(_.getProjectMembersById(SystemUser)(imagesProject.id))
+          received                <- projectRestService(_.getProjectMembersById(TestCandidates.of(SystemUser))(imagesProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects.isEmpty,
           membershipsAfterUpdate.projects.map(_.id) == Seq(imagesProject.id),
@@ -265,9 +266,10 @@ class UserRestServiceSpec extends E2EZSpec {
       test("ADD user to project as project admin") {
         for {
           membershipsBeforeUpdate <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
-          _                       <- userRestService(_.addUserToProject(rootUser)(normalUser.userIri, incunabulaProject.id))
-          membershipsAfterUpdate  <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
-          received                <- projectRestService(_.getProjectMembersById(SystemUser)(incunabulaProject.id))
+          _                       <-
+            userRestService(_.addUserToProject(TestCandidates.of(rootUser))(normalUser.userIri, incunabulaProject.id))
+          membershipsAfterUpdate <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
+          received               <- projectRestService(_.getProjectMembersById(TestCandidates.of(SystemUser))(incunabulaProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects.map(_.id) == Seq(imagesProject.id),
           membershipsAfterUpdate.projects.map(_.id).sortBy(_.value) == Seq(imagesProject.id, incunabulaProject.id)
@@ -277,15 +279,18 @@ class UserRestServiceSpec extends E2EZSpec {
       },
       test("DELETE user from project and also as project admin") {
         for {
-          membershipsBeforeUpdate             <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
-          _                                   <- userRestService(_.addUserToProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id))
+          membershipsBeforeUpdate <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
+          _                       <- userRestService(
+                 _.addUserToProjectAsAdmin(TestCandidates.of(rootUser))(normalUser.userIri, imagesProject.id),
+               )
           projectAdminMembershipsBeforeUpdate <-
             userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          _                                  <- userRestService(_.removeUserFromProject(rootUser)(normalUser.userIri, imagesProject.id))
+          _ <-
+            userRestService(_.removeUserFromProject(TestCandidates.of(rootUser))(normalUser.userIri, imagesProject.id))
           membershipsAfterUpdate             <- userRestService(_.getProjectMemberShipsByUserIri(normalUser.userIri))
           projectAdminMembershipsAfterUpdate <-
             userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          received <- projectRestService(_.getProjectMembersById(rootUser)(imagesProject.id))
+          received <- projectRestService(_.getProjectMembersById(TestCandidates.of(rootUser))(imagesProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects.map(_.id).sortBy(_.value) == Seq(imagesProject.id, incunabulaProject.id)
             .sortBy(_.value),
@@ -303,7 +308,9 @@ class UserRestServiceSpec extends E2EZSpec {
           _                       <- ZIO
                  .fail(IllegalStateException("This test assumes the user is not a member of the project"))
                  .unless(membershipsBeforeUpdate.projects == Seq())
-          exit <- userRestService(_.addUserToProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id)).exit
+          exit <- userRestService(
+                    _.addUserToProjectAsAdmin(TestCandidates.of(rootUser))(normalUser.userIri, imagesProject.id),
+                  ).exit
         } yield assert(exit)(
           E2EZSpec.failsWithMessageEqualTo[BadRequestException](
             s"User ${normalUser.userIri} is not member of project ${imagesProject.id}.",
@@ -313,11 +320,13 @@ class UserRestServiceSpec extends E2EZSpec {
       test("ADD user to project admin group") {
         for {
           membershipsBeforeUpdate <- userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          _                       <- userRestService(_.addUserToProject(rootUser)(normalUser.userIri, imagesProject.id))
-          _                       <- userRestService(_.addUserToProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id))
-          membershipsAfterUpdate  <-
+          _                       <- userRestService(_.addUserToProject(TestCandidates.of(rootUser))(normalUser.userIri, imagesProject.id))
+          _                       <- userRestService(
+                 _.addUserToProjectAsAdmin(TestCandidates.of(rootUser))(normalUser.userIri, imagesProject.id),
+               )
+          membershipsAfterUpdate <-
             userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          received <- projectRestService(_.getProjectAdminMembersById(rootUser)(imagesProject.id))
+          received <- projectRestService(_.getProjectAdminMembersById(TestCandidates.of(rootUser))(imagesProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects == Seq(),
           membershipsAfterUpdate.projects.map(_.id) == Seq(imagesProject.id),
@@ -327,9 +336,11 @@ class UserRestServiceSpec extends E2EZSpec {
       test("DELETE user from project admin group") {
         for {
           membershipsBeforeUpdate <- userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          _                       <- userRestService(_.removeUserFromProjectAsAdmin(rootUser)(normalUser.userIri, imagesProject.id))
-          membershipsAfterUpdate  <- userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
-          received                <- projectRestService(_.getProjectAdminMembersById(rootUser)(imagesProject.id))
+          _                       <- userRestService(
+                 _.removeUserFromProjectAsAdmin(TestCandidates.of(rootUser))(normalUser.userIri, imagesProject.id),
+               )
+          membershipsAfterUpdate <- userRestService(_.getProjectAdminMemberShipsByUserIri(normalUser.userIri))
+          received               <- projectRestService(_.getProjectAdminMembersById(TestCandidates.of(rootUser))(imagesProject.id))
         } yield assertTrue(
           membershipsBeforeUpdate.projects.map(_.id) == Seq(imagesProject.id),
           membershipsAfterUpdate.projects == Seq(),

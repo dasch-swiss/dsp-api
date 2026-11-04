@@ -40,6 +40,9 @@ for the group is returned.
 permissions for a project. As a response, all `default_object_acces_permissions` of a 
 project are returned. 
 
+These four routes require SystemAdmin or ProjectAdmin permissions for the project. An unknown project answers
+`403 Forbidden`.
+
 ### Creating New Administrative Permissions
  
 - `POST: /admin/permissions/ap`: create a new administrative permission. The type of 

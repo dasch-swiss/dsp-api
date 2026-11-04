@@ -17,6 +17,7 @@ import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.admin.MaintenanceEndpoints.ReplaceUserIriRequest
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
 
@@ -25,7 +26,7 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
   given Schema[Option[Json]] =
     Schema.schemaForOption[Json](using Schema.string.map((str: String) => str.fromJson[Json].toOption)(_.toJson))
 
-  val postMaintenance = baseEndpoints.securedEndpoint.post
+  val postMaintenance = baseEndpoints.systemAdminPolicyEndpoint.post
     .in(
       maintenanceBase / path[String]
         .name("action-name")
@@ -41,24 +42,24 @@ final class MaintenanceEndpoints(baseEndpoints: BaseEndpoints) {
                        |""".stripMargin),
     )
     .out(statusCode(StatusCode.Accepted))
-    .description("Execute a maintenance action. Requires SystemAdmin permissions.")
+    .description(s"Execute a maintenance action. ${Policy.SystemAdmin.requirement}")
 
-  val postReplaceUserIri = baseEndpoints.securedEndpoint.post
+  val postReplaceUserIri = baseEndpoints.systemAdminPolicyEndpoint.post
     .in(maintenanceBase / "users" / "replace-iri")
     .in(jsonBody[ReplaceUserIriRequest])
     .out(statusCode(StatusCode.NoContent))
     .description(
       "Replace a user IRI across the entire database (admin graph + all project data graphs). " +
-        "SystemAdmin only. Irreversible -- no undo mechanism. Not idempotent: retrying after success returns 404.",
+        s"${Policy.SystemAdmin.requirement} Irreversible -- no undo mechanism. Not idempotent: retrying after success returns 404.",
     )
 
-  val postReplaceUserIriInProject = baseEndpoints.securedEndpoint.post
+  val postReplaceUserIriInProject = baseEndpoints.systemAdminPolicyEndpoint.post
     .in(maintenanceBase / "projects" / AdminPathVariables.projectShortcode / "replace-user-iri")
     .in(jsonBody[ReplaceUserIriRequest])
     .out(statusCode(StatusCode.NoContent))
     .description(
       "Re-attribute all references to a user IRI within a single project's data graph. " +
-        "Both user accounts remain intact. SystemAdmin only. Not idempotent: retrying after success returns 404.",
+        s"Both user accounts remain intact. ${Policy.SystemAdmin.requirement} Not idempotent: retrying after success returns 404.",
     )
 }
 

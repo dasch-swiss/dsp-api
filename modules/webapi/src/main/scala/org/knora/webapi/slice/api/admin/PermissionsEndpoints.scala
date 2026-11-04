@@ -22,6 +22,7 @@ import org.knora.webapi.slice.api.admin.AdminPathVariables.permissionIri
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectIri
 import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 object PermissionEndpointsRequests {
   final case class ChangeDoapRequest(
@@ -49,6 +50,9 @@ final class PermissionsEndpoints(base: BaseEndpoints) {
 
   private val permissionsBase = "admin" / "permissions"
 
+  private val pathProjectIri          = "path projectIri"
+  private val projectAdminRequirement = Policy.ProjectAdmin(pathProjectIri).requirement
+
   val postPermissionsAp = base.securedEndpoint.post
     .in(permissionsBase / "ap")
     .description(
@@ -57,30 +61,32 @@ final class PermissionsEndpoints(base: BaseEndpoints) {
     .in(jsonBody[CreateAdministrativePermissionAPIRequestADM])
     .out(jsonBody[AdministrativePermissionCreateResponseADM])
 
-  val getPermissionsApByProjectIri = base.securedEndpoint.get
+  val getPermissionsApByProjectIri = base
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(permissionsBase / "ap" / projectIri)
-    .description(
-      "Get all administrative permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.",
-    )
+    .description(s"Get all administrative permissions for a project. $projectAdminRequirement")
     .out(jsonBody[AdministrativePermissionsForProjectGetResponseADM])
 
-  val getPermissionsApByProjectAndGroupIri = base.securedEndpoint.get
+  val getPermissionsApByProjectAndGroupIri = base
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(permissionsBase / "ap" / projectIri / groupIriPathVar)
-    .description(
-      "Get all administrative permissions for a project and a group. Requires SystemAdmin or ProjectAdmin permissions for the project.",
-    )
+    .description(s"Get all administrative permissions for a project and a group. $projectAdminRequirement")
     .out(jsonBody[AdministrativePermissionGetResponseADM])
 
-  val getPermissionsDoapByProjectIri = base.securedEndpoint.get
+  val getPermissionsDoapByProjectIri = base
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(permissionsBase / "doap" / projectIri)
-    .description(
-      "Get all default object access permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.",
-    )
+    .description(s"Get all default object access permissions for a project. $projectAdminRequirement")
     .out(jsonBody[DefaultObjectAccessPermissionsForProjectGetResponseADM])
 
-  val getPermissionsByProjectIri = base.securedEndpoint.get
+  val getPermissionsByProjectIri = base
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(permissionsBase / projectIri)
-    .description("Get all permissions for a project. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+    .description(s"Get all permissions for a project. $projectAdminRequirement")
     .out(jsonBody[PermissionsForProjectGetResponseADM])
 
   val deletePermission = base.securedEndpoint.delete

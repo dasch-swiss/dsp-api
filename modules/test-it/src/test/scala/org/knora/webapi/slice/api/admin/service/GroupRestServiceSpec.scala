@@ -25,6 +25,7 @@ import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.domain.LanguageCode.EN
 import org.knora.webapi.util.MutableTestIri
 
@@ -74,7 +75,7 @@ class GroupRestServiceSpec extends E2EZSpec {
           selfjoin = GroupSelfJoin.disabled,
         )
 
-        groupRestService(_.postGroup(rootUser)(createReq))
+        groupRestService(_.postGroup(TestCandidates.of(rootUser))(createReq))
           .map(_.group)
           .tap(group => ZIO.succeed(newGroupIri.set(group.id)))
           .map { group =>
@@ -101,7 +102,7 @@ class GroupRestServiceSpec extends E2EZSpec {
           status = GroupStatus.active,
           selfjoin = GroupSelfJoin.disabled,
         )
-        groupRestService(_.postGroup(rootUser)(createRequest)).exit.map(
+        groupRestService(_.postGroup(TestCandidates.of(rootUser))(createRequest)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageContaining[DuplicateValueException](
               s"Group with name: '${groupName.value}' already exists.",

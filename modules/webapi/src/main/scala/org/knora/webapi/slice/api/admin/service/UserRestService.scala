@@ -40,6 +40,7 @@ import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
 import org.knora.webapi.slice.api.admin.service.UserRestService.UsersResponse
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.common.api.ProjectCandidate
 
 final case class UserRestService(
   private val auth: AuthorizationRestService,
@@ -179,28 +180,21 @@ final case class UserRestService(
   ): Task[UserResponse] =
     for {
       _        <- ensureNotABuiltInUser(userIri)
-      _        <- auth.ensureSystemAdmin(requestingUser)
       user     <- getKnoraUserOrNotFound(userIri)
       updated  <- knoraUserService.updateSystemAdminStatus(user, changeRequest.systemAdmin)
       response <- asExternalUserResponse(requestingUser, updated)
     } yield response
 
-  def addUserToProject(requestingUser: User)(
+  def addUserToProject(candidate: ProjectCandidate)(
     userIri: UserIri,
     projectIri: ProjectIri,
   ): Task[UserResponse] = for {
     _           <- ensureNotABuiltInUser(userIri)
-    _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
+    grant       <- auth.authorizeProjectAdminById(candidate, projectIri)
     kUser       <- getKnoraUserOrNotFound(userIri)
-    project     <- getProjectOrBadRequest(projectIri)
-    updatedUser <- knoraUserService.addUserToProject(kUser, project).mapError(BadRequestException.apply)
-    external    <- asExternalUserResponse(requestingUser, updatedUser)
+    updatedUser <- knoraUserService.addUserToProject(kUser, grant.project).mapError(BadRequestException.apply)
+    external    <- asExternalUserResponse(grant.user, updatedUser)
   } yield external
-
-  private def getProjectOrBadRequest(projectIri: ProjectIri) =
-    projectService
-      .findById(projectIri)
-      .someOrFail(BadRequestException(s"Project with iri ${projectIri.value} not found."))
 
   private def asExternalUserResponse(requestingUser: User, kUser: KnoraUser): Task[UserResponse] =
     knoraUserToUserConverter.toUser(kUser).flatMap(asExternalUserResponse(requestingUser, _))
@@ -221,45 +215,42 @@ final case class UserRestService(
       filteredUser.ofType(UserInformationType.Public)
     }
 
-  def addUserToProjectAsAdmin(requestingUser: User)(
+  def addUserToProjectAsAdmin(candidate: ProjectCandidate)(
     userIri: UserIri,
     projectIri: ProjectIri,
   ): Task[UserResponse] =
     for {
       _           <- ensureNotABuiltInUser(userIri)
-      _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
+      grant       <- auth.authorizeProjectAdminById(candidate, projectIri)
       user        <- getKnoraUserOrNotFound(userIri)
-      project     <- getProjectOrBadRequest(projectIri)
-      updatedUser <- knoraUserService.addUserToProjectAsAdmin(user, project).mapError(BadRequestException.apply)
-      external    <- asExternalUserResponse(requestingUser, updatedUser)
+      updatedUser <- knoraUserService.addUserToProjectAsAdmin(user, grant.project).mapError(BadRequestException.apply)
+      external    <- asExternalUserResponse(grant.user, updatedUser)
     } yield external
 
-  def removeUserFromProject(requestingUser: User)(
+  def removeUserFromProject(candidate: ProjectCandidate)(
     userIri: UserIri,
     projectIri: ProjectIri,
   ): Task[UserResponse] =
     for {
       _          <- ensureNotABuiltInUser(userIri)
-      _          <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
+      grant      <- auth.authorizeProjectAdminById(candidate, projectIri)
       user       <- getKnoraUserOrNotFound(userIri)
-      project    <- getProjectOrBadRequest(projectIri)
-      updateUser <- knoraUserService.removeUserFromProject(user, project).mapError(BadRequestException.apply)
-      response   <- asExternalUserResponse(requestingUser, updateUser)
+      updateUser <- knoraUserService.removeUserFromProject(user, grant.project).mapError(BadRequestException.apply)
+      response   <- asExternalUserResponse(grant.user, updateUser)
     } yield response
 
-  def removeUserFromProjectAsAdmin(requestingUser: User)(
+  def removeUserFromProjectAsAdmin(candidate: ProjectCandidate)(
     userIri: UserIri,
     projectIri: ProjectIri,
   ): Task[UserResponse] =
     for {
       _           <- ensureNotABuiltInUser(userIri)
-      _           <- auth.ensureSystemAdminOrProjectAdminById(requestingUser, projectIri)
+      grant       <- auth.authorizeProjectAdminById(candidate, projectIri)
       user        <- getKnoraUserOrNotFound(userIri)
-      project     <- getProjectOrBadRequest(projectIri)
       updatedUser <- knoraUserService
-                       .removeUserFromProjectAsAdmin(user, project)
+                       .removeUserFromProjectAsAdmin(user, grant.project)
                        .mapError(BadRequestException.apply)
-      response <- asExternalUserResponse(requestingUser, updatedUser)
+      response <- asExternalUserResponse(grant.user, updatedUser)
     } yield response
 
   def addUserToGroup(requestingUser: User)(

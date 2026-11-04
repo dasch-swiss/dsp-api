@@ -40,6 +40,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
+import org.knora.webapi.slice.common.api.ProjectCandidate
 
 final class PermissionRestService(
   responder: PermissionsResponder,
@@ -66,18 +67,20 @@ final class PermissionRestService(
       .tap(auth.ensureSystemAdminOrProjectAdmin(user, _))
 
   def getPermissionsApByProjectIri(
-    user: User,
+    candidate: ProjectCandidate,
   )(value: ProjectIri): Task[AdministrativePermissionsForProjectGetResponseADM] =
     for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(value, user)
-      result <- responder.getPermissionsApByProjectIri(value)
+      grant  <- auth.authorizeProjectAdminById(candidate, value)
+      result <- responder.getPermissionsApByProjectIri(grant.project.id)
       ext    <- format.toExternal(result)
     } yield ext
 
-  def getPermissionsByProjectIri(user: User)(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] =
+  def getPermissionsByProjectIri(
+    candidate: ProjectCandidate,
+  )(projectIri: ProjectIri): Task[PermissionsForProjectGetResponseADM] =
     for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-      result <- responder.getPermissionsByProjectIri(projectIri)
+      grant  <- auth.authorizeProjectAdminById(candidate, projectIri)
+      result <- responder.getPermissionsByProjectIri(grant.project.id)
       ext    <- format.toExternal(result)
     } yield ext
 
@@ -159,23 +162,23 @@ final class PermissionRestService(
     } yield ext
 
   def getPermissionsDaopByProjectIri(
-    user: User,
+    candidate: ProjectCandidate,
   )(projectIri: ProjectIri): Task[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
-      result <- responder.getPermissionsDaopByProjectIri(projectIri)
+      grant  <- auth.authorizeProjectAdminById(candidate, projectIri)
+      result <- responder.getPermissionsDaopByProjectIri(grant.project.id)
       ext    <- format.toExternal(result)
     } yield ext
 
-  def getPermissionsApByProjectAndGroupIri(user: User)(
+  def getPermissionsApByProjectAndGroupIri(candidate: ProjectCandidate)(
     projectIri: ProjectIri,
     groupIri: GroupIri,
   ): Task[AdministrativePermissionGetResponseADM] =
     for {
-      _      <- ensureProjectIriExistsAndUserHasAccess(projectIri, user)
+      grant  <- auth.authorizeProjectAdminById(candidate, projectIri)
       result <-
         administrativePermissionService
-          .findByGroupAndProject(groupIri, projectIri)
+          .findByGroupAndProject(groupIri, grant.project.id)
           .map(_.map(AdministrativePermissionADM.from))
           .someOrFail(
             NotFoundException(

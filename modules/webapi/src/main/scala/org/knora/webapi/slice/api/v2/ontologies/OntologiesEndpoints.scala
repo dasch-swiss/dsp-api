@@ -19,6 +19,7 @@ import org.knora.webapi.slice.api.v2.ApiV2
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.common.Value
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 
 final case class LastModificationDate private (value: Instant) extends Value[Instant]
@@ -35,6 +36,11 @@ object LastModificationDate {
 }
 
 final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
+
+  private val publicReason =
+    "Ontology metadata (label, comment, project, last modification) is part of the public data model."
+  private val publicRequirement = Policy.Public(publicReason).requirement
+
   private val base = "v2" / "ontologies"
 
   private val requiresOntologyAdmin = "Requires SystemAdmin or ProjectAdmin permissions for the ontology's project."
@@ -59,13 +65,15 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
         "Otherwise, if it looks like it belongs to a project-specific API ontology, prefix it with routeData.appConfig.externalOntologyIriHostAndPort to get the ontology IRI.",
     )
 
-  val getOntologiesMetadataProject = baseEndpoints.publicEndpoint.get
+  val getOntologiesMetadataProject = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in(base / "metadata")
     .in(header[Option[ProjectIri]](ApiV2.Headers.xKnoraAcceptProject))
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Get the metadata of an ontology. Publicly accessible.")
+    .description(s"Get the metadata of an ontology. $publicRequirement")
 
   val putOntologiesMetadata = baseEndpoints.securedEndpoint.put
     .in(base / "metadata")
@@ -77,12 +85,14 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
       "Change the metadata of an ontology. " + requiresOntologyAdmin,
     )
 
-  val getOntologiesMetadataProjects = baseEndpoints.publicEndpoint.get
+  val getOntologiesMetadataProjects = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in(base / "metadata" / paths.description("projectIris"))
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Get the metadata of ontologies for specific projects. Publicly accessible.")
+    .description(s"Get the metadata of ontologies for specific projects. $publicRequirement")
 
   val getOntologiesAllentities = baseEndpoints.withUserEndpoint.get
     .in(base / "allentities" / ontologyIriPath)

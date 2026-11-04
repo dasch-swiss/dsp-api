@@ -315,7 +315,7 @@ Errors:
 - `400 Bad Request`
     - if the provided IRI is not valid.
     - if the provided payload is not valid.
-- `404 Not Found` if no project with the provided IRI is found.
+- `403 Forbidden` if no project with the provided IRI is found, or the user is not a system or project admin.
 
 
 ### Get all Data of a Project
@@ -488,7 +488,7 @@ Example response:
 Errors:
 
 - `400 Bad Request` if the provided ID is not valid.
-- `404 Not Found` if no project with the provided ID is found.
+- `403 Forbidden` if no project with the provided ID is found, or the user is not a system or project admin.
 
 NB:
 
@@ -596,7 +596,7 @@ Example response:
 Errors:
 
 - `400 Bad Request` if the provided ID is not valid.
-- `404 Not Found` if no project with the provided ID is found.
+- `403 Forbidden` if no project with the provided ID is found, or the user is not a system or project admin.
 
 NB:
 

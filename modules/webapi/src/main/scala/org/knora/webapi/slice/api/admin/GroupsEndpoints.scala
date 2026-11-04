@@ -21,23 +21,31 @@ import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "groups"
 
+  private val publicReason      = "Group names and descriptions are public project metadata."
+  private val publicRequirement = Policy.Public(publicReason).requirement
+
   private val groupGetResponse =
     jsonBody[GroupGetResponseADM].example(Examples.GroupEndpointsExample.groupGetResponseADM)
 
-  val getGroups = baseEndpoints.publicEndpoint.get
+  val getGroups = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in(base)
     .out(jsonBody[GroupsGetResponseADM].example(Examples.GroupEndpointsExample.groupsGetResponseADM))
-    .description("Return all groups. Publicly accessible.")
+    .description(s"Return all groups. $publicRequirement")
 
-  val getGroupByIri = baseEndpoints.publicEndpoint.get
+  val getGroupByIri = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in(base / groupIriPathVar)
     .out(groupGetResponse)
-    .description("Return a single group identified by its IRI. Publicly accessible.")
+    .description(s"Return a single group identified by its IRI. $publicRequirement")
 
   val getGroupMembers = baseEndpoints.securedEndpoint.get
     .in(base / groupIriPathVar / "members")
@@ -46,12 +54,15 @@ final class GroupsEndpoints(baseEndpoints: BaseEndpoints) {
       "Return all members of a single group. Requires SystemAdmin or ProjectAdmin permissions for the group's project.",
     )
 
-  val postGroup = baseEndpoints.securedEndpoint.post
+  private val bodyProject = "body project"
+  val postGroup           = baseEndpoints
+    .projectAdminPolicyEndpoint(bodyProject)
+    .post
     .in(base)
     .in(jsonBody[GroupCreateRequest].example(Examples.GroupEndpointsExample.groupCreateRequest))
     .out(groupGetResponse)
     .name("Create new group")
-    .description("Create new group. Requires SystemAdmin or ProjectAdmin permissions for the project.")
+    .description(s"Create new group. ${Policy.ProjectAdmin(bodyProject).requirement}")
 
   val putGroup = baseEndpoints.securedEndpoint.put
     .in(base / groupIriPathVar)

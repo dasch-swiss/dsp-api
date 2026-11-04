@@ -30,6 +30,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.api.admin.service.PermissionRestService
+import org.knora.webapi.slice.common.api.TestCandidates
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class PermissionsResponderSpec extends E2EZSpec {
@@ -61,7 +62,7 @@ class PermissionsResponderSpec extends E2EZSpec {
       test("return Permission.Administrative for project and group") {
         for {
           result <- permissionRestService(
-                      _.getPermissionsApByProjectAndGroupIri(rootUser)(
+                      _.getPermissionsApByProjectAndGroupIri(TestCandidates.of(rootUser))(
                         imagesProjectIri,
                         KnoraGroupRepo.builtIn.ProjectMember.id,
                       ),

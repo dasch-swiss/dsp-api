@@ -19,6 +19,7 @@ import org.knora.webapi.slice.api.admin.AdminPathVariables.projectShortcode
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 import org.knora.webapi.slice.api.admin.model.FilterAndOrder
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 final case class ProjectLicenseDto(id: String, uri: String, labelEn: String, isRecommended: Boolean, isEnabled: Boolean)
 object ProjectLicenseDto {
@@ -65,6 +66,9 @@ object ResourceSideLegalInfo {
 
 final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
 
+  private val publicReason      = "The licenses a project allows are shown on its public data."
+  private val publicRequirement = Policy.Public(publicReason).requirement
+
   private final val base = "admin" / "projects" / "shortcode" / projectShortcode / "legal-info"
 
   private final val licenseIriPath = path[LicenseIri](using TapirCodec.stringCodec(LicenseIri.from))
@@ -92,7 +96,9 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
         "The user must be project member, project admin or system admin.",
     )
 
-  val getProjectLicenses = baseEndpoints.publicEndpoint.get
+  val getProjectLicenses = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in(base / "licenses")
     .in(PageAndSize.queryParams())
     .in(FilterAndOrder.queryParams)
@@ -101,12 +107,14 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
       jsonBody[PagedResponse[ProjectLicenseDto]]
         .example(Examples.PagedResponse.fromTotal(License.BUILT_IN.map(l => ProjectLicenseDto.from(l, true)))),
     )
-    .description("Get the available licenses for use within this project. Publicly accessible.")
+    .description(s"Get the available licenses for use within this project. $publicRequirement")
 
-  val getProjectLicensesIri = baseEndpoints.publicEndpoint.get
+  val getProjectLicensesIri = baseEndpoints
+    .publicPolicyEndpoint(publicReason)
+    .get
     .in(base / "licenses" / licenseIriPath)
     .out(jsonBody[ProjectLicenseDto])
-    .description("Get a specific license by its IRI for use within this project. Publicly accessible.")
+    .description(s"Get a specific license by its IRI for use within this project. $publicRequirement")
 
   val putProjectLicensesEnable = baseEndpoints.securedEndpoint.put
     .in(base / "licenses" / licenseIriPath / "enable")

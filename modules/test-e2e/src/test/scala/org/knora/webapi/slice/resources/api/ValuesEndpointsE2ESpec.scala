@@ -46,6 +46,7 @@ import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGrav
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
+import org.knora.webapi.testservices.ResponseOps.assert401
 import org.knora.webapi.testservices.ResponseOps.assert403
 import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
@@ -4733,16 +4734,16 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           (asMember ++ asOther).forall(m => !m.contains("Thing") && !m.contains("IntValue") && !m.contains("TextValue")),
         )
       },
-      test("an anonymous caller gets the anonymous refusal before any lookup") {
+      test("an anonymous caller is refused with 401 before any lookup") {
         val missing = "http://rdfh.ch/0001/no-such-thing"
         val hidden  =
           deleteValueRequest(HiddenThing.iri, "anything:Thing", "anything:hasInteger", HiddenThing.intValueIri)
         val unknown = deleteValueRequest(missing, "anything:Thing", "anything:noSuchProperty", s"$missing/values/nope")
         for {
           msgs <- ZIO.foreach(List(hidden, unknown))(body =>
-                    TestApiClient.postJsonLdDocument(uri"/v2/values/delete", body, None).flatMap(_.assert403),
+                    TestApiClient.postJsonLdDocument(uri"/v2/values/delete", body, None).flatMap(_.assert401),
                   )
-        } yield assertTrue(msgs.forall(_.contains("Anonymous users aren't allowed to perform this operation")))
+        } yield assertTrue(msgs.forall(_.contains("No credentials provided.")))
       },
       test("a non-existent resource answers 404") {
         val missing = "http://rdfh.ch/0001/no-such-thing"
@@ -4864,7 +4865,7 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           (asMember ++ asOther).forall(m => !m.contains("Thing") && !m.contains("IntValue") && !m.contains("TextValue")),
         )
       },
-      test("an anonymous caller gets the anonymous refusal before any lookup") {
+      test("an anonymous caller is refused with 401 before any lookup") {
         val missing = "http://rdfh.ch/0001/no-such-thing"
         val hidden  =
           updateValueRequest(HiddenThing.iri, "anything:Thing", "anything:hasInteger", HiddenThing.intValueIri)
@@ -4873,9 +4874,9 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
           msgs <- ZIO.foreach(List(hidden, unknown))(body =>
                     ZIO
                       .serviceWithZIO[TestApiClient](_.putJsonLdDocument(uri"/v2/values", body, None, identity))
-                      .flatMap(_.assert403),
+                      .flatMap(_.assert401),
                   )
-        } yield assertTrue(msgs.forall(_.contains("Anonymous users aren't allowed to perform this operation")))
+        } yield assertTrue(msgs.forall(_.contains("No credentials provided.")))
       },
       test("a value the caller cannot view answers the same 404 as a non-existent value") {
         val resourceIri           = "http://rdfh.ch/0001/a-thing-with-text-values"

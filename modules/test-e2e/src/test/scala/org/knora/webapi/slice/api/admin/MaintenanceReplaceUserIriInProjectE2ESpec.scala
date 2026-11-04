@@ -99,6 +99,11 @@ class MaintenanceReplaceUserIriInProjectE2ESpec extends E2EZSpec {
         )
         .map(response => assertTrue(response.code == StatusCode.Forbidden))
     } @@ TestAspect.timeout(30.seconds) @@ TestAspect.flaky,
+    test("returns 403 rather than 400 for a non-admin whose body would be rejected") {
+      TestApiClient
+        .postJson[Json, Json](endpointFor(anythingShortcode), replaceBody(normalUser.id, normalUser.id), normalUser)
+        .map(response => assertTrue(response.code == StatusCode.Forbidden))
+    },
     test("does not reject a built-in user IRI as oldIri (re-attributing SystemUser refs is valid)") {
       // No isBuiltInUser guard is applied at the RestService level for this endpoint. A built-in oldIri is
       // intentionally accepted: re-attributing references stamped under SystemUser/AnonymousUser to a real

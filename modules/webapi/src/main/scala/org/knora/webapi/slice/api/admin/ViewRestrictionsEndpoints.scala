@@ -16,6 +16,7 @@ import org.knora.webapi.slice.api.PageAndSize
 import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectIri
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 
 /**
  * Read-only "view restrictions" reporting for a project (design screen 1h).
@@ -29,6 +30,9 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "admin" / "projects" / "iri" / projectIri / "view-restrictions"
 
+  private val pathProjectIri          = "path projectIri"
+  private val projectAdminRequirement = Policy.ProjectAdmin(pathProjectIri).requirement
+
   private val itemTypeQuery = query[ItemType]("itemType")
     .description("Restrict the report to a single item type, or `all` for the combined view.")
     .default(ItemType.All)
@@ -39,7 +43,9 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
   private val resourceClassQuery = query[String]("resourceClass")
     .description("The IRI of the resource class whose value-level restrictions to count.")
 
-  val getViewRestrictionsClasses = baseEndpoints.securedEndpoint.get
+  val getViewRestrictionsClasses = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(base / "classes")
     .out(jsonBody[ViewRestrictionsClasses].example(ViewRestrictionsClasses.example))
     .description(
@@ -52,14 +58,16 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
         "for the counts here, which are in the same unit. It is derived from the same query rather than " +
         "from a separate count. Requesting this report refreshes the project's cached counts. Every class with one or more non-deleted resources is reported, including " +
         "classes with nothing restricted (all-zero counts, non-zero `totalResources`). Takes no item-type filter: resource-level counts are never filtered. " +
-        "The user must be project admin or system admin.",
+        projectAdminRequirement,
     )
 
   private val valueItemTypeQuery = query[ValueItemType]("itemType")
     .description("Restrict the value counts to a single value type, or `All` for every value type.")
     .default(ValueItemType.All)
 
-  val getViewRestrictionsValues = baseEndpoints.securedEndpoint.get
+  val getViewRestrictionsValues = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(base / "values")
     .in(resourceClassQuery)
     .in(valueItemTypeQuery)
@@ -75,10 +83,12 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
         "which is a different unit from the resource counts in step 1 and must never be summed with them. " +
         "`itemType` narrows to one kind of value; `All` means all value types (it does not include whole " +
         "resources, which step 1 already reports). " +
-        "The user must be project admin or system admin.",
+        projectAdminRequirement,
     )
 
-  val getViewRestrictionsItems = baseEndpoints.securedEndpoint.get
+  val getViewRestrictionsItems = baseEndpoints
+    .projectAdminPolicyEndpoint(pathProjectIri)
+    .get
     .in(base / "items")
     .in(groupQuery)
     .in(itemTypeQuery)
@@ -90,7 +100,7 @@ final class ViewRestrictionsEndpoints(baseEndpoints: BaseEndpoints) {
         "Ordered by label then IRI, so paging is stable across requests. " +
         "The restricted literals come from the cached counts, so an object whose permissions changed after " +
         "the last refresh by `/classes` (at most 60 minutes) can be missing until the next refresh. " +
-        "The user must be project admin or system admin.",
+        projectAdminRequirement,
     )
 }
 

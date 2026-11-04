@@ -20,6 +20,7 @@ import zio.json.interop.refined.*
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.api.v2.authentication.AuthenticationEndpointsV2.*
 import org.knora.webapi.slice.common.api.BaseEndpoints
+import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 
@@ -31,25 +32,38 @@ final class AuthenticationEndpointsV2(
   private val basePath: EndpointInput[Unit] = "v2" / "authentication"
   private val cookieName                    = authenticator.calculateCookieName()
 
-  val getV2Authentication = baseEndpoints.publicEndpoint.get
+  private val credentialCheckReason = "The endpoint is itself the credential check."
+  private val logoutReason          = "Acts only on the caller's own token; a missing or invalid token reveals nothing."
+  private val publicRequirement     = Policy.Public(credentialCheckReason).requirement
+
+  val getV2Authentication = baseEndpoints
+    .publicPolicyEndpoint(credentialCheckReason)
+    .get
     .in(basePath)
     .in(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
     .in(auth.basic[Option[UsernamePassword]](WWWAuthenticateChallenge.basic("realm")))
     .out(setCookieOpt(cookieName))
     .out(jsonBody[CheckResponse])
+    .description(s"Checks the credentials and returns whether they are valid. $publicRequirement")
 
-  val postV2Authentication = baseEndpoints.publicEndpoint.post
+  val postV2Authentication = baseEndpoints
+    .publicPolicyEndpoint(credentialCheckReason)
+    .post
     .in(basePath)
     .in(jsonBody[LoginPayload])
     .out(setCookie(cookieName))
     .out(jsonBody[TokenResponse])
+    .description(s"Logs in and returns a token. $publicRequirement")
 
-  val deleteV2Authentication = baseEndpoints.publicEndpoint.delete
+  val deleteV2Authentication = baseEndpoints
+    .publicPolicyEndpoint(logoutReason)
+    .delete
     .in(basePath)
     .in(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
     .in(cookie[Option[String]](cookieName))
     .out(setCookie(cookieName))
     .out(jsonBody[LogoutResponse])
+    .description(s"Logs out by invalidating the token. $publicRequirement")
 }
 
 object AuthenticationEndpointsV2 {
