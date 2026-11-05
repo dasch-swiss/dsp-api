@@ -70,7 +70,7 @@ that option. If the owner picks another option, the phase's checkboxes are rewri
 | Q4 | Asked in three parts. Create validates `forGroup`, `forResourceClass` and `forProperty` (400 otherwise); changing or deleting a permission stays SystemAdmin; `PUT copyright-holders` stays SystemAdmin. That is option a. |
 | Q5 | a) Declare what they do now |
 | Q6 | a) Keep both |
-| Q7 | Unanswered. Phase 24 waits for it. |
+| Q7 | a) Require ChangeRights when the body carries `hasPermissions` (403 otherwise), matching values and the [DSP-TOOLS permissions guide](https://docs.dasch.swiss/DSP-TOOLS/permissions-guide/) |
 | Q8 | a) Keep both public, with a reason that names the exposure |
 | Q9 | a) Out of this plan; DEV-7718 |
 
