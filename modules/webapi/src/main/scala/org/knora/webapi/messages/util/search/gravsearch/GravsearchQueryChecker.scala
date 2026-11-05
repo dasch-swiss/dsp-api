@@ -179,6 +179,8 @@ object GravsearchQueryChecker {
         else Right(vars.head)
       }
 
+  // Not QueryTraverser.visitWherePatterns: it does not descend into GroupPattern, SubSelectPattern or GraphPattern,
+  // so it would let a nested statement through.
   private def containsMainResourceStatement(patterns: Seq[QueryPattern]): Boolean =
     patterns.exists {
       case statementPattern: StatementPattern                   => isMainResourcePredicate(statementPattern.pred)

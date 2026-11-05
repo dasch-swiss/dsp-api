@@ -35,8 +35,8 @@ class GravsearchQueryCheckerSpec extends ZIOSpecDefault {
   private def removed(construct: String, where: String) =
     GravsearchQueryChecker.removeMainResourceStatementsFromWhereClause(parse(construct, where))
 
-  private def rejectionMessage(construct: String, where: String): String =
-    removed(construct, where).left.map(_.getMessage).swap.getOrElse("")
+  private def rejection(construct: String, where: String): Either[String, ConstructQuery] =
+    removed(construct, where).left.map(_.getMessage)
 
   override def spec: Spec[TestEnvironment, Any] = suite("GravsearchQueryChecker")(
     suite("removeMainResourceStatementsFromWhereClause")(
@@ -51,20 +51,22 @@ class GravsearchQueryCheckerSpec extends ZIOSpecDefault {
       },
       test("rejects a statement that marks a different variable") {
         assertTrue(
-          rejectionMessage(mainThing, "?other knora-api:isMainResource true .") ==
-            "knora-api:isMainResource in the WHERE clause marks ?other, but the CONSTRUCT clause marks ?thing as the main resource",
+          rejection(mainThing, "?other knora-api:isMainResource true .") ==
+            Left(
+              "knora-api:isMainResource in the WHERE clause marks ?other, but the CONSTRUCT clause marks ?thing as the main resource",
+            ),
         )
       },
       test("rejects the object false") {
         assertTrue(
-          rejectionMessage(mainThing, "?thing knora-api:isMainResource false .") ==
-            "The object of knora-api:isMainResource can only be true",
+          rejection(mainThing, "?thing knora-api:isMainResource false .") ==
+            Left("The object of knora-api:isMainResource can only be true"),
         )
       },
       test("rejects a subject that is not a variable") {
         assertTrue(
-          rejectionMessage(mainThing, "<http://rdfh.ch/0001/a-thing> knora-api:isMainResource true .") ==
-            "The subject of knora-api:isMainResource must be a variable",
+          rejection(mainThing, "<http://rdfh.ch/0001/a-thing> knora-api:isMainResource true .") ==
+            Left("The subject of knora-api:isMainResource must be a variable"),
         )
       },
       test("rejects a statement nested in OPTIONAL, UNION, MINUS or FILTER NOT EXISTS") {
@@ -76,7 +78,7 @@ class GravsearchQueryCheckerSpec extends ZIOSpecDefault {
         )
         val expected = "knora-api:isMainResource can only be used at the top level of the WHERE clause, " +
           "not inside a nested block such as OPTIONAL, UNION, MINUS or FILTER NOT EXISTS"
-        assertTrue(nested.map(rejectionMessage(mainThing, _)).forall(_ == expected))
+        assertTrue(nested.map(rejection(mainThing, _)).forall(_ == Left(expected)))
       },
     ),
     suite("mainResourceVariable")(
