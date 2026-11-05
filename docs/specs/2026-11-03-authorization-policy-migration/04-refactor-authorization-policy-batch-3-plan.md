@@ -60,6 +60,20 @@ that option. If the owner picks another option, the phase's checkboxes are rewri
 | Q8 | resource listings (25) | `GET /v2/resources/info` lists every resource of a project, deleted ones included, without filtering; it is documented as public for incremental sync (DEV-7632). `GET /v3/projects/{projectIri}/resourcesPerOntology` counts over the whole data graph. | **a) Keep both public and declare a reason that names the exposure.** b) Require ProjectMember. c) Filter by permission. |
 | Q9 | counts (26) | The five count endpoints ignore the caller's permissions (DEV-7718), so a gravsearch count can probe hidden values. | **a) Out of this plan:** they stay in the baseline, and DEV-7718 migrates them to `ObjectAccess` once counts are filtered. b) Fix DEV-7718 here. c) Declare `Public` with a reason naming the gap. |
 
+### Owner answers (2026-11-05)
+
+| Id | Answer |
+| --- | --- |
+| Q1 | a) `Policy.SelfOrSystemAdmin(userFrom)` |
+| Q2 | a) `Policy.ProjectAdminOfAnyProject`; the `systemAdmin=true` check stays in the handler |
+| Q3 | Postponed. The membership reads stay in the baseline and are aligned outside this PR; Phase 19 does not run. dsp-app defines the three reads but code search found no caller; dsp-tools `get` calls `project-memberships`. |
+| Q4 | Asked in three parts. Create validates `forGroup`, `forResourceClass` and `forProperty` (400 otherwise); changing or deleting a permission stays SystemAdmin; `PUT copyright-holders` stays SystemAdmin. That is option a. |
+| Q5 | a) Declare what they do now |
+| Q6 | a) Keep both |
+| Q7 | Unanswered. Phase 24 waits for it. |
+| Q8 | a) Keep both public, with a reason that names the exposure |
+| Q9 | a) Out of this plan; DEV-7718 |
+
 ## Implementation Phases
 
 Verification commands are those in `CLAUDE.md`: `just test-unit`, `just test-e2e`, `just check`, and filtered
