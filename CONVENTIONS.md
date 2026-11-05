@@ -25,6 +25,18 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 - `final class ServiceName(val …)` with `val layer = ZLayer.derive[ServiceName]` in the companion. No trait + `*Live` split for new domain services.
 - **Carve-out**: trait + `*Live` is allowed for repos and other seams that need in-memory test doubles (`KnoraGroupRepo` / `KnoraGroupRepoLive`, `OntologyRepo`, `JwtService`, `Authenticator`). New repo traits ship an in-memory companion at `modules/webapi/src/test/.../service/<Name>InMemory.scala`. It is also allowed for cross-context **ports** (`docs/adr/0011-cross-context-access-ports-and-adapters.md`): the consumer declares the trait in its `ports` package, the provider implements `<Port>Live` next to its data, `LayersLive` wires it, and a `<Port>InMemory` double lives in the consumer's tests.
 
+### Abstractions
+
+- **No abstraction without a second real caller.** Write one concrete implementation. Extract a trait, abstract base
+  class or generic builder only when a second concrete use exists, and never stack abstractions on each other
+  (a trait wrapped by a base class wrapped by a builder, each with one implementation). The trait + `*Live`
+  carve-out under Services is the exception.
+- **Gravsearch query construction is legacy here; never use it as a template.** Example: the `WhereTransformer`
+  trait, implemented by the 2,500-line `AbstractPrequeryGenerator`, whose page and count subclasses
+  (`GravsearchToPrequeryTransformer`, `GravsearchToCountPrequeryTransformer`) are configured by overriding five
+  small hooks, all driven through `QueryTraverser` callbacks. Location:
+  `modules/webapi/src/main/scala/org/knora/webapi/messages/util/search/` (`gravsearch/` and `QueryTraverser`).
+
 ### API layer — three-tier split (mandatory)
 
 - `*Endpoints.scala` — Tapir endpoint definitions only. Every endpoint declares an HTTP method (`.get`, `.post`, …);
