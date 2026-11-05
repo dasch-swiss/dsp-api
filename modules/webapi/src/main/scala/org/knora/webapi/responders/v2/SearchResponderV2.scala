@@ -598,12 +598,9 @@ final class SearchResponderV2Live(
     val prequery = triplestore.query(Select.gravsearch(prequerySparql)).tapError(logPrequeryFailure(prequerySparql))
     stageSpan("gravsearch.prequery.execute")(
       generator.matchFulltextLookup.fold(prequery)(lookup =>
-        fulltextBreadthGuard.guarded(
-          lookup.searchTerm,
-          limitToStandoffClass = None,
-          dataGraph = lookup.dataGraph,
-          limitToResourceClass = None,
-        )(prequery),
+        fulltextBreadthGuard.guarded(lookup.searchTerm, limitToStandoffClass = None, dataGraph = lookup.dataGraph)(
+          prequery,
+        ),
       ),
     )
   }
@@ -646,7 +643,7 @@ final class SearchResponderV2Live(
                      )
       bindings <-
         fulltextBreadthGuard
-          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph, limitToResourceClass)(
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph)(
             triplestore.query(countSparql).catchSome(translateSearchTimeout(searchValue)),
           )
           .map(_.results.bindings)
@@ -731,7 +728,7 @@ final class SearchResponderV2Live(
 
       prequeryResponseNotMerged <-
         fulltextBreadthGuard
-          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph, limitToResourceClass)(
+          .guarded(LuceneQueryString(searchValue), limitToStandoffClass, dataGraph)(
             triplestore.query(searchSparql).catchSome(translateSearchTimeout(searchValue)),
           )
 
@@ -1555,11 +1552,21 @@ object SearchResponderV2 {
    * parse failure would echo the offending FILTER literal -- and an interruption carries
    * `gravsearch.exit_reason=interrupted`.
    *
+   * A `BadRequestException` is the client's input being refused (a breadth refusal, invalid Lucene syntax, a
+   * generator input check), always a 400: it leaves the status `UNSET` and sets `gravsearch.exit_reason=bad_request`,
+   * on the failed stage and on every enclosing stage span, the root included. `GravsearchException` is not
+   * classified, because it also signals server-side invariant failures; it stays `ERROR`.
+   *
    * The behaviour, and the reason the failure status mapper must stay `UNSET`, live in [[SanitizedSpan]]; this
-   * supplies only the Gravsearch-specific exit-reason key.
+   * supplies only the Gravsearch-specific exit-reason key and client-rejection classifier.
    */
   def stageSpan[A](tracing: Tracing, name: String)(effect: Task[A]): Task[A] =
-    SanitizedSpan.withSpan(tracing, name, GravsearchExitReasonKey)(_ => effect)
+    SanitizedSpan.withSpan(tracing, name, GravsearchExitReasonKey, gravsearchClientRejection)(_ => effect)
+
+  private def gravsearchClientRejection(error: Throwable): Option[String] = error match {
+    case _: BadRequestException => Some("bad_request")
+    case _                      => None
+  }
 
   // ---- query capture: submitted Gravsearch (DEV-6858), generated prequery (DEV-7302) --------------
 
