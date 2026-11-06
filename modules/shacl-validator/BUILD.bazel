@@ -1,5 +1,7 @@
 load("//tools/scalafmt:defs.bzl", "scala_junit_test", "scala_library")
 
+_MEMORY_SPEC = "src/test/scala/org/knora/shacl/ShaclValidatorMemorySpec.scala"
+
 # SHACL validator. Pure leaf module.
 scala_library(
     name = "shacl-validator",
@@ -19,10 +21,35 @@ scala_library(
 scala_junit_test(
     name = "test",
     format = True,
-    srcs = glob(["src/test/scala/**/*.scala"]),
+    srcs = glob(
+        ["src/test/scala/**/*.scala"],
+        exclude = [_MEMORY_SPEC],
+    ),
     # Discovery is by class-name suffix; a missed suffix silently skips specs.
     suffixes = ["Spec", "IT", "Test"],
     # test-onto-shapes.ttl fixture read by ShaclValidatorSpec.
+    resources = glob(["src/test/resources/**"]),
+    deps = [
+        ":shacl-validator",
+        "//modules/test-runner",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_test_3",
+        "@maven//:org_slf4j_slf4j_simple",
+    ],
+)
+
+# Runs under a small heap so a validation model that grows with inference fails
+# with OutOfMemoryError (JVM exit) instead of passing.
+scala_junit_test(
+    name = "memory_test",
+    size = "medium",
+    format = True,
+    srcs = [_MEMORY_SPEC],
+    jvm_flags = [
+        "-Xmx256m",
+        "-XX:+ExitOnOutOfMemoryError",
+    ],
+    suffixes = ["Spec", "IT", "Test"],
     resources = glob(["src/test/resources/**"]),
     deps = [
         ":shacl-validator",
