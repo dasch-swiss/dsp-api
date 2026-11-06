@@ -153,6 +153,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .in(streamBinaryBody(ZioStreams)(CodecFormat.Zip()).description("The export zip file to import"))
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[DataTaskStatusResponse])
+    .attribute(ClosesOnUnreadBody.key, ClosesOnUnreadBodyRoute)
     .description(
       "Initiates an import of a project from an export zip file. " +
         "The import will be performed asynchronously, and the response will indicate that the import has been accepted. " +
@@ -208,6 +209,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     )
     .out(statusCode(StatusCode.Accepted))
     .out(jsonBody[DataTaskStatusResponse])
+    .attribute(ClosesOnUnreadBody.key, ClosesOnUnreadBodyRoute)
     .description(
       "Initiates an import of a project's data graph from a knora-api JSON-LD payload. " +
         "The import will be performed asynchronously, and the response will contain an import ID that can be used to check the status of the import. " +

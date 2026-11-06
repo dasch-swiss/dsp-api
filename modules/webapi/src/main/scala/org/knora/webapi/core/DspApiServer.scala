@@ -49,6 +49,7 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.api.Endpoints
 import org.knora.webapi.slice.api.admin.SparqlPassthroughAudit
 import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
+import org.knora.webapi.slice.api.v3.projects.ClosesOnUnreadBody
 import org.knora.webapi.slice.common.api.NegotiatesOwnAccept
 
 final class DspApiServer(
@@ -296,6 +297,25 @@ object DspApiServer {
       else response
 
     /**
+     * Marks a rejection by a [[ClosesOnUnreadBody]] route as the last response on its connection.
+     *
+     * These rejections (a `404`/`409`/`413` from the server logic) are produced after the body was decoded as a
+     * stream the logic never consumed, so the same `autoRead=false` hazard as in [[closeConnectionIfPassthrough]]
+     * applies. A `2xx` means the body was consumed. Applied only when [[bodyPlausiblyUnread]].
+     */
+    private def closeConnectionIfBodyUnread[B](
+      ep: AnyEndpoint,
+      request: ServerRequest,
+      response: ServerResponse[B],
+    ): ServerResponse[B] =
+      if (
+        ClosesOnUnreadBody.isMarked(ep) && !response.code.isSuccess && bodyPlausiblyUnread(request) &&
+        !response.headers.exists(closesConnection)
+      )
+        response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
+      else response
+
+    /**
      * True when this request's body may still be sitting unread in the channel.
      *
      * The server runs `RequestStreaming.Hybrid(maxAggregatedRequestBodySize)`, and zio-http's
@@ -334,7 +354,8 @@ object DspApiServer {
           monad: MonadError[Task],
           bodyListener: BodyListener[Task, B],
         ): Task[ServerResponse[B]] =
-          updateSpanMetadata(ctx.endpoint) *> delegate.onDecodeSuccess(ctx)
+          updateSpanMetadata(ctx.endpoint) *>
+            delegate.onDecodeSuccess(ctx).map(closeConnectionIfBodyUnread(ctx.endpoint, ctx.request, _))
 
         override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
           monad: MonadError[Task],
