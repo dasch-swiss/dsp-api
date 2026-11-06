@@ -99,7 +99,7 @@ the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PAT
 - Fuseki's recipes (`just docker-build-fuseki-image`/`just docker-publish-fuseki-image`) build and
   publish the fuseki image with Bazel (`//modules/fuseki:load`/`:push`), same as the other three.
 - CI runs entirely through `just` and `bazel test`, pointed at the shared **NativeLink RBE backend**
-  (`dasch-remotebuild-prod-01`) for a remote cache + executor. See `docs/development/dsp-api-rbe.md`.
+  (`dasch-remotebuild-prod-01`) for a remote cache + executor. See `docs/development/rbe.md`.
   sbt has been fully removed: formatting/linting is the rules_scala scalafmt toolchain, license
   headers are `//tools/license`, and dependency updates run through Renovate (`.github/renovate.json`)
   with `MODULE.bazel` as the sole version source.
@@ -121,7 +121,7 @@ boundary questions, never import it here. Domain vocabulary: `CONTEXT.md` (index
 - **Repository Pattern**: Data access abstraction
 - **Service Layer**: Business logic separation
 - **Dependency Injection**: ZIO layers for service composition
-- **Value Types**: Use `Value[A]` (e.g. `StringValue`, `BooleanValue`, `IntValue`) to make domain models type-safe with validated construction. See `docs/development/dsp-api-value-types.md` for details.
+- **Value Types**: Use `Value[A]` (e.g. `StringValue`, `BooleanValue`, `IntValue`) to make domain models type-safe with validated construction. See `docs/development/value-types.md` for details.
 
 ## Testing Guidelines
 
@@ -163,7 +163,7 @@ This repo ships a checked-in `metals` MCP server intended to give agents Scala l
 (compiler diagnostics, type-aware usage search, symbol docs and lookup). **When it is working, prefer
 the `metals` MCP tools over shelling out to `bazel build`** — `compile-file` / `compile-module` and
 `get-usages` are incremental and return structured results. For setup, the full tool list, and the
-worktree/LOOM caveats see `docs/development/dsp-api-metals-mcp.md`.
+worktree/LOOM caveats see `docs/development/metals-mcp.md`.
 
 **Bazel-9 note:** Metals connects to Bazel via **bazel-bsp**, whose bundled aspect (in bazel-bsp 4.0.x)
 isn't Bazel-9-compatible out of the box. Two local fixes make it work: a macOS-scoped
@@ -172,7 +172,7 @@ removed) and a `bazel_binary` wrapper (`tools/metals/bazel-bsp-wrapper.sh`) that
 patch to bazel-bsp's `core.bzl` on each invocation. So `compile-file`/`compile-module`/`get-usages` all work.
 This is **not** a rules_scala 7.x issue. It's a vendored patch to bazel-bsp — track scalameta/metals#8268 and
 remove it once upstream supports Bazel 9. Bootstrap in a fresh worktree: `just metals-bootstrap`, then the
-metals `import-build` tool. Full details in `docs/development/dsp-api-metals-mcp.md`.
+metals `import-build` tool. Full details in `docs/development/metals-mcp.md`.
 
 ## Common Development Tasks
 
@@ -198,11 +198,11 @@ New queries use the in-house `sparql"..."` interpolator from `modules/sparql-bui
 `Fragment` composition). Do not write new queries with RDF4J SparqlBuilder — existing
 sites keep it until they are migrated (verify a migration by diffing rendered SPARQL
 against the old builder's `getQueryString` output). For details see
-`docs/development/dsp-api-sparql-queries.md`.
+`docs/development/sparql-queries.md`.
 
 ### Development Conventions
 
-When writing code, follow the conventions outlined in `docs/development/dsp-api-conventions.md` for consistency across
+When writing code, follow the conventions outlined in `docs/development/conventions.md` for consistency across
 the codebase. This includes structuring test suites, naming conventions, and using ZIO Test features effectively.
 
 See also `CONVENTIONS.md` (work-phase agent reference card — code/testing/commit conventions, with pointers into
@@ -233,7 +233,7 @@ file tracked by git (the `markdownlint` binary comes from the Nix dev shell).
 ### IRI Handling
 
 Universal rules for constructing typed IRI value objects (e.g. `ResourceIri`) from strings — see
-`docs/development/dsp-api-iri-handling.md`. Key rules:
+`docs/development/iri-handling.md`. Key rules:
 
 - Never call `unsafeFrom` in responders or RestServices — use `ZIO.fromEither(Xxx.from(...))`.
 - Map conversion errors to the right failure type per layer: `BadRequestException` in RestServices,
@@ -244,7 +244,7 @@ Universal rules for constructing typed IRI value objects (e.g. `ResourceIri`) fr
 ### V3 API — IRI Handling
 
 When adding or modifying v3 endpoints that accept IRI parameters, follow the two-category model
-described in `docs/development/dsp-api-v3-iri-handling.md`:
+described in `docs/development/v3-iri-handling.md`:
 
 - **Simple IRIs** (e.g. `ProjectIri`, `UserIri`): use the typed value object directly in endpoints.
 - **SmartIri-backed IRIs** (ontology, class, property IRIs): accept as `IriDto` in endpoints, convert via `IriConverter` in the RestService.

@@ -1,7 +1,7 @@
 # How Fuseki Executes Our Queries — Engine Facts
 
 The mechanics behind the rules in
-[`dsp-api-sparql-queries.md` § Pattern Order and Query Performance](dsp-api-sparql-queries.md#pattern-order-and-query-performance).
+[`sparql-queries.md` § Pattern Order and Query Performance](sparql-queries.md#pattern-order-and-query-performance).
 That document says *what to do*; this one explains *why the engine behaves that way* and how to
 verify a hypothesis instead of guessing. Every fact below was verified against a prod-like
 dataset (stage dump: 89M triples, 103 graphs, ~946k resources) during the DEV-6803 audit; the

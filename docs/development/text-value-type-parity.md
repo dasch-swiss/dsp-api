@@ -39,7 +39,7 @@ that case rather than failing. It does not use the shared mapping.
 
 ## Related
 
-- `dsp-api-value-types.md` — value object construction.
+- `value-types.md` — value object construction.
 - The same parity rule holds for scalar-literal datatypes. `OntologyTransformer.canonicalizeScalarLiterals`
   re-types the bulk-import payload to match the create path, and every write path formats a decimal
   through `ValuesValidator.canonicalDecimal`.

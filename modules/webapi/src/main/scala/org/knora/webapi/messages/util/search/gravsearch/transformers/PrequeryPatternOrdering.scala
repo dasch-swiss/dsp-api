@@ -15,7 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * Orders the patterns of one Gravsearch prequery WHERE block so that Fuseki (TDB2, no `stats.opt`)
  * evaluates them in a sane order.
  *
- * Relies on the engine facts documented in `docs/development/dsp-api-fuseki-query-execution.md`: Fact 1
+ * Relies on the engine facts documented in `docs/development/fuseki-query-execution.md`: Fact 1
  * (Fuseki reorders heuristically but only within one BGP, essentially preserving document order across
  * barriers), Fact 3 (`*`/`+` property paths are anchored by whichever end is bound), Fact 4 (`MINUS`
  * evaluates its right side without the outer bindings; `OPTIONAL`/`UNION`/`FILTER NOT EXISTS` see it), and
@@ -101,7 +101,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
  * `GravsearchToCountPrequeryTransformerE2ESpec`, which live in `modules/test-it`, not in `modules/webapi`
  * alongside this file: a tier change verified only with `bazel test //modules/webapi:test` looks green while
  * silently changing emitted query order. Regenerate them through the `GOLDEN_REWRITE` switch documented in
- * `docs/development/dsp-api-conventions.md` and review the diff. `just test-gravsearch-prequery` runs both
+ * `docs/development/conventions.md` and review the diff. `just test-gravsearch-prequery` runs both
  * halves together.
  */
 object PrequeryPatternOrdering {

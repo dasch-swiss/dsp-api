@@ -54,7 +54,7 @@
               # Metals — provides the `metals-mcp` binary the checked-in `.mcp.json`
               # runs for Scala language intelligence. Shipping it in the dev shell
               # means every checkout gets the pinned version without a separate
-              # `cs install`. See docs/development/dsp-api-metals-mcp.md.
+              # `cs install`. See docs/development/metals-mcp.md.
               metals
             ];
 

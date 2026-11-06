@@ -3,7 +3,7 @@
 Safe, composable SPARQL query building: whole queries as `sparql"""|..."""` interpolated
 templates with typed holes, dynamic structure composed as `Fragment` values. This is the
 **only** SPARQL generation style for new dsp-api code — see
-[the decision record](../../docs/development/dsp-api-sparql-builder.md) for why, and for
+[the decision record](../../docs/development/sparql-builder.md) for why, and for
 the RDF4J SparqlBuilder migration plan.
 
 ## Usage
@@ -62,7 +62,7 @@ spanning several lines when needed. Never pull static SPARQL into a local `val`/
 `prefixes` fragment, and write the `PREFIX` declarations literally in every template: one
 whole-query template a reader can follow top to bottom beats a query assembled from named pieces
 or duplicated per runtime shape. See
-[the convention](../../docs/development/dsp-api-sparql-queries.md#keep-the-query-readable-one-explicit-template-per-query).
+[the convention](../../docs/development/sparql-queries.md#keep-the-query-readable-one-explicit-template-per-query).
 
 `Fragments` also provides `optional`, `union`, `graph`, `filter`, `filterNotExists`,
 `minus`, `bind`, `values`, and `subquery` for constructs that are themselves dynamic.

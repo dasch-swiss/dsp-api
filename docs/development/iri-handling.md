@@ -4,7 +4,7 @@ Rules for constructing typed IRI value objects (e.g. `ResourceIri`, `ValueIri`, 
 
 These rules are **universal** — they apply to v2, v3, admin, and any other API slice.
 For v3-specific endpoint wiring (how SmartIri-backed IRIs cross the HTTP boundary), see
-[dsp-api-v3-iri-handling.md](dsp-api-v3-iri-handling.md).
+[v3-iri-handling.md](v3-iri-handling.md).
 
 ## The rules
 
@@ -121,7 +121,7 @@ assertTrue(actual.iri == ResourceIri.unsafeFrom("http://rdfh.ch/0001/a-thing"))
 
 ## Reference
 
-- [dsp-api-v3-iri-handling.md](dsp-api-v3-iri-handling.md) — v3 endpoint wiring, `IriDto`, `IriConverter`
-- [dsp-api-value-types.md](dsp-api-value-types.md) — `StringValue` / `Value[A]` pattern
+- [v3-iri-handling.md](v3-iri-handling.md) — v3 endpoint wiring, `IriDto`, `IriConverter`
+- [value-types.md](value-types.md) — `StringValue` / `Value[A]` pattern
 - `ResourceIri` — `slice/common/ResourceIri.scala`
 - `InconsistentRepositoryDataException` — `dsp/errors/Errors.scala`
