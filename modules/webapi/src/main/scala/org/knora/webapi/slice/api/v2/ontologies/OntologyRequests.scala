@@ -43,7 +43,6 @@ final case class CanDeleteCardinalitiesFromClassRequestV2(
  * @param newObjects           the class's new labels or comments.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 case class ChangeClassLabelsOrCommentsRequestV2(
   classIri: ResourceClassIri,
@@ -51,7 +50,6 @@ case class ChangeClassLabelsOrCommentsRequestV2(
   newObjects: Seq[LanguageTaggedStringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**
@@ -61,14 +59,12 @@ case class ChangeClassLabelsOrCommentsRequestV2(
  * @param newGuiObject         the GUI object with the new GUI element and/or GUI attributes.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 case class ChangePropertyGuiElementRequest(
   propertyIri: KnoraIris.PropertyIri,
   newGuiObject: Schema.GuiObject,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**
@@ -80,7 +76,6 @@ case class ChangePropertyGuiElementRequest(
  * @param label          the label of the ontology.
  * @param comment        the optional comment that described the ontology to be created.
  * @param apiRequestID   the ID of the API request.
- * @param requestingUser the user making the request.
  */
 case class CreateOntologyRequestV2(
   ontologyName: String,
@@ -89,7 +84,6 @@ case class CreateOntologyRequestV2(
   label: String,
   comment: Option[NonEmptyString],
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**
@@ -98,13 +92,11 @@ case class CreateOntologyRequestV2(
  * @param propertyInfoContent  an [[PropertyInfoContentV2]] containing the property definition.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 case class CreatePropertyRequestV2(
   propertyInfoContent: PropertyInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**
@@ -113,13 +105,11 @@ case class CreatePropertyRequestV2(
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the cardinalities to be removed.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 final case class DeleteCardinalitiesFromClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 enum LabelOrComment {

@@ -22,6 +22,7 @@ import org.knora.webapi.slice.`export`.domain.DataTaskStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.v3.*
+import org.knora.webapi.slice.common.api.Policy
 
 final case class DataTaskStatusResponse(
   id: DataTaskId,
@@ -65,7 +66,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
 
   // trigger an export
   val postProjectIriExports = self.base
-    .secured(
+    .systemAdminPolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found),
         conflictVariant(V3ErrorCode.export_exists),
@@ -83,12 +84,13 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .description(
       "Initiates an export of the project. " +
         "The export will be performed asynchronously, and the response will contain an export ID that can be used to check the status of the export. " +
-        "An export can only be triggered when no other export exists.",
+        "An export can only be triggered when no other export exists." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 
   // get the status of an export
   val getProjectIriExportsExportId = self.base
-    .secured(oneOf(notFoundVariant(V3ErrorCode.export_not_found)))
+    .systemAdminPolicy(oneOf(notFoundVariant(V3ErrorCode.export_not_found)))
     .get
     .in(exportsBase / exportIdPathVar)
     .out(statusCode(StatusCode.Ok))
@@ -96,12 +98,13 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .description(
       "Checks the status of an export. " +
         "The response will indicate whether the export is still in progress, has completed successfully, or has failed. " +
-        "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists.",
+        "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 
   // delete an export
   val deleteProjectIriExportsExportId = self.base
-    .secured(
+    .systemAdminPolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.export_not_found),
         conflictVariant(V3ErrorCode.export_in_progress),
@@ -113,12 +116,13 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .description(
       "Deletes an export irrevocably. " +
         "Only exports in state failed or completed can be deleted. " +
-        "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists.",
+        "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 
   // download an export
   val getProjectIriExportsExportIdDownload = self.base
-    .secured(
+    .systemAdminPolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.export_not_found),
         conflictVariant(V3ErrorCode.export_in_progress, V3ErrorCode.export_failed),
@@ -133,12 +137,13 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       "Download an export. " +
         "An export can only be downloaded when it has completed successfully. " +
         "If it is still in progress or has failed, the response will be 409 Conflict. " +
-        "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists.",
+        "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 
   // import an export
   val postProjectIriImports = self.base
-    .secured(
+    .systemAdminPolicy(
       oneOf(
         conflictVariant(V3ErrorCode.import_exists),
       ),
@@ -151,26 +156,28 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .description(
       "Initiates an import of a project from an export zip file. " +
         "The import will be performed asynchronously, and the response will indicate that the import has been accepted. " +
-        "An import can only be triggered when no other import exists.",
+        "An import can only be triggered when no other import exists." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 
   // get the status of an import
   val getProjectIriImportsImportId = self.base
-    .secured(oneOf(notFoundVariant(V3ErrorCode.import_not_found)))
+    .systemAdminPolicy(oneOf(notFoundVariant(V3ErrorCode.import_not_found)))
     .get
     .in(importsBase / importIdPathVar)
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[DataTaskStatusResponse])
     .description(
       "Checks the status of an import. " +
-        "The response will indicate whether the import is still in progress, has completed successfully, or has failed.",
+        "The response will indicate whether the import is still in progress, has completed successfully, or has failed." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 
   // Three distinct 409s: `import_exists` (a previous data-graph import task still exists - the per-kind task mutex),
   // `data_graph_exists` (the create-only precondition - the project already holds data other than list nodes), and
   // `project_ontologies_missing` (the project has no ontologies, so no data can be imported).
   val postProjectIriDataImports = self.base
-    .secured(
+    .systemAdminPolicy(
       oneOf(
         notFoundVariant(
           V3ErrorCode.project_not_found,
@@ -207,22 +214,24 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
         "Every imported resource and value is attributed to the `onBehalfOfUser`, not the triggering admin. " +
         "The import is create-only: it fails with 409 `data_graph_exists` if the project data graph already holds data other than list nodes. A graph containing only list nodes is permitted. " +
         "The project must have at least one ontology: an ontology-less project is rejected with 409 `project_ontologies_missing`, evaluated before the create-only check. " +
-        "An import can only be triggered when no other data-graph import exists.",
+        "An import can only be triggered when no other data-graph import exists." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 
   val getProjectIriDataImportsImportId = self.base
-    .secured(oneOf(notFoundVariant(V3ErrorCode.import_not_found, V3ErrorCode.feature_missing)))
+    .systemAdminPolicy(oneOf(notFoundVariant(V3ErrorCode.import_not_found, V3ErrorCode.feature_missing)))
     .get
     .in(dataImportsBase / importIdPathVar)
     .out(statusCode(StatusCode.Ok))
     .out(jsonBody[DataTaskStatusResponse])
     .description(
       "Checks the status of a data-graph import. " +
-        "The response will indicate whether the import is still in progress, has completed successfully, or has failed.",
+        "The response will indicate whether the import is still in progress, has completed successfully, or has failed." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 
   val deleteProjectIriDataImportsImportId = self.base
-    .secured(
+    .systemAdminPolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.import_not_found, V3ErrorCode.feature_missing),
         conflictVariant(V3ErrorCode.import_in_progress),
@@ -234,12 +243,13 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .description(
       "Deletes a data-graph import. " +
         "Only imports in state failed or completed can be deleted. " +
-        "If it is still in progress, the response will be 409 Conflict.",
+        "If it is still in progress, the response will be 409 Conflict." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 
   // delete an import
   val deleteProjectIriImportsImportId = self.base
-    .secured(
+    .systemAdminPolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.import_not_found),
         conflictVariant(V3ErrorCode.import_in_progress),
@@ -251,7 +261,8 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .description(
       "Deletes an import. " +
         "Only imports in state failed or completed can be deleted. " +
-        "If it is still in progress, the response will be 409 Conflict.",
+        "If it is still in progress, the response will be 409 Conflict." +
+        s" ${Policy.SystemAdmin.requirement}",
     )
 }
 

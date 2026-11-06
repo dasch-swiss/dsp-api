@@ -12,19 +12,23 @@ import zio.*
 
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v3.*
+import org.knora.webapi.slice.common.api.Policy
 
 final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelper {
 
   private val ontologiesBase = ApiV3.basePath / "ontologies"
   private val mappingsTag    = List("Ontology Mappings")
+  private val projectFrom    = "path ontology's project"
+  private val requirement    = Policy.ProjectAdmin(projectFrom).requirement
 
   /** PUT class mapping: add/replace rdfs:subClassOf triples pointing to external IRIs */
   val putClassMapping = base
-    .secured(
+    .projectAdminPolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.class_not_found),
         badRequestVariant,
       ),
+      projectFrom,
     )
     .put
     .in(ontologiesBase / path[IriDto].name("ontologyIri") / "classes" / path[IriDto].name("classIri") / "mapping")
@@ -34,16 +38,18 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     .tags(mappingsTag)
     .description(
       "Adds rdfs:subClassOf triples from the given class to the listed external IRIs. " +
-        "Existing external super-class mappings are not removed - use DELETE first to replace them.",
+        "Existing external super-class mappings are not removed - use DELETE first to replace them." +
+        s" ${requirement}",
     )
 
   /** DELETE class mapping: remove a single rdfs:subClassOf triple to an external IRI */
   val deleteClassMapping = base
-    .secured(
+    .projectAdminPolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.class_not_found),
         badRequestVariant,
       ),
+      projectFrom,
     )
     .delete
     .in(ontologiesBase / path[IriDto].name("ontologyIri") / "classes" / path[IriDto].name("classIri") / "mapping")
@@ -53,16 +59,18 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     .tags(mappingsTag)
     .description(
       "Removes a single rdfs:subClassOf triple from the given class to the specified external IRI. " +
-        "Idempotent: deleting an absent triple is a no-op.",
+        "Idempotent: deleting an absent triple is a no-op." +
+        s" ${requirement}",
     )
 
   /** PUT property mapping: add/replace rdfs:subPropertyOf triples pointing to external IRIs */
   val putPropertyMapping = base
-    .secured(
+    .projectAdminPolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.property_not_found),
         badRequestVariant,
       ),
+      projectFrom,
     )
     .put
     .in(ontologiesBase / path[IriDto].name("ontologyIri") / "properties" / path[IriDto].name("propertyIri") / "mapping")
@@ -72,16 +80,18 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     .tags(mappingsTag)
     .description(
       "Adds rdfs:subPropertyOf triples from the given property to the listed external IRIs. " +
-        "Existing external super-property mappings are not removed - use DELETE first to replace them.",
+        "Existing external super-property mappings are not removed - use DELETE first to replace them." +
+        s" ${requirement}",
     )
 
   /** DELETE property mapping: remove a single rdfs:subPropertyOf triple to an external IRI */
   val deletePropertyMapping = base
-    .secured(
+    .projectAdminPolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.ontology_not_found, V3ErrorCode.property_not_found),
         badRequestVariant,
       ),
+      projectFrom,
     )
     .delete
     .in(ontologiesBase / path[IriDto].name("ontologyIri") / "properties" / path[IriDto].name("propertyIri") / "mapping")
@@ -93,7 +103,8 @@ final class OntologyMappingEndpoints(base: V3BaseEndpoint) extends EndpointHelpe
     .tags(mappingsTag)
     .description(
       "Removes a single rdfs:subPropertyOf triple from the given property to the specified external IRI. " +
-        "Idempotent: deleting an absent triple is a no-op.",
+        "Idempotent: deleting an absent triple is a no-op." +
+        s" ${requirement}",
     )
 }
 

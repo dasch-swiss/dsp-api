@@ -22,6 +22,7 @@ import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v3.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
@@ -74,7 +75,11 @@ class OntologyMappingRestServiceSpec extends ZIOSpecDefault {
     mappings: List[String],
   ) = ZIO
     .serviceWithZIO[OntologyMappingRestService](
-      _.putClassMapping(adminUser)(IriDto(ontologyIri), IriDto(classIri), AddClassMappingsRequest(mappings)),
+      _.putClassMapping(TestCandidates.of(adminUser))(
+        IriDto(ontologyIri),
+        IriDto(classIri),
+        AddClassMappingsRequest(mappings),
+      ),
     )
     .exit
 
@@ -85,7 +90,7 @@ class OntologyMappingRestServiceSpec extends ZIOSpecDefault {
     mapping: String,
   ) = ZIO
     .serviceWithZIO[OntologyMappingRestService](
-      _.deleteClassMapping(adminUser)(IriDto(ontologyIri), IriDto(classIri), IriDto(mapping)),
+      _.deleteClassMapping(TestCandidates.of(adminUser))(IriDto(ontologyIri), IriDto(classIri), IriDto(mapping)),
     )
     .exit
 
@@ -96,7 +101,11 @@ class OntologyMappingRestServiceSpec extends ZIOSpecDefault {
     mappings: List[String],
   ) = ZIO
     .serviceWithZIO[OntologyMappingRestService](
-      _.putPropertyMapping(adminUser)(IriDto(ontologyIri), IriDto(propertyIri), AddPropertyMappingsRequest(mappings)),
+      _.putPropertyMapping(TestCandidates.of(adminUser))(
+        IriDto(ontologyIri),
+        IriDto(propertyIri),
+        AddPropertyMappingsRequest(mappings),
+      ),
     )
     .exit
 
@@ -107,7 +116,7 @@ class OntologyMappingRestServiceSpec extends ZIOSpecDefault {
     mapping: String,
   ) = ZIO
     .serviceWithZIO[OntologyMappingRestService](
-      _.deletePropertyMapping(adminUser)(IriDto(ontologyIri), IriDto(propertyIri), IriDto(mapping)),
+      _.deletePropertyMapping(TestCandidates.of(adminUser))(IriDto(ontologyIri), IriDto(propertyIri), IriDto(mapping)),
     )
     .exit
 
@@ -161,14 +170,14 @@ class OntologyMappingRestServiceSpec extends ZIOSpecDefault {
             _ <- OntologyCacheFake.set(projectOntologyCacheData)
             // Project repo is empty -- findById returns None
             result <- putClass(anythingOntologyIri, anythingClassIri, List("https://schema.org/Thing"))
-          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
+          } yield assertTrue(result.causeOption.flatMap(_.failureOption).exists(_.isInstanceOf[Forbidden]))
         },
         test("putPropertyMapping returns Forbidden when the ontology's project cannot be found") {
           for {
             _ <- OntologyCacheFake.set(projectOntologyCacheData)
             // Project repo is empty -- findById returns None
             result <- putProperty(anythingOntologyIri, anythingPropertyIri, List("https://schema.org/Thing"))
-          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
+          } yield assertTrue(result.causeOption.flatMap(_.failureOption).exists(_.isInstanceOf[Forbidden]))
         },
       ),
       suite("authorization -- system ontology cannot be modified (DELETE)")(
@@ -190,13 +199,13 @@ class OntologyMappingRestServiceSpec extends ZIOSpecDefault {
           for {
             _      <- OntologyCacheFake.set(projectOntologyCacheData)
             result <- deleteClass(anythingOntologyIri, anythingClassIri, "https://schema.org/Thing")
-          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
+          } yield assertTrue(result.causeOption.flatMap(_.failureOption).exists(_.isInstanceOf[Forbidden]))
         },
         test("deletePropertyMapping returns Forbidden when the ontology's project cannot be found") {
           for {
             _      <- OntologyCacheFake.set(projectOntologyCacheData)
             result <- deleteProperty(anythingOntologyIri, anythingPropertyIri, "https://schema.org/Thing")
-          } yield assertTrue(result == Exit.fail(Forbidden("Cannot modify this ontology.")))
+          } yield assertTrue(result.causeOption.flatMap(_.failureOption).exists(_.isInstanceOf[Forbidden]))
         },
       ),
       suite("IRI validation -- forbidden IRI rejected by DELETE")(

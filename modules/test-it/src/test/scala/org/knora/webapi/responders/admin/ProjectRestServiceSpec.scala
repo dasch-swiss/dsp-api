@@ -358,17 +358,19 @@ class ProjectRestServiceSpec extends E2EZSpec {
         }
       },
       test("return all members of a project identified by shortname") {
-        projectRestService(_.getProjectMembersByShortname(rootUser)(imagesProject.shortname)).map { actual =>
-          assert(actual.members.map(_.id))(
-            hasSameElements(Seq(imagesUser01.id, imagesUser02.id, multiuserUser.id, imagesReviewerUser.id)),
-          )
+        projectRestService(_.getProjectMembersByShortname(TestCandidates.of(rootUser))(imagesProject.shortname)).map {
+          actual =>
+            assert(actual.members.map(_.id))(
+              hasSameElements(Seq(imagesUser01.id, imagesUser02.id, multiuserUser.id, imagesReviewerUser.id)),
+            )
         }
       },
       test("return all members of a project identified by shortcode") {
-        projectRestService(_.getProjectMembersByShortcode(rootUser)(imagesProject.shortcode)).map { actual =>
-          assert(actual.members.map(_.id))(
-            hasSameElements(Seq(imagesUser01.id, imagesUser02.id, multiuserUser.id, imagesReviewerUser.id)),
-          )
+        projectRestService(_.getProjectMembersByShortcode(TestCandidates.of(rootUser))(imagesProject.shortcode)).map {
+          actual =>
+            assert(actual.members.map(_.id))(
+              hasSameElements(Seq(imagesUser01.id, imagesUser02.id, multiuserUser.id, imagesReviewerUser.id)),
+            )
         }
       },
       test("return 'Forbidden' when the project IRI is unknown (project membership)") {
@@ -381,7 +383,9 @@ class ProjectRestServiceSpec extends E2EZSpec {
         )
       },
       test("return 'Forbidden' when the project shortname is unknown (project membership)") {
-        projectRestService(_.getProjectMembersByShortname(rootUser)(Shortname.unsafeFrom("wrongshortname"))).exit.map(
+        projectRestService(
+          _.getProjectMembersByShortname(TestCandidates.of(rootUser))(Shortname.unsafeFrom("wrongshortname")),
+        ).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
               s"Project with shortname wrongshortname not found.",
@@ -390,7 +394,9 @@ class ProjectRestServiceSpec extends E2EZSpec {
         )
       },
       test("return 'Forbidden' when the project shortcode is unknown (project membership)") {
-        projectRestService(_.getProjectMembersByShortcode(rootUser)(Shortcode.unsafeFrom("9999"))).exit.map(
+        projectRestService(
+          _.getProjectMembersByShortcode(TestCandidates.of(rootUser))(Shortcode.unsafeFrom("9999")),
+        ).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
               s"Project with shortcode 9999 not found.",
@@ -404,12 +410,16 @@ class ProjectRestServiceSpec extends E2EZSpec {
         }
       },
       test("return all project admin members of a project identified by shortname") {
-        projectRestService(_.getProjectAdminMembersByShortname(rootUser)(imagesProject.shortname)).map { actual =>
+        projectRestService(
+          _.getProjectAdminMembersByShortname(TestCandidates.of(rootUser))(imagesProject.shortname),
+        ).map { actual =>
           assert(actual.members.map(_.id))(hasSameElements(Seq(imagesUser01.id, multiuserUser.id)))
         }
       },
       test("return all project admin members of a project identified by shortcode") {
-        projectRestService(_.getProjectAdminMembersByShortcode(rootUser)(imagesProject.shortcode)).map { actual =>
+        projectRestService(
+          _.getProjectAdminMembersByShortcode(TestCandidates.of(rootUser))(imagesProject.shortcode),
+        ).map { actual =>
           assert(actual.members.map(_.id))(hasSameElements(Seq(imagesUser01.id, multiuserUser.id)))
         }
       },
@@ -423,7 +433,9 @@ class ProjectRestServiceSpec extends E2EZSpec {
         )
       },
       test("return 'Forbidden' when the project shortname is unknown (project admin membership)") {
-        projectRestService(_.getProjectAdminMembersByShortname(rootUser)(Shortname.unsafeFrom("wrongshortname"))).exit
+        projectRestService(
+          _.getProjectAdminMembersByShortname(TestCandidates.of(rootUser))(Shortname.unsafeFrom("wrongshortname")),
+        ).exit
           .map(
             assert(_)(
               E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
@@ -433,7 +445,9 @@ class ProjectRestServiceSpec extends E2EZSpec {
           )
       },
       test("return 'Forbidden' when the project shortcode is unknown (project admin membership)") {
-        projectRestService(_.getProjectMembersByShortcode(rootUser)(Shortcode.unsafeFrom("9999"))).exit.map(
+        projectRestService(
+          _.getProjectMembersByShortcode(TestCandidates.of(rootUser))(Shortcode.unsafeFrom("9999")),
+        ).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[ForbiddenException](
               s"Project with shortcode 9999 not found.",

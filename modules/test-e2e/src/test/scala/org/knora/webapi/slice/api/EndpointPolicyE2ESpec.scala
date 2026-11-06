@@ -39,10 +39,10 @@ class EndpointPolicyE2ESpec extends E2EZSpec {
   private def sortedLines(keys: Iterable[String]): String = keys.toList.sorted.mkString("\n")
 
   // Reads that use POST because their query does not fit in a URL.
-  private val postReads = Set("POST /v2/resources/batch", "POST /v2/searchextended")
+  private val postReads = Set("POST /v2/resources/batch", "POST /v2/searchextended", "POST /v3/export/resources")
 
   // Pinned so that an appended baseline line fails; lowered in the same commit that removes lines.
-  private val baselineSize = 100
+  private val baselineSize = 37
 
   override def e2eSpec = suite("Endpoint policy ratchet")(
     test("every endpoint has a unique METHOD /path key") {

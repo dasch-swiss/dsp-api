@@ -18,15 +18,19 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.OntologyResponderV2
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.api.v2.ontologies.OntologyV2RequestParser
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
+import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
@@ -69,19 +73,20 @@ final class OntologiesRestService(
     } yield response
   }
 
-  def changeOntologyMetadata(user: User)(
+  def changeOntologyMetadata(candidate: ProjectCandidate)(
     jsonLd: String,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
     uuid   <- Random.nextUUID
-    req    <- requestParser.changeOntologyMetadataRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
+    req    <- requestParser.changeOntologyMetadataRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant  <- authorizeForOntology(candidate, req.ontologyIri)
     result <- ontologyResponder.changeOntologyMetadata(
                 req.ontologyIri,
                 req.label,
                 req.comment,
                 req.lastModificationDate,
                 uuid,
-                user,
+                grant,
               )
     response <- renderer.render(result, formatOptions)
   } yield response
@@ -121,45 +126,48 @@ final class OntologiesRestService(
     response = result.format(opts.copy(schema = targetSchema), appConfig)
   } yield (response, MediaType("application", "ld+json"))
 
-  def createClass(user: User)(
+  def createClass(candidate: ProjectCandidate)(
     jsonLd: String,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
     uuid      <- Random.nextUUID
-    createReq <- requestParser.createClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
-    result    <- ontologyResponder.createClass(createReq)
+    createReq <- requestParser.createClassRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant     <- authorizeForOntology(candidate, createReq.classInfoContent.resourceClassIri.ontologyIri)
+    result    <- ontologyResponder.createClass(createReq, grant)
     response  <- renderer.render(result, formatOptions)
   } yield response
 
-  def changeClassLabelsOrComments(user: User)(
+  def changeClassLabelsOrComments(candidate: ProjectCandidate)(
     jsonLd: String,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
     uuid      <- Random.nextUUID
-    updateReq <-
-      requestParser.changeClassLabelsOrCommentsRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
-    result   <- ontologyResponder.changeClassLabelsOrComments(updateReq)
-    response <- renderer.render(result, formatOptions)
+    updateReq <- requestParser.changeClassLabelsOrCommentsRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant     <- authorizeForOntology(candidate, updateReq.classIri.ontologyIri)
+    result    <- ontologyResponder.changeClassLabelsOrComments(updateReq, grant)
+    response  <- renderer.render(result, formatOptions)
   } yield response
 
-  def deleteClassComment(user: User)(
+  def deleteClassComment(candidate: ProjectCandidate)(
     classIri: IriDto,
     lastModificationDate: LastModificationDate,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
     classIri <- iriConverter.asResourceClassIri(classIri.value).mapError(BadRequestException.apply)
+    grant    <- authorizeForOntology(candidate, classIri.ontologyIri)
     uuid     <- Random.nextUUID
-    result   <- ontologyResponder.deleteClassComment(classIri, lastModificationDate, uuid, user)
+    result   <- ontologyResponder.deleteClassComment(classIri, lastModificationDate, uuid, grant)
     response <- renderer.render(result, formatOptions)
   } yield response
 
-  def addCardinalities(user: User)(
+  def addCardinalities(candidate: ProjectCandidate)(
     jsonLd: String,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
     uuid      <- Random.nextUUID
-    createReq <- requestParser.addCardinalitiesToClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
-    result    <- ontologyResponder.addCardinalitiesToClass(createReq)
+    createReq <- requestParser.addCardinalitiesToClassRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant     <- authorizeForOntology(candidate, createReq.classInfoContent.resourceClassIri.ontologyIri)
+    result    <- ontologyResponder.addCardinalitiesToClass(createReq, grant)
     response  <- renderer.render(result, formatOptions)
   } yield response
 
@@ -177,13 +185,13 @@ final class OntologiesRestService(
   } yield response
 
   def replaceCardinalities(
-    user: User,
+    candidate: ProjectCandidate,
   )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
     uuid      <- Random.nextUUID
-    updateReq <-
-      requestParser.replaceClassCardinalitiesRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
-    result   <- ontologyResponder.replaceClassCardinalities(updateReq)
-    response <- renderer.render(result, formatOptions)
+    updateReq <- requestParser.replaceClassCardinalitiesRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant     <- authorizeForOntology(candidate, updateReq.classInfoContent.resourceClassIri.ontologyIri)
+    result    <- ontologyResponder.replaceClassCardinalities(updateReq, grant)
+    response  <- renderer.render(result, formatOptions)
   } yield response
 
   def canDeleteCardinalitiesFromClass(
@@ -197,20 +205,23 @@ final class OntologiesRestService(
   } yield response
 
   def deleteCardinalitiesFromClass(
-    user: User,
+    candidate: ProjectCandidate,
   )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
     uuid      <- Random.nextUUID
-    updateReq <-
-      requestParser.deleteCardinalitiesFromClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
-    result   <- ontologyResponder.deleteCardinalitiesFromClass(updateReq)
-    response <- renderer.render(result, formatOptions)
+    updateReq <- requestParser.deleteCardinalitiesFromClassRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant     <- authorizeForOntology(candidate, updateReq.classInfoContent.resourceClassIri.ontologyIri)
+    result    <- ontologyResponder.deleteCardinalitiesFromClass(updateReq, grant)
+    response  <- renderer.render(result, formatOptions)
   } yield response
 
-  def changeGuiOrder(user: User)(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
+  def changeGuiOrder(
+    candidate: ProjectCandidate,
+  )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
     for {
       uuid      <- Random.nextUUID
-      updateReq <- requestParser.changeGuiOrderRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
-      result    <- ontologyResponder.changeGuiOrder(updateReq)
+      updateReq <- requestParser.changeGuiOrderRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+      grant     <- authorizeForOntology(candidate, updateReq.classInfoContent.resourceClassIri.ontologyIri)
+      result    <- ontologyResponder.changeGuiOrder(updateReq, grant)
       response  <- renderer.render(result, formatOptions)
     } yield response
 
@@ -236,7 +247,7 @@ final class OntologiesRestService(
     response <- renderer.render(result, formatOptions)
   } yield response
 
-  def deleteClass(user: User)(
+  def deleteClass(candidate: ProjectCandidate)(
     resourceClassIri: IriDto,
     lastModificationDate: LastModificationDate,
     formatOptions: FormatOptions,
@@ -246,12 +257,13 @@ final class OntologiesRestService(
         .asResourceClassIriApiV2Complex(resourceClassIri.value)
         .mapError(BadRequestException.apply)
         .filterOrFail(_.ontologyIri.isExternal)(BadRequestException("Only external ontologies can be modified"))
+    grant    <- authorizeForOntology(candidate, classIri.ontologyIri)
     uuid     <- Random.nextUUID
-    result   <- ontologyResponder.deleteClass(classIri, lastModificationDate.value, uuid, user)
+    result   <- ontologyResponder.deleteClass(classIri, lastModificationDate.value, uuid, grant)
     response <- renderer.render(result, formatOptions)
   } yield response
 
-  def deleteOntologyComment(user: User)(
+  def deleteOntologyComment(candidate: ProjectCandidate)(
     ontologyIri: IriDto,
     lastModificationDate: LastModificationDate,
     formatOptions: FormatOptions,
@@ -261,49 +273,55 @@ final class OntologiesRestService(
                      .asOntologyIriApiV2Complex(ontologyIri.value)
                      .mapError(BadRequestException.apply)
                      .filterOrFail(_.isExternal)(BadRequestException("Only external ontologies can have comments"))
-    result   <- ontologyResponder.deleteOntologyComment(ontologyIri, lastModificationDate.value, uuid, user)
+    grant    <- authorizeForOntology(candidate, ontologyIri)
+    result   <- ontologyResponder.deleteOntologyComment(ontologyIri, lastModificationDate.value, uuid, grant)
     response <- renderer.render(result, formatOptions)
   } yield response
 
-  def createProperty(user: User)(
+  def createProperty(candidate: ProjectCandidate)(
     jsonLd: String,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
     uuid      <- Random.nextUUID
-    createReq <- requestParser.createPropertyRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
-    result    <- ontologyResponder.createProperty(createReq)
+    createReq <- requestParser.createPropertyRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant     <- authorizeForOntology(
+               candidate,
+               OntologyIri.unsafeFrom(createReq.propertyInfoContent.propertyIri.getOntologyFromEntity),
+             )
+    result   <- ontologyResponder.createProperty(createReq, grant)
+    response <- renderer.render(result, formatOptions)
+  } yield response
+
+  def changePropertyLabelsOrComments(candidate: ProjectCandidate)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] = for {
+    uuid      <- Random.nextUUID
+    updateReq <- requestParser.changePropertyLabelsOrCommentsRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant     <- authorizeForOntology(candidate, updateReq.propertyIri.ontologyIri)
+    result    <- ontologyResponder.changePropertyLabelsOrComments(updateReq, grant)
     response  <- renderer.render(result, formatOptions)
   } yield response
 
-  def changePropertyLabelsOrComments(user: User)(
-    jsonLd: String,
-    formatOptions: FormatOptions,
-  ): Task[(RenderedResponse, MediaType)] = for {
-    uuid      <- Random.nextUUID
-    updateReq <- requestParser
-                   .changePropertyLabelsOrCommentsRequestV2(jsonLd, uuid, user)
-                   .mapError(BadRequestException.apply)
-    result   <- ontologyResponder.changePropertyLabelsOrComments(updateReq)
-    response <- renderer.render(result, formatOptions)
-  } yield response
-
-  def deletePropertyComment(user: User)(
+  def deletePropertyComment(candidate: ProjectCandidate)(
     propertyIri: IriDto,
     lastModificationDate: LastModificationDate,
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
     propertyIri <- iriConverter.asPropertyIri(propertyIri.value).mapError(BadRequestException.apply)
+    grant       <- authorizeForOntology(candidate, propertyIri.ontologyIri)
     uuid        <- Random.nextUUID
-    result      <- ontologyResponder.deletePropertyComment(propertyIri, lastModificationDate, uuid, user)
+    result      <- ontologyResponder.deletePropertyComment(propertyIri, lastModificationDate, uuid, grant)
     response    <- renderer.render(result, formatOptions)
   } yield response
 
   def changePropertyGuiElement(
-    user: User,
+    candidate: ProjectCandidate,
   )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
     uuid      <- Random.nextUUID
-    updateReq <- requestParser.changePropertyGuiElementRequest(jsonLd, uuid, user).mapError(BadRequestException.apply)
-    result    <- ontologyResponder.changePropertyGuiElement(updateReq)
+    updateReq <- requestParser.changePropertyGuiElementRequest(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant     <- authorizeForOntology(candidate, updateReq.propertyIri.ontologyIri)
+    result    <- ontologyResponder.changePropertyGuiElement(updateReq, grant)
     response  <- renderer.render(result, formatOptions)
   } yield response
 
@@ -328,36 +346,41 @@ final class OntologiesRestService(
     response    <- renderer.render(result, formatOptions)
   } yield response
 
-  def deleteProperty(user: User)(
+  def deleteProperty(candidate: ProjectCandidate)(
     propertyIri: IriDto,
     formatOptions: FormatOptions,
     lastModificationDate: LastModificationDate,
   ): Task[(RenderedResponse, MediaType)] = for {
     propertyIri <- iriConverter.asPropertyIri(propertyIri.value).mapError(BadRequestException.apply)
+    grant       <- authorizeForOntology(candidate, propertyIri.ontologyIri)
     uuid        <- Random.nextUUID
-    result      <- ontologyResponder.deleteProperty(propertyIri, lastModificationDate.value, uuid, user)
+    result      <- ontologyResponder.deleteProperty(propertyIri, lastModificationDate.value, uuid, grant)
     response    <- renderer.render(result, formatOptions)
   } yield response
 
-  def createOntology(user: User)(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
+  def createOntology(candidate: ProjectCandidate)(
+    jsonLd: String,
+    formatOptions: FormatOptions,
+  ): Task[(RenderedResponse, MediaType)] =
     for {
       uuid      <- Random.nextUUID
-      createReq <- requestParser.createOntologyRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
-      _         <- auth.ensureSystemAdminOrProjectAdminById(user, createReq.projectIri)
-      result    <- ontologyResponder.createOntology(createReq)
+      createReq <- requestParser.createOntologyRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+      grant     <- auth.authorizeProjectAdminById(candidate, createReq.projectIri)
+      result    <- ontologyResponder.createOntology(createReq, grant)
       response  <- renderer.render(result, formatOptions)
     } yield response
 
-  def deleteOntology(user: User)(
+  def deleteOntology(candidate: ProjectCandidate)(
     ontologyIri: IriDto,
     formatOptions: FormatOptions,
     lastModificationDate: LastModificationDate,
   ): Task[(RenderedResponse, MediaType)] = for {
-    onto     <- ensureOntologyExists(ontologyIri)
-    _        <- ensureProjectAdmin(onto, user)
-    uuid     <- Random.nextUUID
-    result   <- ontologyResponder.deleteOntology(onto.ontologyIri, lastModificationDate.value, uuid)
-    response <- renderer.render(result, formatOptions)
+    onto       <- ensureOntologyExists(ontologyIri)
+    projectIri <- ZIO.fromOption(onto.projectIri).orElseFail(NotFoundException.notfound(onto.ontologyIri))
+    grant      <- auth.authorizeProjectAdminById(candidate, projectIri)
+    uuid       <- Random.nextUUID
+    result     <- ontologyResponder.deleteOntology(onto.ontologyIri, lastModificationDate.value, uuid, grant)
+    response   <- renderer.render(result, formatOptions)
   } yield response
 
   def canDeleteOntology(
@@ -368,17 +391,21 @@ final class OntologiesRestService(
     response    <- renderer.render(result, formatOptions)
   } yield response
 
-  private def ensureOntologyExists(ontologyIri: IriDto) = for {
-    ontologyIri <- iriConverter.asOntologyIri(ontologyIri.value).mapError(BadRequestException.apply)
-    onto        <- ontologiesRepo.findById(ontologyIri).someOrFail(NotFoundException.notfound(ontologyIri))
-  } yield onto
+  private def ensureOntologyExists(ontologyIri: IriDto): Task[ReadOntologyV2] =
+    asOntologyIri(ontologyIri).flatMap(ensureOntologyExists)
+
+  private def ensureOntologyExists(ontologyIri: OntologyIri): Task[ReadOntologyV2] =
+    ontologiesRepo.findById(ontologyIri).someOrFail(NotFoundException.notfound(ontologyIri))
+
+  private def authorizeForOntology(candidate: ProjectCandidate, ontologyIri: OntologyIri): Task[ProjectAdminGrant] =
+    for {
+      _          <- OntologyHelpers.checkOntologyIriForUpdate(ontologyIri)
+      onto       <- ensureOntologyExists(ontologyIri)
+      projectIri <- ZIO.fromOption(onto.projectIri).orElseFail(NotFoundException.notfound(onto.ontologyIri))
+      grant      <- auth.authorizeProjectAdminById(candidate, projectIri)
+    } yield grant
 
   private def asOntologyIri(iri: IriDto) = iriConverter.asOntologyIri(iri.value).mapError(BadRequestException.apply)
-
-  private def ensureProjectAdmin(onto: ReadOntologyV2, user: User) = for {
-    projectIri <- ZIO.fromOption(onto.projectIri).orElseFail(NotFoundException.notfound(onto.ontologyIri))
-    _          <- auth.ensureSystemAdminOrProjectAdminById(user, projectIri)
-  } yield ()
 }
 
 object OntologiesRestService {

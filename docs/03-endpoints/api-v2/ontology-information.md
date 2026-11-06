@@ -1208,6 +1208,7 @@ this is discouraged since it is likely to lead to confusion.
 
 An ontology can be created or updated only by a system administrator, or
 by a project administrator in the ontology's project.
+Anonymous callers are refused with 401 Unauthorized on every ontology update.
 
 Ontology updates always use the complex schema.
 

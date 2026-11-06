@@ -105,6 +105,10 @@ class BaseEndpointsSpec extends ZIOSpecDefault {
         val policy = policyOf(base.projectAdminPolicyEndpoint("path projectIri"))
         assertTrue(policy.contains(Policy.ProjectAdmin("path projectIri")))
       },
+      test("ProjectMember") {
+        val policy = policyOf(base.projectMemberPolicyEndpoint("path projectShortcode"))
+        assertTrue(policy.contains(Policy.ProjectMember("path projectShortcode")))
+      },
       test("ObjectAccess") {
         val policy = policyOf(base.objectAccessPolicyEndpoint("the responder"))
         assertTrue(policy.contains(Policy.ObjectAccess("the responder", admitsAnonymous = true)))
@@ -165,6 +169,21 @@ class BaseEndpointsSpec extends ZIOSpecDefault {
           .map((status, candidate) => assertTrue(status == Status.Ok, candidate.map(_.user).contains(activeUser)))
       },
     ),
+    suite("ProjectMember refuses in the security logic")(
+      test("a caller without credentials with 401") {
+        refused(base.projectMemberPolicyEndpoint("path projectShortcode"), None, Status.Unauthorized)
+      },
+      test("the anonymous user with 403") {
+        refused(base.projectMemberPolicyEndpoint("path projectShortcode"), Some("anonymous"), Status.Forbidden)
+      },
+      test("an inactive user with 403") {
+        refused(base.projectMemberPolicyEndpoint("path projectShortcode"), Some("inactive"), Status.Forbidden)
+      },
+      test("and hands an active user to the handler as a candidate") {
+        call(base.projectMemberPolicyEndpoint("path projectShortcode"), Some("normal"))
+          .map((status, candidate) => assertTrue(status == Status.Ok, candidate.map(_.user).contains(activeUser)))
+      },
+    ),
     suite("ObjectAccess for a write refuses in the security logic")(
       test("a caller without credentials with 401") {
         refused(base.authenticatedObjectAccessPolicyEndpoint("the responder"), None, Status.Unauthorized)
@@ -190,6 +209,31 @@ class BaseEndpointsSpec extends ZIOSpecDefault {
           )
       } yield assertTrue(response.status == Status.Ok)
     },
+    test("bearerSystemAdminEndpoint declares SystemAdmin") {
+      val policy = policyOf(base.bearerSystemAdminEndpoint(_ => ZIO.unit))
+      assertTrue(policy.contains(Policy.SystemAdmin))
+    },
+    test("publicPolicyEndpoint with an error output declares Public on that output") {
+      val errorOut = statusCode(sttp.model.StatusCode.ServiceUnavailable).and(emptyOutput)
+      val e        = base.publicPolicyEndpoint(errorOut, "reason").get.in("probe")
+      assertTrue(e.attribute(Policy.key).contains(Policy.Public("reason")), e.errorOutput.show == errorOut.show)
+    },
+    suite("Public with the user")(
+      test("hands a caller without credentials to the handler as the anonymous user") {
+        call(base.publicPolicyEndpointWithUser("reason"), None)
+          .map((status, principal) => assertTrue(status == Status.Ok, principal.contains(AnonymousUser)))
+      },
+      test("hands an authenticated caller to the handler") {
+        call(base.publicPolicyEndpointWithUser("reason"), Some("normal"))
+          .map((status, principal) => assertTrue(status == Status.Ok, principal.contains(activeUser)))
+      },
+      test("refuses an invalid token with 401") {
+        refused(base.publicPolicyEndpointWithUser("reason"), Some("invalid"), Status.Unauthorized)
+      },
+      test("declares Public") {
+        assertTrue(policyOf(base.publicPolicyEndpointWithUser("reason")).contains(Policy.Public("reason")))
+      },
+    ),
     suite("ObjectAccess")(
       test("refuses an invalid token with 401 instead of treating the caller as anonymous") {
         refused(base.objectAccessPolicyEndpoint("the responder"), Some("invalid"), Status.Unauthorized)

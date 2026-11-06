@@ -13,7 +13,6 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.*
 import org.knora.webapi.messages.admin.responder.usersmessages.GroupMembersGetResponseADM
 import org.knora.webapi.slice.admin.domain.model.GroupIri
 import org.knora.webapi.slice.admin.domain.model.GroupStatus
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.GroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.UserService
@@ -46,12 +45,9 @@ final case class GroupRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def getGroupMembers(user: User)(iri: GroupIri): Task[GroupMembersGetResponseADM] =
+  def getGroupMembers(candidate: ProjectCandidate)(iri: GroupIri): Task[GroupMembersGetResponseADM] =
     for {
-      _ <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
-      _ <- groupService
-             .findById(iri)
-             .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
+      _        <- auth.authorizeProjectAdminOfGroup(candidate, iri)
       internal <- userService.findByGroupMembership(iri).map(GroupMembersGetResponseADM.from)
       external <- format.toExternal(internal)
     } yield external
@@ -63,32 +59,33 @@ final case class GroupRestService(
       external <- format.toExternal(internal)
     } yield external
 
-  def putGroup(user: User)(iri: GroupIri, request: GroupUpdateRequest): Task[GroupGetResponseADM] =
+  def putGroup(candidate: ProjectCandidate)(iri: GroupIri, request: GroupUpdateRequest): Task[GroupGetResponseADM] =
     for {
-      _ <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
-      _ <- ZIO
+      groupAndGrant <- auth.authorizeProjectAdminOfGroup(candidate, iri)
+      (group, _)     = groupAndGrant
+      _             <- ZIO
              .fail(BadRequestException("No data would be changed. Aborting update request."))
              .when(List(request.name, request.descriptions, request.status, request.selfjoin).flatten.isEmpty)
-      groupToUpdate <- groupService
-                         .findById(iri)
-                         .someOrFail(NotFoundException(s"Group <${iri.value}> not found."))
-      internal <- groupService.updateGroup(groupToUpdate, request).map(GroupGetResponseADM.apply)
-      external <- format.toExternal(internal)
+      groupToUpdate <- groupService.toGroup(group)
+      internal      <- groupService.updateGroup(groupToUpdate, request).map(GroupGetResponseADM.apply)
+      external      <- format.toExternal(internal)
     } yield external
 
-  def putGroupStatus(user: User)(iri: GroupIri, request: GroupStatusUpdateRequest): Task[GroupGetResponseADM] =
-    updateStatus(iri, request.status, user)
+  def putGroupStatus(
+    candidate: ProjectCandidate,
+  )(iri: GroupIri, request: GroupStatusUpdateRequest): Task[GroupGetResponseADM] =
+    updateStatus(iri, request.status, candidate)
 
-  def deleteGroup(user: User)(iri: GroupIri): Task[GroupGetResponseADM] =
-    updateStatus(iri, GroupStatus.inactive, user)
+  def deleteGroup(candidate: ProjectCandidate)(iri: GroupIri): Task[GroupGetResponseADM] =
+    updateStatus(iri, GroupStatus.inactive, candidate)
 
-  private def updateStatus(iri: GroupIri, status: GroupStatus, user: User) =
+  private def updateStatus(iri: GroupIri, status: GroupStatus, candidate: ProjectCandidate) =
     for {
-      groupAndProject <- auth.ensureSystemAdminOrProjectAdminOfGroup(user, iri)
-      (group, _)       = groupAndProject
-      updated         <- knoraGroupService.updateGroupStatus(group, status)
-      internal        <- groupService.toGroup(updated).map(GroupGetResponseADM.apply)
-      external        <- format.toExternal(internal)
+      groupAndGrant <- auth.authorizeProjectAdminOfGroup(candidate, iri)
+      (group, _)     = groupAndGrant
+      updated       <- knoraGroupService.updateGroupStatus(group, status)
+      internal      <- groupService.toGroup(updated).map(GroupGetResponseADM.apply)
+      external      <- format.toExternal(internal)
     } yield external
 }
 

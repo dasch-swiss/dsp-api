@@ -15,7 +15,6 @@ import java.time.Instant
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.TestDataFactory
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
@@ -42,7 +41,6 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
   private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
 
   private val parser = ZIO.serviceWithZIO[OntologyV2RequestParser]
-  private val user   = TestDataFactory.User.rootUser
 
   private val ontologyIri  = OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
   private val lastModified = Instant.parse("2017-12-19T15:23:42.166Z")
@@ -81,7 +79,7 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
         check(JsonLdTransformations.allGen) { t =>
           for {
             uuid <- Random.nextUUID
-            req  <- parser(_.changeOntologyMetadataRequestV2(t(jsonLd), uuid, user))
+            req  <- parser(_.changeOntologyMetadataRequestV2(t(jsonLd), uuid))
           } yield assertTrue(
             req == ChangeOntologyMetadataRequestV2(
               ontologyIri,
@@ -89,7 +87,6 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
               Some(NonEmptyString.unsafeFrom("Some Comment")),
               lastModified,
               uuid,
-              user,
             ),
           )
         }
@@ -119,7 +116,7 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
         check(JsonLdTransformations.allGen) { t =>
           for {
             uuid <- Random.nextUUID
-            req  <- parser(_.changeOntologyMetadataRequestV2(t(jsonLd), uuid, user))
+            req  <- parser(_.changeOntologyMetadataRequestV2(t(jsonLd), uuid))
           } yield assertTrue(
             req == ChangeOntologyMetadataRequestV2(
               ontologyIri,
@@ -127,7 +124,6 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
               None,
               instant,
               uuid,
-              user,
             ),
           )
         }
@@ -155,9 +151,9 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
            |}""".stripMargin
       for {
         uuid   <- Random.nextUUID
-        actual <- parser(_.createOntologyRequestV2(reqStr, uuid, user))
+        actual <- parser(_.createOntologyRequestV2(reqStr, uuid))
       } yield assertTrue(
-        actual == CreateOntologyRequestV2("useless", projectIri, true, "Label", Some(comment), uuid, user),
+        actual == CreateOntologyRequestV2("useless", projectIri, true, "Label", Some(comment), uuid),
       )
     },
     test("should reject an empty comment") {
@@ -179,7 +175,7 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
            |}""".stripMargin
       for {
         uuid   <- Random.nextUUID
-        either <- parser(_.createOntologyRequestV2(reqStr, uuid, user)).either
+        either <- parser(_.createOntologyRequestV2(reqStr, uuid)).either
       } yield assertTrue(either == Left("Ontology comment may not be empty"))
     },
   )
@@ -273,9 +269,9 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
       check(JsonLdTransformations.allGen) { t =>
         for {
           uuid <- Random.nextUUID
-          req  <- parser(_.createClassRequestV2(t(jsonLd), uuid, user))
+          req  <- parser(_.createClassRequestV2(t(jsonLd), uuid))
         } yield assertTrue(
-          req == CreateClassRequestV2(classDef, lastModified, uuid, user),
+          req == CreateClassRequestV2(classDef, lastModified, uuid),
         )
       }
     },
@@ -309,7 +305,7 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
       check(JsonLdTransformations.allGen) { t =>
         for {
           uuid <- Random.nextUUID
-          req  <- parser(_.createClassRequestV2(t(jsonLd), uuid, user))
+          req  <- parser(_.createClassRequestV2(t(jsonLd), uuid))
         } yield assert(req.classInfoContent.subClassOf.map(_.toIri))(hasSameElements(List("http://example.com#Ext")))
       }
     },
@@ -357,7 +353,7 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
       check(JsonLdTransformations.allGen) { t =>
         for {
           uuid <- Random.nextUUID
-          exit <- parser(_.createClassRequestV2(t(jsonLd), uuid, user)).exit
+          exit <- parser(_.createClassRequestV2(t(jsonLd), uuid)).exit
         } yield assertTrue(
           exit == Exit.fail(
             "Ontology for class 'http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing' does not match " +
@@ -406,7 +402,7 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
       check(JsonLdTransformations.allGen) { t =>
         for {
           uuid   <- Random.nextUUID
-          actual <- parser(_.changeClassLabelsOrCommentsRequestV2(t(jsonLd), uuid, user))
+          actual <- parser(_.changeClassLabelsOrCommentsRequestV2(t(jsonLd), uuid))
         } yield assertTrue(
           actual == ChangeClassLabelsOrCommentsRequestV2(
             ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri),
@@ -417,7 +413,6 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
             ),
             lastModified,
             uuid,
-            user,
           ),
         )
       }
@@ -459,7 +454,7 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
       check(JsonLdTransformations.allGen) { t =>
         for {
           uuid   <- Random.nextUUID
-          actual <- parser(_.changeClassLabelsOrCommentsRequestV2(t(jsonLd), uuid, user))
+          actual <- parser(_.changeClassLabelsOrCommentsRequestV2(t(jsonLd), uuid))
         } yield assertTrue(
           actual == ChangeClassLabelsOrCommentsRequestV2(
             ResourceClassIri.unsafeFrom("http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri),
@@ -470,7 +465,6 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
             ),
             lastModified,
             uuid,
-            user,
           ),
         )
       }
@@ -568,8 +562,8 @@ class OntologyV2RequestParserSpec extends ZIOSpecDefault {
         check(JsonLdTransformations.allGen) { t =>
           for {
             apiRequestId <- Random.nextUUID
-            actual       <- parser(_.createPropertyRequestV2(t(jsonLd), apiRequestId, user))
-          } yield assertTrue(actual == CreatePropertyRequestV2(propertyDef, lastModified, apiRequestId, user))
+            actual       <- parser(_.createPropertyRequestV2(t(jsonLd), apiRequestId))
+          } yield assertTrue(actual == CreatePropertyRequestV2(propertyDef, lastModified, apiRequestId))
         }
       },
     ),

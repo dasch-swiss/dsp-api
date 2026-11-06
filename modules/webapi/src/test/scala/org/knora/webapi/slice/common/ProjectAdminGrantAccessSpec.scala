@@ -16,6 +16,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.api.ProjectAdminGrant
 import org.knora.webapi.slice.common.api.ProjectCandidate
+import org.knora.webapi.slice.common.api.ProjectMemberGrant
 import org.knora.webapi.slice.common.api.TestCandidates
 
 /**
@@ -25,10 +26,11 @@ import org.knora.webapi.slice.common.api.TestCandidates
 @RunWith(classOf[DspZTestJUnitRunner])
 class ProjectAdminGrantAccessSpec extends ZIOSpecDefault {
 
-  val user: User                  = TestDataFactory.User.rootUser
-  val project: KnoraProject       = TestDataFactory.someProject
-  val candidate: ProjectCandidate = TestCandidates.of(user)
-  def grant: ProjectAdminGrant    = ???
+  val user: User                      = TestDataFactory.User.rootUser
+  val project: KnoraProject           = TestDataFactory.someProject
+  val candidate: ProjectCandidate     = TestCandidates.of(user)
+  def grant: ProjectAdminGrant        = ???
+  def memberGrant: ProjectMemberGrant = ???
 
   private def isDenied(errors: List[scala.compiletime.testing.Error], symbol: String, fragment: String) =
     assertTrue(errors.exists(e => e.message.contains(symbol) && e.message.contains(fragment)))
@@ -48,6 +50,19 @@ class ProjectAdminGrantAccessSpec extends ZIOSpecDefault {
     },
     test("a ProjectAdminGrant cannot be copied") {
       isDenied(typeCheckErrors("grant.copy(user = user)"), "copy", "cannot be accessed")
+    },
+    test("a ProjectMemberGrant cannot be constructed with new") {
+      isDenied(typeCheckErrors("new ProjectMemberGrant(user, project)"), "ProjectMemberGrant", "cannot be accessed")
+    },
+    test("a ProjectMemberGrant cannot be constructed with apply") {
+      isDenied(typeCheckErrors("ProjectMemberGrant(user, project)"), "ProjectMemberGrant", "does not take parameters")
+    },
+    test("a ProjectMemberGrant cannot be copied") {
+      isDenied(typeCheckErrors("memberGrant.copy(user = user)"), "copy", "cannot be accessed")
+    },
+    test("a ProjectMemberGrant's fields stay readable") {
+      val errors = typeCheckErrors("{ val u: User = memberGrant.user; val p: KnoraProject = memberGrant.project }")
+      assertTrue(errors.isEmpty)
     },
     test("a ProjectAdminGrant's fields and unapply stay readable") {
       val errors = typeCheckErrors(

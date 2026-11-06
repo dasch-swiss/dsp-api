@@ -40,6 +40,8 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.ontologies.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.ChangeClassLabelsOrCommentsRequestV2
@@ -55,6 +57,9 @@ import org.knora.webapi.slice.api.v2.ontologies.ReplaceClassCardinalitiesRequest
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.domain.LanguageCode.*
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
@@ -69,6 +74,38 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
   private val ontologyResponder  = ZIO.serviceWithZIO[OntologyResponderV2]
   private val ontologyCache      = ZIO.serviceWithZIO[OntologyCache]
   private val triplestoreService = ZIO.serviceWithZIO[TriplestoreService]
+
+  private def grantFor(user: User, project: ProjectIri) =
+    ZIO.serviceWithZIO[AuthorizationRestService](_.authorizeProjectAdminById(TestCandidates.of(user), project))
+
+  private def createOntologyAs(req: CreateOntologyRequestV2, user: User) =
+    grantFor(user, req.projectIri).flatMap(grant => ontologyResponder(_.createOntology(req, grant)))
+
+  private def deleteOntologyAs(
+    ontologyIri: OntologyIri,
+    lastModificationDate: Instant,
+    grantProject: ProjectIri,
+  ) =
+    grantFor(rootUser, grantProject).flatMap(grant =>
+      ontologyResponder(_.deleteOntology(ontologyIri, lastModificationDate, randomUUID, grant)),
+    )
+
+  private def withGrant[A](user: User, project: ProjectIri)(f: (OntologyResponderV2, ProjectAdminGrant) => Task[A]) =
+    grantFor(user, project).flatMap(grant => ontologyResponder(f(_, grant)))
+
+  private def asAnythingAdmin[A](f: (OntologyResponderV2, ProjectAdminGrant) => Task[A]) =
+    withGrant(anythingAdminUser, anythingProjectIri)(f)
+
+  private def asImagesAdmin[A](f: (OntologyResponderV2, ProjectAdminGrant) => Task[A]) =
+    withGrant(imagesUser01, imagesProjectIri)(f)
+
+  /** The anything ontology belongs to the anything project, so a grant for the images project must write nothing. */
+  private def notAllowedWithGrantForAnotherProject[A](f: (OntologyResponderV2, ProjectAdminGrant) => Task[A]) =
+    for {
+      before <- OntologyTestHelper.lastModificationDate(anythingOntologyIri)
+      exit   <- asImagesAdmin(f).exit
+      after  <- OntologyTestHelper.lastModificationDate(anythingOntologyIri)
+    } yield assert(exit)(failsWithA[ForbiddenException]) && assertTrue(before == after)
 
   override val rdfDataObjects: List[RdfDataObject] =
     List(
@@ -200,10 +237,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
   override val e2eSpec = suite("The ontology responder v2")(
     test("create an empty ontology called 'foo' with a project code") {
       val createReq =
-        CreateOntologyRequestV2("foo", imagesProjectIri, false, "The foo ontology", None, randomUUID, imagesUser01)
+        CreateOntologyRequestV2("foo", imagesProjectIri, false, "The foo ontology", None, randomUUID)
 
       for {
-        response <- ontologyResponder(_.createOntology(createReq))
+        response <- createOntologyAs(createReq, imagesUser01)
         metadata  = response.ontologies.head
         _         = self.fooIri.set(metadata.ontologyIri.toString)
         (_, _)    = self.fooLastModDate.updateFrom(response)
@@ -216,16 +253,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       val newLabel = "The modified foo ontology"
 
       for {
-        response <- ontologyResponder(
-                      _.changeOntologyMetadata(
-                        fooIri.asOntologyIri,
-                        Some(newLabel),
-                        None,
-                        self.fooLastModDate,
-                        randomUUID,
-                        imagesUser01,
-                      ),
-                    )
+        response <-
+          asImagesAdmin(
+            _.changeOntologyMetadata(fooIri.asOntologyIri, Some(newLabel), None, self.fooLastModDate, randomUUID, _),
+          )
         metadata                            = response.ontologies.head
         (oldLastModDate, newFooLastModDate) = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
@@ -239,16 +270,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       val aComment = NonEmptyString.unsafeFrom("a comment")
 
       for {
-        response <- ontologyResponder(
-                      _.changeOntologyMetadata(
-                        fooIri.asOntologyIri,
-                        None,
-                        Some(aComment),
-                        self.fooLastModDate,
-                        randomUUID,
-                        imagesUser01,
-                      ),
-                    )
+        response <-
+          asImagesAdmin(
+            _.changeOntologyMetadata(fooIri.asOntologyIri, None, Some(aComment), self.fooLastModDate, randomUUID, _),
+          )
         metadata                            = response.ontologies.head
         (oldLastModDate, newFooLastModDate) = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
@@ -263,14 +288,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       val aComment = NonEmptyString.unsafeFrom("a changed comment")
 
       for {
-        response <- ontologyResponder(
+        response <- asImagesAdmin(
                       _.changeOntologyMetadata(
                         fooIri.asOntologyIri,
                         Some(aLabel),
                         Some(aComment),
                         self.fooLastModDate,
                         randomUUID,
-                        imagesUser01,
+                        _,
                       ),
                     )
         metadata                            = response.ontologies.head
@@ -286,16 +311,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the label of 'foo' again") {
       val newLabel = "a label changed again"
       for {
-        response <- ontologyResponder(
-                      _.changeOntologyMetadata(
-                        fooIri.asOntologyIri,
-                        Some(newLabel),
-                        None,
-                        self.fooLastModDate,
-                        randomUUID,
-                        imagesUser01,
-                      ),
-                    )
+        response <-
+          asImagesAdmin(
+            _.changeOntologyMetadata(fooIri.asOntologyIri, Some(newLabel), None, self.fooLastModDate, randomUUID, _),
+          )
         metadata                            = response.ontologies.head
         (oldLastModDate, newFooLastModDate) = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
@@ -309,9 +328,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the comment from 'foo'") {
       for {
         response <-
-          ontologyResponder(
-            _.deleteOntologyComment(fooIri.asOntologyIri, self.fooLastModDate, randomUUID, imagesUser01),
-          )
+          asImagesAdmin(_.deleteOntologyComment(fooIri.asOntologyIri, self.fooLastModDate, randomUUID, _))
         metadata                            = response.ontologies.head
         (oldLastModDate, newFooLastModDate) = self.fooLastModDate.updateFrom(response)
       } yield assertTrue(
@@ -330,9 +347,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         "The bär ontology",
         Some(NonEmptyString.unsafeFrom("some comment")),
         randomUUID,
-        imagesUser01,
       )
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("create an empty ontology called 'bar' with a comment") {
       val comment   = NonEmptyString.unsafeFrom("some comment")
@@ -343,11 +359,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         "The bar ontology",
         Some(comment),
         randomUUID,
-        imagesUser01,
       )
 
       for {
-        response <- ontologyResponder(_.createOntology(createReq))
+        response <- createOntologyAs(createReq, imagesUser01)
         metadata  = response.ontologies.head
         _         = self.barIri.set(metadata.ontologyIri.toString)
         (_, _)    = self.barLastModDate.updateFrom(response)
@@ -362,14 +377,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       val newComment = NonEmptyString.unsafeFrom("a new comment")
 
       for {
-        response <- ontologyResponder(
+        response <- asImagesAdmin(
                       _.changeOntologyMetadata(
                         OntologyIri.unsafeFrom(barIri.get.toSmartIri.toComplexSchema),
                         None,
                         Some(newComment),
                         self.barLastModDate,
                         randomUUID,
-                        imagesUser01,
+                        _,
                       ),
                     )
         metadata                               = response.ontologies.head
@@ -383,21 +398,26 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("not create 'foo' again") {
       val createReq =
-        CreateOntologyRequestV2("foo", imagesProjectIri, false, "ignored", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("foo", imagesProjectIri, false, "ignored", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not delete an ontology that doesn't exist") {
-      ontologyResponder(
-        _.deleteOntology(
-          OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
-          self.fooLastModDate,
-          randomUUID,
-        ),
+      deleteOntologyAs(
+        OntologyIri.unsafeFrom("http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri),
+        self.fooLastModDate,
+        imagesProjectIri,
       ).exit.map(actual => assert(actual)(failsWithA[NotFoundException]))
+    },
+    test("not delete the 'foo' ontology with a grant for another project") {
+      for {
+        exit   <- deleteOntologyAs(fooIri.asOntologyIri, self.fooLastModDate, anythingProjectIri).exit
+        exists <- ontologyResponder(_.getOntologyMetadataForAllProjects)
+                    .map(_.ontologies.exists(_.ontologyIri == fooIri.get.toSmartIri))
+      } yield assert(exit)(failsWithA[ForbiddenException]) && assertTrue(exists)
     },
     test("delete the 'foo' ontology") {
       for {
-        _ <- ontologyResponder(_.deleteOntology(fooIri.asOntologyIri, self.fooLastModDate, randomUUID))
+        _ <- deleteOntologyAs(fooIri.asOntologyIri, self.fooLastModDate, imagesProjectIri)
         // Request the metadata of all ontologies to check that 'foo' isn't listed.
         cachedMetadataResponse <- ontologyResponder(_.getOntologyMetadataForAllProjects)
         // Reload the ontologies from the triplestore and check again.
@@ -412,7 +432,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       for {
         metadataResponse   <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
         anythingLastModDate = OntologyTestHelper.lastModificationDate(metadataResponse, anythingOntologyIri)
-        exit               <- ontologyResponder(_.deleteOntology(anythingOntologyIri, anythingLastModDate, randomUUID)).exit
+        exit               <- deleteOntologyAs(anythingOntologyIri, anythingLastModDate, anythingProjectIri).exit
       } yield assertTrue(metadataResponse.ontologies.size == 3) &&
         assert(exit)(
           fails(
@@ -433,48 +453,48 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("not create an ontology called 'rdfs'") {
       val createReq =
-        CreateOntologyRequestV2("rdfs", imagesProjectIri, false, "The rdfs ontology", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("rdfs", imagesProjectIri, false, "The rdfs ontology", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create an ontology called '0000'") {
       val createReq =
-        CreateOntologyRequestV2("0000", imagesProjectIri, false, "The 0000 ontology", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("0000", imagesProjectIri, false, "The 0000 ontology", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create an ontology called '-foo'") {
       val createReq =
-        CreateOntologyRequestV2("-foo", imagesProjectIri, false, "The -foo ontology", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("-foo", imagesProjectIri, false, "The -foo ontology", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create an ontology called 'v3'") {
       val createReq =
-        CreateOntologyRequestV2("v3", imagesProjectIri, false, "The v3 ontology", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("v3", imagesProjectIri, false, "The v3 ontology", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create an ontology called 'ontology'") {
       val createReq =
-        CreateOntologyRequestV2("ontology", imagesProjectIri, false, "ignored", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("ontology", imagesProjectIri, false, "ignored", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create an ontology called 'knora'") {
       val createReq =
-        CreateOntologyRequestV2("knora", imagesProjectIri, false, "ignored", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("knora", imagesProjectIri, false, "ignored", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create an ontology called 'simple'") {
       val createReq =
-        CreateOntologyRequestV2("simple", imagesProjectIri, false, "ignored", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("simple", imagesProjectIri, false, "ignored", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create an ontology called 'shared'") {
       val createReq =
-        CreateOntologyRequestV2("shared", imagesProjectIri, false, "ignored", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("shared", imagesProjectIri, false, "ignored", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a shared ontology in the wrong project") {
       val createReq =
-        CreateOntologyRequestV2("misplaced", imagesProjectIri, true, "ignored", None, randomUUID, imagesUser01)
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+        CreateOntologyRequestV2("misplaced", imagesProjectIri, true, "ignored", None, randomUUID)
+      createOntologyAs(createReq, imagesUser01).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a non-shared ontology in the shared ontologies project") {
       val createReq = CreateOntologyRequestV2(
@@ -484,9 +504,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         "ignored",
         None,
         randomUUID,
-        imagesUser01,
       )
-      ontologyResponder(_.createOntology(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      createOntologyAs(createReq, superUser).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("create a shared ontology") {
       val createReq = CreateOntologyRequestV2(
@@ -496,10 +515,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         "a chaired ontology",
         None,
         randomUUID,
-        superUser,
       )
       for {
-        response <- ontologyResponder(_.createOntology(createReq))
+        response <- createOntologyAs(createReq, superUser)
         metadata  = response.ontologies.head
         _         = self.chairIri.set(metadata.ontologyIri.toOntologySchema(ApiV2Complex).toString)
       } yield assertTrue(
@@ -508,7 +526,12 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         metadata.lastModificationDate.isDefined,
       )
     },
-    test("not allow a user to create a property if they are not a sysadmin or an admin in the ontology's project") {
+    test("not allow a user to change the metadata of an ontology with a grant for another project") {
+      notAllowedWithGrantForAnotherProject(
+        _.changeOntologyMetadata(anythingOntologyIri, Some("hijacked"), None, anythingLastModDate, randomUUID, _),
+      )
+    },
+    test("not allow a user to create a property with a grant for another project") {
       val propertyIri         = anythingOntologyIri.makeEntityIri("hasName")
       val propertyInfoContent = PropertyInfoContentV2(
         propertyIri = propertyIri,
@@ -547,9 +570,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       for {
         metadataResponse <- ontologyResponder(_.getOntologyMetadataForProject(anythingProjectIri))
         (_, _)            = self.anythingLastModDate.updateFrom(metadataResponse, anythingOntologyIri)
-        exit             <-
-          ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingUser1)).exit
-      } yield assertTrue(metadataResponse.ontologies.size == 3) && assert(exit)(failsWithA[ForbiddenException])
+        result           <- notAllowedWithGrantForAnotherProject(
+                    _.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _),
+                  )
+      } yield assertTrue(metadataResponse.ontologies.size == 3) && result
     },
     test("create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name") {
       for {
@@ -590,7 +614,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                 ontologySchema = ApiV2Complex,
                               )
         propertyCreatedResponse <-
-          ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _))
         propertyCreatedOntology                          = propertyCreatedResponse.toOntologySchema(ApiV2Complex)
         actualProperty                                   = propertyCreatedOntology.properties(propertyIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(propertyCreatedResponse)
@@ -650,7 +674,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                 ontologySchema = ApiV2Complex,
                               )
         createPropertyResponse <-
-          ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _))
         ontologyFromCreate                               = createPropertyResponse.toOntologySchema(ApiV2Complex)
         propertyFromCreate                               = ontologyFromCreate.properties(propertyIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(createPropertyResponse)
@@ -738,8 +762,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                       ontologySchema = ApiV2Complex,
                                     )
         createReq =
-          CreateClassRequestV2(comicBookClassInfoContent, self.freetestLastModDate, randomUUID, anythingAdminUser)
-        createClassResponse                             <- ontologyResponder(_.createClass(createReq))
+          CreateClassRequestV2(comicBookClassInfoContent, self.freetestLastModDate, randomUUID)
+        createClassResponse                             <- asAnythingAdmin(_.createClass(createReq, _))
         (oldFreetestLastModDate, newFreetestLastModDate) = freetestLastModDate.updateFrom(createClassResponse)
         // Create class freetest:ComicAuthor which is a subclass of freetest:Author
         comicAuthorClassIri         = freeTestOntologyIri.makeEntityIri("ComicAuthor")
@@ -764,8 +788,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                         ontologySchema = ApiV2Complex,
                                       )
         createSubClassReq =
-          CreateClassRequestV2(comicAuthorClassInfoContent, self.freetestLastModDate, randomUUID, anythingAdminUser)
-        createSubclassResponse                                                          <- ontologyResponder(_.createClass(createSubClassReq))
+          CreateClassRequestV2(comicAuthorClassInfoContent, self.freetestLastModDate, randomUUID)
+        createSubclassResponse                                                          <- asAnythingAdmin(_.createClass(createSubClassReq, _))
         (oldLastModDateFromSubclassCreation, newFreetestLastModDateFromSubclassCreation) =
           freetestLastModDate.updateFrom(createSubclassResponse)
         // Create property freetest:hasComicBookAuthor which is a subproperty of freetest:hasAuthor and links freetest:ComicBook and freetest:ComicAuthor
@@ -805,9 +829,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                            ontologySchema = ApiV2Complex,
                                          )
         createPropertyResponse <-
-          ontologyResponder(
-            _.createProperty(comicAuthorPropertyInfoContent, freetestLastModDate, randomUUID, anythingAdminUser),
-          )
+          asAnythingAdmin(_.createProperty(comicAuthorPropertyInfoContent, freetestLastModDate, randomUUID, _))
         createPropertyOntology                                            = createPropertyResponse.toOntologySchema(ApiV2Complex)
         comicAuthorProperty                                               = createPropertyOntology.properties(comicAuthorPropertyIri)
         (lastModDateBeforePropertyCreate, lastModDateAfterPropertyCreate) =
@@ -815,7 +837,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Add new subproperty freetest:hasComicBookAuthor to class freetest:ComicBook
         msg <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.addCardinalitiesToClass(
               AddCardinalitiesToClassRequestV2(
                 classInfoContent = ClassInfoContentV2(
@@ -835,8 +857,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                 ),
                 lastModificationDate = freetestLastModDate,
                 apiRequestID = randomUUID,
-                requestingUser = anythingAdminUser,
               ),
+              _,
             ),
           )
         comicBookClass      = msg.classes("http://www.knora.org/ontology/0001/freetest#ComicBook".toSmartIri)
@@ -921,7 +943,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with the wrong rdf:type") {
@@ -957,7 +979,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property that already exists") {
@@ -993,7 +1015,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with a nonexistent Knora superproperty") {
@@ -1029,7 +1051,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(anythingOntologyIri.makeEntityIri("nonexistentProperty")),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property that is not a subproperty of knora-api:hasValue or knora-api:hasLinkTo") {
@@ -1065,7 +1087,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set("http://xmlns.com/foaf/0.1/name".toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property that is a subproperty of both knora-api:hasValue and knora-api:hasLinkTo") {
@@ -1104,7 +1126,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with a knora-base:subjectType that refers to a nonexistent class") {
@@ -1140,7 +1162,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with a knora-base:objectType that refers to a nonexistent class") {
@@ -1180,7 +1202,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a subproperty of anything:hasInteger with a knora-base:subjectType of knora-api:Representation") {
@@ -1216,7 +1238,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(anythingOntologyIri.makeEntityIri("hasInteger")),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a file value property") {
@@ -1252,7 +1274,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasFileValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not directly create a link value property") {
@@ -1288,7 +1310,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasLinkToValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not directly create a property with a knora-api:objectType of knora-api:LinkValue") {
@@ -1324,7 +1346,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property with a knora-api:objectType of xsd:string") {
@@ -1360,7 +1382,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a property whose object type is knora-api:StillImageFileValue") {
@@ -1396,7 +1418,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test(
@@ -1434,7 +1456,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasValue.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a link property whose object type is knora-api:TextValue") {
@@ -1470,7 +1492,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(KA.HasLinkTo.toSmartIri),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a subproperty of anything:hasText with a knora-api:objectType of knora-api:IntegerValue") {
@@ -1506,7 +1528,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(anythingOntologyIri.makeEntityIri("hasText")),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a subproperty of anything:hasBlueThing with a knora-api:objectType of anything:Thing") {
@@ -1542,11 +1564,11 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subPropertyOf = Set(anythingOntologyIri.makeEntityIri("hasBlueThing")),
         ontologySchema = ApiV2Complex,
       )
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test(
-      "not allow a user to change the labels of a property if they are not a sysadmin or an admin in the ontology's project",
+      "not allow a user to change the labels of a property with a grant for another project",
     ) {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects  = Seq(
@@ -1560,13 +1582,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects,
         anythingLastModDate,
         randomUUID,
-        anythingUser1,
       )
-      ontologyResponder(
-        _.changePropertyLabelsOrComments(
-          changeReq,
-        ),
-      ).exit.map(actual => assert(actual)(failsWithA[ForbiddenException]))
+      notAllowedWithGrantForAnotherProject(_.changePropertyLabelsOrComments(changeReq, _))
     },
     test("change the labels of a property") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
@@ -1583,10 +1600,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
           newObjects,
           anythingLastModDate,
           randomUUID,
-          anythingAdminUser,
         )
       for {
-        msg                                             <- ontologyResponder(_.changePropertyLabelsOrComments(changeReq))
+        msg                                             <- asAnythingAdmin(_.changePropertyLabelsOrComments(changeReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readPropertyInfo                                 = externalOntology.properties(propertyIri.smartIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -1609,11 +1625,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects,
         anythingLastModDate,
         randomUUID,
-        anythingAdminUser,
       )
 
       for {
-        msg                                             <- ontologyResponder(_.changePropertyLabelsOrComments(changeReq))
+        msg                                             <- asAnythingAdmin(_.changePropertyLabelsOrComments(changeReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readPropertyInfo                                 = externalOntology.properties(propertyIri.smartIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -1624,7 +1639,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test(
-      "not allow a user to change the comments of a property if they are not a sysadmin or an admin in the ontology's project",
+      "not allow a user to change the comments of a property with a grant for another project",
     ) {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
       val newObjects  = Seq(
@@ -1642,11 +1657,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects,
         anythingLastModDate,
         randomUUID,
-        anythingUser1,
       )
-      ontologyResponder(_.changePropertyLabelsOrComments(changeReq)).exit.map(actual =>
-        assert(actual)(failsWithA[ForbiddenException]),
-      )
+      notAllowedWithGrantForAnotherProject(_.changePropertyLabelsOrComments(changeReq, _))
     },
     test("change the comments of a property") {
       val propertyIri = anythingOntologyIri.makeProperty("hasName")
@@ -1657,7 +1669,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       for {
-        msg <- ontologyResponder(
+        msg <- asAnythingAdmin(
                  _.changePropertyLabelsOrComments(
                    ChangePropertyLabelsOrCommentsRequestV2(
                      propertyIri,
@@ -1665,8 +1677,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                      newObjects,
                      anythingLastModDate,
                      randomUUID,
-                     anythingAdminUser,
                    ),
+                   _,
                  ),
                )
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
@@ -1693,10 +1705,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects,
         anythingLastModDate,
         randomUUID,
-        anythingAdminUser,
       )
       for {
-        msg                                             <- ontologyResponder(_.changePropertyLabelsOrComments(changeReq))
+        msg                                             <- asAnythingAdmin(_.changePropertyLabelsOrComments(changeReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readPropertyInfo                                 = externalOntology.properties(propertyIri.smartIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -1710,7 +1721,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       val propertyIri = freeTestOntologyIri.makeProperty("hasPropertyWithComment")
       for {
         msg <-
-          ontologyResponder(_.deletePropertyComment(propertyIri, freetestLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.deletePropertyComment(propertyIri, freetestLastModDate, randomUUID, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readPropertyInfo                                 = externalOntology.properties(propertyIri.toComplexSchema)
         (oldFreeTestLastModDate, newFreeTestLastModDate) = self.freetestLastModDate.updateFrom(msg)
@@ -1724,7 +1735,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       val propertyIri = freeTestOntologyIri.makeProperty("hasPropertyWithoutComment")
       for {
         msg <-
-          ontologyResponder(_.deletePropertyComment(propertyIri, freetestLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.deletePropertyComment(propertyIri, freetestLastModDate, randomUUID, _))
         externalOntology                            = msg.toOntologySchema(ApiV2Complex)
         readPropertyInfo                            = externalOntology.properties(propertyIri.toComplexSchema)
         (oldFreeTestModDate, newFreeTestLatModDate) = self.freetestLastModDate.updateFrom(msg)
@@ -1738,7 +1749,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the comment of a class that has a comment") {
       val classIri = freeTestOntologyIri.makeClass("BookWithComment")
       for {
-        msg                                             <- ontologyResponder(_.deleteClassComment(classIri, freetestLastModDate, randomUUID, anythingAdminUser))
+        msg                                             <- asAnythingAdmin(_.deleteClassComment(classIri, freetestLastModDate, randomUUID, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri.toComplexSchema)
         (oldFreeTestLastModDate, newFreeTestLastModDate) = self.freetestLastModDate.updateFrom(msg)
@@ -1751,7 +1762,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("not update the ontology when trying to delete a comment of a class that has no comment") {
       val classIri = freeTestOntologyIri.makeClass("BookWithoutComment")
       for {
-        msg                                             <- ontologyResponder(_.deleteClassComment(classIri, freetestLastModDate, randomUUID, anythingAdminUser))
+        msg                                             <- asAnythingAdmin(_.deleteClassComment(classIri, freetestLastModDate, randomUUID, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri.toComplexSchema)
         (oldFreeTestLastModDate, newFreeTestLastModDate) = self.freetestLastModDate.updateFrom(msg)
@@ -1768,9 +1779,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
       for {
         // delete the comment of the link property
-        msg <- ontologyResponder(
-                 _.deletePropertyComment(linkPropertyIri, freetestLastModDate, randomUUID, anythingAdminUser),
-               )
+        msg                                             <- asAnythingAdmin(_.deletePropertyComment(linkPropertyIri, freetestLastModDate, randomUUID, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         propertyReadPropertyInfo                         = externalOntology.properties(linkPropertyIri.toComplexSchema)
         (oldFreeTestLastModDate, newFreeTestLastModDate) = self.freetestLastModDate.updateFrom(msg)
@@ -1791,7 +1800,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         !linkValueReadPropertyInfo.entityInfoContent.predicates.contains(Rdfs.Comment.toSmartIri),
       )
     },
-    test("not allow a user to create a class if they are not a sysadmin or an admin in the ontology's project") {
+    test("not allow a user to create a class with a grant for another project") {
       val classIri         = anythingOntologyIri.makeEntityIri("WildThing")
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
@@ -1820,9 +1829,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingUser1)),
-      ).exit.map(actual => assert(actual)(failsWithA[ForbiddenException]))
+      notAllowedWithGrantForAnotherProject(
+        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _),
+      )
     },
     test("not allow a user to create a class with cardinalities both on property P and on a subproperty of P") {
       val classIri         = anythingOntologyIri.makeEntityIri("InvalidThing")
@@ -1852,9 +1861,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not allow the user to submit a direct cardinality on anything:hasInterestingThingValue") {
       val classIri         = anythingOntologyIri.makeEntityIri("WildThing")
@@ -1881,15 +1889,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class if rdfs:label is missing") {
       val invalid =
         validClassInfoContentV2.copy(predicates = validClassInfoContentV2.predicates - Rdfs.Label.toSmartIri)
-      val req = CreateClassRequestV2(invalid, anythingLastModDate, randomUUID, anythingAdminUser)
-      ontologyResponder(_.createClass(req)).exit.map(actual =>
+      val req = CreateClassRequestV2(invalid, anythingLastModDate, randomUUID)
+      asAnythingAdmin(_.createClass(req, _)).exit.map(actual =>
         assert(actual)(failsWithMessageEqualTo[BadRequestException](s"Missing ${Rdfs.Label}")),
       )
     },
@@ -1904,8 +1911,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
             ),
           ),
         )
-      val req = CreateClassRequestV2(invalid, anythingLastModDate, randomUUID, anythingAdminUser)
-      ontologyResponder(_.createClass(req)).exit.map(actual =>
+      val req = CreateClassRequestV2(invalid, anythingLastModDate, randomUUID)
+      asAnythingAdmin(_.createClass(req, _)).exit.map(actual =>
         assert(actual)(
           failsWithMessageEqualTo[BadRequestException](
             s"All values of ${Rdfs.Label} must be string literals with a language code",
@@ -1924,8 +1931,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
             ),
           ),
         )
-      val req = CreateClassRequestV2(invalid, anythingLastModDate, randomUUID, anythingAdminUser)
-      ontologyResponder(_.createClass(req)).exit.map(actual =>
+      val req = CreateClassRequestV2(invalid, anythingLastModDate, randomUUID)
+      asAnythingAdmin(_.createClass(req, _)).exit.map(actual =>
         assert(actual)(
           failsWithMessageEqualTo[BadRequestException](
             s"All values of ${Rdfs.Comment} must be string literals with a language code",
@@ -1959,9 +1966,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subClassOf = Set(anythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex,
       )
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.createClass(createReq))
+        msg                                             <- asAnythingAdmin(_.createClass(createReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -1999,9 +2006,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      val createPartThingClassReq = CreateClassRequestV2(partThing, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createPartThingClassReq = CreateClassRequestV2(partThing, anythingLastModDate, randomUUID)
       for {
-        msg   <- ontologyResponder(_.createClass(createPartThingClassReq))
+        msg   <- asAnythingAdmin(_.createClass(createPartThingClassReq, _))
         (_, _) = self.anythingLastModDate.updateFrom(msg)
         // Create class wholeThing
         wholeThingClassIri         = anythingOntologyIri.makeEntityIri("wholeThing")
@@ -2025,8 +2032,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                        ontologySchema = ApiV2Complex,
                                      )
         createWholeThingClassReq =
-          CreateClassRequestV2(wholeThingClassInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
-        createWholeThingClassResponse <- ontologyResponder(_.createClass(createWholeThingClassReq))
+          CreateClassRequestV2(wholeThingClassInfoContent, anythingLastModDate, randomUUID)
+        createWholeThingClassResponse <- asAnythingAdmin(_.createClass(createWholeThingClassReq, _))
         (_, _)                         = self.anythingLastModDate.updateFrom(createWholeThingClassResponse)
 
         // Create property partOf with subject partThing and object wholeThing
@@ -2076,9 +2083,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                     )
 
         createPropertyPartOfResponse <-
-          ontologyResponder(
-            _.createProperty(partOfPropertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser),
-          )
+          asAnythingAdmin(_.createProperty(partOfPropertyInfoContent, anythingLastModDate, randomUUID, _))
         (lastModDateBeforeCreatePropertyPartOf, lastModDateAfterCreatePropertyPartOf) =
           self.anythingLastModDate.updateFrom(createPropertyPartOfResponse)
         ontologyFromCreatePropertyPartOf = createPropertyPartOfResponse.toOntologySchema(ApiV2Complex)
@@ -2103,16 +2108,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("change the metadata of the 'anything' ontology") {
       val newLabel = "The modified anything ontology"
       for {
-        response <- ontologyResponder(
-                      _.changeOntologyMetadata(
-                        anythingOntologyIri,
-                        Some(newLabel),
-                        None,
-                        anythingLastModDate,
-                        randomUUID,
-                        anythingAdminUser,
-                      ),
-                    )
+        response <-
+          asAnythingAdmin(
+            _.changeOntologyMetadata(anythingOntologyIri, Some(newLabel), None, anythingLastModDate, randomUUID, _),
+          )
         metadata                                         = response.ontologies.head
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
       } yield assertTrue(
@@ -2125,14 +2124,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the class anything:CardinalityThing") {
       val classIri = anythingOntologyIri.makeClass("CardinalityThing")
       for {
-        response <- ontologyResponder(
-                      _.deleteClass(
-                        classIri = classIri,
-                        lastModificationDate = anythingLastModDate,
-                        apiRequestID = randomUUID,
-                        requestingUser = anythingAdminUser,
-                      ),
-                    )
+        response <-
+          asAnythingAdmin(
+            _.deleteClass(classIri = classIri, lastModificationDate = anythingLastModDate, apiRequestID = randomUUID, _),
+          )
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
       } yield assertTrue(response.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
@@ -2202,9 +2197,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.createClass(createReq))
+        msg                                             <- asAnythingAdmin(_.createClass(createReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -2277,9 +2272,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.createClass(createReq))
+        msg                                             <- asAnythingAdmin(_.createClass(createReq, _))
         readClassInfo                                    = msg.toOntologySchema(ApiV2Complex).classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
         classInfoContentWithCardinalityToDeleteDontAllow =
@@ -2384,9 +2379,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
       )
 
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.createClass(createReq))
+        msg                                             <- asAnythingAdmin(_.createClass(createReq, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
         readClassInfo                                    = msg.toOntologySchema(ApiV2Complex).classes(classIri)
 
@@ -2466,9 +2461,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingHasStandoffLinkToValue,
       ).map(_.toSmartIri)
 
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.createClass(createReq))
+        msg                                             <- asAnythingAdmin(_.createClass(createReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -2480,7 +2475,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test(
-      "not allow a user to change the labels of a class if they are not a sysadmin or an admin in the ontology's project",
+      "not allow a user to change the labels of a class with a grant for another project",
     ) {
       val classIri   = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
@@ -2493,11 +2488,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = randomUUID,
-        requestingUser = anythingUser1,
       )
-      ontologyResponder(_.changeClassLabelsOrComments(changeReq)).exit.map(actual =>
-        assert(actual)(failsWithA[ForbiddenException]),
-      )
+      notAllowedWithGrantForAnotherProject(_.changeClassLabelsOrComments(changeReq, _))
     },
     test("change the labels of a class") {
       val classIri   = anythingOntologyIri.makeClass("Nothing")
@@ -2512,10 +2504,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = randomUUID,
-        requestingUser = anythingAdminUser,
       )
       for {
-        response                                        <- ontologyResponder(_.changeClassLabelsOrComments(changeReq))
+        response                                        <- asAnythingAdmin(_.changeClassLabelsOrComments(changeReq, _))
         externalOntology                                 = response.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri.smartIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
@@ -2537,11 +2528,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
       for {
-        response                                        <- ontologyResponder(_.changeClassLabelsOrComments(changeReq))
+        response                                        <- asAnythingAdmin(_.changeClassLabelsOrComments(changeReq, _))
         externalOntology                                 = response.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri.smartIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
@@ -2552,7 +2542,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test(
-      "not allow a user to change the comments of a class if they are not a sysadmin or an admin in the ontology's project",
+      "not allow a user to change the comments of a class with a grant for another project",
     ) {
       val classIri   = anythingOntologyIri.makeClass("Nothing")
       val newObjects = Seq(
@@ -2565,11 +2555,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = randomUUID,
-        requestingUser = anythingUser1,
       )
-      ontologyResponder(_.changeClassLabelsOrComments(changeReq)).exit.map(actual =>
-        assert(actual)(failsWithA[ForbiddenException]),
-      )
+      notAllowedWithGrantForAnotherProject(_.changeClassLabelsOrComments(changeReq, _))
     },
     test("change the comments of a class") {
       val classIri   = anythingOntologyIri.makeClass("Nothing")
@@ -2587,11 +2574,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
       for {
-        response                                <- ontologyResponder(_.changeClassLabelsOrComments(changeReq))
+        response                                <- asAnythingAdmin(_.changeClassLabelsOrComments(changeReq, _))
         externalOntology                         = response.toOntologySchema(ApiV2Complex)
         readClassInfo                            = externalOntology.classes(classIri.smartIri)
         (oldLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
@@ -2617,11 +2603,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
       for {
-        response                                <- ontologyResponder(_.changeClassLabelsOrComments(changeReq))
+        response                                <- asAnythingAdmin(_.changeClassLabelsOrComments(changeReq, _))
         externalOntology                         = response.toOntologySchema(ApiV2Complex)
         readClassInfo                            = externalOntology.classes(classIri.smartIri)
         (oldLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
@@ -2657,9 +2642,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class that already exists") {
       val classIri         = anythingOntologyIri.makeEntityIri("Thing")
@@ -2687,9 +2671,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class with a nonexistent base class") {
       val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
@@ -2717,9 +2700,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class that is not a subclass of knora-api:Resource") {
       val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
@@ -2747,9 +2729,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class with a cardinality for a Knora property that doesn't exist") {
       val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
@@ -2779,9 +2760,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[NotFoundException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[NotFoundException]))
     },
     test("not create a class that has a cardinality for anything:hasInteger but is not a subclass of anything:Thing") {
       val classIri         = anythingOntologyIri.makeEntityIri("WrongClass")
@@ -2810,9 +2790,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("create a subclass of anything:Thing that has cardinality 1 for anything:hasBoolean") {
       val classIri         = anythingOntologyIri.makeEntityIri("RestrictiveThing")
@@ -2841,9 +2820,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.createClass(createReq))
+        msg                                             <- asAnythingAdmin(_.createClass(createReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -2881,18 +2860,17 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("reject a request to delete a link value property directly") {
       val hasInterestingThingValue = anythingOntologyIri.makeProperty("hasInterestingThingValue")
-      ontologyResponder(
+      asAnythingAdmin(
         _.deleteProperty(
           propertyIri = hasInterestingThingValue,
           lastModificationDate = anythingLastModDate,
           apiRequestID = randomUUID,
-          requestingUser = anythingAdminUser,
+          _,
         ),
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
@@ -2900,7 +2878,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       val linkPropIri = anythingOntologyIri.makeProperty("hasInterestingThing")
 
       for {
-        msg                                             <- ontologyResponder(_.deleteProperty(linkPropIri, anythingLastModDate, randomUUID, anythingAdminUser))
+        msg                                             <- asAnythingAdmin(_.deleteProperty(linkPropIri, anythingLastModDate, randomUUID, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
         // Reload the ontology cache and see if we get the same result.
         _ <- ontologyCache(_.refreshCache())
@@ -2914,8 +2892,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("not create a property if rdfs:label is missing") {
       val invalid = validPropertyInfo.copy(predicates = validPropertyInfo.predicates - Rdfs.Label.toSmartIri)
-      ontologyResponder(_.createProperty(invalid, anythingLastModDate, randomUUID, anythingAdminUser)).exit.map(
-        actual => assert(actual)(failsWithMessageEqualTo[BadRequestException](s"Missing ${Rdfs.Label}")),
+      asAnythingAdmin(_.createProperty(invalid, anythingLastModDate, randomUUID, _)).exit.map(actual =>
+        assert(actual)(failsWithMessageEqualTo[BadRequestException](s"Missing ${Rdfs.Label}")),
       )
     },
     test("not create a property if rdfs:label is missing a language") {
@@ -2926,13 +2904,12 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
             PredicateInfoV2(Rdfs.Label.toSmartIri, List(StringLiteralV2.unsafeFrom("foo", None))),
           ),
         )
-      ontologyResponder(_.createProperty(invalid, anythingLastModDate, randomUUID, anythingAdminUser)).exit.map(
-        actual =>
-          assert(actual)(
-            failsWithMessageEqualTo[BadRequestException](
-              s"All values of ${Rdfs.Label} must be string literals with a language code",
-            ),
+      asAnythingAdmin(_.createProperty(invalid, anythingLastModDate, randomUUID, _)).exit.map(actual =>
+        assert(actual)(
+          failsWithMessageEqualTo[BadRequestException](
+            s"All values of ${Rdfs.Label} must be string literals with a language code",
           ),
+        ),
       )
     },
     test("not create a property if rdfs:comment is missing a language") {
@@ -2943,13 +2920,12 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
             PredicateInfoV2(Rdfs.Comment.toSmartIri, List(StringLiteralV2.unsafeFrom("foo", None))),
           ),
         )
-      ontologyResponder(_.createProperty(invalid, anythingLastModDate, randomUUID, anythingAdminUser)).exit.map(
-        actual =>
-          assert(actual)(
-            failsWithMessageEqualTo[BadRequestException](
-              s"All values of ${Rdfs.Comment} must be string literals with a language code",
-            ),
+      asAnythingAdmin(_.createProperty(invalid, anythingLastModDate, randomUUID, _)).exit.map(actual =>
+        assert(actual)(
+          failsWithMessageEqualTo[BadRequestException](
+            s"All values of ${Rdfs.Comment} must be string literals with a language code",
           ),
+        ),
       )
     },
     test("create a property anything:hasNothingness with knora-api:subjectType anything:Nothing") {
@@ -2994,7 +2970,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
       for {
         msg <-
-          ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         property                                         = externalOntology.properties(propertyIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -3018,10 +2994,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newGuiObject = guiObject,
         lastModificationDate = anythingLastModDate,
         apiRequestID = randomUUID,
-        requestingUser = anythingAdminUser,
       )
       for {
-        response        <- ontologyResponder(_.changePropertyGuiElement(changeReq))
+        response        <- asAnythingAdmin(_.changePropertyGuiElement(changeReq, _))
         externalOntology = response.toOntologySchema(ApiV2Complex)
         property         = externalOntology.properties(propertyIri.smartIri)
         // Check that the salsah-gui:guiElement from the message is as expected
@@ -3066,11 +3041,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         newGuiObject = guiObject,
         lastModificationDate = anythingLastModDate,
         apiRequestID = randomUUID,
-        requestingUser = anythingAdminUser,
       )
 
       for {
-        response                                        <- ontologyResponder(_.changePropertyGuiElement(changeReq))
+        response                                        <- asAnythingAdmin(_.changePropertyGuiElement(changeReq, _))
         externalOntology                                 = response.toOntologySchema(ApiV2Complex)
         property                                         = externalOntology.properties(propertyIri.smartIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
@@ -3115,7 +3089,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class called anything:hasNothingness, because that IRI is already used for a property") {
@@ -3144,9 +3118,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
-        _.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)),
-      ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      asAnythingAdmin(_.createClass(CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID), _)).exit
+        .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("create a class anything:Void as a subclass of anything:Nothing") {
       val classIri         = anythingOntologyIri.makeEntityIri("Void")
@@ -3170,9 +3143,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.createClass(createReq))
+        msg                                             <- asAnythingAdmin(_.createClass(createReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -3199,9 +3172,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       val addReq =
-        AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+        AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.addCardinalitiesToClass(addReq))
+        msg                                             <- asAnythingAdmin(_.addCardinalitiesToClass(addReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
 
@@ -3209,9 +3182,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                       classInfoContent = classInfoContent,
                       lastModificationDate = anythingLastModDate,
                       apiRequestID = randomUUID,
-                      requestingUser = anythingAdminUser,
                     )
-        deleteCardinalitiesResponse                                      <- ontologyResponder(_.deleteCardinalitiesFromClass(deleteReq))
+        deleteCardinalitiesResponse                                      <- asAnythingAdmin(_.deleteCardinalitiesFromClass(deleteReq, _))
         (anythingLastModDateBeforeDelete, anythingLastModDateAfterDelete) =
           self.anythingLastModDate.updateFrom(deleteCardinalitiesResponse)
       } yield assertTrue(
@@ -3220,20 +3192,19 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         anythingLastModDateAfterDelete.isAfter(anythingLastModDateBeforeDelete),
       )
     },
-    test("not allow a user to delete a class if they are not a sysadmin or an admin in the ontology's project") {
+    test("not allow a user to delete a class with a grant for another project") {
       val classIri = anythingOntologyIri.makeClass("Void")
-      ontologyResponder(_.deleteClass(classIri, anythingLastModDate, randomUUID, anythingUser1)).exit
-        .map(actual => assert(actual)(failsWithA[ForbiddenException]))
+      notAllowedWithGrantForAnotherProject(_.deleteClass(classIri, anythingLastModDate, randomUUID, _))
     },
     test("delete the class anything:Void") {
       val classIri = anythingOntologyIri.makeClass("Void")
       for {
-        response                                        <- ontologyResponder(_.deleteClass(classIri, anythingLastModDate, randomUUID, anythingAdminUser))
+        response                                        <- asAnythingAdmin(_.deleteClass(classIri, anythingLastModDate, randomUUID, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
       } yield assertTrue(response.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
     test(
-      "not allow a user to add a cardinality to a class if they are not a sysadmin or an admin in the user's project",
+      "not allow a user to add a cardinality to a class with a grant for another project",
     ) {
       val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
@@ -3253,11 +3224,12 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
+      notAllowedWithGrantForAnotherProject(
         _.addCardinalitiesToClass(
-          AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingUser1),
+          AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID),
+          _,
         ),
-      ).exit.map(actual => assert(actual)(failsWithA[ForbiddenException]))
+      )
     },
     test(
       "create a link property, anything:hasOtherNothing, and add a cardinality for it to the class anything:Nothing",
@@ -3298,7 +3270,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
       for {
         msg <-
-          ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
         classInfoContent                                 = ClassInfoContentV2(
                              classIri = classIri,
@@ -3335,14 +3307,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                                   (anythingOntology + "Nothing").toSmartIri,
                                                   "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
                                                 )
-        addCardinalitiesResponse <- ontologyResponder(
+        addCardinalitiesResponse <- asAnythingAdmin(
                                       _.addCardinalitiesToClass(
                                         AddCardinalitiesToClassRequestV2(
                                           classInfoContent,
                                           anythingLastModDate,
                                           randomUUID,
-                                          anythingAdminUser,
                                         ),
+                                        _,
                                       ),
                                     )
         ontologyFromAddCardinalities                                                     = addCardinalitiesResponse.toOntologySchema(ApiV2Complex)
@@ -3377,9 +3349,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(
+      asAnythingAdmin(
         _.addCardinalitiesToClass(
-          AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser),
+          AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID),
+          _,
         ),
       ).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
@@ -3425,14 +3398,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       for {
-        msg <- ontologyResponder(
+        msg <- asAnythingAdmin(
                  _.addCardinalitiesToClass(
                    AddCardinalitiesToClassRequestV2(
                      classInfoContent,
                      anythingLastModDate,
                      randomUUID,
-                     anythingAdminUser,
                    ),
+                   _,
                  ),
                )
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
@@ -3464,8 +3437,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       val addRequest =
-        AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
-      ontologyResponder(_.addCardinalitiesToClass(addRequest)).exit.map(actual =>
+        AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
+      asAnythingAdmin(_.addCardinalitiesToClass(addRequest, _)).exit.map(actual =>
         assert(actual)(failsWithA[BadRequestException]),
       )
     },
@@ -3488,9 +3461,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       val addRequest =
-        AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+        AddCardinalitiesToClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.addCardinalitiesToClass(addRequest))
+        msg                                             <- asAnythingAdmin(_.addCardinalitiesToClass(addRequest, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
       } yield assertTrue(externalOntology.classes.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
@@ -3533,7 +3506,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
       for {
         msg <-
-          ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         property                                         = externalOntology.properties(propertyIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -3592,11 +3565,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         classInfoContent,
         anythingLastModDate,
         randomUUID,
-        anythingAdminUser,
       )
 
       for {
-        msg                                             <- ontologyResponder(_.addCardinalitiesToClass(addReq))
+        msg                                             <- asAnythingAdmin(_.addCardinalitiesToClass(addReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -3608,7 +3580,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
     },
     test(
-      "not allow a user to change the cardinalities of a class if they are not a sysadmin or an admin in the user's project",
+      "not allow a user to change the cardinalities of a class with a grant for another project",
     ) {
       val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
@@ -3629,10 +3601,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       val replaceReq =
-        ReplaceClassCardinalitiesRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingUser1)
-      ontologyResponder(_.replaceClassCardinalities(replaceReq)).exit.map(actual =>
-        assert(actual)(failsWithA[ForbiddenException]),
-      )
+        ReplaceClassCardinalitiesRequestV2(classInfoContent, anythingLastModDate, randomUUID)
+      notAllowedWithGrantForAnotherProject(_.replaceClassCardinalities(replaceReq, _))
     },
     test("change the GUI order of the cardinalities of the class anything:Nothing") {
       val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
@@ -3679,9 +3649,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ),
       )
 
-      val changeReq = ChangeGuiOrderRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val changeReq = ChangeGuiOrderRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        response                                        <- ontologyResponder(_.changeGuiOrder(changeReq))
+        response                                        <- asAnythingAdmin(_.changeGuiOrder(changeReq, _))
         externalOntology                                 = response.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
@@ -3723,10 +3693,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       val replaceReq =
-        ReplaceClassCardinalitiesRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+        ReplaceClassCardinalitiesRequestV2(classInfoContent, anythingLastModDate, randomUUID)
 
       for {
-        response                                        <- ontologyResponder(_.replaceClassCardinalities(replaceReq))
+        response                                        <- asAnythingAdmin(_.replaceClassCardinalities(replaceReq, _))
         externalOntology                                 = response.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
@@ -3740,25 +3710,25 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("not delete the class anything:Nothing, because the property anything:hasEmptiness refers to it") {
       val classIri = anythingOntologyIri.makeClass("Nothing")
-      ontologyResponder(_.deleteClass(classIri, anythingLastModDate, randomUUID, anythingAdminUser)).exit.map(actual =>
+      asAnythingAdmin(_.deleteClass(classIri, anythingLastModDate, randomUUID, _)).exit.map(actual =>
         assert(actual)(failsWithA[BadRequestException]),
       )
     },
     test("delete the property anything:hasNothingness") {
       val hasNothingness = anythingOntologyIri.makeProperty("hasNothingness")
       for {
-        msg                                             <- ontologyResponder(_.deleteProperty(hasNothingness, anythingLastModDate, randomUUID, anythingAdminUser))
+        msg                                             <- asAnythingAdmin(_.deleteProperty(hasNothingness, anythingLastModDate, randomUUID, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
       } yield assertTrue(msg.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
     test("not delete the property anything:hasEmptiness, because the class anything:Nothing refers to it") {
       val hasNothingness = anythingOntologyIri.makeProperty("hasEmptiness")
-      ontologyResponder(_.deleteProperty(hasNothingness, anythingLastModDate, randomUUID, anythingAdminUser)).exit.map(
-        actual => assert(actual)(failsWithA[BadRequestException]),
+      asAnythingAdmin(_.deleteProperty(hasNothingness, anythingLastModDate, randomUUID, _)).exit.map(actual =>
+        assert(actual)(failsWithA[BadRequestException]),
       )
     },
     test(
-      "not allow a user to remove all cardinalities from a class if they are not a sysadmin or an admin in the user's project",
+      "not allow a user to remove all cardinalities from a class with a grant for another project",
     ) {
       val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
       val classInfoContent = ClassInfoContentV2(
@@ -3767,10 +3737,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
       val replaceReq =
-        ReplaceClassCardinalitiesRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingUser1)
-      ontologyResponder(_.replaceClassCardinalities(replaceReq)).exit.map(actual =>
-        assert(actual)(failsWithA[ForbiddenException]),
-      )
+        ReplaceClassCardinalitiesRequestV2(classInfoContent, anythingLastModDate, randomUUID)
+      notAllowedWithGrantForAnotherProject(_.replaceClassCardinalities(replaceReq, _))
     },
     test("remove all cardinalities from the class anything:Nothing") {
       val classIri         = anythingOntologyIri.makeEntityIri("Nothing")
@@ -3791,14 +3759,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       for {
-        response <- ontologyResponder(
+        response <- asAnythingAdmin(
                       _.replaceClassCardinalities(
                         ReplaceClassCardinalitiesRequestV2(
                           classInfoContent = classInfoContent,
                           lastModificationDate = anythingLastModDate,
                           apiRequestID = randomUUID,
-                          requestingUser = anythingAdminUser,
                         ),
+                        _,
                       ),
                     )
         externalOntology                                 = response.toOntologySchema(ApiV2Complex)
@@ -3813,26 +3781,24 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     },
     test("not delete the property anything:hasEmptiness with the wrong knora-api:lastModificationDate") {
       val hasEmptiness = anythingOntologyIri.makeProperty("hasEmptiness")
-      ontologyResponder(
-        _.deleteProperty(hasEmptiness, anythingLastModDate.minusSeconds(60), randomUUID, anythingAdminUser),
-      ).exit.map(actual => assert(actual)(failsWithA[EditConflictException]))
-    },
-    test("not allow a user to delete a property if they are not a sysadmin or an admin in the ontology's project") {
-      val hasEmptiness = anythingOntologyIri.makeProperty("hasEmptiness")
-      ontologyResponder(_.deleteProperty(hasEmptiness, anythingLastModDate, randomUUID, anythingUser1)).exit.map(
-        actual => assert(actual)(failsWithA[ForbiddenException]),
+      asAnythingAdmin(_.deleteProperty(hasEmptiness, anythingLastModDate.minusSeconds(60), randomUUID, _)).exit.map(
+        actual => assert(actual)(failsWithA[EditConflictException]),
       )
+    },
+    test("not allow a user to delete a property with a grant for another project") {
+      val hasEmptiness = anythingOntologyIri.makeProperty("hasEmptiness")
+      notAllowedWithGrantForAnotherProject(_.deleteProperty(hasEmptiness, anythingLastModDate, randomUUID, _))
     },
     test("delete the properties anything:hasOtherNothing and anything:hasEmptiness") {
       val hasOtherNothing = anythingOntologyIri.makeProperty("hasOtherNothing")
       val hasEmptiness    = anythingOntologyIri.makeProperty("hasEmptiness")
 
       for {
-        msg                                                              <- ontologyResponder(_.deleteProperty(hasOtherNothing, anythingLastModDate, randomUUID, anythingAdminUser))
+        msg                                                              <- asAnythingAdmin(_.deleteProperty(hasOtherNothing, anythingLastModDate, randomUUID, _))
         (lastModDateBeforeDeleteProperty, lastModDateAfterDeleteProperty) = self.anythingLastModDate.updateFrom(msg)
         // prop2
         deleteHasEmptinessResponse <-
-          ontologyResponder(_.deleteProperty(hasEmptiness, anythingLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.deleteProperty(hasEmptiness, anythingLastModDate, randomUUID, _))
         (lastModDateBeforeDeleteHasEmptiness, lastModDateAfterDeleteHasEmptiness) =
           self.anythingLastModDate.updateFrom(deleteHasEmptinessResponse)
       } yield assertTrue(
@@ -3845,7 +3811,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the class anything:Nothing") {
       val classIri = anythingOntologyIri.makeClass("Nothing")
       for {
-        response                                        <- ontologyResponder(_.deleteClass(classIri, anythingLastModDate, randomUUID, anythingAdminUser))
+        response                                        <- asAnythingAdmin(_.deleteClass(classIri, anythingLastModDate, randomUUID, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
       } yield assertTrue(response.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
@@ -3871,8 +3837,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
-      ontologyResponder(_.createClass(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
+      asAnythingAdmin(_.createClass(createReq, _)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a class with a cardinality on a property defined in a non-shared ontology in another project") {
       val classIri         = anythingOntologyIri.makeEntityIri("InvalidClass")
@@ -3898,8 +3864,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
-      ontologyResponder(_.createClass(createReq)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
+      asAnythingAdmin(_.createClass(createReq, _)).exit.map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create a subproperty of a property defined in a non-shared ontology in another project") {
       val propertyIri         = anythingOntologyIri.makeEntityIri("invalidProperty")
@@ -3931,7 +3897,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create property with a subject type defined in a non-shared ontology in another project") {
@@ -3968,7 +3934,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("not create property with an object type defined in a non-shared ontology in another project") {
@@ -4001,7 +3967,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)).exit
+      asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _)).exit
         .map(actual => assert(actual)(failsWithA[BadRequestException]))
     },
     test("create a class anything:AnyBox1 as a subclass of example-box:Box") {
@@ -4025,10 +3991,10 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
         ontologySchema = ApiV2Complex,
       )
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
 
       for {
-        msg                                             <- ontologyResponder(_.createClass(createReq))
+        msg                                             <- asAnythingAdmin(_.createClass(createReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -4041,7 +4007,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the class anything:AnyBox1") {
       val classIri = anythingOntologyIri.makeClass("AnyBox1")
       for {
-        response                                        <- ontologyResponder(_.deleteClass(classIri, anythingLastModDate, randomUUID, anythingAdminUser))
+        response                                        <- asAnythingAdmin(_.deleteClass(classIri, anythingLastModDate, randomUUID, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
       } yield assertTrue(response.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
@@ -4067,9 +4033,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         directCardinalities = Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne)),
         ontologySchema = ApiV2Complex,
       )
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        msg                                             <- ontologyResponder(_.createClass(createReq))
+        msg                                             <- asAnythingAdmin(_.createClass(createReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -4082,7 +4048,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the class anything:AnyBox2") {
       val classIri = anythingOntologyIri.makeClass("AnyBox2")
       for {
-        response                                        <- ontologyResponder(_.deleteClass(classIri, anythingLastModDate, randomUUID, anythingAdminUser))
+        response                                        <- asAnythingAdmin(_.deleteClass(classIri, anythingLastModDate, randomUUID, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(response)
       } yield assertTrue(response.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
@@ -4114,7 +4080,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
       for {
         msg <-
-          ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         property                                         = externalOntology.properties(propertyIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -4127,7 +4093,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the property anything:hasAnyName") {
       val propertyIri = anythingOntologyIri.makeProperty("hasAnyName")
       for {
-        msg                                             <- ontologyResponder(_.deleteProperty(propertyIri, anythingLastModDate, randomUUID, anythingAdminUser))
+        msg                                             <- asAnythingAdmin(_.deleteProperty(propertyIri, anythingLastModDate, randomUUID, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
       } yield assertTrue(msg.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
@@ -4162,7 +4128,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       for {
-        msg                                             <- ontologyResponder(_.createProperty(propertyInfo, anythingLastModDate, randomUUID, anythingAdminUser))
+        msg                                             <- asAnythingAdmin(_.createProperty(propertyInfo, anythingLastModDate, randomUUID, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         property                                         = externalOntology.properties(propertyIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -4175,7 +4141,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the property anything:BoxHasBoolean") {
       val propertyIri = anythingOntologyIri.makeProperty("BoxHasBoolean")
       for {
-        msg                                             <- ontologyResponder(_.deleteProperty(propertyIri, anythingLastModDate, randomUUID, anythingAdminUser))
+        msg                                             <- asAnythingAdmin(_.deleteProperty(propertyIri, anythingLastModDate, randomUUID, _))
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
       } yield assertTrue(msg.ontologies.size == 1, newAnythingLastModDate.isAfter(oldAnythingLastModDate))
     },
@@ -4206,7 +4172,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       for {
-        msg                                             <- ontologyResponder(_.createProperty(propertyInfo, anythingLastModDate, randomUUID, anythingAdminUser))
+        msg                                             <- asAnythingAdmin(_.createProperty(propertyInfo, anythingLastModDate, randomUUID, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         property                                         = externalOntology.properties(propertyIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -4219,7 +4185,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
     test("delete the property anything:hasBox") {
       val propertyIri = anythingOntologyIri.makeProperty("hasBox")
       for {
-        msg                          <- ontologyResponder(_.deleteProperty(propertyIri, anythingLastModDate, randomUUID, anythingAdminUser))
+        msg                          <- asAnythingAdmin(_.deleteProperty(propertyIri, anythingLastModDate, randomUUID, _))
         (lastModBefore, lastModAfter) = self.anythingLastModDate.updateFrom(msg)
       } yield assertTrue(msg.ontologies.size == 1, lastModAfter.isAfter(lastModBefore))
     },
@@ -4257,16 +4223,15 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = randomUUID,
-        requestingUser = anythingAdminUser,
       )
       for {
-        createClassResponse                                        <- ontologyResponder(_.createClass(createReq))
+        createClassResponse                                        <- asAnythingAdmin(_.createClass(createReq, _))
         (lastModDateBeforeCreateClass, lastModDateAfterCreateClass) =
           self.anythingLastModDate.updateFrom(createClassResponse)
 
         // Create a text property.
         createPropertyResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.createProperty(
               propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = (anythingOntology + "testTextProp").toSmartIri,
@@ -4310,7 +4275,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
               ),
               lastModificationDate = anythingLastModDate,
               apiRequestID = randomUUID,
-              requestingUser = anythingAdminUser,
+              _,
             ),
           )
         (lastModDateBeforeCreateProperty, lastModDateAfterCreateProperty) =
@@ -4318,7 +4283,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Create an integer property.
         createIntegerPropertyResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.createProperty(
               propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = (anythingOntology + "testIntProp").toSmartIri,
@@ -4362,7 +4327,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
               ),
               lastModificationDate = anythingLastModDate,
               apiRequestID = randomUUID,
-              requestingUser = anythingAdminUser,
+              _,
             ),
           )
         (lastModDateBeforeCreateIntegerProp, lastModDateAfterCreateIntegerProp) =
@@ -4370,7 +4335,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Create a link property.
         createLinkPropertyResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.createProperty(
               propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = (anythingOntology + "testLinkProp").toSmartIri,
@@ -4412,7 +4377,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
               ),
               lastModificationDate = anythingLastModDate,
               apiRequestID = randomUUID,
-              requestingUser = anythingAdminUser,
+              _,
             ),
           )
         (lastModDateBeforeCreateLinkProperty, lastModDateAfterCreateLinkProperty) =
@@ -4420,7 +4385,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Add cardinalities to the class.
         addCardinalitiesResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.addCardinalitiesToClass(
               AddCardinalitiesToClassRequestV2(
                 classInfoContent = ClassInfoContentV2(
@@ -4446,8 +4411,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                 ),
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = randomUUID,
-                requestingUser = anythingAdminUser,
               ),
+              _,
             ),
           )
         (lastModDateBeforeAddCardinalities, lastModDateAfterAddCardinalities) =
@@ -4455,7 +4420,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Remove the link value cardinality from the class.
         replaceCardinalitiesResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.replaceClassCardinalities(
               ReplaceClassCardinalitiesRequestV2(
                 classInfoContent = ClassInfoContentV2(
@@ -4478,8 +4443,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                 ),
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = randomUUID,
-                requestingUser = anythingAdminUser,
               ),
+              _,
             ),
           )
         (lastModDateBeforeReplaceCardinalities, lastModDateAfterReplaceCardinalities) =
@@ -4520,7 +4485,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       for {
         // Create a class with no cardinalities.
         createClassResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.createClass(
               CreateClassRequestV2(
                 classInfoContent = ClassInfoContentV2(
@@ -4554,8 +4519,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                 ),
                 lastModificationDate = freetestLastModDate,
                 apiRequestID = randomUUID,
-                requestingUser = anythingAdminUser,
               ),
+              _,
             ),
           )
         (lastModDateBeforeCreateClass, lastModDateAfterCreateClass) =
@@ -4563,7 +4528,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Create a text property.
         createTextPropertyResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.createProperty(
               propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri,
@@ -4611,7 +4576,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
               ),
               lastModificationDate = freetestLastModDate,
               apiRequestID = randomUUID,
-              requestingUser = anythingAdminUser,
+              _,
             ),
           )
         (lastModDateBeforeCreateTextProperty, lastModDateAfterCreateTextProperty) =
@@ -4619,7 +4584,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Create an integer property.
         createIntegerPropertyResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.createProperty(
               propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri,
@@ -4667,7 +4632,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
               ),
               lastModificationDate = freetestLastModDate,
               apiRequestID = randomUUID,
-              requestingUser = anythingAdminUser,
+              _,
             ),
           )
         (lastModDateBeforeCreateIntegerProperty, lastModDateAfterCreateIntegerProperty) =
@@ -4675,7 +4640,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Add cardinalities to the class.
         addCardinalitiesResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.addCardinalitiesToClass(
               AddCardinalitiesToClassRequestV2(
                 classInfoContent = ClassInfoContentV2(
@@ -4698,8 +4663,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                 ),
                 lastModificationDate = freetestLastModDate,
                 apiRequestID = randomUUID,
-                requestingUser = anythingAdminUser,
               ),
+              _,
             ),
           )
         (lastModeDateBeforeAddCardinalities, lastModeDateAfterAddCardinalities) =
@@ -4766,7 +4731,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Successfully remove the (unused) text value cardinality from the class.
         deleteCardinalitiesResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.deleteCardinalitiesFromClass(
               DeleteCardinalitiesFromClassRequestV2(
                 classInfoContent = ClassInfoContentV2(
@@ -4786,8 +4751,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                 ),
                 lastModificationDate = freetestLastModDate,
                 apiRequestID = randomUUID,
-                requestingUser = anythingAdminUser,
               ),
+              _,
             ),
           )
         (lastModBeforeDeleteCardinalities, lastModAfterDeleteCardinalities) =
@@ -4849,9 +4814,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val createReq = CreateClassRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        createClassResponse          <- ontologyResponder(_.createClass(createReq))
+        createClassResponse          <- asAnythingAdmin(_.createClass(createReq, _))
         ontologyFromCreateClass       = createClassResponse.toOntologySchema(ApiV2Complex)
         classInfoFromCreateClass      = ontologyFromCreateClass.classes(classIri)
         (lastModBefore, lastModAfter) = self.anythingLastModDate.updateFrom(createClassResponse)
@@ -4914,7 +4879,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                                      )
 
         createPropertyResponse <-
-          ontologyResponder(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, anythingAdminUser))
+          asAnythingAdmin(_.createProperty(propertyInfoContent, anythingLastModDate, randomUUID, _))
         ontologyFromCreateProperty                                        = createPropertyResponse.toOntologySchema(ApiV2Complex)
         property                                                          = ontologyFromCreateProperty.properties(propertyIri)
         (lastModDateBeforeCreateProperty, lastModDateAfterCreateProperty) =
@@ -4968,10 +4933,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         classWithNewCardinalityInfoContent,
         anythingLastModDate,
         randomUUID,
-        anythingAdminUser,
       )
       for {
-        msg                                             <- ontologyResponder(_.addCardinalitiesToClass(addReq))
+        msg                                             <- asAnythingAdmin(_.addCardinalitiesToClass(addReq, _))
         externalOntology                                 = msg.toOntologySchema(ApiV2Complex)
         readClassInfo                                    = externalOntology.classes(classIri)
         (oldAnythingLastModDate, newAnythingLastModDate) = self.anythingLastModDate.updateFrom(msg)
@@ -5026,14 +4990,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                                    ),
                                    ontologySchema = ApiV2Complex,
                                  )
-        replaceResponse <- ontologyResponder(
+        replaceResponse <- asAnythingAdmin(
                              _.replaceClassCardinalities(
                                ReplaceClassCardinalitiesRequestV2(
                                  classInfoContent = classChangeInfoContent,
                                  lastModificationDate = anythingLastModDate,
                                  apiRequestID = randomUUID,
-                                 requestingUser = anythingAdminUser,
                                ),
+                               _,
                              ),
                            )
 
@@ -5068,9 +5032,9 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         ontologySchema = ApiV2Complex,
       )
 
-      val changeReq = ChangeGuiOrderRequestV2(classInfoContent, anythingLastModDate, randomUUID, anythingAdminUser)
+      val changeReq = ChangeGuiOrderRequestV2(classInfoContent, anythingLastModDate, randomUUID)
       for {
-        response              <- ontologyResponder(_.changeGuiOrder(changeReq))
+        response              <- asAnythingAdmin(_.changeGuiOrder(changeReq, _))
         externalOntology       = response.toOntologySchema(ApiV2Complex)
         readClassInfo          = externalOntology.classes(classIri)
         metadata               = externalOntology.ontologyMetadata

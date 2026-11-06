@@ -27,6 +27,7 @@ import org.knora.webapi.slice.api.admin.ProjectLicenseDto
 import org.knora.webapi.slice.api.admin.ResourceSideLegalInfo
 import org.knora.webapi.slice.api.admin.model.FilterAndOrder
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectCandidate
 
 final case class ProjectsLegalInfoRestService(
   private val legalInfos: LegalInfoService,
@@ -34,12 +35,14 @@ final case class ProjectsLegalInfoRestService(
   private val auth: AuthorizationRestService,
 ) {
 
-  def findAuthorships(user: User)(
+  def findAuthorships(candidate: ProjectCandidate)(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
     filterAndOrder: FilterAndOrder,
   ): Task[PagedResponse[Authorship]] =
-    auth.ensureProjectMember(user, shortcode).flatMap(legalInfos.findAuthorships(_, pageAndSize, filterAndOrder))
+    auth
+      .authorizeProjectMemberByShortcode(candidate, shortcode)
+      .flatMap(grant => legalInfos.findAuthorships(grant.project, pageAndSize, filterAndOrder))
 
   def findLicenses(
     shortcode: Shortcode,
@@ -74,31 +77,33 @@ final case class ProjectsLegalInfoRestService(
     val slice = filtered.slice(pageAndSize.size * (pageAndSize.page - 1), pageAndSize.size * pageAndSize.page)
     PagedResponse.from(slice, filtered.size, pageAndSize)
 
-  def enableLicense(user: User)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =
+  def enableLicense(candidate: ProjectCandidate)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-      _       <- legalInfos.enableLicense(licenseIri, project).mapError(BadRequestException.apply)
+      grant <- auth.authorizeProjectAdminByShortcode(candidate, shortcode)
+      _     <- legalInfos.enableLicense(licenseIri, grant.project).mapError(BadRequestException.apply)
     } yield ()
 
-  def disableLicense(user: User)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =
+  def disableLicense(candidate: ProjectCandidate)(shortcode: Shortcode, licenseIri: LicenseIri): Task[Unit] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-      _       <- legalInfos.disableLicense(licenseIri, project)
+      grant <- auth.authorizeProjectAdminByShortcode(candidate, shortcode)
+      _     <- legalInfos.disableLicense(licenseIri, grant.project)
     } yield ()
 
-  def findCopyrightHolders(user: User)(
+  def findCopyrightHolders(candidate: ProjectCandidate)(
     shortcode: Shortcode,
     pageAndSize: PageAndSize,
     filterAndOrder: FilterAndOrder,
   ): Task[PagedResponse[CopyrightHolder]] =
     for {
-      project <- auth.ensureProjectMember(user, shortcode)
-    } yield slice(project.allowedCopyrightHolders.toSeq, pageAndSize, filterAndOrder)
+      grant <- auth.authorizeProjectMemberByShortcode(candidate, shortcode)
+    } yield slice(grant.project.allowedCopyrightHolders.toSeq, pageAndSize, filterAndOrder)
 
-  def addCopyrightHolders(user: User)(shortcode: Shortcode, req: CopyrightHolderAddRequest): Task[Unit] =
+  def addCopyrightHolders(
+    candidate: ProjectCandidate,
+  )(shortcode: Shortcode, req: CopyrightHolderAddRequest): Task[Unit] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-      _       <- projects.addCopyrightHolders(project.id, req.data)
+      grant <- auth.authorizeProjectAdminByShortcode(candidate, shortcode)
+      _     <- projects.addCopyrightHolders(grant.project.id, req.data)
     } yield ()
 
   def replaceCopyrightHolder(user: User)(
@@ -111,13 +116,13 @@ final case class ProjectsLegalInfoRestService(
       _       <- projects.replaceCopyrightHolder(project.id, req.`old-value`, req.`new-value`)
     } yield ()
 
-  def setResourceSideLegalInfo(user: User)(
+  def setResourceSideLegalInfo(candidate: ProjectCandidate)(
     shortcode: Shortcode,
     req: ResourceSideLegalInfo,
   ): Task[ResourceSideLegalInfo] =
     for {
-      project <- auth.ensureSystemAdminOrProjectAdminByShortcode(user, shortcode)
-      _       <- ZIO
+      grant <- auth.authorizeProjectAdminByShortcode(candidate, shortcode)
+      _     <- ZIO
              .fail(
                BadRequestException(
                  "Invalid data license: only Creative Commons licenses are allowed " +
@@ -126,7 +131,7 @@ final case class ProjectsLegalInfoRestService(
              )
              .when(req.dataLicense.exists(license => !LicenseIri.CC_LICENSES.contains(license)))
       updated <- projects.setResourceSideLegalInfo(
-                   project.id,
+                   grant.project.id,
                    req.dataLicense,
                    req.dataCopyrightHolder,
                    req.defaultDataAuthorship,

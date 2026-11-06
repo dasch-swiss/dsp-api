@@ -121,7 +121,7 @@ class GroupRestServiceSpec extends E2EZSpec {
           status = Some(GroupStatus.active),
           selfjoin = Some(GroupSelfJoin.disabled),
         )
-        groupRestService(_.putGroup(rootUser)(newGroupIri.asGroupIri, updateReq))
+        groupRestService(_.putGroup(TestCandidates.of(rootUser))(newGroupIri.asGroupIri, updateReq))
           .map(_.group)
           .map(group =>
             assertTrue(
@@ -138,7 +138,7 @@ class GroupRestServiceSpec extends E2EZSpec {
       },
       test("return 'BadRequestException' if nothing would be changed during the update") {
         val updateReq = GroupUpdateRequest(None, None, None, None)
-        groupRestService(_.putGroup(rootUser)(newGroupIri.asGroupIri, updateReq)).exit.map(
+        groupRestService(_.putGroup(TestCandidates.of(rootUser))(newGroupIri.asGroupIri, updateReq)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[BadRequestException](
               "No data would be changed. Aborting update request.",
@@ -157,7 +157,7 @@ class GroupRestServiceSpec extends E2EZSpec {
           status = Some(GroupStatus.active),
           selfjoin = Some(GroupSelfJoin.disabled),
         )
-        groupRestService(_.putGroup(rootUser)(newGroupIri.asGroupIri, updateReq)).exit.map(
+        groupRestService(_.putGroup(TestCandidates.of(rootUser))(newGroupIri.asGroupIri, updateReq)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[DuplicateValueException](
               s"Group with name: '${groupName.value}' already exists.",
@@ -176,7 +176,7 @@ class GroupRestServiceSpec extends E2EZSpec {
           status = Some(GroupStatus.active),
           selfjoin = Some(GroupSelfJoin.disabled),
         )
-        groupRestService(_.putGroup(rootUser)(groupIri, updateReq)).exit.map(
+        groupRestService(_.putGroup(TestCandidates.of(rootUser))(groupIri, updateReq)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageContaining[ForbiddenException](
               s"Group with IRI '$groupIri' not found",
@@ -195,7 +195,7 @@ class GroupRestServiceSpec extends E2EZSpec {
           status = Some(GroupStatus.active),
           selfjoin = Some(GroupSelfJoin.disabled),
         )
-        groupRestService(_.putGroup(rootUser)(newGroupIri.asGroupIri, updateReq)).exit.map(
+        groupRestService(_.putGroup(TestCandidates.of(rootUser))(newGroupIri.asGroupIri, updateReq)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageEqualTo[DuplicateValueException](
               s"Group with name: '${groupName.value}' already exists.",
@@ -205,18 +205,19 @@ class GroupRestServiceSpec extends E2EZSpec {
       },
       test("return 'BadRequestException' if nothing would be changed during the update") {
         val updateReq = GroupUpdateRequest(None, None, None, None)
-        groupRestService(_.putGroup(rootUser)(GroupIri.unsafeFrom(newGroupIri.get), updateReq)).exit.map(
-          assert(_)(
-            E2EZSpec.failsWithMessageEqualTo[BadRequestException](
-              "No data would be changed. Aborting update request.",
+        groupRestService(_.putGroup(TestCandidates.of(rootUser))(GroupIri.unsafeFrom(newGroupIri.get), updateReq)).exit
+          .map(
+            assert(_)(
+              E2EZSpec.failsWithMessageEqualTo[BadRequestException](
+                "No data would be changed. Aborting update request.",
+              ),
             ),
-          ),
-        )
+          )
       },
     ),
     suite("used to query members")(
       test("return all members of a group identified by IRI") {
-        groupRestService(_.getGroupMembers(rootUser)(imagesReviewerGroup.groupIri)).map { received =>
+        groupRestService(_.getGroupMembers(TestCandidates.of(rootUser))(imagesReviewerGroup.groupIri)).map { received =>
           val expectedIds = Seq(multiuserUser, imagesReviewerUser).map(_.id)
           val actualIds   = received.members.map(_.id)
           assert(actualIds)(hasSameElements(expectedIds))
@@ -225,10 +226,12 @@ class GroupRestServiceSpec extends E2EZSpec {
       test("remove all members when group is deactivated") {
         val groupIri = imagesReviewerGroup.groupIri
         for {
-          activeGroupBefore <- groupRestService(_.getGroupMembers(rootUser)(groupIri))
+          activeGroupBefore <- groupRestService(_.getGroupMembers(TestCandidates.of(rootUser))(groupIri))
           statusChanged     <-
-            groupRestService(_.putGroupStatus(rootUser)(groupIri, GroupStatusUpdateRequest(GroupStatus.inactive)))
-          deactivatedGroup <- groupRestService(_.getGroupMembers(rootUser)(groupIri))
+            groupRestService(
+              _.putGroupStatus(TestCandidates.of(rootUser))(groupIri, GroupStatusUpdateRequest(GroupStatus.inactive)),
+            )
+          deactivatedGroup <- groupRestService(_.getGroupMembers(TestCandidates.of(rootUser))(groupIri))
         } yield assertTrue(
           activeGroupBefore.members.size == 2,
           !statusChanged.group.status,
@@ -237,7 +240,7 @@ class GroupRestServiceSpec extends E2EZSpec {
       },
       test("return 'ForbiddenException' when the group IRI is unknown") {
         val groupIri = GroupIri.unsafeFrom("http://rdfh.ch/groups/0000/notexisting")
-        groupRestService(_.getGroupMembers(rootUser)(groupIri)).exit.map(
+        groupRestService(_.getGroupMembers(TestCandidates.of(rootUser))(groupIri)).exit.map(
           assert(_)(
             E2EZSpec.failsWithMessageContaining[ForbiddenException](
               s"Group with IRI '$groupIri' not found",
