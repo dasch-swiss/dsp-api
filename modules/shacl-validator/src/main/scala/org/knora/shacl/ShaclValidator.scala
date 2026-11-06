@@ -63,7 +63,8 @@ object ShaclValidator {
   /**
    * Validates on a plain model: no inference runs. Class targets and `sh:class` match subclass instances
    * through the `rdfs:subClassOf` triples of the loaded ontologies; sub-property triples do not satisfy
-   * a super-property path.
+   * a super-property path. Do not add an inference model: its heap grows with the data and runs out of memory
+   * on large imports. `memory_test` in BUILD.bazel guards this.
    */
   def validate(
     graphs: RdfGraphs,

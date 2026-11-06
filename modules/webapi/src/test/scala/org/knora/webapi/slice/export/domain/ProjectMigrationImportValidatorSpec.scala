@@ -260,7 +260,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       },
     ),
     suite("ResourceShape (data)") {
-      // Ontology that declares a resource class — needed for RDFS inference
+      // Ontology that declares a resource class — its rdfs:subClassOf triple lets the Resource shape target the instance
       val ontologyWithClass = validOntologyNq +
         s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
            |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .

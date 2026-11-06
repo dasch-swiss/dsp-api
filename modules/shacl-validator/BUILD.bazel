@@ -1,6 +1,7 @@
 load("//tools/scalafmt:defs.bzl", "scala_junit_test", "scala_library")
 
-_MEMORY_SPEC = "src/test/scala/org/knora/shacl/ShaclValidatorMemorySpec.scala"
+# Memory specs run only in :memory_test, under its small heap.
+_MEMORY_SPEC_PATTERN = "src/test/scala/**/*MemorySpec.scala"
 
 # SHACL validator. Pure leaf module.
 scala_library(
@@ -23,7 +24,7 @@ scala_junit_test(
     format = True,
     srcs = glob(
         ["src/test/scala/**/*.scala"],
-        exclude = [_MEMORY_SPEC],
+        exclude = [_MEMORY_SPEC_PATTERN],
     ),
     # Discovery is by class-name suffix; a missed suffix silently skips specs.
     suffixes = ["Spec", "IT", "Test"],
@@ -44,13 +45,12 @@ scala_junit_test(
     name = "memory_test",
     size = "medium",
     format = True,
-    srcs = [_MEMORY_SPEC],
+    srcs = glob([_MEMORY_SPEC_PATTERN]),
     jvm_flags = [
         "-Xmx256m",
         "-XX:+ExitOnOutOfMemoryError",
     ],
     suffixes = ["Spec", "IT", "Test"],
-    resources = glob(["src/test/resources/**"]),
     deps = [
         ":shacl-validator",
         "//modules/test-runner",

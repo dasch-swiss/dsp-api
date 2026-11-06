@@ -62,9 +62,9 @@ class ShaclValidatorMemorySpec extends ZIOSpecDefault {
       link   <- linkFamily
       n      <- 0 until 2
     } yield s"""
-                |:Shape${target}_${link}_$n a sh:NodeShape ;
-                |  sh:targetClass :$target ;
-                |  sh:property [ sh:path :$link ; sh:class :Root ] .""".stripMargin
+               |:Shape${target}_${link}_$n a sh:NodeShape ;
+               |  sh:targetClass :$target ;
+               |  sh:property [ sh:path :$link ; sh:class :Root ] .""".stripMargin
     s"$prefixes\n${shapes.mkString("\n")}\n"
   }
 
@@ -88,26 +88,25 @@ class ShaclValidatorMemorySpec extends ZIOSpecDefault {
   }
 
   private val quadFile: ZIO[Scope, Throwable, Path] =
-    ZIO.acquireRelease(
-      ZIO.attemptBlocking {
-        val path = Files.createTempFile("shacl-memory-", ".nq")
-        writeQuads(path)
-        path
-      },
-    )(path => ZIO.attemptBlocking(Files.deleteIfExists(path)).ignore)
+    ZIO
+      .acquireRelease(ZIO.attemptBlocking(Files.createTempFile("shacl-memory-", ".nq")))(path =>
+        ZIO.attemptBlocking(Files.deleteIfExists(path)).ignore,
+      )
+      .tap(path => ZIO.attemptBlocking(writeQuads(path)))
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("ShaclValidatorMemorySpec")(
       test("validates leaf-typed data below class and property hierarchies within a bounded heap") {
         ZIO.scoped {
           for {
-            path <- quadFile
+            path  <- quadFile
             graphs = RdfGraphs(
                        ontologies = NonEmptyChunk(RdfData.InMemoryTurtle(ontologyTtl, "http://example.org/mem/onto")),
                        data = NonEmptyChunk(RdfData.NQuadFile(path)),
                      )
             shapes = ShaclShapes(
-                       ontologyShapes = NonEmptyChunk(RdfData.InMemoryTurtle(ontologyShapesTtl, "http://example.org/mem/os")),
+                       ontologyShapes =
+                         NonEmptyChunk(RdfData.InMemoryTurtle(ontologyShapesTtl, "http://example.org/mem/os")),
                        dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "http://example.org/mem/ds")),
                      )
             result <- ShaclValidator.validate(graphs, shapes).exit

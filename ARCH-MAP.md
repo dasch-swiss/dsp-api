@@ -1462,6 +1462,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/shacl-validator/src/main/scala/org/knora/shacl/ShaclValidator.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/export/domain/ProjectMigrationImportValidator.scala`
     - `modules/shacl-validator/src/test/resources/shacl/test-onto-shapes.ttl`
+    - `modules/shacl-validator/src/test/scala/org/knora/shacl/ShaclValidatorMemorySpec.scala`
 - **Depends on**: build-toolchain. No other inventory component; `zio`, `jena-core`, `jena-arq` and
     `org.topbraid:shacl` only.
 - **Used by**: webapi-export (`ProjectMigrationImportValidator`).
@@ -1469,6 +1470,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - Two-phase validation is fixed in order: ontology graphs against ontology shapes must conform before
         data graphs and data shapes are even loaded - enforcement: structure (a sequential `for`
         comprehension in `validate`, not parameterizable by callers).
+    - Validation runs on a plain Jena model, never an inference model: an inference model's heap grows with the
+        data and runs out of memory on large imports. Class targets and `sh:class` still match subclass instances
+        through the loaded `rdfs:subClassOf` triples - enforcement: test (`memory_test` runs
+        `*MemorySpec.scala` under `-Xmx256m`; it is in `just test-unit` and in `scalafmt_targets`).
     - `NQuadFile` and `InMemoryNQuad` input must contain triples belonging to exactly one named graph and
         none in the default graph, or loading fails with `LoadingError` - enforcement: review (checked in
         `streamNQuadsIntoModel`, not statically typed).
