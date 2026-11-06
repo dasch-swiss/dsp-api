@@ -1,33 +1,32 @@
 name: Release-create-release
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
+    branches:
+      - main
+
+# Several pushes to main in quick succession each start a run, and they all force-push the same
+# release-please branch. Never cancel a running one: the next run waits for it (GitHub keeps only
+# the newest pending run, which sees every commit) instead of racing it on --force-with-lease.
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   create-release:
     name: Create release PR
     runs-on: ubuntu-latest
-    # Automate releases with Conventional Commit Messages as Pull Requests are merged into "main" branch
-    if: github.event.pull_request.merged == true
+    if: github.repository_owner == 'dasch-swiss'
     steps:
       - name: Run release please action
-        uses: google-github-actions/release-please-action@v3
+        uses: googleapis/release-please-action@v4
         with:
+          # A PAT, not GITHUB_TOKEN: a release created with GITHUB_TOKEN triggers no further
+          # workflows, so publish-release.yml (on `release`) would never run.
           token: ${{ secrets.GH_TOKEN }}
-          draft-pull-request: true
-          release-type: simple
-          package-name: dsp-api
-          pull-request-title-pattern: "chore${scope}: Release${component} ${version}"
-          changelog-types: '[
-              {"type": "build", "section": "Maintenances"},
-              {"type": "chore", "section": "Maintenances"},
-              {"type": "docs", "section": "Documentation"},
-              {"type": "feat", "section": "Enhancements"},
-              {"type": "fix", "section": "Bug Fixes"},
-              {"type": "perf", "section": "Performance Improvements"},
-              {"type": "refactor", "section": "Maintenances"},
-              {"type": "test", "section": "Tests"},
-              {"type": "deprecated", "section": "Deprecated"}
-            ]'
+          config-file: .github/release-please/config.json
+          manifest-file: .github/release-please/manifest.json

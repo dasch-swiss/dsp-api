@@ -1,7 +1,7 @@
 name: CI-build-and-test
 
 on:
-  # `paths-ignore` skips the whole workflow when a main push touches only these two files, which is
+  # `paths-ignore` skips the whole workflow when a main push touches only these three files, which is
   # exactly (and only) what a release-please merge commit changes. Applied to `push` only: on
   # `pull_request` the jobs must still REPORT (as skipped) for branch protection, so those keep
   # their job-level `if:` guards. See DEV-6678.
@@ -11,6 +11,7 @@ on:
     paths-ignore:
       - CHANGELOG.md
       - version.txt
+      - .github/release-please/manifest.json
   pull_request:
     types: [opened, reopened, synchronize]
 
@@ -22,11 +23,11 @@ permissions:
 env:
   JAVA_VERSION: 25
 
-# Release PRs (head branch `release-please--*`) only bump CHANGELOG.md and version.txt, so every
-# job below is skipped for them via `!startsWith(github.head_ref, 'release-please')`. A required
-# check skipped by a job-level `if:` counts as passing in branch protection, so the release PR
-# stays mergeable. On `push` events `github.head_ref` is empty, so ordinary main pushes run the
-# test jobs as usual. See DEV-6678.
+# Release PRs (head branch `release-please--*`) only bump CHANGELOG.md, version.txt and
+# .github/release-please/manifest.json, so every job below is skipped for them via
+# `!startsWith(github.head_ref, 'release-please')`. A required check skipped by a job-level `if:`
+# counts as passing in branch protection, so the release PR stays mergeable. On `push` events
+# `github.head_ref` is empty, so ordinary main pushes run the test jobs as usual. See DEV-6678.
 
 jobs:
   # All pure-JVM unit tests run in a single job: one `bazel test` over every
