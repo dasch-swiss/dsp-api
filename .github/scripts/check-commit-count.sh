@@ -14,9 +14,10 @@
 #
 # The `main` ruleset's `required_linear_history` keeps merge commits off main,
 # but it says nothing about the branch, and GitHub's "Update branch" button
-# defaults to merging the base in. A linear-history ruleset on all branches is
-# planned for 2026-11-13; until it exists, this is the only place that catches
-# such a merge.
+# defaults to merging the base in. The "feature branches: linear history"
+# ruleset (a GitHub repository setting, not in this repo) refuses such a merge
+# on the other branches; this check is the in-repo backstop and also covers a
+# fork's branch, which no ruleset here reaches.
 #
 # Configuration (environment variables, with defaults):
 #   BASE_REF        base to diff against            (default: origin/main)
