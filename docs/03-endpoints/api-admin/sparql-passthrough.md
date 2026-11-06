@@ -217,7 +217,7 @@ open, and an alert on the startup warning (`ALLOW_SPARQL_PASSTHROUGH is turned O
   whatever the store's union-default-graph setting is, so its meaning is a property of the deployment rather than of
   the query. The passthrough does not rewrite queries, so scope patterns to explicit graphs (`GRAPH`, `FROM`) when a
   statement needs to mean the same thing everywhere. See
-  [SPARQL queries](../../development/dsp-api-sparql-queries.md).
+  [SPARQL queries](../../development/sparql-queries.md).
 - **Store errors depend on the store.** Fuseki 6.1.0 does not refuse an `Accept` it cannot satisfy; it falls back to
   its default serialization. The relay carries whatever the store answers, so what a client sees for an odd `Accept` is
   the store's choice, not this API's.

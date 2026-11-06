@@ -125,7 +125,7 @@ This applies everywhere — including at config / boot time. `ZIO.config(...).or
 
 ### Never `.die` on IRI conversion
 
-A malformed client IRI is a 400, not a 500. Mapping rules are in [`dsp-api-iri-handling.md`](dsp-api-iri-handling.md).
+A malformed client IRI is a 400, not a 500. Mapping rules are in [`iri-handling.md`](iri-handling.md).
 
 ## Reading persisted data leniently
 

@@ -104,7 +104,7 @@ header-fix: require-bazel
 # Metals connects to the Bazel build via bazel-bsp, which it bootstraps itself from the
 # committed .bazelproject. Two local fixes make bazel-bsp work on Bazel 9: a macOS-scoped
 # --incompatible_autoload_externally flag in .bazelrc, and the tools/metals wrapper that
-# re-patches its struct-returning aspect on each invocation. See docs/development/dsp-api-metals-mcp.md.
+# re-patches its struct-returning aspect on each invocation. See docs/development/metals-mcp.md.
 # Check the Metals prerequisites and warm Bazel; call the metals `import-build` tool once to connect.
 metals-bootstrap: require-bazel
     #!/usr/bin/env bash

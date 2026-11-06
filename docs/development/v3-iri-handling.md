@@ -139,7 +139,7 @@ Document this in the `.description(...)` of every IRI path/query parameter: `"Mu
 
 - [ADR-0009: API v3](../adr/0009-api-v3.md) - v3 API overview
 - [ADR-0010: API v3 basics](../adr/0010-api-v3-basics.md) - naming, pagination, errors
-- [dsp-api conventions](dsp-api-conventions.md) - `StringValue` pattern, Tapir codecs
+- [dsp-api conventions](conventions.md) - `StringValue` pattern, Tapir codecs
 - `AdminPathVariables.scala` - reusable path variable definitions for simple IRIs
 - `IriDto` - defined in `slice/api/v2/Models.scala`
 - `IriConverter` - defined in `slice/common/service/IriConverter.scala`

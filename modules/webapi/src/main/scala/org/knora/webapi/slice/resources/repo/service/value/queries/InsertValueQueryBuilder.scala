@@ -240,7 +240,7 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
 
     // Scalar datatypes here (integer, decimal, uri, interval bounds, timestamp) are emitted with an explicit
     // datatype. The v3 bulk-import path re-types the same literals to match this:
-    // OntologyTransformer.canonicalizeScalarLiterals. See docs/development/dsp-api-text-value-type-parity.md.
+    // OntologyTransformer.canonicalizeScalarLiterals. See docs/development/text-value-type-parity.md.
     value match {
       case textValue: TextValueContentV2 =>
         buildTextValuePatterns(valueIri, textValue)
@@ -300,7 +300,7 @@ object InsertValueQueryBuilder extends QueryBuilderHelper {
       valueIri.has(KB.valueHasLanguage, literalOf(lang))
     }
 
-    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See dsp-api-text-value-type-parity.md.
+    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See text-value-type-parity.md.
     val textValueTypePattern = List(valueIri.has(KB.hasTextValueType, textValueTypeIri(textValue.textValueType)))
 
     if (textValue.standoff.nonEmpty) {

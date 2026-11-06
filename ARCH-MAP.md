@@ -118,7 +118,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/BaseEndpoints.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v3/V3BaseEndpoint.scala`
     - Sufficiency gap: the v2 and v3 aggregators (`ApiV2ServerEndpoints`, `ApiV3ServerEndpoints`,
-        `ApiV2Module`, `ApiV3Module`) plus `docs/development/dsp-api-v3-iri-handling.md` are also required
+        `ApiV2Module`, `ApiV3Module`) plus `docs/development/v3-iri-handling.md` are also required
         when the change touches v2 or v3 rather than admin.
 - **Depends on**: webapi-common (`BaseEndpoints`, `AuthorizationRestService`, `KnoraResponseRenderer`,
     `IriConverter`, `KnoraIris`, `dsp.errors.*`), webapi-admin, webapi-ontology, webapi-resources,
@@ -233,10 +233,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/KnoraIris.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/BaseEndpoints.scala`
     - `modules/webapi/src/main/scala/dsp/errors/Errors.scala`
-    - `docs/development/dsp-api-iri-handling.md`
+    - `docs/development/iri-handling.md`
     - `CONVENTIONS.md`
-    - Sufficiency gap: `docs/development/dsp-api-value-types.md` and
-        `docs/development/dsp-api-error-handling.md` are also load-bearing, and
+    - Sufficiency gap: `docs/development/value-types.md` and
+        `docs/development/error-handling.md` are also load-bearing, and
         `slice/common/ValueTypes.scala` defines the `Value[A]` / `WithFrom` shape every new value type follows.
 - **Depends on**: webapi-admin (upward), webapi-ontology (upward), webapi-resources (upward),
     webapi-standoff (upward), webapi-security (upward), webapi-triplestore (upward), webapi-sipi-client
@@ -280,9 +280,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         then skips its `406` check for it. `RequiresMethod` (with `.head` alongside `.get`) pins an endpoint's
         HTTP method. `StringFormatter.projectArkUrl` builds a project's ARK URL - enforcement: review.
     - Never call `unsafeFrom` in responders or RestServices, and never `.die` on an IRI conversion failure -
-        enforcement: review (`docs/development/dsp-api-iri-handling.md`).
+        enforcement: review (`docs/development/iri-handling.md`).
     - New value types extend `Value[A]` with a `WithFrom` or `StringValueCompanion` companion rather than a
-        raw `String` - enforcement: review (`docs/development/dsp-api-value-types.md`).
+        raw `String` - enforcement: review (`docs/development/value-types.md`).
     - Wiring: shared inventory. `CommonModule.layer` is registered in `core/LayersLive.scala` and its
         `Provided` type appears in the aggregate environment; new foundation services are added to
         `CommonModule.{Dependencies,Provided,layer}`.
@@ -436,7 +436,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/main/scala/org/knora/webapi/store/triplestore/upgrade/RepositoryUpdater.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/CommonModule.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/core/LayersLive.scala`
-    - `docs/development/dsp-api-fuseki-query-execution.md`
+    - `docs/development/fuseki-query-execution.md`
 - **Depends on**: webapi-common (`QueryBuilderHelper`, `InternalIri`, `RdfModel`, `messages/util/rdf/*`),
     webapi-infrastructure (`TracingHttpClient`), webapi-admin (seven upgrade plugins import
     `slice.admin.*`), webapi-app (`config.Triplestore`, `config.Fuseki`), fuseki (remote-owned),
@@ -457,7 +457,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `ProjectMigrationExportServiceSpec`, `SparqlPassthroughTestEnv`, `ReadResourcesServiceLiveSpec`); no
         export-facing accessor for the built-in graph set exists yet - enforcement: docs-only.
     - New SPARQL query sites use the `sparql"..."` interpolator, not RDF4J SparqlBuilder or string
-        concatenation - enforcement: review (`docs/development/dsp-api-sparql-queries.md`).
+        concatenation - enforcement: review (`docs/development/sparql-queries.md`).
     - Wiring: shared inventory. New upgrade plugins are registered in
         `RepositoryUpdatePlan.makePluginsForVersions`; the service itself is one
         `TriplestoreServiceLive.layer` in `CommonModule.scala`.
@@ -685,7 +685,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - Sufficiency gap: cardinality changes additionally need `CardinalityService.scala` and
         `responders/v2/ontology/CardinalityHandler.scala`; built-in Turtle edits need
         `docs/05-internals/development/updating-repositories.md`; new SPARQL needs
-        `docs/development/dsp-api-sparql-queries.md`.
+        `docs/development/sparql-queries.md`.
 - **Depends on**: webapi-common, webapi-triplestore, webapi-admin, webapi-resources, webapi-standoff,
     webapi-sipi-client (`OntologyTransformer` only), webapi-app (`AppConfig`), webapi-api (inverted),
     webapi-fair (`FairClassesLive` implements the `FairClasses` port), sparql-builder (23 files under
@@ -776,7 +776,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/resources/repo/service/ValueRepo.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/resources/service/ReadResourcesServiceLive.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/messages/v2/responder/valuemessages/ValueMessagesV2.scala`
-    - `docs/development/dsp-api-sparql-queries.md`
+    - `docs/development/sparql-queries.md`
     - Sufficiency gap: write paths also need `responders/v2/ResourcesResponderV2.scala`,
         `responders/v2/ValuesResponderV2.scala` and `responders/v2/resources/CreateResourceV2Handler.scala`,
         and the endpoints that call them live in webapi-api.
@@ -976,7 +976,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - Sufficiency gap: type inspection (`GravsearchTypeInspectionRunner`,
         `InferringGravsearchTypeInspector`), main-query assembly (`GravsearchMainQueryGenerator`,
         `MainQueryResultProcessor`) and the SPARQL conventions in `CONVENTIONS.md` and
-        `docs/development/dsp-api-sparql-queries.md` are load-bearing but do not fit in seven files.
+        `docs/development/sparql-queries.md` are load-bearing but do not fit in seven files.
 - **Depends on**: webapi-common (`StringFormatter`, `SmartIri`, `IriConverter`, `ConstructResponseUtilV2`,
     `ConstructResponseRdfData`, `QueryBuilderHelper`, `KnoraIris`, `dsp.errors.*`), webapi-ontology
     (`OntologyRepo`, `OntologyCacheHelpers`, `OntologyCache`, `ReadClassInfoV2`, `ReadPropertyInfoV2`),
@@ -1503,7 +1503,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/sparql-builder/src/main/scala/org/knora/sparqlbuilder/Fragments.scala`
     - `modules/sparql-builder/src/main/scala/org/knora/sparqlbuilder/types.scala`
     - `modules/sparql-builder/README.md`
-    - `docs/development/dsp-api-sparql-queries.md`
+    - `docs/development/sparql-queries.md`
 - **Depends on**: build-toolchain. No other inventory component; zero main-source deps, with RDF4J's
     `sparqlbuilder` present only as a test-scope escaping oracle.
 - **Used by**: webapi-ontology (23 files under `slice/ontology/repo`) and webapi-resources (35 files under
@@ -1524,8 +1524,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `import org.knora.sparqlbuilder.*`, not a central registry.
 - **Durable state**: none. The library only renders strings; execution and the triplestore belong to
     webapi-triplestore and fuseki.
-    - Colocated docs: `modules/sparql-builder/README.md`, `docs/development/dsp-api-sparql-builder.md` (the
-        decision record) and `docs/development/dsp-api-sparql-queries.md` (the migration guide).
+    - Colocated docs: `modules/sparql-builder/README.md`, `docs/development/sparql-builder.md` (the
+        decision record) and `docs/development/sparql-queries.md` (the migration guide).
     - Migrations from RDF4J are verified by diffing rendered SPARQL against the old builder's
         `getQueryString` output, a review-time check, not automated per migration. Golden-file tests snapshot
         rendered output for representative query shapes.
@@ -1744,7 +1744,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `tools/license/BUILD.bazel`
     - `tools/lint/BUILD.bazel`
     - `.github/workflows/build-and-test.yml`
-    - `docs/development/dsp-api-rbe.md`
+    - `docs/development/rbe.md`
     - Sufficiency gap: `CONVENTIONS.md` carries the build, format and lint conventions agents must follow and
         is needed alongside the seven above.
 - **Depends on**: none inside the inventory. It consumes the Bazel Central Registry, Maven Central, the
@@ -1806,10 +1806,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     module: the public mkdocs site, the developer-facing convention docs `CLAUDE.md` and `CONVENTIONS.md`
     cite by path, the C4 architecture model in Structurizr DSL, and the ADR log.
 - **Key entities**: `mkdocs.yml` (`nav`), `docs/adr/`, `workspace.dsl`, `users.dsl`, ADR-0001 through
-    ADR-0010, `dsp-api-rbe.md`, `dsp-api-conventions.md`, `dsp-api-iri-handling.md`,
-    `dsp-api-v3-iri-handling.md`, `dsp-api-value-types.md`, `dsp-api-metals-mcp.md`,
-    `dsp-api-sparql-queries.md`, `dsp-api-sparql-builder.md`, `dsp-api-error-handling.md`,
-    `dsp-api-commit-conventions.md`, `dsp-api-fuseki-query-execution.md`, `observability/index.md`,
+    ADR-0010, `rbe.md`, `conventions.md`, `iri-handling.md`,
+    `v3-iri-handling.md`, `value-types.md`, `metals-mcp.md`,
+    `sparql-queries.md`, `sparql-builder.md`, `error-handling.md`,
+    `commit-conventions.md`, `fuseki-query-execution.md`, `observability/index.md`,
     `observability/instrumentation-recipe.md`
 - **Public interface**: the built mkdocs static site published to GitHub Pages by `publish-docs.yml`, and the
     individual `docs/development/*.md` pages that `CLAUDE.md` and `CONVENTIONS.md` cite as load-bearing
