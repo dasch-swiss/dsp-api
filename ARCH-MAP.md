@@ -1787,11 +1787,13 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `version.txt` and `CHANGELOG.md`, single writer: release-please via the `create-release` and
         `publish-release` workflows on merge to `main`. Hand edits are a violation.
     - The CI repository cache, keyed on the `MODULE.bazel.lock` hash, not source-controlled.
-    - Release flow: conventional-commit PR titles are enforced by `check-pr-title.yml`, merge to `main` has
-        release-please open or update a release PR bumping `version.txt` and `CHANGELOG.md`, and tagging a
-        GitHub Release triggers `publish-release.yml`, which builds and pushes all four images.
-    - `.claude/settings.json` and `.mcp.json` configure the agent harness itself, the Metals MCP server and
-        the permission lists; they affect agent behavior, not the build.
+    - Release flow: the `Commit hygiene` job (`commit-hygiene.yml`, `just commit-lint` locally) checks every
+        commit of a PR, and `check-pr-title.yml` the PR title a squash merge uses. Rebase merge puts each curated
+        commit on `main` as its own `CHANGELOG.md` line; release-please opens or updates a release PR bumping
+        `version.txt` and `CHANGELOG.md`, and tagging a GitHub Release triggers `publish-release.yml`, which
+        builds and pushes all four images. Rules: `docs/development/commit-conventions.md`.
+    - `.claude/settings.json` and `.mcp.json` configure the agent harness itself, the Metals MCP server,
+        the permission lists and hooks; they affect agent behavior, not the build.
 
 ### docs
 
