@@ -26,6 +26,7 @@ import org.knora.bagit.domain.Bag
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportValidator.ImportMode
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -125,9 +126,9 @@ final class ProjectMigrationImportService(
                      }
         _ <- ZIO.logInfo(s"$taskId: Admin data validation passed for project '$projectIri'")
 
-        _ <- ZIO.logInfo(s"$taskId: Starting ontology validation for project '$projectIri'")
-        _ <- projectImportValidator.validateWithoutDataShapes(ontologyFiles, dataFiles, projectIri)
-        _ <- ZIO.logInfo(s"$taskId: Ontology validation passed for project '$projectIri'")
+        _ <- ZIO.logInfo(s"$taskId: Starting SHACL validation for project '$projectIri'")
+        _ <- projectImportValidator.validate(ontologyFiles, dataFiles, projectIri, ImportMode.Migration)
+        _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
 
         // Second parse of admin.nq: idempotent user handling rewrites user triples.
         _               <- ZIO.logInfo(s"$taskId: Starting user preparation for project '$projectIri'")

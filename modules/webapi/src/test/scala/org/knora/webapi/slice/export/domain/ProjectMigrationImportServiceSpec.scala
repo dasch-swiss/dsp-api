@@ -1120,7 +1120,7 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         }
       },
     ),
-    test("does not apply data shapes: accepts data.nq with attachedToUser pointing at SystemUser") {
+    test("applies data shapes: rejects data.nq with attachedToUser pointing at SystemUser") {
       val dataGraph            = "http://www.knora.org/data/9999/test"
       val resourceType         = "http://www.knora.org/ontology/9999/test#TestResource"
       val attachedToUser       = "http://www.knora.org/ontology/knora-base#attachedToUser"
@@ -1141,7 +1141,10 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
           _      <- cleanupImport(env, task.id)
-        } yield assertTrue(result.status == DataTaskStatus.Completed)
+        } yield assertTrue(
+          result.status == DataTaskStatus.Failed,
+          result.errorMessage.exists(_.contains("AttachedToUserNotBuiltIn-Shape")),
+        )
       }
     },
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)
