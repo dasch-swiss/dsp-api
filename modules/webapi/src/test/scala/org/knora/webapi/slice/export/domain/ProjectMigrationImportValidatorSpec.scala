@@ -1563,16 +1563,23 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     )
   }
 
-  // Mirrors what the migration export writes to admin.nq and permission.nq for a project, so that the data
-  // shapes run over them in ImportMode.Migration.
+  // Keep in sync with the admin.nq / permission.nq that AdminDataQuery and PermissionDataQuery export.
+  // A user who left the project but still owns data: AdminDataQuery.buildWithReferencedUsers exports them without
+  // an isInProject triple.
+  private val ReferencedUser = "http://rdfh.ch/users/former001"
+
   private val exportedAdminNq =
     s"""<http://rdfh.ch/projects/9999> <$RdfType> <${KnoraAdmin}knoraProject> <$AdminGraph> .
        |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectShortname> "test"^^<$XsdString> <$AdminGraph> .
        |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectShortcode> "9999"^^<$XsdString> <$AdminGraph> .
        |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectLongname> "Test Project"^^<$XsdString> <$AdminGraph> .
-       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectDescription> "Test Project"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectDescription> "Test Project"@en <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectDescription> "Testprojekt"@de <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectRestrictedViewSize> "!512,512"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectRestrictedViewWatermark> "true"^^<$XsdBoolean> <$AdminGraph> .
        |<http://rdfh.ch/projects/9999> <${KnoraAdmin}hasSelfJoinEnabled> "false"^^<$XsdBoolean> <$AdminGraph> .
        |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectKeyword> "things"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectKeyword> "testing"^^<$XsdString> <$AdminGraph> .
        |<http://rdfh.ch/users/test001> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
        |<http://rdfh.ch/users/test001> <${KnoraAdmin}username> "test.user01"^^<$XsdString> <$AdminGraph> .
        |<http://rdfh.ch/users/test001> <${KnoraAdmin}givenName> "Test"^^<$XsdString> <$AdminGraph> .
@@ -1595,6 +1602,15 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
        |<http://rdfh.ch/users/admin001> <${KnoraAdmin}isInProject> <http://rdfh.ch/projects/9999> <$AdminGraph> .
        |<http://rdfh.ch/users/admin001> <${KnoraAdmin}isInProjectAdminGroup> <http://rdfh.ch/projects/9999> <$AdminGraph> .
        |<http://rdfh.ch/users/admin001> <${KnoraAdmin}isInSystemAdminGroup> "false"^^<$XsdBoolean> <$AdminGraph> .
+       |<$ReferencedUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}username> "former.member"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}givenName> "Former"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}familyName> "Member"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}password> "$$2a$$12$$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}email> "former.member@example.org"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}preferredLanguage> "en"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}status> "false"^^<$XsdBoolean> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}isInSystemAdminGroup> "false"^^<$XsdBoolean> <$AdminGraph> .
        |<http://rdfh.ch/groups/9999/searcher> <$RdfType> <${KnoraAdmin}UserGroup> <$AdminGraph> .
        |<http://rdfh.ch/groups/9999/searcher> <${KnoraAdmin}groupName> "Searcher"^^<$XsdString> <$AdminGraph> .
        |<http://rdfh.ch/groups/9999/searcher> <${KnoraAdmin}groupDescriptions> "A group for searchers."@en <$AdminGraph> .
@@ -1613,7 +1629,19 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
        |<http://rdfh.ch/permissions/9999/doap001> <$RdfType> <${KnoraAdmin}DefaultObjectAccessPermission> <$PermissionGraph> .
        |<http://rdfh.ch/permissions/9999/doap001> <${KnoraAdmin}forProject> <http://rdfh.ch/projects/9999> <$PermissionGraph> .
        |<http://rdfh.ch/permissions/9999/doap001> <${KnoraAdmin}forGroup> <http://rdfh.ch/groups/9999/searcher> <$PermissionGraph> .
-       |<http://rdfh.ch/permissions/9999/doap001> <${KnoraBase}hasPermissions> "D knora-admin:Creator"^^<$XsdString> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap001> <${KnoraBase}hasPermissions> "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser"^^<$XsdString> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap002> <$RdfType> <${KnoraAdmin}DefaultObjectAccessPermission> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap002> <${KnoraAdmin}forProject> <http://rdfh.ch/projects/9999> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap002> <${KnoraAdmin}forResourceClass> <${OntologyGraph}#TestThing> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap002> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember|V knora-admin:UnknownUser"^^<$XsdString> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap003> <$RdfType> <${KnoraAdmin}DefaultObjectAccessPermission> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap003> <${KnoraAdmin}forProject> <http://rdfh.ch/projects/9999> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap003> <${KnoraAdmin}forProperty> <${OntologyGraph}#hasText> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap003> <${KnoraBase}hasPermissions> "CR knora-admin:Creator|M knora-admin:ProjectMember"^^<$XsdString> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap004> <$RdfType> <${KnoraAdmin}DefaultObjectAccessPermission> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap004> <${KnoraAdmin}forProject> <http://rdfh.ch/projects/9999> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap004> <${KnoraAdmin}forGroup> <${KnoraAdmin}KnownUser> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap004> <${KnoraBase}hasPermissions> "CR knora-admin:Creator|V knora-admin:KnownUser"^^<$XsdString> <$PermissionGraph> .
        |""".stripMargin
 
   private val migrationAdminAndPermissionSuite = {
@@ -1623,14 +1651,14 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
          |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
          |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
          |""".stripMargin
-    def resourceNq(user: String) =
-      s"""<$resource> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
-         |<$resource> <$RdfsLabel> "Thing 1" <$DataGraph> .
-         |<$resource> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
-         |<$resource> <${KnoraBase}attachedToUser> <$user> <$DataGraph> .
-         |<$resource> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
-         |<$resource> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
-         |<$resource> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+    def resourceNq(user: String, iri: String = resource) =
+      s"""<$iri> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+         |<$iri> <$RdfsLabel> "Thing 1" <$DataGraph> .
+         |<$iri> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+         |<$iri> <${KnoraBase}attachedToUser> <$user> <$DataGraph> .
+         |<$iri> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+         |<$iri> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin|V knora-admin:KnownUser"^^<$XsdString> <$DataGraph> .
+         |<$iri> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
          |""".stripMargin
 
     suite("migration admin.nq and permission.nq")(
@@ -1638,10 +1666,29 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
         ZIO.scoped {
           validate(
             ontologyWithClass,
-            resourceNq("http://rdfh.ch/users/test001"),
+            resourceNq("http://rdfh.ch/users/test001") + resourceNq(ReferencedUser, "http://rdfh.ch/9999/thing002"),
             exportedAdminNq,
             permissionNq = Some(exportedPermissionNq),
           ).map(result => assertTrue(result.isRight))
+        }
+      },
+      test("rejects a resource attached to the built-in AnonymousUser") {
+        ZIO.scoped {
+          validate(ontologyWithClass, resourceNq(s"${KnoraAdmin}AnonymousUser"), exportedAdminNq).map { result =>
+            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("AttachedToUserNotBuiltIn-Shape")))
+          }
+        }
+      },
+      test("rejects a value attached to the built-in AnonymousUser") {
+        val value = "http://rdfh.ch/9999/thing001/values/val001"
+        val nq    = resourceNq("http://rdfh.ch/users/test001") +
+          s"""<$value> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+             |<$value> <${KnoraBase}attachedToUser> <${KnoraAdmin}AnonymousUser> <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, exportedAdminNq).map { result =>
+            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("AttachedToUserNotBuiltIn-Shape")))
+          }
         }
       },
       test("rejects a resource whose attachedToUser is not in the bag admin.nq") {

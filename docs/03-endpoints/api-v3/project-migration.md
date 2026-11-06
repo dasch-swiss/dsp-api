@@ -111,14 +111,24 @@ The import fails if:
 
 ### SHACL Validation
 
-The import validates the ontology files using SHACL shapes. It checks that:
+The import validates all files using SHACL shapes. It validates in two steps:
+
+1. The ontology files are validated against the ontology shapes.
+2. The data files (`admin.nq`, `data.nq`, `permission.nq`) are validated against `data-shapes.ttl` and the migration-mode shapes.
+
+The ontology check verifies that:
 
 - Each project ontology has 1-5 `rdfs:label` values with valid language tags (`en`, `de`, `fr`, `it`, `rm`), unique per language, and single-line.
 - Each project ontology is attached to the correct project IRI and has a `lastModificationDate`.
 - Each resource class and property has 1-5 labels with valid language tags.
 
-The data files (`admin.nq`, `data.nq`, `permission.nq`) are not validated against SHACL shapes.
-The import only checks that each data file is valid N-Quads and contains exactly one named graph.
+The data check has these consequences:
+
+- A bag is rejected if a resource or value is attached to the built-in SystemUser or AnonymousUser.
+- A bag is rejected if a resource or value is attached to a user that is not in the bag's `admin.nq`.
+- A previous value needs no `hasPermissions`.
+
+Each NQuad file must also be valid N-Quads and contain exactly one named graph.
 
 ### User Handling
 

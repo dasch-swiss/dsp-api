@@ -16,7 +16,6 @@ import org.apache.jena.riot.RDFParser
 import org.apache.jena.riot.RDFParserBuilder
 import org.apache.jena.riot.system.StreamRDF
 import org.apache.jena.riot.system.StreamRDFBase
-import org.apache.jena.riot.system.StreamRDFLib
 import org.apache.jena.sparql.core.Quad
 import org.topbraid.shacl.validation.ValidationEngineConfiguration
 import org.topbraid.shacl.validation.ValidationUtil
@@ -81,16 +80,6 @@ object ShaclValidator {
     } yield ()
   }
 
-  /**
-   * Validates only the ontologies against the ontology shapes. No data is loaded.
-   */
-  def validateOntologies(
-    ontologies: NonEmptyChunk[RdfData],
-    ontologyShapes: NonEmptyChunk[RdfData],
-  ): IO[ShaclValidationError, Unit] = ZIO.scoped {
-    defaultModel.flatMap(loadAndValidateOntologies(_, ontologies, ontologyShapes))
-  }
-
   private def loadAndValidateOntologies(
     model: Model,
     ontologies: NonEmptyChunk[RdfData],
@@ -117,27 +106,6 @@ object ShaclValidator {
       case RdfData.InMemoryNQuad(content) =>
         streamNQuads(inMemoryNQuadParser(content), model.getGraph.add)
     }
-
-  /**
-   * Parses every source with the same rules as loading for validation, but keeps no triples.
-   * Memory use does not grow with the size of the sources.
-   */
-  def checkParsable(sources: NonEmptyChunk[RdfData]): IO[ShaclValidationError, Unit] =
-    ZIO.foreachDiscard(sources) {
-      case RdfData.TurtleFile(path, _) =>
-        parseTurtleWithoutLoading(RDFParser.source(path.toUri.toString))
-      case RdfData.NQuadFile(path) =>
-        streamNQuads(nQuadFileParser(path), _ => ())
-      case RdfData.InMemoryTurtle(content, _) =>
-        parseTurtleWithoutLoading(RDFParser.create().source(new StringReader(content)))
-      case RdfData.InMemoryNQuad(content) =>
-        streamNQuads(inMemoryNQuadParser(content), _ => ())
-    }
-
-  private def parseTurtleWithoutLoading(parser: RDFParserBuilder): IO[ShaclValidationError, Unit] =
-    ZIO
-      .attemptBlocking(parser.lang(Lang.TURTLE).parse(StreamRDFLib.sinkNull()))
-      .mapError(ShaclValidationError.LoadingError(_))
 
   private def nQuadFileParser(path: Path): RDFParserBuilder =
     RDFParser.source(path.toUri.toString).lang(Lang.NQUADS)

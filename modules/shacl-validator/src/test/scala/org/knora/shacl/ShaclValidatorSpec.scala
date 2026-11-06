@@ -105,19 +105,6 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
         .either
     }
 
-  private def validateOntologies(ontologyTtl: String) =
-    ZIO.serviceWithZIO[ShapesFile] { shapesFile =>
-      ShaclValidator
-        .validateOntologies(
-          ontologies = NonEmptyChunk(
-            RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
-            RdfData.InMemoryTurtle(ontologyTtl, ontoGraphIri),
-          ),
-          ontologyShapes = NonEmptyChunk(RdfData.TurtleFile(shapesFile.path, "urn:shapes")),
-        )
-        .either
-    }
-
   private val dataShapesPrefixes =
     """@prefix sh:         <http://www.w3.org/ns/shacl#> .
       |@prefix :           <http://www.knora.org/ontology/0001/test#> .
@@ -183,22 +170,6 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
             |    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> .
             |""".stripMargin
         validate(ttl).map(result => assert(result)(isLeft))
-      },
-    ),
-    suite("ontology-only validation")(
-      test("valid minimal ontology conforms") {
-        validateOntologies(prefixes + validOntologyHeader).map(result => assert(result)(isRight))
-      },
-      test("ontology missing rdfs:label fails with an ontology validation error") {
-        val ttl = prefixes +
-          """<http://www.knora.org/ontology/0001/test>
-            |    rdf:type                        owl:Ontology ;
-            |    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
-            |    knora-base:lastModificationDate "2024-01-01T00:00:00Z"^^xsd:dateTime .
-            |""".stripMargin
-        validateOntologies(ttl).map(result =>
-          assert(result)(isLeft(isSubtype[ShaclValidationError.OntologyValidationError](anything))),
-        )
       },
     ),
     suite("resource class validation")(
@@ -554,8 +525,24 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
           .either
           .map { result =>
             assert(result)(isLeft) &&
-            assert(result.left.toOption.get)(Assertion.isSubtype[ShaclValidationError.LoadingError](anything))
+            assert(result.left.toOption.get)(Assertion.isSubtype[ShaclValidationError.LoadingError](anything)) &&
+            assert(result.left.toOption.get.message)(containsString("exactly one named graph"))
           }
+      },
+      test("malformed NQuad data fails with LoadingError") {
+        ShaclValidator
+          .validate(
+            graphs = RdfGraphs(
+              ontologies = NonEmptyChunk(RdfData.InMemoryTurtle("", "urn:dummy")),
+              data = NonEmptyChunk(RdfData.InMemoryNQuad("not valid { nquads } content")),
+            ),
+            shapes = ShaclShapes(
+              ontologyShapes = NonEmptyChunk(noOpShapes),
+              dataShapes = NonEmptyChunk(noOpShapes),
+            ),
+          )
+          .either
+          .map(result => assert(result)(isLeft(isSubtype[ShaclValidationError.LoadingError](anything))))
       },
       test("NQuad data with triples only in default graph fails with LoadingError") {
         // NTriples-style triples (no graph component) parsed as NQuads go into the default graph and should fail
@@ -576,31 +563,6 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
             assert(result)(isLeft) &&
             assert(result.left.toOption.get)(Assertion.isSubtype[ShaclValidationError.LoadingError](anything))
           }
-      },
-    ),
-    suite("checkParsable")(
-      test("accepts NQuads in one named graph") {
-        val nq = s"""<http://rdfh.ch/0001/r1> <http://www.w3.org/2000/01/rdf-schema#label> "r1" <$dataGraphIri> .\n"""
-        ShaclValidator
-          .checkParsable(NonEmptyChunk(RdfData.InMemoryNQuad(nq)))
-          .either
-          .map(result => assert(result)(isRight))
-      },
-      test("rejects malformed NQuads with a loading error") {
-        ShaclValidator
-          .checkParsable(NonEmptyChunk(RdfData.InMemoryNQuad("not valid { nquads } content")))
-          .either
-          .map(result => assert(result)(isLeft(isSubtype[ShaclValidationError.LoadingError](anything))))
-      },
-      test("rejects NQuads in two named graphs with a loading error") {
-        val nq =
-          """<http://rdfh.ch/0001/r1> <http://www.w3.org/2000/01/rdf-schema#label> "r1" <http://example.org/g1> .
-            |<http://rdfh.ch/0001/r2> <http://www.w3.org/2000/01/rdf-schema#label> "r2" <http://example.org/g2> .
-            |""".stripMargin
-        ShaclValidator
-          .checkParsable(NonEmptyChunk(RdfData.InMemoryNQuad(nq)))
-          .either
-          .map(result => assert(result)(isLeft(isSubtype[ShaclValidationError.LoadingError](anything))))
       },
     ),
   ).provideLayerShared(shapesFileLayer)
