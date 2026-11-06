@@ -30,14 +30,6 @@ Conventional Commit that an agent or a developer can read through `git log` and 
 - **Every commit should build and pass its tests**, so that `git bisect` can land on any commit of `main`. This is a
   recommendation, not a check: CI tests only the head of a PR.
 
-### Grace period (until 2026-11-13)
-
-Until 2026-11-13, squash merge is still allowed next to rebase merge. A PR whose history is not clean, or which has
-several commits without `allow-many-commits` ticked, is squash-merged instead. A squash merge takes the PR title as
-the commit subject and the PR description as the body, so write the title as `type(scope): subject` too (the PR
-title check does not require the scope).
-From 2026-11-13 on, rebase merge is the only merge method.
-
 ## Commit message schema
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/). release-please reads the type of every commit
@@ -158,7 +150,8 @@ own commits only. Run the same checks locally before pushing (`commitlint` is in
 Locally the PR description is empty, so the one-commit cap applies strictly; set
 `PR_BODY='- [x] allow-many-commits'` to check a branch that keeps several commits.
 
-The `main` ruleset requires a linear history, so a merge commit cannot reach `main` itself.
+The `main` ruleset requires a linear history, so a merge commit cannot reach `main` itself. A second ruleset,
+"feature branches: linear history" (GitHub repository settings), refuses merge commits on every other branch.
 
 For agents, the Claude Code hook `.claude/hooks/pr-curation-reminder.sh` lists the branch's commits and repeats the
 curation rule before `gh pr create`, `gh pr merge` and `gh stack submit`. It is advisory and never blocks.
@@ -233,13 +226,15 @@ extension (`gh extension install github/gh-stack`):
 | Rebase the layers above after a lower one changes | `gh stack rebase`, then `gh stack push`       |
 | After a lower layer merges                        | `gh stack sync` (fetches, rebases, pushes)    |
 
-Both rebase merge and squash merge give the merged commits new SHAs. After a lower layer merges, restack the layers
+Rebase merge gives the merged commits new SHAs. After a lower layer merges, restack the layers
 above (`gh stack sync`, or `gh stack rebase` and `gh stack push`); otherwise the next layer's commit hygiene check
 still counts the lower layer's old commits as its own. Curate each layer's commits before it merges, as for any PR.
 
 ## Pull requests
 
 ### PR description
+
+The PR title does not land on `main` and is not checked; the commit subjects are what count.
 
 `.github/pull_request_template.md` pre-fills the structure into every new PR; a PR opened from the CLI
 (`gh pr create --body-file`) supplies the same sections:

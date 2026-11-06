@@ -10,9 +10,8 @@ name: Commit Hygiene
 #     merge commits on the branch
 #   - the tests of the .github/scripts gates (`just test-scripts`)
 #
-# Whether `Commit hygiene` *blocks* a merge is a repo ruleset setting (mark the
-# check required), not something configured here, so this workflow can ship as
-# a non-blocking signal first and be promoted later without changing this file.
+# Whether `Commit hygiene` *blocks* a merge is a repo ruleset setting, not
+# something configured here: the `main` ruleset lists it as a required check.
 
 on:
   pull_request:
