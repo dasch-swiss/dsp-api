@@ -107,8 +107,8 @@ the version is pinned in `.bazelversion`), a JDK 25, `just`, and `crane` on `PAT
 - CI runs entirely through `just` and `bazel test`, pointed at the shared **NativeLink RBE backend**
   (`dasch-remotebuild-prod-01`) for a remote cache + executor. See `docs/development/rbe.md`.
   sbt has been fully removed: formatting/linting is the rules_scala scalafmt toolchain, license
-  headers are `//tools/license`, and dependency updates run through Renovate (`.github/renovate.json`)
-  with `MODULE.bazel` as the sole version source.
+  headers are `//tools/license`, and dependency updates are made by hand in `MODULE.bazel`, the sole
+  version source (Renovate is disabled in `.github/renovate.json`).
 
 ## Architecture
 
