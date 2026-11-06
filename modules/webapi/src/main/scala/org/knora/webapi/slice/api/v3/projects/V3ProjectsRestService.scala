@@ -28,6 +28,7 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.v3.BadRequest
 import org.knora.webapi.slice.api.v3.Conflict
 import org.knora.webapi.slice.api.v3.NotFound
+import org.knora.webapi.slice.api.v3.PayloadTooLarge
 import org.knora.webapi.slice.api.v3.V3ErrorCode.Conflicts
 import org.knora.webapi.slice.api.v3.V3ErrorCode.NotFounds
 import org.knora.webapi.slice.api.v3.V3ErrorCode.data_graph_exists
@@ -216,9 +217,16 @@ final class V3ProjectsRestService(
   )(
     projectIri: ProjectIri,
     stream: ZStream[Any, Throwable, Byte],
+    declaredLength: Option[Long],
     onBehalfOfUser: String,
   ): IO[V3ErrorInfo, DataTaskStatusResponse] =
     failDataImportFeatureMissing.zipRight(for {
+      // Rejected before the project lookup and before a task exists, so an oversized request leaves no task.
+      _ <- ZIO
+             .fromEither(
+               ProjectDataImportService.checkDeclaredLength(declaredLength, ProjectDataImportService.maxPayloadBytes),
+             )
+             .mapError { case ProjectDataImportService.PayloadTooLargeError(d, l) => PayloadTooLarge.of(d, l) }
       project <- ensureProjectExists(projectIri)
       // On-behalf-of user: malformed identifier (400), then not-found (404), then eligibility (400). Runs after the
       // project-exists check and before the create-only precondition (G1 order).

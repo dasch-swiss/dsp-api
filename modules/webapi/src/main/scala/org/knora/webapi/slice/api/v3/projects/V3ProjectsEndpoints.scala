@@ -191,6 +191,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
           V3ErrorCode.data_graph_exists,
           V3ErrorCode.project_ontologies_missing,
         ),
+        payloadTooLargeVariant(V3ErrorCode.payload_too_large),
       ),
     )
     .post
@@ -199,6 +200,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       streamBinaryBody(ZioStreams)(JsonLdCodecFormat)
         .description("The project's data graph as knora-api (v2 external) JSON-LD"),
     )
+    .in(extractFromRequest(_.contentLength))
     .in(
       query[String]("onBehalfOfUser")
         .description(
@@ -216,7 +218,10 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
         "Every imported resource and value is attributed to the `onBehalfOfUser`, not the triggering admin. " +
         "The import is create-only: it fails with 409 `data_graph_exists` if the project data graph already holds data other than list nodes. A graph containing only list nodes is permitted. " +
         "The project must have at least one ontology: an ontology-less project is rejected with 409 `project_ontologies_missing`, evaluated before the create-only check. " +
-        "An import can only be triggered when no other data-graph import exists." +
+        "An import can only be triggered when no other data-graph import exists. " +
+        "The raw request body is limited to 250 MiB. " +
+        "The client must send the `Content-Length` header: a larger declared length is rejected with 413 `payload_too_large`, " +
+        "and a chunked body above 1 MiB is rejected by the server with a bare 413." +
         s" ${Policy.SystemAdmin.requirement}",
     )
 

@@ -33,6 +33,8 @@ enum V3ErrorCode(val template: String):
   case data_graph_exists  extends V3ErrorCode("The data graph for project '{projectIri}' already exists.")
   case project_ontologies_missing
       extends V3ErrorCode("The project '{projectIri}' has no ontologies in the triplestore.")
+  // V3ErrorCode.PayloadTooLarge errors
+  case payload_too_large extends V3ErrorCode("The payload of {size} bytes exceeds the limit of {max} bytes.")
   // V3ErrorCode.BadRequest errors
   case invalid_ontology_mapping_iri extends V3ErrorCode("Invalid OntologyMappingIri: '{iri}'.")
   case on_behalf_of_user_ineligible
@@ -46,6 +48,8 @@ object V3ErrorCode:
 
   type Conflicts = export_exists.type | export_failed.type | export_in_progress.type | import_exists.type |
     import_in_progress.type | data_graph_exists.type | project_ontologies_missing.type
+
+  type PayloadTooLarges = payload_too_large.type
 
   given Schema[V3ErrorCode] = Schema.derivedEnumeration[V3ErrorCode].defaultStringBased
 

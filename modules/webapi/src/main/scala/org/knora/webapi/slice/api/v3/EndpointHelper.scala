@@ -33,11 +33,23 @@ trait EndpointHelper {
       ),
     )
 
+  def payloadTooLargeVariant(
+    codes: V3ErrorCode.PayloadTooLarges*,
+  ): EndpointOutput.OneOfVariant[PayloadTooLarge] =
+    oneOfVariant(
+      statusCode(StatusCode.PayloadTooLarge).and(
+        jsonBody[PayloadTooLarge].examples(codes.toList.map(mkExamplePayloadTooLarge)),
+      ),
+    )
+
   private def mkExampleNotFound(code: V3ErrorCode.NotFounds) =
     mkExample(NotFound(code, code.template, code.mkExampleMap), code)
 
   private def mkExampleConflict(code: V3ErrorCode.Conflicts) =
     mkExample(Conflict(code, code.template, code.mkExampleMap), code)
+
+  private def mkExamplePayloadTooLarge(code: V3ErrorCode.PayloadTooLarges) =
+    mkExample(PayloadTooLarge(code, code.template, code.mkExampleMap), code)
 
   private def mkExample[O <: V3ErrorInfo](example: O, code: V3ErrorCode) =
     Example.of(example).name(code.toString).description(code.description)
