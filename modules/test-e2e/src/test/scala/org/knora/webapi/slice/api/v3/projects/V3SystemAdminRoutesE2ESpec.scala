@@ -17,6 +17,7 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.RawHeadOnlyPost
 import org.knora.webapi.testservices.TestApiClient
@@ -58,7 +59,7 @@ class V3SystemAdminRoutesE2ESpec extends E2EZSpec {
     "POST"   -> uri"/v3/export/resources/oai",
   )
 
-  private val overLimitBytes = 250L * 1024 * 1024 + 1
+  private val overLimitBytes = ProjectDataImportService.maxPayloadBytes + 1
 
   private val dataImportPostWithoutCredentials =
     test("POST data-imports without credentials declaring a Content-Length above the size limit returns 401, not 413") {
@@ -72,7 +73,11 @@ class V3SystemAdminRoutesE2ESpec extends E2EZSpec {
                       overLimitBytes,
                       bearer = None,
                     )
-      } yield assertTrue(rejected.statusLine == "HTTP/1.1 401 Unauthorized")
+      } yield assertTrue(
+        rejected.statusLine == "HTTP/1.1 401 Unauthorized",
+        rejected.header("Connection").exists(_.equalsIgnoreCase("close")),
+        rejected.serverClosed,
+      )
     }
 
   override val e2eSpec: Spec[env, Any] = suite("v3 SystemAdmin routes")(

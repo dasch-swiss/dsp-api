@@ -143,6 +143,9 @@ object SparqlPassthroughEndpoints {
    * The alternative -- comparing the rendered path template -- was method-blind (a future `GET` on the same path would
    * silently inherit the exemptions) and broke on a rename unless a separate constant was kept in step. This is
    * neither, and it costs a map lookup rather than rebuilding the template on every request.
+   *
+   * It also makes the server close the connection on a rejection that leaves a streamed body unread. The same hazard
+   * on the import routes is covered by [[org.knora.webapi.slice.api.v3.projects.ClosesOnUnreadBody]].
    */
   val routeMarker: AttributeKey[SparqlPassthroughRoute.type] = AttributeKey[SparqlPassthroughRoute.type]
 

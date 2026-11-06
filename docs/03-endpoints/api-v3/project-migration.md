@@ -82,6 +82,8 @@ Export status, delete and download resolve the task by its `exportId` alone; the
 
 The import endpoint requires the `{projectIri}` in the URL to match the `External-Identifier` in the BagIt `bag-info.txt`. The request body is the zip file with content type `application/zip`.
 
+A rejected import `POST` (any 4xx) that declares a `Content-Length` above 1 MiB closes the connection (`Connection: close`), because the unread body is still on the wire. Open a new connection for the next request.
+
 Exports can optionally exclude assets via `?skipAssets=true`.
 
 Downloads are only available for completed exports. Attempting to download an in-progress or failed export returns `409 Conflict`.

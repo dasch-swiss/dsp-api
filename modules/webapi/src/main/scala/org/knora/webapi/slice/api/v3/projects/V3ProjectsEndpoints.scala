@@ -19,6 +19,7 @@ import java.time.Instant
 import org.knora.webapi.slice.`export`.domain.CurrentDataTask
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
+import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.v3.*
@@ -219,9 +220,11 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
         "The import is create-only: it fails with 409 `data_graph_exists` if the project data graph already holds data other than list nodes. A graph containing only list nodes is permitted. " +
         "The project must have at least one ontology: an ontology-less project is rejected with 409 `project_ontologies_missing`, evaluated before the create-only check. " +
         "An import can only be triggered when no other data-graph import exists. " +
-        "The raw request body is limited to 250 MiB. " +
-        "The client must send the `Content-Length` header: a larger declared length is rejected with 413 `payload_too_large`, " +
-        "and a chunked body above 1 MiB is rejected by the server with a bare 413." +
+        s"The raw request body is limited to ${ProjectDataImportService.humanLimit(ProjectDataImportService.maxPayloadBytes)}. " +
+        "The client should send the `Content-Length` header: a larger declared length is rejected with 413 `payload_too_large`. " +
+        "Without it, only the server's 1 MiB request cap applies, and a chunked body above 1 MiB is rejected with a bare 413. " +
+        "A rejected request that declares more than 1 MiB closes the connection. " +
+        "A body longer than its declared length that exceeds the limit is accepted with 202, and the import task then fails." +
         s" ${Policy.SystemAdmin.requirement}",
     )
 

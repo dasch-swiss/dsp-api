@@ -48,22 +48,14 @@ final class ProjectDataImportService(
    * @param onBehalfOf the project user every imported resource and value is attributed to, and whose default object
    *                   access permissions are resolved. Its eligibility is captured once at trigger time (no
    *                   mid-flight re-check).
+   * @param limit      the payload size limit in bytes; only tests lower it.
    */
   def importDataGraph(
     project: KnoraProject,
     createdBy: User,
     onBehalfOf: User,
     stream: ZStream[Any, Throwable, Byte],
-  ): IO[ImportExistsError, CurrentDataTask] =
-    importDataGraph(project, createdBy, onBehalfOf, stream, ProjectDataImportService.maxPayloadBytes)
-
-  /** Same as the public overload with an explicit payload size limit in bytes. */
-  private[domain] def importDataGraph(
-    project: KnoraProject,
-    createdBy: User,
-    onBehalfOf: User,
-    stream: ZStream[Any, Throwable, Byte],
-    limit: Long,
+    limit: Long = ProjectDataImportService.maxPayloadBytes,
   ): IO[ImportExistsError, CurrentDataTask] = for {
     task <- state
               .makeNew(project.id, createdBy, Some(onBehalfOf.userIri))
@@ -183,7 +175,12 @@ object ProjectDataImportService {
 
   private val BytesPerMiB = 1024L * 1024L
 
-  /** The maximum accepted size of the JSON-LD payload: 250 MiB. */
+  /**
+   * The maximum accepted size of the JSON-LD payload: 250 MiB.
+   *
+   * The JSON-LD parser holds the whole document in the heap, at 10-16 times the payload size, and an out-of-memory
+   * error stops the whole API. Do not raise it before the JSON-LD parsing streams.
+   */
   val maxPayloadBytes: Long = 250L * BytesPerMiB
 
   /** The limit in human-readable form, e.g. "250 MiB". */

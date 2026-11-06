@@ -31,7 +31,25 @@ class ClosesOnUnreadBodyInterceptorSpec extends ZIOSpecDefault {
       .zServerLogic[Any](_ => ZIO.succeed((status, "x")))
   }
 
+  private val markedUnauthorized: ZServerEndpoint[Any, Any] =
+    endpoint.post
+      .in("marked-unauthorized")
+      .securityIn(auth.bearer[Option[String]]())
+      .errorOut(statusCode)
+      .attribute(ClosesOnUnreadBody.key, ClosesOnUnreadBodyRoute)
+      .zServerSecurityLogic[Any, Unit](_ => ZIO.fail(SttpStatusCode.Unauthorized))
+      .serverLogic(_ => _ => ZIO.unit)
+
+  private val markedRequiringQuery: ZServerEndpoint[Any, Any] =
+    endpoint.post
+      .in("marked-bad-query")
+      .in(query[String]("required"))
+      .attribute(ClosesOnUnreadBody.key, ClosesOnUnreadBodyRoute)
+      .zServerLogic[Any](_ => ZIO.unit)
+
   private val endpoints = List(
+    markedUnauthorized,
+    markedRequiringQuery,
     rejecting("marked-rejects", marked = true, SttpStatusCode.Conflict),
     rejecting("marked-accepts", marked = true, SttpStatusCode.Accepted),
     rejecting("unmarked-rejects", marked = false, SttpStatusCode.Conflict),
@@ -54,6 +72,12 @@ class ClosesOnUnreadBodyInterceptorSpec extends ZIOSpecDefault {
   val spec: Spec[Any, Any] = suite("a ClosesOnUnreadBody route")(
     test("a rejection with a declared length above the aggregation threshold closes the connection") {
       connectionHeader("/marked-rejects", aboveThreshold).map(h => assertTrue(h.contains("close")))
+    },
+    test("a security failure with a declared length above the aggregation threshold closes the connection") {
+      connectionHeader("/marked-unauthorized", aboveThreshold).map(h => assertTrue(h.contains("close")))
+    },
+    test("a decode failure with a declared length above the aggregation threshold closes the connection") {
+      connectionHeader("/marked-bad-query", aboveThreshold).map(h => assertTrue(h.contains("close")))
     },
     test("a rejection with a declared length at the aggregation threshold keeps the connection") {
       connectionHeader("/marked-rejects", DspApiServer.maxAggregatedRequestBodySize.toLong)

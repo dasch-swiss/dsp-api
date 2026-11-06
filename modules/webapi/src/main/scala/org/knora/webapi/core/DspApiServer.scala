@@ -268,52 +268,34 @@ object DspApiServer {
     }
 
     /**
-     * Marks a passthrough response produced *before* the request body was read as the last one on its connection.
+     * Marks a response produced *before* the request body was read as the last one on its connection.
      *
-     * Several rejections on this route answer without consuming the body: the security logic's `401`/`403`, which
-     * runs before body decoding by design, and a `415`, where no body variant matched the request's `Content-Type`.
-     * Bodies declaring a length above the server's aggregation threshold are streamed, and zio-http leaves such a
-     * connection with
-     * `autoRead=false` when the handler answers without consuming it -- the next keep-alive request on that connection
-     * is then silently dropped and the client hangs until its own timeout. `Connection: close` takes the connection out
-     * of the client's pool instead, which is the same remedy tapir applies to its own over-cap `413`; the header is
-     * added only once, since that `413` already carries it.
+     * `applies` says whether the endpoint is one whose rejections can leave the body unread: the SPARQL passthrough
+     * ([[SparqlPassthroughEndpoints.isPassthroughRoute]]) or a [[ClosesOnUnreadBody]] route. Their rejections
+     * answer without consuming the body: the security logic's `401`/`403`, which runs before body decoding by
+     * design, a `400`/`415` from body decoding, and, on a [[ClosesOnUnreadBody]] route, a status from server logic
+     * that never read the stream. Bodies declaring a length above the server's aggregation threshold are streamed,
+     * and zio-http leaves such a connection with `autoRead=false` when the handler answers without consuming it --
+     * the next keep-alive request on that connection is silently dropped and the client hangs until its own
+     * timeout. `Connection: close` takes the connection out of the client's pool instead, which is the same remedy
+     * tapir applies to its own over-cap `413`; the header is added only once, since that `413` already carries it.
      *
      * It is applied only when the body plausibly went unread, which is a property of the *request*, not of the
      * rejection: see [[bodyPlausiblyUnread]]. Closing on every rejection also killed healthy connections -- a missing
      * `query` form field or an unsupported `Content-Type` on a small body is answered after zio-http has already read
      * the whole thing, so there is nothing left in the channel and nothing to fix.
      */
-    private def closeConnectionIfPassthrough[B](
-      ep: AnyEndpoint,
+    private def closeConnectionIfBodyUnread[B](
+      applies: Boolean,
       request: ServerRequest,
       response: ServerResponse[B],
     ): ServerResponse[B] =
-      if (
-        SparqlPassthroughEndpoints.isPassthroughRoute(ep) && bodyPlausiblyUnread(request) &&
-        !response.headers.exists(closesConnection)
-      )
+      if (applies && bodyPlausiblyUnread(request) && !response.headers.exists(closesConnection))
         response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
       else response
 
-    /**
-     * Marks a rejection by a [[ClosesOnUnreadBody]] route as the last response on its connection.
-     *
-     * These rejections (a `404`/`409`/`413` from the server logic) are produced after the body was decoded as a
-     * stream the logic never consumed, so the same `autoRead=false` hazard as in [[closeConnectionIfPassthrough]]
-     * applies. A `2xx` means the body was consumed. Applied only when [[bodyPlausiblyUnread]].
-     */
-    private def closeConnectionIfBodyUnread[B](
-      ep: AnyEndpoint,
-      request: ServerRequest,
-      response: ServerResponse[B],
-    ): ServerResponse[B] =
-      if (
-        ClosesOnUnreadBody.isMarked(ep) && !response.code.isSuccess && bodyPlausiblyUnread(request) &&
-        !response.headers.exists(closesConnection)
-      )
-        response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
-      else response
+    private def streamsUnreadBody(ep: AnyEndpoint): Boolean =
+      SparqlPassthroughEndpoints.isPassthroughRoute(ep) || ClosesOnUnreadBody.isMarked(ep)
 
     /**
      * True when this request's body may still be sitting unread in the channel.
@@ -355,7 +337,13 @@ object DspApiServer {
           bodyListener: BodyListener[Task, B],
         ): Task[ServerResponse[B]] =
           updateSpanMetadata(ctx.endpoint) *>
-            delegate.onDecodeSuccess(ctx).map(closeConnectionIfBodyUnread(ctx.endpoint, ctx.request, _))
+            delegate.onDecodeSuccess(ctx).map { response =>
+              closeConnectionIfBodyUnread(
+                ClosesOnUnreadBody.isMarked(ctx.endpoint) && !response.code.isSuccess,
+                ctx.request,
+                response,
+              )
+            }
 
         override def onSecurityFailure[A](ctx: SecurityFailureContext[Task, A])(implicit
           monad: MonadError[Task],
@@ -365,7 +353,9 @@ object DspApiServer {
           // behind a 403 is still in scope. Attributing them here as well would double-count them, and this hook
           // cannot tell the two apart.
           updateSpanMetadata(ctx.endpoint) *>
-            delegate.onSecurityFailure(ctx).map(closeConnectionIfPassthrough(ctx.endpoint, ctx.request, _))
+            delegate
+              .onSecurityFailure(ctx)
+              .map(closeConnectionIfBodyUnread(streamsUnreadBody(ctx.endpoint), ctx.request, _))
 
         // The delegate is consulted first and the entry written only if it answered. `None` means this endpoint
         // did not claim the request at all -- see logRejectedPassthroughDecode.
@@ -381,7 +371,7 @@ object DspApiServer {
           delegate.onDecodeFailure(ctx).flatMap {
             case Some(response) =>
               logRejectedPassthroughDecode(ctx)
-                .as(Some(closeConnectionIfPassthrough(ctx.endpoint, ctx.request, response)))
+                .as(Some(closeConnectionIfBodyUnread(streamsUnreadBody(ctx.endpoint), ctx.request, response)))
                 .uninterruptible
             case None => ZIO.none
           }

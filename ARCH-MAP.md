@@ -80,6 +80,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         review.
     - `DspApiServer` skips the server's `406` check for endpoints marked `NegotiatesOwnAccept`
         (`negotiatesItsOwnAccept`), the SPARQL passthrough and the fair routes - enforcement: review.
+    - A route whose server logic can reject a streamed request body without reading it carries
+        `ClosesOnUnreadBody` (the SPARQL passthrough has `routeMarker`), so `DspApiServer` closes the connection on
+        its rejections - enforcement: `StreamingBodyMarkerE2ESpec`.
     - Wiring: shared inventory. `LayersLive.scala` is the one file every slice's `*Module.layer` is added to,
         and `AppConfig.AppConfigurations` is the one place a new config section is projected. `Main.bootstrap`
         composes `LayersLive.bootstrap >+> ApiModule.layer`, so `ApiModule` (webapi-api) is a second adjacent
@@ -102,11 +105,11 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Key entities**: `ApiModule`, `Endpoints`, `AdminApiModule`, `AdminApiServerEndpoints`, `ApiV2Module`,
     `ApiV2ServerEndpoints`, `ApiV3Module`, `ApiV3ServerEndpoints`, `ManagementServerEndpoints`,
     `OntologyApiModule`, `V3BaseEndpoint`, `V3ErrorInfo`, `V3ErrorCode`, `V3Authorizer`, `PageAndSize`,
-    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `Codecs`, `FairApiModule` (webapi-fair)
+    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `ClosesOnUnreadBody`, `Codecs`, `FairApiModule` (webapi-fair)
 - **Public interface**: `ApiModule.layer`; `Endpoints.serverEndpoints`; the four `*RestService`s re-exported
     by `AdminApiModule.Provided` (`GroupRestService`, `PermissionRestService`, `ProjectRestService`,
     `UserRestService`, exposed for the integration tests); `SparqlPassthroughEndpoints.isPassthroughRoute` /
-    `routeMarker`; `ApiV2.Headers`, `ApiV2.QueryParams`, `ApiV3.basePath`; `PageAndSize` / `PagedResponse`;
+    `routeMarker`; `ClosesOnUnreadBody` (`key`, `isMarked`); `ApiV2.Headers`, `ApiV2.QueryParams`, `ApiV3.basePath`; `PageAndSize` / `PagedResponse`;
     and, de facto, the DTO and codec objects `Codecs.TapirCodec`, `Codecs.ZioJsonCodec`, `admin.model.Project`,
     `admin.model.MaintenanceRequests`, `v2.ontologies.LastModificationDate`.
 - **Local-context kit**:

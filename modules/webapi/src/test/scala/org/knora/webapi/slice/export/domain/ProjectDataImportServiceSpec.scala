@@ -38,16 +38,6 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
     },
   )
 
-  private val limitConstantSuite = suite("limit")(
-    test("is 250 MiB and renders as such") {
-      assertTrue(
-        maxPayloadBytes == 262144000L,
-        humanLimit(maxPayloadBytes) == "250 MiB",
-        payloadTooLargeMessage(maxPayloadBytes) == "The payload exceeds the limit of 250 MiB.",
-      )
-    },
-  )
-
   private val saveWithinLimitSuite = suite("saveWithinLimit")(
     test("writes the whole file and returns true when the stream equals the limit") {
       ZIO.scoped {
@@ -69,15 +59,17 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(!within, !exists)
       }
     },
-    test("reads at most limit + 1 bytes from the stream") {
+    test("stops pulling from a multi-chunk stream once limit + 1 bytes have been read") {
       ZIO.scoped {
         for {
           dir    <- Files.createTempDirectoryScoped(Some("save-limit"), Seq.empty)
           pulled <- Ref.make(0)
-          counted = bytes(1000).mapChunks(c => c).tap(_ => pulled.update(_ + 1))
-          _      <- saveWithinLimit(counted, dir / "data.jsonld", 5)
+          // 1000 chunks of 3 bytes: only the first two (6 = limit + 1 bytes) are needed to decide.
+          source  = ZStream.fromChunks(List.fill(1000)(Chunk[Byte](1, 2, 3))*)
+          counted = source.chunks.tap(_ => pulled.update(_ + 1)).flattenChunks
+          within <- saveWithinLimit(counted, dir / "data.jsonld", 5)
           n      <- pulled.get
-        } yield assertTrue(n <= 6)
+        } yield assertTrue(!within, n <= 3)
       }
     },
   )
@@ -112,5 +104,5 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
   ).provide(TestAppConfig.layer())
 
   def spec: Spec[Any, Any] =
-    suite("ProjectDataImportService")(declaredLengthSuite, limitConstantSuite, saveWithinLimitSuite, serviceSuite)
+    suite("ProjectDataImportService")(declaredLengthSuite, saveWithinLimitSuite, serviceSuite)
 }

@@ -72,7 +72,7 @@ graph, which is derived from the project.
 
 ### Size limit
 
-The raw request body is limited to **250 MiB**. The client must send the `Content-Length` header. A declared length
+The raw request body is limited to **250 MiB**. The client should send the `Content-Length` header. A declared length
 above the limit is rejected with `413 Payload Too Large` and error code `payload_too_large` before the body is read:
 
 ```json
@@ -91,12 +91,15 @@ above the limit is rejected with `413 Payload Too Large` and error code `payload
 }
 ```
 
-The server closes the connection after this rejection (`Connection: close`), because the unread body is still on the
-wire. A client must open a new connection for its next request, and may see the connection reset while it is still
-sending the body.
+The server closes the connection after any rejection (4xx) of a request that declares more than 1 MiB
+(`Connection: close`), including this `413`, because the unread body is still on the wire. A client must open a new
+connection for its next request, and may see the connection reset while it is still sending the body.
 
-A chunked body (no `Content-Length`) above 1 MiB is rejected by the server with a bare `413` that carries no v3 error
-body.
+Without a `Content-Length` header, only the server's 1 MiB cap applies: a chunked body above 1 MiB is rejected by the
+server with a bare `413` that carries no v3 error body.
+
+A body that is longer than its declared length and exceeds the limit is accepted with `202`. The task then fails with
+the message "The payload exceeds the limit of 250 MiB."
 
 ## Key Behaviors
 
