@@ -1749,7 +1749,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         is needed alongside the seven above.
 - **Depends on**: none inside the inventory. It consumes the Bazel Central Registry, Maven Central, the
     NativeLink RBE backend `dasch-remotebuild-prod-01` (remote-owned, provisioned in separate ops
-    repositories), GitHub Actions, Renovate, release-please, and Nix with nixpkgs.
+    repositories), GitHub Actions, release-please, and Nix with nixpkgs.
 - **Used by**: every other component, namely webapi-app, webapi-api, webapi-common, webapi-security,
     webapi-infrastructure, webapi-triplestore, webapi-sipi-client, webapi-admin, webapi-ontology,
     webapi-resources, webapi-standoff, webapi-search, webapi-export, ingest, sipi, fuseki, bagit, jwt,
@@ -1770,8 +1770,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         (`//tools/license:spdx_header_check`, part of `just check`).
     - `-Wunused:all -Werror` turns unused imports and vals into build failures - enforcement:
         static-analysis (a compiler flag).
-    - Dependency versions come only from `MODULE.bazel`'s `maven.install`; Renovate opens PRs against it and
-        the lock is re-pinned with `bazel run @unpinned_maven//:pin` - enforcement: docs-only.
+    - Dependency versions come only from `MODULE.bazel`'s `maven.install`, updated by hand, and the lock is
+        re-pinned with `bazel run @unpinned_maven//:pin` - enforcement: docs-only.
     - RBE connection secrets never live in `.bazelrc`, where env vars are not expanded; flags are threaded
         per invocation by the `bazel-rbe` composite action into `just` recipes - enforcement: structure
         (`.bazelrc` has nowhere to put them, and `try-import user.bazelrc` is git-ignored).
@@ -1782,8 +1782,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Durable state**:
     - `MODULE.bazel.lock`, single writer: Bazel resolution, regenerated on `bazel_dep` or registry changes
         and committed.
-    - `maven_install.json`, single writer: `bazel run @unpinned_maven//:pin`, driven by Renovate PRs and
-        manual re-pins.
+    - `maven_install.json`, single writer: `bazel run @unpinned_maven//:pin`, run by hand after a
+        `maven.install` change.
     - `version.txt`, `CHANGELOG.md` and `.github/release-please/manifest.json`, single writer: release-please
         via the `create-release` workflow on push to `main` (configured in `.github/release-please/config.json`).
         Hand edits are a violation.

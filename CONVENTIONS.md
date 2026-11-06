@@ -134,8 +134,8 @@ target's `env`), not by reading a version-report object.
   OTLP `service.version` resource attribute (which surfaces the deployed engine version in Grafana). It
   reaches BUILD files via a module extension → generated `@dsp_image_versions//:defs.bzl` (BUILD files
   can't `load()` MODULE.bazel directly).
-- Dependency versions: `MODULE.bazel`'s `maven.install` is the sole source; Renovate updates it
-  (`.github/renovate.json`); the lock is re-pinned by `bazel run @unpinned_maven//:pin`.
+- Dependency versions: `MODULE.bazel`'s `maven.install` is the sole source, updated by hand (Renovate is
+  disabled in `.github/renovate.json`); the lock is re-pinned by `bazel run @unpinned_maven//:pin`.
 
 ### Code style (formerly Codacy-enforced)
 
