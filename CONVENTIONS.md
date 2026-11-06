@@ -176,29 +176,14 @@ Do **not** use "Knora" in free-form human-readable text — commit messages, PR 
 
 ## Commit Conventions
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/). The mapping is enforced by `release-please` (see `.github/workflows/create-release.yml`):
-
-| Prefix       | Changelog section          |
-|--------------|----------------------------|
-| `feat:`      | Enhancements               |
-| `fix:`       | Bug Fixes                  |
-| `perf:`      | Performance Improvements   |
-| `docs:`      | Documentation              |
-| `test:`      | Tests                      |
-| `deprecated:`| Deprecated                 |
-| `refactor:`  | Maintenances               |
-| `build:`     | Maintenances               |
-| `chore:`     | Maintenances               |
-
-Breaking changes use `!` (e.g. `feat!:`). Do not use "Knora" in commit messages; use "dsp-api".
-
-An optional scope in parentheses marks the affected release artifact, e.g. `feat(dsp-api): …`, `fix(sipi): …`.
-
-For how to group commits by user-visible impact and what belongs in a commit vs. a PR description vs. a learnings doc, see `docs/development/commit-conventions.md`.
+PRs are rebase-merged: curate the branch, and land one `type(scope): subject` commit per PR unless the PR ticks
+`allow-many-commits`; the `Commit hygiene` check and `just commit-lint` enforce the types and the mandatory scope.
+Types, scopes, commit bodies, stacks and the PR description: `docs/development/commit-conventions.md`.
 
 ## PR Template
 
-See `.github/pull_request_template.md`. For the recommended section structure (Motivation, Summary, Key Changes, Gotchas, Test Plan) and where the debugging journey goes instead, see `docs/development/commit-conventions.md` § PR Description Format.
+`.github/pull_request_template.md`; what goes in each section is in `docs/development/commit-conventions.md`
+§ PR description.
 
 ## Where to go for depth
 

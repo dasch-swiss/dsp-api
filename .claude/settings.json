@@ -11,6 +11,7 @@
       "Bash(git add :*)",
       "Bash(git commit :*)",
       "Bash(git push)",
+      "Bash(git push --force-with-lease:*)",
       "Bash(git config :*)",
       "Bash(git tag :*)",
       "Bash(git branch :*)",
@@ -27,7 +28,25 @@
       "Bash(eval :*)"
     ]
   },
-  "hooks": {},
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(gh pr *)",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/pr-curation-reminder.sh\" 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "if": "Bash(gh stack submit*)",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/pr-curation-reminder.sh\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  },
   "includeCoAuthoredBy": true,
   "enabledMcpjsonServers": ["metals"]
 }
