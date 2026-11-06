@@ -54,20 +54,35 @@ final class ProjectDataImportService(
     createdBy: User,
     onBehalfOf: User,
     stream: ZStream[Any, Throwable, Byte],
+  ): IO[ImportExistsError, CurrentDataTask] =
+    importDataGraph(project, createdBy, onBehalfOf, stream, ProjectDataImportService.maxPayloadBytes)
+
+  /** Same as the public overload with an explicit payload size limit in bytes. */
+  private[domain] def importDataGraph(
+    project: KnoraProject,
+    createdBy: User,
+    onBehalfOf: User,
+    stream: ZStream[Any, Throwable, Byte],
+    limit: Long,
   ): IO[ImportExistsError, CurrentDataTask] = for {
     task <- state
               .makeNew(project.id, createdBy, Some(onBehalfOf.userIri))
               .mapError { case StatesExistError(t) => ImportExistsError(t) }
-    _ <- saveJsonLdStream(task.id, stream)
-    _ <- doImport(task.id, project, onBehalfOf).whenZIO(state.isInProgress(task.id)).forkDaemon
+    withinLimit <- saveJsonLdStream(task.id, stream, limit)
+    _           <- doImport(task.id, project, onBehalfOf).whenZIO(state.isInProgress(task.id)).forkDaemon.when(withinLimit)
   } yield task
 
-  private def saveJsonLdStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]) = (
+  /** Saves the payload; if it exceeds the limit, fails the task and returns `false`. */
+  private def saveJsonLdStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte], limit: Long): UIO[Boolean] = (
     for {
-      _          <- storage.dataImportDir(taskId)
-      jsonLdPath <- storage.dataImportJsonLdPath(taskId)
-      _          <- stream.run(ZSink.fromFile(jsonLdPath.toFile))
-    } yield ()
+      _           <- storage.dataImportDir(taskId)
+      jsonLdPath  <- storage.dataImportJsonLdPath(taskId)
+      withinLimit <- ProjectDataImportService.saveWithinLimit(stream, jsonLdPath, limit)
+      _           <- state
+             .fail(taskId, ProjectDataImportService.payloadTooLargeMessage(limit))
+             .ignore
+             .unless(withinLimit)
+    } yield withinLimit
   ).tapError(e => state.fail(taskId, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore).orDie
 
   // The `onBehalfOf` user is captured once at trigger time; per-entity permissions are resolved later inside the
@@ -165,6 +180,38 @@ final class ProjectDataImportService(
 }
 
 object ProjectDataImportService {
+
+  private val BytesPerMiB = 1024L * 1024L
+
+  /** The maximum accepted size of the JSON-LD payload: 250 MiB. */
+  val maxPayloadBytes: Long = 250L * BytesPerMiB
+
+  /** The limit in human-readable form, e.g. "250 MiB". */
+  def humanLimit(limit: Long): String = s"${limit / BytesPerMiB} MiB"
+
+  def payloadTooLargeMessage(limit: Long): String = s"The payload exceeds the limit of ${humanLimit(limit)}."
+
+  /** A declared `Content-Length` above the limit. */
+  final case class PayloadTooLargeError(declared: Long, limit: Long)
+
+  /** A missing declared length passes; a length equal to the limit passes. */
+  def checkDeclaredLength(declared: Option[Long], limit: Long): Either[PayloadTooLargeError, Unit] =
+    declared match {
+      case Some(d) if d > limit => Left(PayloadTooLargeError(d, limit))
+      case _                    => Right(())
+    }
+
+  /**
+   * Writes at most `limit + 1` bytes of the stream to the file. Returns `true` if the stream fits within the limit.
+   * Otherwise deletes the partial file and returns `false`.
+   */
+  def saveWithinLimit(stream: ZStream[Any, Throwable, Byte], path: Path, limit: Long): Task[Boolean] =
+    for {
+      written    <- stream.take(limit + 1).run(ZSink.fromFile(path.toFile))
+      withinLimit = written <= limit
+      _          <- Files.deleteIfExists(path).unless(withinLimit)
+    } yield withinLimit
+
   val layer: URLayer[
     KnoraProjectService & OntologyTransformer & ProjectMigrationImportValidator & TriplestoreService,
     ProjectDataImportService,
