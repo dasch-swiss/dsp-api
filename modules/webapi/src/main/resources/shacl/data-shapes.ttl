@@ -13,7 +13,7 @@
 knora-base:Resource-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Resource ;
-  sh:description "Validates every knora-base:Resource subclass instance. RDFS inference makes sh:targetClass match subclass instances. This shape checks the base metadata that every resource shares, the optional description, and the standoff-link reification pair." ;
+  sh:description "Validates every knora-base:Resource subclass instance. Subclass instances match sh:targetClass through the rdfs:subClassOf triples of the loaded ontologies. This shape checks the base metadata that every resource shares, the optional description, and the standoff-link reification pair." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path rdfs:label ;
@@ -354,7 +354,7 @@ knora-base:TextRepresentation-Shape
 knora-base:Value-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Value ;
-  sh:description "Validates every knora-base:Value subclass instance. RDFS inference makes sh:targetClass match subclass instances. This shape checks the metadata that every value shares." ;
+  sh:description "Validates every knora-base:Value subclass instance. Subclass instances match sh:targetClass through the rdfs:subClassOf triples of the loaded ontologies. This shape checks the metadata that every value shares. The requirement for knora-base:hasPermissions is in knora-base:ValueHasPermissions-Shape." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:valueCreationDate ;
@@ -373,10 +373,9 @@ knora-base:Value-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasPermissions ;
-    sh:minCount 1 ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
-    sh:message "Value instance must have one knora-base:hasPermissions of type xsd:string" ;
+    sh:message "Value instance may have at most one knora-base:hasPermissions of type xsd:string" ;
   ] ;
   sh:property [
     a sh:PropertyShape ;
@@ -415,6 +414,22 @@ knora-base:Value-Shape
     sh:datatype xsd:string ;
     sh:message "Value instance may have at most one knora-base:valueHasUUID of type xsd:string" ;
   ] .
+
+knora-base:ValueHasPermissions-Shape
+  a sh:NodeShape ;
+  sh:targetClass knora-base:Value ;
+  sh:description "Requires knora-base:hasPermissions on every current value. A previous value, the object of knora-base:previousValue, needs none. The sh:or lets either a hasPermissions or an incoming knora-base:previousValue satisfy the shape. This node shape carries the sh:message, unlike the usual convention of a message on the failing property, because TopBraid reports a generic 'Value must have at least one of the following shapes' for an sh:or without one." ;
+  sh:or (
+    [
+      sh:path knora-base:hasPermissions ;
+      sh:minCount 1 ;
+    ]
+    [
+      sh:path [ sh:inversePath knora-base:previousValue ] ;
+      sh:minCount 1 ;
+    ]
+  ) ;
+  sh:message "Value instance must have one knora-base:hasPermissions unless it is a previous value" .
 
 # All values are subclass of Value, so Value-Shape constraints also apply.
 
@@ -854,7 +869,7 @@ knora-base:TextFileValue-Shape
 knora-base:AttachedToUserExists-Shape
   a sh:NodeShape ;
   sh:targetSubjectsOf knora-base:attachedToUser ;
-  sh:description "Checks that every knora-base:attachedToUser value points to a real knora-admin:User. sh:targetSubjectsOf selects every node that has an owner. The admin data loads into the same model, so RDFS inference can confirm the user exists." ;
+  sh:description "Checks that every knora-base:attachedToUser value points to a real knora-admin:User. sh:targetSubjectsOf selects every node that has an owner. The admin data loads into the same model, so sh:class knora-admin:User finds the user through its rdf:type or an rdfs:subClassOf triple." ;
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:attachedToUser ;

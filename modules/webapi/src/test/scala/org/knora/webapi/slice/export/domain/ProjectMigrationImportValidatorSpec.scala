@@ -492,6 +492,113 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
         },
       )
     },
+    suite("ValueShape previous values (data)") {
+      val ontologyWithClass = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      val CurrentValue  = "http://rdfh.ch/9999/thing001/values/current"
+      val PreviousValue = "http://rdfh.ch/9999/thing001/values/previous"
+
+      val validResourceNq =
+        s"""<http://rdfh.ch/9999/thing001> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <$RdfsLabel> "Thing 1" <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      def valueNq(node: String, permissions: Seq[String]): String =
+        s"""<$node> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+           |<$node> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$node> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$node> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$node> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
+           |<$node> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+           |""".stripMargin +
+          permissions.map(p => s"""<$node> <${KnoraBase}hasPermissions> "$p"^^<$XsdString> <$DataGraph> .\n""").mkString
+
+      val permission      = "CR knora-admin:ProjectAdmin"
+      val otherPermission = "V knora-admin:UnknownUser"
+      val previousLink    = s"<$CurrentValue> <${KnoraBase}previousValue> <$PreviousValue> <$DataGraph> .\n"
+
+      suite("hasPermissions")(
+        test("accepts a previous value without knora-base:hasPermissions") {
+          val nq = validResourceNq + valueNq(CurrentValue, Seq(permission)) + previousLink +
+            valueNq(PreviousValue, Seq.empty)
+          ZIO.scoped(validate(ontologyWithClass, nq).map(result => assertTrue(result.isRight)))
+        },
+        test("rejects a current value without knora-base:hasPermissions") {
+          val nq = validResourceNq + valueNq(CurrentValue, Seq.empty) + previousLink +
+            valueNq(PreviousValue, Seq(permission))
+          ZIO.scoped(
+            validate(ontologyWithClass, nq).map(result =>
+              assertTrue(result.isLeft) && assertTrue(
+                result.left.exists(_.getMessage.contains("unless it is a previous value")),
+              ),
+            ),
+          )
+        },
+        test("rejects a previous value with two knora-base:hasPermissions") {
+          val nq = validResourceNq + valueNq(CurrentValue, Seq(permission)) + previousLink +
+            valueNq(PreviousValue, Seq(permission, otherPermission))
+          ZIO.scoped(validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft)))
+        },
+      )
+    },
+    suite("project class hierarchy (data)") {
+      val ontologyWithChain = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |<${OntologyGraph}#ChildThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#ChildThing> <$RdfsSubClassOf> <${OntologyGraph}#TestThing> <$OntologyGraph> .
+           |<${OntologyGraph}#ChildThing> <$RdfsLabel> "Child Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      def resourceNq(node: String, resourceType: String, label: Option[String]): String =
+        s"""<$node> <$RdfType> <${OntologyGraph}#$resourceType> <$DataGraph> .
+           |<$node> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$node> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$node> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$node> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$node> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin + label.fold("")(l => s"""<$node> <$RdfsLabel> "$l" <$DataGraph> .\n""")
+
+      val Child1   = "http://rdfh.ch/9999/child001"
+      val Thing1   = "http://rdfh.ch/9999/thing001"
+      val LinkVal1 = "http://rdfh.ch/9999/thing001/values/link001"
+
+      val linkValueNq =
+        s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+           |<$LinkVal1> <$RdfSubject> <$Thing1> <$DataGraph> .
+           |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+           |<$LinkVal1> <$RdfObject> <$Child1> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+           |""".stripMargin
+
+      suite("subclass matching")(
+        test("rejects an instance of a subclass of a project class without rdfs:label") {
+          val nq = resourceNq(Child1, "ChildThing", None)
+          ZIO.scoped(validate(ontologyWithChain, nq).map(result => assertTrue(result.isLeft)))
+        },
+        test("accepts a LinkValue whose rdf:object is an instance of a project subclass") {
+          val nq = resourceNq(Thing1, "TestThing", Some("Thing 1")) +
+            resourceNq(Child1, "ChildThing", Some("Child 1")) + linkValueNq
+          ZIO.scoped(validate(ontologyWithChain, nq).map(result => assertTrue(result.isRight)))
+        },
+      )
+    },
     suite("LinkValueShape (data)") {
       val ontologyWithClass = validOntologyNq +
         s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
