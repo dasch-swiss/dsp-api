@@ -546,7 +546,11 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
         test("rejects a previous value with two knora-base:hasPermissions") {
           val nq = validResourceNq + valueNq(CurrentValue, Seq(permission)) + previousLink +
             valueNq(PreviousValue, Seq(permission, otherPermission))
-          ZIO.scoped(validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft)))
+          ZIO.scoped(
+            validate(ontologyWithClass, nq).map(result =>
+              assertTrue(result.left.exists(_.getMessage.contains("at most one knora-base:hasPermissions"))),
+            ),
+          )
         },
       )
     },
@@ -590,7 +594,13 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       suite("subclass matching")(
         test("rejects an instance of a subclass of a project class without rdfs:label") {
           val nq = resourceNq(Child1, "ChildThing", None)
-          ZIO.scoped(validate(ontologyWithChain, nq).map(result => assertTrue(result.isLeft)))
+          ZIO.scoped(
+            validate(ontologyWithChain, nq).map(result =>
+              assertTrue(
+                result.left.exists(_.getMessage.contains("Resource instance must have at least one rdfs:label")),
+              ),
+            ),
+          )
         },
         test("accepts a LinkValue whose rdf:object is an instance of a project subclass") {
           val nq = resourceNq(Thing1, "TestThing", Some("Thing 1")) +

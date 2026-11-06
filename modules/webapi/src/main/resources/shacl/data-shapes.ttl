@@ -373,6 +373,7 @@ knora-base:Value-Shape
   sh:property [
     a sh:PropertyShape ;
     sh:path knora-base:hasPermissions ;
+    sh:description "No sh:minCount here: knora-base:ValueHasPermissions-Shape requires hasPermissions on current values only." ;
     sh:maxCount 1 ;
     sh:datatype xsd:string ;
     sh:message "Value instance may have at most one knora-base:hasPermissions of type xsd:string" ;
@@ -418,7 +419,7 @@ knora-base:Value-Shape
 knora-base:ValueHasPermissions-Shape
   a sh:NodeShape ;
   sh:targetClass knora-base:Value ;
-  sh:description "Requires knora-base:hasPermissions on every current value. A previous value, the object of knora-base:previousValue, needs none. The sh:or lets either a hasPermissions or an incoming knora-base:previousValue satisfy the shape. This node shape carries the sh:message, unlike the usual convention of a message on the failing property, because TopBraid reports a generic 'Value must have at least one of the following shapes' for an sh:or without one." ;
+  sh:description "Requires knora-base:hasPermissions on every current value. A previous value, the object of knora-base:previousValue, needs none. The sh:or lets either a hasPermissions or an incoming knora-base:previousValue satisfy the shape." ;
   sh:or (
     [
       sh:path knora-base:hasPermissions ;

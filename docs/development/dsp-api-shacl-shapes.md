@@ -30,7 +30,11 @@ The plain model keeps the class semantics of SHACL Core:
 - A shape whose `sh:path` is a super-property does not see triples of its sub-properties.
   Use the leaf property as the path. A `sh:minCount` on a property that a project can
   sub-property gives a false violation when a subclass overrides the cardinality with the
-  sub-property.
+  sub-property. The existing `sh:minCount` constraints on `hasLinkTo`, `hasLinkToValue`,
+  `hasComment` and the other parent paths of `LinkObj`, `Annotation`, `Region`, `Segment`,
+  `AudioSegment` and `VideoSegment` stay, because no project class subclasses these classes.
+  Check this again before a project subclasses one of them. Do not add a new `sh:minCount`
+  on such a path: the project-ontology shapes, which use the effective cardinality, own it.
 
 ## Documenting shapes
 
@@ -82,9 +86,11 @@ guarantees the value and a backfill covers existing data.
 - Put `sh:message` on the specific property or constraint shape that fails. Never put it on
   a node shape that has sibling constraints. A node-level message bleeds onto every sibling
   constraint.
-- Exception: a node shape that holds only one `sh:or` gets its own `sh:message`. TopBraid
-  reports the `sh:or` result on the node shape, and without a message the result says only
-  "at least one of the following shapes". Example: `knora-base:ValueHasPermissions-Shape`.
+- Exception: a node shape whose only constraint is one `sh:or` gets its own `sh:message`.
+  TopBraid reports the `sh:or` result on the node shape, and without a message the result
+  says only "at least one of the following shapes". Example:
+  `knora-base:ValueHasPermissions-Shape`. When you add a sibling constraint to such a shape,
+  move the message to the property shapes.
 
 The test for all three: a reader identifies the violation from the message and the data
 alone, without opening the shapes file.
