@@ -50,7 +50,7 @@ test *FLAGS='': require-bazel
 
 # Run all pure-JVM unit tests (matches the CI `unit-tests` job; RBE-safe: runs remotely + result-caches)
 test-unit *FLAGS='': require-bazel
-    bazel test //modules/webapi:test //modules/ingest:test //modules/bagit:test //modules/jwt:test //modules/shacl-validator:test //modules/sparql-builder:test {{FLAGS}}
+    bazel test //modules/webapi:test //modules/ingest:test //modules/bagit:test //modules/jwt:test //modules/shacl-validator:test //modules/shacl-validator:memory_test //modules/sparql-builder:test {{FLAGS}}
 
 # Load the :latest/pinned sipi, ingest and fuseki images into the local Docker daemon (needed by test-it/test-e2e/test-ingest-integration)
 docker-load-test-images *FLAGS='': require-bazel
