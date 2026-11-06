@@ -15,8 +15,10 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.RawHeadOnlyPost
 import org.knora.webapi.testservices.TestApiClient
 
 /**
@@ -56,8 +58,25 @@ class V3SystemAdminRoutesE2ESpec extends E2EZSpec {
     "POST"   -> uri"/v3/export/resources/oai",
   )
 
+  private val overLimitBytes = 250L * 1024 * 1024 + 1
+
+  private val dataImportPostWithoutCredentials =
+    test("POST data-imports without credentials declaring a Content-Length above the size limit returns 401, not 413") {
+      for {
+        api      <- ZIO.service[KnoraApi]
+        rejected <- RawHeadOnlyPost(
+                      api.externalHost,
+                      api.externalPort,
+                      "/v3/projects/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/data-imports?onBehalfOfUser=nobody",
+                      "application/ld+json",
+                      overLimitBytes,
+                      bearer = None,
+                    )
+      } yield assertTrue(rejected.statusLine == "HTTP/1.1 401 Unauthorized")
+    }
+
   override val e2eSpec: Spec[env, Any] = suite("v3 SystemAdmin routes")(
-    routes.flatMap { (method, target) =>
+    (dataImportPostWithoutCredentials +: routes.flatMap { (method, target) =>
       List(
         test(s"$method ${target.path.mkString("/")} without credentials returns 401") {
           send(method, target)(None).map(code => assertTrue(code == StatusCode.Unauthorized))
@@ -66,6 +85,6 @@ class V3SystemAdminRoutesE2ESpec extends E2EZSpec {
           send(method, target)(Some(normalUser)).map(code => assertTrue(code == StatusCode.Forbidden))
         },
       )
-    }*,
+    })*,
   )
 }

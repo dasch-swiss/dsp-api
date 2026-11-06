@@ -70,6 +70,34 @@ without reading a resource.
 `@graph` declarations in the payload are ignored: all data is written exclusively into the project's data named
 graph, which is derived from the project.
 
+### Size limit
+
+The raw request body is limited to **250 MiB**. The client must send the `Content-Length` header. A declared length
+above the limit is rejected with `413 Payload Too Large` and error code `payload_too_large` before the body is read:
+
+```json
+{
+  "message": "The payload of 262144001 bytes exceeds the limit of 262144000 bytes.",
+  "errors": [
+    {
+      "code": "payload_too_large",
+      "message": "The payload of 262144001 bytes exceeds the limit of 262144000 bytes.",
+      "details": {
+        "size": "262144001",
+        "max": "262144000"
+      }
+    }
+  ]
+}
+```
+
+The server closes the connection after this rejection (`Connection: close`), because the unread body is still on the
+wire. A client must open a new connection for its next request, and may see the connection reset while it is still
+sending the body.
+
+A chunked body (no `Content-Length`) above 1 MiB is rejected by the server with a bare `413` that carries no v3 error
+body.
+
 ## Key Behaviors
 
 The import is **asynchronous**. Triggering an import returns `202 Accepted` with a task ID.

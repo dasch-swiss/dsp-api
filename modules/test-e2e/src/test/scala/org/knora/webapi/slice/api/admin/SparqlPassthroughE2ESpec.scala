@@ -15,16 +15,13 @@ import zio.ZIO
 import zio.json.ast.Json
 import zio.test.*
 
-import java.io.ByteArrayOutputStream
-import java.net.Socket
-import java.net.SocketTimeoutException
-import java.nio.charset.StandardCharsets
-
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.api.RawExchange
+import org.knora.webapi.slice.api.RawHeadOnlyPost
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.testservices.TestApiClient
 
@@ -55,72 +52,8 @@ class SparqlPassthroughE2ESpec extends E2EZSpec {
   /** Comfortably past both the request cap and the 1 MiB point at which the server stops aggregating bodies. */
   private val oversized = "# " + ("x" * (1024 * 1024 + 1024)) + "\n" + selectQuery
 
-  /**
-   * What a raw socket read back after a request head was sent: the response text, and whether the server then hung
-   * up. `serverClosed` is `false` when the read ran out its own timeout instead of reaching EOF, so a server that
-   * answered but kept the connection open fails as a readable assertion rather than as an exception.
-   */
-  private final case class RawExchange(text: String, serverClosed: Boolean) {
-
-    def statusLine: String = text.linesIterator.nextOption().getOrElse("").trim
-
-    def header(name: String): Option[String] =
-      text.linesIterator
-        .drop(1)
-        .takeWhile(_.trim.nonEmpty)
-        .collectFirst {
-          case line if line.toLowerCase.startsWith(s"${name.toLowerCase}:") => line.split(":", 2)(1).trim
-        }
-  }
-
-  /** Long enough that a slow answer is not mistaken for a connection left open, short enough to fail a suite fast. */
-  private val rawReadTimeoutMillis = 10_000
-
-  /**
-   * Sends only the head of a `POST` declaring `contentLength` bytes of `application/sparql-query`, then reads the
-   * connection to EOF without ever sending that body.
-   *
-   * Hand-rolled and blocking on purpose. An HTTP client owns the decision of when to write a request body relative
-   * to reading the response, and on this route that decision is the thing under test: the server answers before the
-   * body arrives, and nothing else here can hold the body back to show it.
-   */
-  private def headOnlyPost(host: String, port: Int, contentLength: Int, bearer: String): Task[RawExchange] = {
-    val head =
-      s"POST $endpointPath HTTP/1.1\r\n" +
-        s"Host: $host:$port\r\n" +
-        s"Authorization: Bearer $bearer\r\n" +
-        "Content-Type: application/sparql-query\r\n" +
-        s"Content-Length: $contentLength\r\n" +
-        "\r\n"
-    ZIO.scoped {
-      ZIO
-        .acquireRelease(ZIO.attemptBlocking(new Socket(connectHost(host), port)))(s => ZIO.attempt(s.close()).ignore)
-        .flatMap { socket =>
-          ZIO.attemptBlocking {
-            socket.setSoTimeout(rawReadTimeoutMillis)
-            val out = socket.getOutputStream
-            out.write(head.getBytes(StandardCharsets.US_ASCII))
-            out.flush()
-            val in         = socket.getInputStream
-            val received   = new ByteArrayOutputStream()
-            val chunk      = new Array[Byte](4096)
-            var reachedEof = false
-            try {
-              var read = in.read(chunk)
-              while (read >= 0) {
-                received.write(chunk, 0, read)
-                read = in.read(chunk)
-              }
-              reachedEof = true
-            } catch { case _: SocketTimeoutException => () }
-            RawExchange(received.toString(StandardCharsets.UTF_8), reachedEof)
-          }
-        }
-    }
-  }
-
-  /** `0.0.0.0` is the configured *bind* address; as a connect target loopback says the same thing unambiguously. */
-  private def connectHost(host: String): String = if (host == "0.0.0.0") "127.0.0.1" else host
+  private def headOnlyPost(host: String, port: Int, contentLength: Int, bearer: String): Task[RawExchange] =
+    RawHeadOnlyPost(host, port, endpointPath, "application/sparql-query", contentLength, Some(bearer))
 
   val e2eSpec: Spec[env, Any] = suite("POST /admin/sparql/query")(
     suite("authentication and authorization")(
