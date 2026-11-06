@@ -80,13 +80,7 @@ object GravsearchQueryChecker {
           val literalOK: Boolean = if (inConstructClause) {
             // The only literal allowed in the CONSTRUCT clause is the boolean object of knora-api:isMainResource .
             if (xsdLiteral.datatype.toString == OntologyConstants.Xsd.Boolean) {
-              statementPattern.pred match {
-                case iriRef: IriRef =>
-                  val iriStr = iriRef.iri.toString
-                  iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource || iriStr == OntologyConstants.KnoraApiV2Complex.IsMainResource
-
-                case _ => false
-              }
+              isMainResourcePredicate(statementPattern.pred)
             } else {
               false
             }
@@ -140,6 +134,110 @@ object GravsearchQueryChecker {
              },
            )
     } yield ()
+
+  private def isMainResourcePredicate(entity: Entity): Boolean =
+    entity match {
+      case IriRef(iri, _) =>
+        val iriStr = iri.toString
+        iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource ||
+        iriStr == OntologyConstants.KnoraApiV2Complex.IsMainResource
+      case _ => false
+    }
+
+  /**
+   * Validates the shape of a `knora-api:isMainResource` statement and returns the variable it marks.
+   * The object must be the boolean literal `true` and the subject a variable.
+   */
+  private def markedMainResourceVariable(
+    statementPattern: StatementPattern,
+  ): Either[GravsearchException, QueryVariable] =
+    statementPattern.obj match {
+      case XsdLiteral(value, datatype)
+          if datatype.toString == OntologyConstants.Xsd.Boolean && value.toBooleanOption.contains(true) =>
+        statementPattern.subj match {
+          case queryVariable: QueryVariable => Right(queryVariable)
+          case _                            => Left(GravsearchException("The subject of knora-api:isMainResource must be a variable"))
+        }
+      case _ => Left(GravsearchException("The object of knora-api:isMainResource can only be true"))
+    }
+
+  /**
+   * Returns the variable that the CONSTRUCT clause marks with `knora-api:isMainResource true`.
+   * Exactly one such variable is required.
+   */
+  def mainResourceVariable(constructClause: ConstructClause): Either[GravsearchException, QueryVariable] =
+    constructClause.statements
+      .filter(statementPattern => isMainResourcePredicate(statementPattern.pred))
+      .map(markedMainResourceVariable)
+      .foldLeft[Either[GravsearchException, Set[QueryVariable]]](Right(Set.empty)) { (acc, marked) =>
+        acc.flatMap(vars => marked.map(vars + _))
+      }
+      .flatMap { vars =>
+        if (vars.isEmpty) Left(GravsearchException("CONSTRUCT clause contains no knora-api:isMainResource"))
+        else if (vars.size > 1)
+          Left(GravsearchException("CONSTRUCT clause contains more than one knora-api:isMainResource"))
+        else Right(vars.head)
+      }
+
+  // Not QueryTraverser.visitWherePatterns: it does not descend into GroupPattern, SubSelectPattern or GraphPattern,
+  // so it would let a nested statement through.
+  private def containsMainResourceStatement(patterns: Seq[QueryPattern]): Boolean =
+    patterns.exists {
+      case statementPattern: StatementPattern                   => isMainResourcePredicate(statementPattern.pred)
+      case GraphPattern(_, statementPattern)                    => isMainResourcePredicate(statementPattern.pred)
+      case UnionPattern(blocks)                                 => blocks.exists(containsMainResourceStatement)
+      case OptionalPattern(nested)                              => containsMainResourceStatement(nested)
+      case FilterNotExistsPattern(nested)                       => containsMainResourceStatement(nested)
+      case MinusPattern(nested)                                 => containsMainResourceStatement(nested)
+      case GroupPattern(nested)                                 => containsMainResourceStatement(nested)
+      case SubSelectPattern(_, nested)                          => containsMainResourceStatement(nested)
+      case _: FilterPattern | _: BindPattern | _: ValuesPattern => false
+    }
+
+  /**
+   * Removes `knora-api:isMainResource` statements from the WHERE clause, where they would match no stored data: only
+   * the CONSTRUCT clause designates the main resource. A statement is removed only if it is at the top level of the
+   * WHERE clause and marks the same variable as the CONSTRUCT clause; any other use is rejected.
+   */
+  def removeMainResourceStatementsFromWhereClause(
+    query: ConstructQuery,
+  ): Either[GravsearchException, ConstructQuery] = {
+    val topLevelStatements = query.whereClause.patterns.collect {
+      case statementPattern: StatementPattern if isMainResourcePredicate(statementPattern.pred) => statementPattern
+    }
+    val otherPatterns = query.whereClause.patterns.filterNot(topLevelStatements.contains)
+
+    def checkMarksSameVariable(constructVariable: QueryVariable)(
+      statementPattern: StatementPattern,
+    ): Option[GravsearchException] =
+      markedMainResourceVariable(statementPattern) match {
+        case Left(error)                                                => Some(error)
+        case Right(whereVariable) if whereVariable == constructVariable => None
+        case Right(whereVariable)                                       =>
+          Some(
+            GravsearchException(
+              s"knora-api:isMainResource in the WHERE clause marks ${whereVariable.toSparql}, " +
+                s"but the CONSTRUCT clause marks ${constructVariable.toSparql} as the main resource",
+            ),
+          )
+      }
+
+    if (containsMainResourceStatement(otherPatterns))
+      Left(
+        GravsearchException(
+          "knora-api:isMainResource can only be used at the top level of the WHERE clause, " +
+            "not inside a nested block such as OPTIONAL, UNION, MINUS or FILTER NOT EXISTS",
+        ),
+      )
+    else if (topLevelStatements.isEmpty) Right(query)
+    else if (otherPatterns.isEmpty)
+      Left(GravsearchException("The WHERE clause contains no statements other than knora-api:isMainResource"))
+    else
+      for {
+        constructVariable <- mainResourceVariable(query.constructClause)
+        _                 <- topLevelStatements.flatMap(checkMarksSameVariable(constructVariable)).headOption.toLeft(())
+      } yield query.copy(whereClause = query.whereClause.copy(patterns = otherPatterns))
+  }
 
   // A set of predicates that aren't allowed in Gravsearch.
   val forbiddenPredicates: Set[IRI] = Set(
