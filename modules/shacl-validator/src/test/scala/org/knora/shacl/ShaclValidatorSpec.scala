@@ -118,6 +118,28 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
         .either
     }
 
+  private val dataShapesPrefixes =
+    """@prefix sh:         <http://www.w3.org/ns/shacl#> .
+      |@prefix :           <http://www.knora.org/ontology/0001/test#> .
+      |""".stripMargin
+
+  private def validateData(ontologyTtl: String, dataTtl: String, dataShapesTtl: String) =
+    ShaclValidator
+      .validate(
+        graphs = RdfGraphs(
+          ontologies = NonEmptyChunk(
+            RdfData.InMemoryTurtle(minimalSchema, schemaGraphIri),
+            RdfData.InMemoryTurtle(ontologyTtl, ontoGraphIri),
+          ),
+          data = NonEmptyChunk(RdfData.InMemoryTurtle(dataTtl, dataGraphIri)),
+        ),
+        shapes = ShaclShapes(
+          ontologyShapes = NonEmptyChunk(noOpShapes),
+          dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "urn:data-shapes")),
+        ),
+      )
+      .either
+
   /** Convert Turtle triples into NQuad lines within a named graph. */
   private def ttlToNQuads(ttl: String, graphIri: String): String = {
     val model = org.apache.jena.rdf.model.ModelFactory.createDefaultModel()
@@ -228,7 +250,7 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
         validate(ttl).map(result => assert(result)(isLeft))
       },
     ),
-    suite("RDFS inference")(
+    suite("subclass and subproperty walk on loaded ontology triples")(
       test("indirect subclass of knora-base:Resource is validated") {
         val ttl = prefixes + validOntologyHeader +
           """:ParentThing
@@ -368,14 +390,14 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
             }
         }
       },
-      test("data shapes can use RDFS inference from ontology triples") {
+      test("data shapes target subclass instances through the loaded rdfs:subClassOf triples") {
         val ontoTtl = prefixes + validOntologyHeader +
           """:TestThing
             |    rdf:type        owl:Class ;
             |    rdfs:subClassOf knora-base:Resource ;
             |    rdfs:label      "Test thing"@en .
             |""".stripMargin
-        // Shape requires rdfs:label on all knora-base:Resource instances (via inference)
+        // Shape requires rdfs:label on all knora-base:Resource instances, including subclass instances
         val dataShapesTtl =
           """@prefix sh:         <http://www.w3.org/ns/shacl#> .
             |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
@@ -412,7 +434,7 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
           .either
           .map(result => assert(result)(isRight))
       },
-      test("data validation fails when RDFS-inferred instance violates shape") {
+      test("data validation fails when a subclass instance violates a shape on its superclass") {
         val ontoTtl = prefixes + validOntologyHeader +
           """:TestThing
             |    rdf:type        owl:Class ;
@@ -433,7 +455,7 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
             |        sh:message "Resource instance must have rdfs:label" ;
             |    ] .
             |""".stripMargin
-        // Data: instance of :TestThing without rdfs:label — should fail via RDFS inference
+        // Data: instance of :TestThing without rdfs:label — should fail through the subclass walk
         val dataNq =
           s"""<http://example.org/thing1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.knora.org/ontology/0001/test#TestThing> <$dataGraphIri> .
              |""".stripMargin
@@ -453,6 +475,62 @@ class ShaclValidatorSpec extends ZIOSpecDefault {
           )
           .either
           .map(result => assert(result)(isLeft))
+      },
+    ),
+    suite("plain-model class semantics")(
+      test("sh:targetClass reaches an instance typed only with a class two subclass levels down") {
+        val ontoTtl = prefixes + validOntologyHeader +
+          """:C0 rdf:type owl:Class ; rdfs:subClassOf knora-base:Resource ; rdfs:label "C0"@en .
+            |:C1 rdf:type owl:Class ; rdfs:subClassOf :C0 ; rdfs:label "C1"@en .
+            |:C2 rdf:type owl:Class ; rdfs:subClassOf :C1 ; rdfs:label "C2"@en .
+            |""".stripMargin
+        val shapesTtl = dataShapesPrefixes +
+          """<urn:shapes/C0Shape>
+            |    a sh:NodeShape ;
+            |    sh:targetClass :C0 ;
+            |    sh:property [ sh:path :hasName ; sh:minCount 1 ] .
+            |""".stripMargin
+        val dataTtl = prefixes + "<http://example.org/i1> a :C2 .\n"
+        validateData(ontoTtl, dataTtl, shapesTtl).map { result =>
+          assert(result)(isLeft) &&
+          assert(result.left.toOption.get)(Assertion.isSubtype[ShaclValidationError.DataValidationError](anything))
+        }
+      },
+      test("sh:class is satisfied by a link target typed only with a subclass of the required class") {
+        val ontoTtl = prefixes + validOntologyHeader +
+          """:Target rdf:type owl:Class ; rdfs:subClassOf knora-base:Resource ; rdfs:label "Target"@en .
+            |:SubTarget rdf:type owl:Class ; rdfs:subClassOf :Target ; rdfs:label "SubTarget"@en .
+            |:Source rdf:type owl:Class ; rdfs:subClassOf knora-base:Resource ; rdfs:label "Source"@en .
+            |""".stripMargin
+        val shapesTtl = dataShapesPrefixes +
+          """<urn:shapes/SourceShape>
+            |    a sh:NodeShape ;
+            |    sh:targetClass :Source ;
+            |    sh:property [ sh:path :linksTo ; sh:class :Target ] .
+            |""".stripMargin
+        val dataTtl = prefixes +
+          """<http://example.org/s1> a :Source ; :linksTo <http://example.org/t1> .
+            |<http://example.org/t1> a :SubTarget .
+            |""".stripMargin
+        validateData(ontoTtl, dataTtl, shapesTtl).map(result => assert(result)(isRight))
+      },
+      test("a super-property path does not see triples that use only a sub-property") {
+        val ontoTtl = prefixes + validOntologyHeader +
+          """:Thing rdf:type owl:Class ; rdfs:subClassOf knora-base:Resource ; rdfs:label "Thing"@en .
+            |:superProp rdf:type rdf:Property ; rdfs:label "super"@en .
+            |:subProp rdf:type rdf:Property ; rdfs:subPropertyOf :superProp ; rdfs:label "sub"@en .
+            |""".stripMargin
+        val shapesTtl = dataShapesPrefixes +
+          """<urn:shapes/ThingShape>
+            |    a sh:NodeShape ;
+            |    sh:targetClass :Thing ;
+            |    sh:property [ sh:path :superProp ; sh:minCount 1 ] .
+            |""".stripMargin
+        val dataTtl = prefixes + "<http://example.org/i1> a :Thing ; :subProp \"x\" .\n"
+        validateData(ontoTtl, dataTtl, shapesTtl).map { result =>
+          assert(result)(isLeft) &&
+          assert(result.left.toOption.get)(Assertion.isSubtype[ShaclValidationError.DataValidationError](anything))
+        }
       },
     ),
     suite("NQuad single-graph check")(

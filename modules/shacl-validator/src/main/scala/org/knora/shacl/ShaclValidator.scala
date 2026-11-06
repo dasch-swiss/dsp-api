@@ -59,22 +59,24 @@ object ShaclValidator {
 
   private val defaultModel =
     ZIO.acquireRelease(ZIO.succeed(ModelFactory.createDefaultModel()))(m => ZIO.attempt(m.close()).logError.ignore)
-  private val rdfsModel = defaultModel.flatMap(m =>
-    ZIO.acquireRelease(ZIO.succeed(ModelFactory.createRDFSModel(m)))(m => ZIO.attempt(m.close()).logError.ignore),
-  )
 
+  /**
+   * Validates on a plain model: no inference runs. Class targets and `sh:class` match subclass instances
+   * through the `rdfs:subClassOf` triples of the loaded ontologies; sub-property triples do not satisfy
+   * a super-property path.
+   */
   def validate(
     graphs: RdfGraphs,
     shapes: ShaclShapes,
   ): IO[ShaclValidationError, Unit] = ZIO.scoped {
     for {
-      rdfsModel <- rdfsModel
+      model <- defaultModel
       // Step 1: load ontologies and validate ontology shapes
-      _ <- loadAndValidateOntologies(rdfsModel, graphs.ontologies, shapes.ontologyShapes)
+      _ <- loadAndValidateOntologies(model, graphs.ontologies, shapes.ontologyShapes)
       // Step 2: load data and validate data shapes
-      _           <- ZIO.foreachDiscard(graphs.data)(loadIntoModel(rdfsModel, _))
+      _           <- ZIO.foreachDiscard(graphs.data)(loadIntoModel(model, _))
       shapesModel <- loadShapes(shapes.dataShapes)
-      _           <- validateModel(rdfsModel, shapesModel, ShaclValidationError.DataValidationError(_))
+      _           <- validateModel(model, shapesModel, ShaclValidationError.DataValidationError(_))
     } yield ()
   }
 
@@ -85,18 +87,18 @@ object ShaclValidator {
     ontologies: NonEmptyChunk[RdfData],
     ontologyShapes: NonEmptyChunk[RdfData],
   ): IO[ShaclValidationError, Unit] = ZIO.scoped {
-    rdfsModel.flatMap(loadAndValidateOntologies(_, ontologies, ontologyShapes))
+    defaultModel.flatMap(loadAndValidateOntologies(_, ontologies, ontologyShapes))
   }
 
   private def loadAndValidateOntologies(
-    rdfsModel: Model,
+    model: Model,
     ontologies: NonEmptyChunk[RdfData],
     ontologyShapes: NonEmptyChunk[RdfData],
   ): ZIO[Scope, ShaclValidationError, Unit] =
     for {
-      _           <- ZIO.foreachDiscard(ontologies)(loadIntoModel(rdfsModel, _))
+      _           <- ZIO.foreachDiscard(ontologies)(loadIntoModel(model, _))
       shapesModel <- loadShapes(ontologyShapes)
-      _           <- validateModel(rdfsModel, shapesModel, ShaclValidationError.OntologyValidationError(_))
+      _           <- validateModel(model, shapesModel, ShaclValidationError.OntologyValidationError(_))
     } yield ()
 
   private def loadIntoModel(model: Model, source: RdfData): IO[ShaclValidationError, Unit] =
