@@ -66,7 +66,7 @@ that option. If the owner picks another option, the phase's checkboxes are rewri
 | --- | --- |
 | Q1 | a) `Policy.SelfOrSystemAdmin(userFrom)` |
 | Q2 | a) `Policy.ProjectAdminOfAnyProject`; the `systemAdmin=true` check stays in the handler |
-| Q3 | Postponed. The membership reads stay in the baseline and are aligned outside this PR; Phase 19 does not run. dsp-app defines the three reads but code search found no caller; dsp-tools `get` calls `project-memberships`. |
+| Q3 | a) Restrict the three membership reads to the user themselves or a SystemAdmin (`SelfOrSystemAdmin`). Neither dsp-app nor dsp-tools calls them: dsp-tools only POSTs to these routes (memberships writes) and `dsp-tools get` reads `/admin/projects/shortcode/{shortcode}/members`. |
 | Q4 | Asked in three parts. Create validates `forGroup`, `forResourceClass` and `forProperty` (400 otherwise); changing or deleting a permission stays SystemAdmin; `PUT copyright-holders` stays SystemAdmin. That is option a. |
 | Q5 | a) Declare what they do now |
 | Q6 | a) Keep both |
@@ -253,7 +253,7 @@ Under the recommended options:
 
 - **Depends on batch 2**: `publicPolicyEndpointWithUser` (Phase 12), the parser split (Phase 8), the
   permission-free IRI check (Phase 16) and the v3 factories (Phase 14).
-- **Front-end.** The membership-read restriction (Q3) may break dsp-das screens. Check before merging (H3).
+- **Front-end.** The membership-read restriction (Q3) breaks no known client: dsp-app and dsp-tools do not call the three reads (checked 2026-11-06).
 
 ## Success Metrics
 
