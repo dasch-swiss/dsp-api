@@ -367,7 +367,7 @@ object ResourcesRepoLive {
       value match
         case v: LinkValueInfo =>
           buildLinkValuePatterns(v, valueIri, propertyIri, resourceIri)
-        // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See dsp-api-text-value-type-parity.md.
+        // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See text-value-type-parity.md.
         case UnformattedTextValueInfo(valueHasLanguage) =>
           List(
             iri(valueIri)
@@ -433,7 +433,7 @@ object ResourcesRepoLive {
           .andHas(KB.valueHasRefCount, literalOf(1)),
       )
 
-    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See dsp-api-text-value-type-parity.md.
+    // hasTextValueType via the shared TextValueType.hasTextValueTypeIri. See text-value-type-parity.md.
     private def buildFormattedTextValuePatterns(v: FormattedTextValueInfo, valueIri: String): List[TriplePattern] =
       val textValueType = v.textValueType match
         case FormattedTextValueType.StandardMapping           => TextValueType.FormattedText

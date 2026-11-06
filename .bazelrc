@@ -38,7 +38,7 @@ build:macos --repo_env=PATH
 # bazel-bsp). bazel-bsp's aspects reference JavaInfo/java_common/CcInfo as bare Starlark globals,
 # which Bazel 9 moved into @rules_java / @rules_cc behind this flag. Autoloading them back fixes
 # the aspect's "name 'JavaInfo' is not defined" analysis error. Harmless for our own build (our
-# rules load these explicitly). See docs/development/dsp-api-metals-mcp.md.
+# rules load these explicitly). See docs/development/metals-mcp.md.
 build:macos --incompatible_autoload_externally=+JavaInfo,+JavaPluginInfo,+java_common,+CcInfo,+cc_common
 
 # JDK 25 (matches the runtime base eclipse-temurin:25-jre-noble and sbt's Temurin 25).

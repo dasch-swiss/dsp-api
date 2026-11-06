@@ -309,7 +309,7 @@ described below.
 
 In Jena Fuseki, the performance of a query highly depends on the order of the query statements. Without a
 `stats.opt` statistics file, TDB2 reorders triple patterns for selectivity only within one Basic Graph
-Pattern, and only by counting bound terms (Fact 1 of `docs/development/dsp-api-fuseki-query-execution.md`);
+Pattern, and only by counting bound terms (Fact 1 of `docs/development/fuseki-query-execution.md`);
 it never reorders across an `OPTIONAL`, `UNION`, `MINUS`, property-path, or subquery boundary. So the written
 order of a prequery's patterns is, in large part, the execution plan Fuseki runs.
 
@@ -388,7 +388,7 @@ scoped and one unscoped Lucene unit keeps the order it would have unscoped.
 `OPTIONAL`, `UNION` (each branch separately), and `FILTER NOT EXISTS` are recursed into with the *outer*
 block's bound-variable set as the seed, because Fuseki evaluates them with the outer bindings visible.
 `MINUS` is recursed into with an *empty* seed, because Fact 4 of
-`docs/development/dsp-api-fuseki-query-execution.md` establishes that Fuseki evaluates a `MINUS`'s right side
+`docs/development/fuseki-query-execution.md` establishes that Fuseki evaluates a `MINUS`'s right side
 without the outer bindings. These seeds are an execution-plan heuristic mirroring Fuseki's evaluation, not a
 SPARQL-semantics claim: placing every statement before every block (the `StatementsFirst` partition,
 described below) can change results when a block binds a variable a later statement also uses, and is kept
@@ -470,7 +470,7 @@ statement is not a candidate while a candidate *selective* `rdf:type` unit whose
 exists, so that type unit is emitted first; a bound-subject type unit that is unselective-technical (its
 object is a bare `IriRef` naming `knora-base:LinkValue` or `knora-base:Resource`) does not defer a path,
 since it restricts essentially nothing and deferring the path for it would buy none of the rule's benefit.
-Per Fact 3 of `docs/development/dsp-api-fuseki-query-execution.md`, a `*`/`+`
+Per Fact 3 of `docs/development/fuseki-query-execution.md`, a `*`/`+`
 property path fans out from every binding of its anchored end, whereas a type check on an already-bound
 subject costs one index lookup per binding and shrinks the binding set before the path runs - so the cheap,
 selective check belongs first. Measured on stage (dsp-cli, 5 interleaved runs, 1344 rows in both layouts): 3.71

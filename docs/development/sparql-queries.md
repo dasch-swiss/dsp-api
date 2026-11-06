@@ -27,7 +27,7 @@ val query = sparql"""|SELECT ?resource
 
 - API guide and safety model:
   [modules/sparql-builder/README.md](https://github.com/dasch-swiss/dsp-api/blob/main/modules/sparql-builder/README.md)
-- Why, and the migration plan: [docs/development/dsp-api-sparql-builder.md](dsp-api-sparql-builder.md)
+- Why, and the migration plan: [docs/development/sparql-builder.md](sparql-builder.md)
 - Never build SPARQL with plain `s"..."` string interpolation. Untrusted values enter
   queries only through the typed holes; `Fragment.raw` is the audited escape hatch.
 - Keep fixed variables, predicates, and syntax in the template. Interpolate only dynamic
@@ -490,13 +490,13 @@ other hands the optimizer a choice it may get wrong. Measured (DEV-6833): swappi
 instead of probing per row. (That particular rewrite was also wrong, since the closure is not
 materialized — but it was 8.6× slower regardless.) Benchmark a simplification in place, using the
 query as generated, before believing it. See
-[`dsp-api-fuseki-query-execution.md` Fact 11](dsp-api-fuseki-query-execution.md).
+[`fuseki-query-execution.md` Fact 11](fuseki-query-execution.md).
 
 ### Incoming-reference keep-set is IRI shape, not `¬LinkValue`
 
 `?s ?p <bound>` (“what points at me”) needs a subquery barrier so `isDeleted false` cannot
 win the bound-term heuristic — see
-[`dsp-api-fuseki-query-execution.md` Fact 1 corollary](dsp-api-fuseki-query-execution.md).
+[`fuseki-query-execution.md` Fact 1 corollary](fuseki-query-execution.md).
 Do **not** then replace `rdfs:subClassOf* knora-base:Resource` with
 `FILTER NOT EXISTS { ?s a knora-base:LinkValue }` and call it equivalent.
 
@@ -523,7 +523,7 @@ rescues it.
 ### Keep a filter on an unbound variable out of the pattern
 
 Without statistics, Fuseki orders the patterns of a group by fixed weights (see Fact 1 in
-[the engine facts](dsp-api-fuseki-query-execution.md)).
+[the engine facts](fuseki-query-execution.md)).
 A pattern with a constant object, such as `?value knora-base:isDeleted false` or `?resource a <Class>`, runs before
 a pattern with one bound term, such as `?resource ?prop ?value`. If its variable is not yet bound, it reads every
 subject with that object; in the union default graph that is the whole store. Use one of these fixes:
@@ -885,7 +885,7 @@ written to the resources mirror of the spec's package
 To create or update goldens, set `rewrite = true` on a call or `override val rewriteAll =
 true` on the spec, run once, then turn it off again; review the resulting diff. For the
 `GOLDEN_REWRITE` environment variable, which modules honour it, and the placeholder rule
-for new golden files, see `dsp-api-conventions.md` § Golden snapshot tests.
+for new golden files, see `conventions.md` § Golden snapshot tests.
 
 ```scala
 object CreateLinkQuerySpec extends ZIOSpecDefault with GoldenTest {

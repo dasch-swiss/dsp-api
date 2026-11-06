@@ -203,7 +203,7 @@ Every new endpoint declares its function-level authorization with a policy-decla
 
 ## Error Handling
 
-See [`dsp-api-error-handling.md`](dsp-api-error-handling.md) for the full rules: when to use the ZIO error channel (recoverable failures) vs. the `die` family (invariant violations), the `RequestRejectedException` / `InternalServerException` hierarchy, typed `IO[E, A]` vs. `Task[A]`, the V3 typed-error pattern, and the narrow legacy carve-out for `throw`.
+See [`error-handling.md`](error-handling.md) for the full rules: when to use the ZIO error channel (recoverable failures) vs. the `die` family (invariant violations), the `RequestRejectedException` / `InternalServerException` hierarchy, typed `IO[E, A]` vs. `Task[A]`, the V3 typed-error pattern, and the narrow legacy carve-out for `throw`.
 
 ## Authentication
 
@@ -278,7 +278,7 @@ object AuthServiceLiveSpec extends ZIOSpecDefault {
 - Use `@@ TestAspect.withLiveClock` for time-dependent tests
 - Use `.exit` to capture `Exit[E, A]` for error testing
 - Use `check(Gen[T])` for property-based testing
-- **Query builders: prefer golden snapshots** (`GoldenTest` + `assertGolden`) over scattered `q.contains(...)` substring assertions — see `dsp-api-sparql-queries.md` § Testing Query Builders
+- **Query builders: prefer golden snapshots** (`GoldenTest` + `assertGolden`) over scattered `q.contains(...)` substring assertions — see `sparql-queries.md` § Testing Query Builders
 
 ### Golden snapshot tests
 
@@ -363,7 +363,7 @@ Ontologies) — including when a bump is *not* needed and how test fixtures are 
 
 Validation shapes live in `modules/webapi/src/main/resources/shacl/`. Their conventions —
 file layering, `sh:description` on complex shapes, `sh:not` for single-case prohibitions,
-`sh:message` placement, and testing — are in `docs/development/dsp-api-shacl-shapes.md`.
+`sh:message` placement, and testing — are in `docs/development/shacl-shapes.md`.
 
 ## Import Organization
 
@@ -385,7 +385,7 @@ Do not build SPARQL with plain `s"..."` string concatenation. **New** queries us
 in-house `sparql"..."` interpolator in `modules/sparql-builder/` (package
 `org.knora.sparqlbuilder`). Do not write new queries with RDF4J SparqlBuilder — it is
 grandfathered for existing sites only, until they are migrated.
-For more details see `dsp-api-sparql-queries.md`.
+For more details see `sparql-queries.md`.
 
 ## Scala Idioms
 

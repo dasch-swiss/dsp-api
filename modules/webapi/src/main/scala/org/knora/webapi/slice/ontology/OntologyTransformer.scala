@@ -373,7 +373,7 @@ final class OntologyTransformer(
       .toList
 
     // hasTextValueType via the shared TextValueType.hasTextValueTypeIri; this path emits only Unformatted/FormattedText,
-    // never CustomFormattedText. See docs/development/dsp-api-text-value-type-parity.md.
+    // never CustomFormattedText. See docs/development/text-value-type-parity.md.
     textValues.foreach { v =>
       val valueType = if (v.hasProperty(textValueAsXml)) TextValueType.FormattedText else TextValueType.UnformattedText
       v.addProperty(hasTextValueType, model.createResource(TextValueType.hasTextValueTypeIri(valueType)))

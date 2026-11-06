@@ -936,7 +936,7 @@ object TextValueType {
    * and the v3 bulk-import path (OntologyTransformer). So an imported text value and a create-path text value hold the
    * same marker, and a divergence fails a build, not a review. The read path (this file's JSON-LD response) stays
    * separate: it emits external `knora-api` IRIs and keeps `UndefinedTextType`, which no write path can produce. See
-   * docs/development/dsp-api-text-value-type-parity.md.
+   * docs/development/text-value-type-parity.md.
    */
   def hasTextValueTypeIri(textValueType: TextValueType): String =
     textValueType match {
@@ -1063,7 +1063,7 @@ case class TextValueContentV2(
 
         // Read path: maps to external knora-api IRIs, not the internal knora-base IRIs of the write paths
         // (TextValueType.hasTextValueTypeIri). It is the only path that reaches UndefinedTextType, so it maps that
-        // case rather than failing. See docs/development/dsp-api-text-value-type-parity.md.
+        // case rather than failing. See docs/development/text-value-type-parity.md.
         val textValueTypeIri = textValueType match
           case TextValueType.UnformattedText        => UnformattedText
           case TextValueType.FormattedText          => FormattedText
