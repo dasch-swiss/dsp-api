@@ -15,7 +15,7 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
   flag in `.bazelrc` plus a `bazel_binary` wrapper (`tools/metals/`) that patches bazel-bsp's struct-returning
   aspect. Fresh worktree: `just metals-bootstrap` then the metals `import-build` tool. It's a vendored patch to
   bazel-bsp (not a rules_scala issue); tracked at scalameta/metals#8268. Details:
-  `docs/development/dsp-api-metals-mcp.md`.
+  `docs/development/metals-mcp.md`.
 - Formatting/linting and CI test runs all go through Bazel (`just fmt` / `just check`, `bazel test`).
 
 ## Code Conventions
@@ -38,7 +38,7 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
   `modules/test-e2e/src/test/resources/endpoints-without-policy.txt`; that baseline only shrinks, and a new endpoint
   never extends it. The spec pins the baseline's size (`baselineSize`); the commit that removes lines lowers it. A
   slice never sets `Policy.key` and never calls `withInfo` (it replaces all attributes). See
-  `docs/development/dsp-api-conventions.md#endpoint-authorization-policy`.
+  `docs/development/conventions.md#endpoint-authorization-policy`.
 - `*ServerEndpoints.scala` — wiring of endpoint to RestService method. `.zServerLogic(_ => …)` for public, `.serverLogic(restService.x)` for secured.
 - `*RestService.scala` — handler logic: auth and presentation only, with a minimal amount of business logic. The actual business logic lives in plain `*Service`s. Every secured method uses multiple parameter lists `def x(user: User)(args…): Task[Resp]` (a `ProjectCandidate` in place of the `User` for `projectAdminPolicyEndpoint`, which obtains a `ProjectAdminGrant` from `AuthorizationRestService.authorizeProjectAdminById` before it acts), which lets the `*ServerEndpoints` wire it concisely without enumerating every param. The body follows: **auth check → delegate to service → `format.toExternal(...)`**.
 - Register new endpoints in the API's aggregator — `AdminApiServerEndpoints` for admin, and the matching `*ServerEndpoints` aggregator for the other APIs.
@@ -47,21 +47,21 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 ### Value objects
 
 - `final case class X private (value: I)` extending the appropriate `*Value` base, with `object X extends  WithFrom[I, X]` or a specialized companion e.g. StringValueCompanion[X]` in case `I` is `String`.
-- Smart constructor: `def from(value): Either[String, X]`. `unsafeFrom` is for known-good inputs only, checks invariants and throws if invalid. Codecs declared with `given`. A companion extending neither `StringValueCompanion` nor `IntValueCompanion` also declares a `given Schema[X]` matching the JSON codec, or the OpenAPI spec silently renders an object. Full pattern in `docs/development/dsp-api-value-types.md`.
+- Smart constructor: `def from(value): Either[String, X]`. `unsafeFrom` is for known-good inputs only, checks invariants and throws if invalid. Codecs declared with `given`. A companion extending neither `StringValueCompanion` nor `IntValueCompanion` also declares a `given Schema[X]` matching the JSON codec, or the OpenAPI spec silently renders an object. Full pattern in `docs/development/value-types.md`.
 - Factory functions should be named `makeNew`
 
 ### IRI handling
 
 - At the API boundary (admin / v2): `ZIO.fromEither(X.from(iri)).mapError(BadRequestException.apply)`. In v3, map the failure to the endpoint's typed `V3ErrorInfo` variant instead of `BadRequestException`.
 - **No `unsafeFrom` in RestServices or responders**, and **never `.die` on `X.from(...)` failures** — a malformed client IRI is a 400, not a 500.
-- Layer-specific failure mapping (`BadRequestException` in RestServices, domain errors in services, `InconsistentRepositoryDataException` in repos): see `docs/development/dsp-api-iri-handling.md`.
-- V3 endpoints: only SmartIri-backed IRIs (ontology, resource-class, property/value IRIs, which have schema-dependent representations) are accepted as `IriDto` and converted via `IriConverter` in the RestService. Simple IRIs (`ProjectIri`, `UserIri`, `ResourceIri`, `ValueIri`, …) use the typed value object directly in the endpoint definition: see `docs/development/dsp-api-v3-iri-handling.md`.
+- Layer-specific failure mapping (`BadRequestException` in RestServices, domain errors in services, `InconsistentRepositoryDataException` in repos): see `docs/development/iri-handling.md`.
+- V3 endpoints: only SmartIri-backed IRIs (ontology, resource-class, property/value IRIs, which have schema-dependent representations) are accepted as `IriDto` and converted via `IriConverter` in the RestService. Simple IRIs (`ProjectIri`, `UserIri`, `ResourceIri`, `ValueIri`, …) use the typed value object directly in the endpoint definition: see `docs/development/v3-iri-handling.md`.
 
 ### Error handling
 
 - Recoverable failures travel in the ZIO error channel (`ZIO.fail`, `.someOrFail`); invariant violations use the `die` family with a message (`ZIO.dieMessage`, `.orDieWith`); `throw` only inside non-effectful code wrapped by an upstream `ZIO.attempt`.
 - **Never add a variant to the shared `BaseEndpoints.errorOutputs`.** It is attached to every endpoint in the API, and a typed variant serializes the exception's `message` verbatim — so one added line makes that message readable from every route, including unauthenticated public ones (the `oneOfDefaultVariant` catch-all discards it). Declare the variants on the endpoint that produces them with `errorOutVariantsPrepend` (precedent `V3BaseEndpoint.scala`), and enumerate **every** outcome: one without a variant falls through to the catch-all and is answered as a generic `500`.
-- Full rules — fail vs die, typed `IO[E, A]` vs `Task[A]`, V3 typed errors, the legacy `throw` carve-out — in `docs/development/dsp-api-error-handling.md`.
+- Full rules — fail vs die, typed `IO[E, A]` vs `Task[A]`, V3 typed errors, the legacy `throw` carve-out — in `docs/development/error-handling.md`.
 
 ### SPARQL
 
@@ -70,16 +70,16 @@ Never concatenate query strings. **New queries** use the `sparql"..."` interpola
 `Fragment` composition for dynamic structure). Do not write new queries with rdf4j
 SparqlBuilder; existing files keep it until they are migrated (verify a migration by
 diffing rendered SPARQL against the old `getQueryString` output). See
-`docs/development/dsp-api-sparql-queries.md`.
+`docs/development/sparql-queries.md`.
 
 - **One explicit template per query.** Prefixes written out in every template, no pulled-out `prefixes` val, no
   fragment-returning local vals/defs; only typed values are prepared outside the template, and dynamic structure is a
-  closure inside its hole (multi-line is fine). See `docs/development/dsp-api-sparql-queries.md`
+  closure inside its hole (multi-line is fine). See `docs/development/sparql-queries.md`
   § Keep the query readable: one explicit template per query.
 
 - **Carve-out — the admin SPARQL passthrough.** `POST /admin/sparql/query` forwards a client-supplied query string to the store on purpose: being transparent is its contract, so it must not parse, validate or rewrite the SPARQL it carries, and no builder applies. This is the only such surface; everything else builds queries. See `docs/03-endpoints/api-admin/sparql-passthrough.md`.
 
-- **Selective patterns before OPTIONALs, in the same flat group.** OPTIONALs are left-joins evaluated in document order; a restriction placed after them is evaluated over the whole class (prod incident DEV-6796: ~150ms → ~700ms tile loads). Beware: `pattern.and(group)` nests (`{ pattern . { … } }`) instead of splicing. See `docs/development/dsp-api-sparql-queries.md` § Pattern Order and Query Performance.
+- **Selective patterns before OPTIONALs, in the same flat group.** OPTIONALs are left-joins evaluated in document order; a restriction placed after them is evaluated over the whole class (prod incident DEV-6796: ~150ms → ~700ms tile loads). Beware: `pattern.and(group)` nests (`{ pattern . { … } }`) instead of splicing. See `docs/development/sparql-queries.md` § Pattern Order and Query Performance.
 - **Anchor property paths.** A `*`/`+` path whose variables are not bound by *preceding* patterns cross-joins everything matched so far against the whole closure (audit DEV-6803: >60s vs 0.4s). Odd-looking patterns next to a path are usually the anchor — load-bearing, don't "clean up" (measured: 19ms → ~15s). Don't inline large closures as `VALUES` either (measured: 2s → >60s).
 - **`FILTER NOT EXISTS` for per-row guards; GRAPH-scope scans, not lookups.** Un-scoped `MINUS` materializes union-wide sets (DEV-6803: 27s → ~200ms). Bound-term lookups don't need a `GRAPH` clause; class extents, unbound-predicate scans, and aggregation inputs do. `GRAPH <projectDataGraph>` **replaces** `attachedToProject` — drop the join (DEV-6827: 5.4×), except that a GRAPH-scoped Gravsearch Lucene lookup keeps the main resource's `attachedToProject` (ADR-0012).
 - **No redundant per-row work.** Drop `DISTINCT` that provably can't dedup (always a no-op over `GROUP BY`; verify by byte-comparing outputs). Per-subject min/max: `GROUP BY` + aggregate, not a nested `NOT EXISTS` anti-join (O(k) vs O(k²), DEV-6827). Before rewriting a slow query, isolate compute with a `COUNT(*)` wrapper — result size can't be fixed in the WHERE clause (DEV-6821: 5s compute inside a "26s" query).
@@ -87,13 +87,13 @@ diffing rendered SPARQL against the old `getQueryString` output). See
 
 ### Ontology & RDF
 
-- Overridable project-wide defaults: `hasDefault*` in the ontology, `default*` as payload key (precedent `default_permissions`, `hasDefaultDataAuthorship`). Details in `docs/development/dsp-api-conventions.md` § Ontology Conventions.
-- Stored values that fail validation on read: skip + `ZIO.logWarning` — never 500 the whole read, never drop silently. See `docs/development/dsp-api-error-handling.md` § Reading persisted data leniently.
+- Overridable project-wide defaults: `hasDefault*` in the ontology, `default*` as payload key (precedent `default_permissions`, `hasDefaultDataAuthorship`). Details in `docs/development/conventions.md` § Ontology Conventions.
+- Stored values that fail validation on read: skip + `ZIO.logWarning` — never 500 the whole read, never drop silently. See `docs/development/error-handling.md` § Reading persisted data leniently.
 - Changing `knora-base.ttl` / `knora-admin.ttl`: version-bump rules (incl. when *not* to bump, and `MigrateOnlyBuiltInGraphs` for reload-only changes) in `docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies. Generated fixtures (e.g. `knoraApiOntologyWithValueObjects.jsonld`) are rewritten by `OntologyFormatsE2ESpec` — never hand-edited.
-- Single-graph updates use `` .`with`(graph) `` so the WHERE is graph-scoped too — an ungraphed WHERE silently no-ops on stores without a union default graph. Invariant + `USING`/`GRAPH` caveat in `docs/development/dsp-api-sparql-queries.md`.
-- Three write paths persist `knora-base:hasTextValueType` from the shared `TextValueType.hasTextValueTypeIri`, and format decimals through `ValuesValidator.canonicalDecimal`: v2 create (`ResourcesRepoLive`), v2 add-value (`InsertValueQueryBuilder`), v3 bulk import (`OntologyTransformer`). Change the shared helper, not one site. See `docs/development/dsp-api-text-value-type-parity.md`.
+- Single-graph updates use `` .`with`(graph) `` so the WHERE is graph-scoped too — an ungraphed WHERE silently no-ops on stores without a union default graph. Invariant + `USING`/`GRAPH` caveat in `docs/development/sparql-queries.md`.
+- Three write paths persist `knora-base:hasTextValueType` from the shared `TextValueType.hasTextValueTypeIri`, and format decimals through `ValuesValidator.canonicalDecimal`: v2 create (`ResourcesRepoLive`), v2 add-value (`InsertValueQueryBuilder`), v3 bulk import (`OntologyTransformer`). Change the shared helper, not one site. See `docs/development/text-value-type-parity.md`.
 - The v2 create/add-value path and the v3 bulk-import path both validate and canonicalize `knora-base:valueHasGeolocation` through the shared `Geolocation.parse` / `Geolocation.toStoredLiteral`: `GeolocationValueContentV2` (`ValueMessagesV2`) and `OntologyTransformer.convertGeolocationValues`. Change the shared helper, not one site.
-- SHACL shapes (`modules/webapi/src/main/resources/shacl/`): complex-constraint shapes (`sh:or`/`sh:not`/conditional) carry `sh:description`, never `#` comments; forbid a single case with `sh:not`, not an `sh:or` allowlist; `sh:message` on the failing property, not the node shape; place a new value predicate's constraint in `data-shapes.ttl` (universal) or a mode layer. See `docs/development/dsp-api-shacl-shapes.md`.
+- SHACL shapes (`modules/webapi/src/main/resources/shacl/`): complex-constraint shapes (`sh:or`/`sh:not`/conditional) carry `sh:description`, never `#` comments; forbid a single case with `sh:not`, not an `sh:or` allowlist; `sh:message` on the failing property, not the node shape; place a new value predicate's constraint in `data-shapes.ttl` (universal) or a mode layer. See `docs/development/shacl-shapes.md`.
 
 ### Observability
 
@@ -101,7 +101,7 @@ When adding or changing tracing/telemetry (spans, span attributes, metrics), rea
 
 ### Scala idioms
 
-- Collapse an `Option` with `opt.fold(default)(f)`, not `opt.map(f).getOrElse(default)`. Details + argument-order note in `docs/development/dsp-api-conventions.md` § Scala Idioms.
+- Collapse an `Option` with `opt.fold(default)(f)`, not `opt.map(f).getOrElse(default)`. Details + argument-order note in `docs/development/conventions.md` § Scala Idioms.
 
 ### Imports & formatting
 
@@ -170,9 +170,9 @@ Do **not** use "Knora" in free-form human-readable text — commit messages, PR 
 - `object XSpec extends ZIOSpecDefault`; `suite("X should")(test("...") { … })`; layers via `.provide(...)`. Use `TestAspect.withLiveClock` for time-dependent tests.
 - New repo traits ship an in-memory companion under `modules/webapi/src/test/.../service/<Name>InMemory.scala`.
 - Test data: prefer self-contained fixtures next to the component. Only fall back to shared `test_data/` sets when unavoidable. When adding to a shared set, verify an actual *instance* of the scenario exists — not just that the schema supports it.
-- Repeated datatype triples are **unordered** — never assert their insertion order in tests (use sorted lists or sets; entity reads sort small literal lists at the read boundary, see `keywords` / `defaultDataAuthorship` in `KnoraProjectRepoLive`). If result order matters in production, it is `ORDER BY` in the query, not post-hoc sorting. See `docs/development/dsp-api-sparql-queries.md` § Repeated Properties Have No Order.
+- Repeated datatype triples are **unordered** — never assert their insertion order in tests (use sorted lists or sets; entity reads sort small literal lists at the read boundary, see `keywords` / `defaultDataAuthorship` in `KnoraProjectRepoLive`). If result order matters in production, it is `ORDER BY` in the query, not post-hoc sorting. See `docs/development/sparql-queries.md` § Repeated Properties Have No Order.
 - Test locations: unit → `modules/webapi/src/test/scala/`; integration → `modules/test-it/`; ingest integration → `modules/test-ingest-integration/`; E2E → `modules/test-e2e/`; shared utilities → `modules/testkit/`.
-- For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. `modules/webapi` and `modules/sparql-builder` each carry their own `GoldenTest` (e.g. `modules/webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`) with no other regeneration route, while specs in `modules/test-it` and `modules/test-e2e` use the testkit copy (`modules/testkit/src/main/scala/org/knora/webapi/GoldenTest.scala`), which can also be regenerated without a source edit via `--test_env=GOLDEN_REWRITE=1`. See `docs/development/dsp-api-conventions.md` § "Golden snapshot tests" for the full recipe. This is the **preferred** way to test query builders — not scattered `q.contains(...)` substring assertions (see `docs/development/dsp-api-sparql-queries.md` § Testing Query Builders).
+- For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. `modules/webapi` and `modules/sparql-builder` each carry their own `GoldenTest` (e.g. `modules/webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`) with no other regeneration route, while specs in `modules/test-it` and `modules/test-e2e` use the testkit copy (`modules/testkit/src/main/scala/org/knora/webapi/GoldenTest.scala`), which can also be regenerated without a source edit via `--test_env=GOLDEN_REWRITE=1`. See `docs/development/conventions.md` § "Golden snapshot tests" for the full recipe. This is the **preferred** way to test query builders — not scattered `q.contains(...)` substring assertions (see `docs/development/sparql-queries.md` § Testing Query Builders).
 
 ## Commit Conventions
 
@@ -194,21 +194,21 @@ Breaking changes use `!` (e.g. `feat!:`). Do not use "Knora" in commit messages;
 
 An optional scope in parentheses marks the affected release artifact, e.g. `feat(dsp-api): …`, `fix(sipi): …`.
 
-For how to group commits by user-visible impact and what belongs in a commit vs. a PR description vs. a learnings doc, see `docs/development/dsp-api-commit-conventions.md`.
+For how to group commits by user-visible impact and what belongs in a commit vs. a PR description vs. a learnings doc, see `docs/development/commit-conventions.md`.
 
 ## PR Template
 
-See `.github/pull_request_template.md`. For the recommended section structure (Motivation, Summary, Key Changes, Gotchas, Test Plan) and where the debugging journey goes instead, see `docs/development/dsp-api-commit-conventions.md` § PR Description Format.
+See `.github/pull_request_template.md`. For the recommended section structure (Motivation, Summary, Key Changes, Gotchas, Test Plan) and where the debugging journey goes instead, see `docs/development/commit-conventions.md` § PR Description Format.
 
 ## Where to go for depth
 
-- `docs/development/dsp-api-conventions.md` — full code conventions (services, value objects, three-tier API, naming, imports, STM, ZIO Test)
-- `docs/development/dsp-api-error-handling.md` — fail vs die, typed errors, the `throw` carve-out
-- `docs/development/dsp-api-iri-handling.md` — universal IRI handling rules
-- `docs/development/dsp-api-v3-iri-handling.md` — V3 IRI conventions
-- `docs/development/dsp-api-value-types.md` — `StringValue` / `WithFrom` pattern
-- `docs/development/dsp-api-text-value-type-parity.md` — three-write-path parity for text-value-type IRIs and scalar decimals
-- `docs/development/dsp-api-sparql-queries.md` — SPARQL: new code with the `sparql"..."` interpolator, grandfathered rdf4j SparqlBuilder
-- `docs/development/dsp-api-shacl-shapes.md` — SHACL shape files, layering, `sh:description`/`sh:not`/`sh:message` conventions, testing
+- `docs/development/conventions.md` — full code conventions (services, value objects, three-tier API, naming, imports, STM, ZIO Test)
+- `docs/development/error-handling.md` — fail vs die, typed errors, the `throw` carve-out
+- `docs/development/iri-handling.md` — universal IRI handling rules
+- `docs/development/v3-iri-handling.md` — V3 IRI conventions
+- `docs/development/value-types.md` — `StringValue` / `WithFrom` pattern
+- `docs/development/text-value-type-parity.md` — three-write-path parity for text-value-type IRIs and scalar decimals
+- `docs/development/sparql-queries.md` — SPARQL: new code with the `sparql"..."` interpolator, grandfathered rdf4j SparqlBuilder
+- `docs/development/shacl-shapes.md` — SHACL shape files, layering, `sh:description`/`sh:not`/`sh:message` conventions, testing
 - `docs/adr/0011-cross-context-access-ports-and-adapters.md` - how contexts may depend on each other (ports, adapters, graph sovereignty)
 - `docs/adr/` — architectural decisions

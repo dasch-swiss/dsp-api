@@ -15,7 +15,7 @@ bazel-bsp re-copies its aspects into `.bazelbsp/` on every import, so this is in
 the `bazel_binary` wrapper (tools/metals/bazel-bsp-wrapper.sh) at each bazel-bsp invocation
 — after the copy, before the build reads the file — and is idempotent. The companion
 JavaInfo/CcInfo global fix is the macOS `--incompatible_autoload_externally` flag in .bazelrc.
-See docs/development/dsp-api-metals-mcp.md.
+See docs/development/metals-mcp.md.
 """
 import sys
 
