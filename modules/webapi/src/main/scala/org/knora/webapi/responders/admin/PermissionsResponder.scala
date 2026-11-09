@@ -31,6 +31,7 @@ import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.F
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClass
 import org.knora.webapi.slice.admin.domain.model.DefaultObjectAccessPermission.ForWhat.ResourceClassAndProperty
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraGroup
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
@@ -45,6 +46,8 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.repo.service.DefaultObjectAccessPermissionRepoLive
 import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRequest
+import org.knora.webapi.slice.common.KnoraIris.KnoraIri
+import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.service.IriConverter
@@ -84,6 +87,7 @@ final class PermissionsResponder(
         group <- groupService
                    .findById(createRequest.forGroup)
                    .someOrFail(NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
+        _                <- ensureGroupBelongsToProject(group, project)
         newPermissionIri <- iriService
                               .checkOrCreateEntityIri(
                                 createRequest.id.map(_.value.toSmartIri),
@@ -261,12 +265,18 @@ final class PermissionsResponder(
           .flatMap(iriService.checkOrCreateEntityIri(_, PermissionIri.makeNew(project.shortcode).value))
           .mapBoth(_.getMessage, PermissionIri.unsafeFrom)
 
-      groupIri         <- ZIO.foreach(req.forGroup)(checkGroupExists).mapError(_.getMessage)
+      groupIri         <- ZIO.foreach(req.forGroup)(checkGroupExistsInProject(_, project)).mapError(_.getMessage)
       resourceClassIri <- ZIO.foreach(req.forResourceClass)(checkResourceClassIri).mapError(_.getMessage)
       propertyIri      <- ZIO.foreach(req.forProperty)(checkPropertyIri).mapError(_.getMessage)
-      forWhat          <- ZIO.fromEither(ForWhat.fromIris(groupIri, resourceClassIri, propertyIri))
-      _                <- ZIO.fail("Permissions needs to be supplied.").when(req.hasPermissions.isEmpty)
-      doap             <- ZIO.fromEither(DefaultObjectAccessPermission.from(permissionIri, project.id, forWhat, req.hasPermissions))
+      _                <- ZIO
+             .foreach(resourceClassIri)(c => ensureOntologyBelongsToProject(c.ontologyIri, c, project))
+             .mapError(_.getMessage)
+      _ <- ZIO
+             .foreach(propertyIri)(p => ensureOntologyBelongsToProject(p.ontologyIri, p, project))
+             .mapError(_.getMessage)
+      forWhat <- ZIO.fromEither(ForWhat.fromIris(groupIri, resourceClassIri, propertyIri))
+      _       <- ZIO.fail("Permissions needs to be supplied.").when(req.hasPermissions.isEmpty)
+      doap    <- ZIO.fromEither(DefaultObjectAccessPermission.from(permissionIri, project.id, forWhat, req.hasPermissions))
     } yield doap
 
   def createDefaultObjectAccessPermission(
@@ -424,6 +434,36 @@ final class PermissionsResponder(
     .findById(groupIri)
     .someOrFail(BadRequestException(s"Group $groupIri not found."))
     .as(groupIri)
+
+  private def checkGroupExistsInProject(groupIri: GroupIri, project: KnoraProject): Task[GroupIri] =
+    groupService
+      .findById(groupIri)
+      .someOrFail(BadRequestException(s"Group $groupIri not found."))
+      .flatMap(ensureGroupBelongsToProject(_, project))
+      .as(groupIri)
+
+  private def ensureGroupBelongsToProject(group: KnoraGroup, project: KnoraProject): Task[Unit] =
+    ZIO
+      .fail(BadRequestException(s"Group ${group.id.value} does not belong to project ${project.id.value}."))
+      .unless(group.id.isBuiltInGroupIri || group.belongsToProject.contains(project.id))
+      .unit
+
+  private def ensureOntologyBelongsToProject(
+    ontologyIri: OntologyIri,
+    entityIri: KnoraIri,
+    project: KnoraProject,
+  ): Task[Unit] =
+    ZIO
+      .unless(ontologyIri.isBuiltIn)(
+        projectService
+          .getOntologyGraphsForProject(project)
+          .filterOrFail(_.contains(ontologyIri.toInternalIri))(
+            BadRequestException(
+              s"<${entityIri.toComplexSchema}> does not belong to an ontology of project ${project.id.value}.",
+            ),
+          ),
+      )
+      .unit
 
   private def checkPropertyIri(propertyIri: IRI): Task[PropertyIri] =
     iriConverter

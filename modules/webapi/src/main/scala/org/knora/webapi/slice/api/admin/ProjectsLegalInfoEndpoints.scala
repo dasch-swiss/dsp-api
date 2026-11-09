@@ -154,7 +154,7 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     )
     .description(s"Add new allowed copyright holders for use within this project. $adminRequirement")
 
-  val putProjectCopyrightHolders = baseEndpoints.securedEndpoint.put
+  val putProjectCopyrightHolders = baseEndpoints.systemAdminPolicyEndpoint.put
     .in(base / "copyright-holders")
     .in(
       jsonBody[CopyrightHolderReplaceRequest]
@@ -167,7 +167,7 @@ final class ProjectsLegalInfoEndpoints(baseEndpoints: BaseEndpoints) {
     )
     .description(
       "Update a particular allowed copyright holder for use within this project, does not update existing values on assets. " +
-        "The user must be a system admin.",
+        Policy.SystemAdmin.requirement,
     )
 
   val putProjectLegalInfoResourceSide = baseEndpoints

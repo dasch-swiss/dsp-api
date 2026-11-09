@@ -42,7 +42,7 @@ class EndpointPolicyE2ESpec extends E2EZSpec {
   private val postReads = Set("POST /v2/resources/batch", "POST /v2/searchextended", "POST /v3/export/resources")
 
   // Pinned so that an appended baseline line fails; lowered in the same commit that removes lines.
-  private val baselineSize = 25
+  private val baselineSize = 16
 
   override def e2eSpec = suite("Endpoint policy ratchet")(
     test("every endpoint has a unique METHOD /path key") {

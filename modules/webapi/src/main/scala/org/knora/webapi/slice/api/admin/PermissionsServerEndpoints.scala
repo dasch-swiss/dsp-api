@@ -33,12 +33,14 @@ final class PermissionsServerEndpoints(
     ),
     permissionsEndpoints.getPermissionsDoapByProjectIri.serverLogic(restService.getPermissionsDaopByProjectIri),
     permissionsEndpoints.getPermissionsByProjectIri.serverLogic(restService.getPermissionsByProjectIri),
-    permissionsEndpoints.putPermissionsDoapForWhat.serverLogic(restService.updateDoapForWhat),
-    permissionsEndpoints.putPermissionsProjectIriGroup.serverLogic(restService.updatePermissionGroup),
-    permissionsEndpoints.putPerrmissionsHasPermissions.serverLogic(restService.updatePermissionHasPermissions),
-    permissionsEndpoints.putPermissionsProperty.serverLogic(restService.updatePermissionProperty),
-    permissionsEndpoints.putPermissionsResourceClass.serverLogic(restService.updatePermissionResourceClass),
-    permissionsEndpoints.deletePermission.serverLogic(restService.deletePermission),
+    permissionsEndpoints.putPermissionsDoapForWhat.serverLogic(_ => restService.updateDoapForWhat.tupled),
+    permissionsEndpoints.putPermissionsProjectIriGroup.serverLogic(_ => restService.updatePermissionGroup.tupled),
+    permissionsEndpoints.putPerrmissionsHasPermissions.serverLogic(_ =>
+      restService.updatePermissionHasPermissions.tupled,
+    ),
+    permissionsEndpoints.putPermissionsProperty.serverLogic(_ => restService.updatePermissionProperty.tupled),
+    permissionsEndpoints.putPermissionsResourceClass.serverLogic(_ => restService.updatePermissionResourceClass.tupled),
+    permissionsEndpoints.deletePermission.serverLogic(_ => restService.deletePermission),
     permissionsEndpoints.postPermissionsDoap.serverLogic(restService.createDefaultObjectAccessPermission),
   )
 }

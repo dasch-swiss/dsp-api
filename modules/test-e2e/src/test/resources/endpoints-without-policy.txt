@@ -1,6 +1,5 @@
 # Endpoints that declare no Policy (ADR-0013), checked by EndpointPolicyE2ESpec. Only ever remove lines:
 # a new endpoint uses a policy-declaring factory in BaseEndpoints instead of being listed here.
-DELETE /admin/permissions/{permissionIri}
 GET /v2/ontologies/candeleteclass/{resourceClassIri}
 GET /v2/ontologies/candeleteontology/{ontologyIri}
 GET /v2/ontologies/candeleteproperty/{propertyIri}
@@ -11,17 +10,9 @@ GET /v2/searchStillImageRepresentationsCount/{resourceIri}
 GET /v2/searchbylabel/count/{searchTerm}
 GET /v2/searchextended/count/{param1}
 GET /v3/projects/{projectIri}/resourcesPerOntology
-POST /admin/permissions/ap
-POST /admin/permissions/doap
 POST /v2/ontologies/candeletecardinalities
 POST /v2/resources/erase
 POST /v2/searchextended/count
 POST /v2/values/erase
 POST /v2/values/erasehistory
-PUT /admin/permissions/doap/{permissionIri}
-PUT /admin/permissions/{permissionIri}/group
-PUT /admin/permissions/{permissionIri}/hasPermissions
-PUT /admin/permissions/{permissionIri}/property
-PUT /admin/permissions/{permissionIri}/resourceClass
-PUT /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders
 PUT /v2/resources

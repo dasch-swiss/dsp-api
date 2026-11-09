@@ -47,7 +47,12 @@ These four routes require SystemAdmin or ProjectAdmin permissions for the projec
  
 - `POST: /admin/permissions/ap`: create a new administrative permission. The type of 
 permissions, the project and group to which the permission should be added must be 
-included in the request body, for example:
+included in the request body.
+
+Creating a permission requires a system administrator or an administrator of the project named in `forProject`;
+an unknown `forProject` answers `403 Forbidden`. The request fails with `400 Bad Request` if `forGroup` is neither a built-in group nor a group of that project.
+
+For example:
 
 ```json
 {
@@ -134,8 +139,12 @@ A single instance of `knora-admin:DefaultObjectAccessPermission` must
 always reference a project, but can only reference **either** a group
 (`knora-admin:forGroup` property), a resource class
 (`knora-admin:forResourceClass`), a property (`knora-admin:forProperty`),
-or a combination of resource class **and** property. For example, to create a new 
-default object access permission for a group of a project the request body would be
+or a combination of resource class **and** property.
+
+Creating a permission requires a system administrator or an administrator of the project named in `forProject`;
+an unknown `forProject` answers `403 Forbidden`. The request fails with `400 Bad Request` if `forGroup` is neither a built-in group nor a group of that project, or if `forResourceClass` or `forProperty` is neither from a built-in ontology nor from an ontology of that project.
+
+For example, to create a new default object access permission for a group of a project the request body would be
  
 ```json
 {

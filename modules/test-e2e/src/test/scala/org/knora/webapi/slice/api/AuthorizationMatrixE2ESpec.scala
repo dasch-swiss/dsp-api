@@ -27,19 +27,25 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponse
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.ANYTHING_HasDate_PROPERTY_LocalHost
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.api.EndpointPolicyE2ESpec.key
 import org.knora.webapi.slice.api.admin.CopyrightHolderAddRequest
+import org.knora.webapi.slice.api.admin.CopyrightHolderReplaceRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.api.admin.Requests.*
 import org.knora.webapi.slice.api.admin.ResourceSideLegalInfo
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.*
@@ -412,6 +418,8 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
 
   private val projectAdminOutcomes = outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed)
 
+  private val systemAdminOutcomes = outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed)
+
   private val selfOrAdminOutcomes =
     outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed) + (Self -> allowed)
 
@@ -439,6 +447,76 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       send = (_, user) => put(legalInfo.addPath("licenses", matrixLicense.value, action), Json.Obj())(user),
       readBack = Some(_ => licenseEnabled),
     )
+
+  private final case class PermissionFixture(iri: PermissionIri, group: GroupIri, other: GroupIri)
+
+  private val memberPermissions = Set(
+    PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+  )
+
+  private def freshAp: RIO[env, PermissionFixture] =
+    for {
+      group   <- freshGroup
+      other   <- freshGroup
+      created <- TestApiClient
+                   .postJson[AdministrativePermissionCreateResponseADM, CreateAdministrativePermissionAPIRequestADM](
+                     anythingPermissions.addPath("ap"),
+                     CreateAdministrativePermissionAPIRequestADM(
+                       forProject = anythingProjectIri,
+                       forGroup = group,
+                       hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
+                     ),
+                     rootUser,
+                   )
+                   .flatMap(_.assert200)
+    } yield PermissionFixture(created.administrativePermission.iri, group, other)
+
+  private def freshDoap: RIO[env, PermissionFixture] =
+    for {
+      group   <- freshGroup
+      other   <- freshGroup
+      created <-
+        TestApiClient
+          .postJson[DefaultObjectAccessPermissionCreateResponseADM, CreateDefaultObjectAccessPermissionAPIRequestADM](
+            anythingPermissions.addPath("doap"),
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = anythingProjectIri,
+              forGroup = Some(group),
+              hasPermissions = memberPermissions,
+            ),
+            rootUser,
+          )
+          .flatMap(_.assert200)
+    } yield PermissionFixture(created.defaultObjectAccessPermission.iri, group, other)
+
+  /** The administrative and default object access permissions of the anything project whose `field` is `value`. */
+  private def permissionsWith(field: String, value: String): RIO[env, String] = {
+    def find(json: Json): List[Json] = json match {
+      case Json.Obj(fields) =>
+        (if fields.contains(field -> Json.Str(value)) then List(json) else Nil) ++ fields.flatMap(f => find(f._2))
+      case Json.Arr(elements) => elements.toList.flatMap(find)
+      case _                  => Nil
+    }
+    ZIO
+      .foreach(List("ap", "doap"))(kind =>
+        TestApiClient
+          .getJson[Json](permissionsOf(kind), rootUser)
+          .map(_.body.fold(identity, json => find(json).mkString("\n"))),
+      )
+      .map(_.mkString("\n"))
+  }
+
+  private def permissionState(fixture: PermissionFixture) = permissionsWith("iri", fixture.iri.value)
+
+  private def permissionRow(key: String, prepare: RIO[env, PermissionFixture])(
+    send: PermissionFixture => Option[User] => RIO[env, StatusCode],
+  ) = Row[PermissionFixture](
+    key,
+    systemAdminOutcomes,
+    prepare,
+    (fixture, user) => send(fixture)(user),
+    Some(permissionState),
+  )
 
   private def groupUri(iri: GroupIri) = uri"/admin/groups/${iri.value}"
 
@@ -916,6 +994,88 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       permissionsOf("ap").addPath("http://www.knora.org/ontology/knora-admin#ProjectMember"),
     ),
     anythingRead("GET /admin/permissions/doap/{projectIri}", permissionsOf("doap")),
+    Row[GroupIri](
+      "POST /admin/permissions/ap",
+      projectAdminOutcomes,
+      prepare = freshGroup,
+      send = (group, user) =>
+        post(
+          anythingPermissions.addPath("ap"),
+          CreateAdministrativePermissionAPIRequestADM(
+            forProject = anythingProjectIri,
+            forGroup = group,
+            hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
+          ),
+        )(user),
+      readBack = Some(group => permissionsWith("forGroup", group.value)),
+    ),
+    Row[GroupIri](
+      "POST /admin/permissions/doap",
+      projectAdminOutcomes,
+      prepare = freshGroup,
+      send = (group, user) =>
+        post(
+          anythingPermissions.addPath("doap"),
+          CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = anythingProjectIri,
+            forGroup = Some(group),
+            hasPermissions = memberPermissions,
+          ),
+        )(user),
+      readBack = Some(group => permissionsWith("forGroup", group.value)),
+    ),
+    permissionRow("DELETE /admin/permissions/{permissionIri}", freshAp)(fixture =>
+      delete(anythingPermissions.addPath(fixture.iri.value)),
+    ),
+    permissionRow("PUT /admin/permissions/doap/{permissionIri}", freshDoap)(fixture =>
+      put(
+        anythingPermissions.addPath("doap", fixture.iri.value),
+        ChangeDoapRequest(hasPermissions =
+          Some(
+            Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value)),
+          ),
+        ),
+      ),
+    ),
+    permissionRow("PUT /admin/permissions/{permissionIri}/group", freshDoap)(fixture =>
+      put(
+        anythingPermissions.addPath(fixture.iri.value, "group"),
+        ChangePermissionGroupApiRequestADM(fixture.other),
+      ),
+    ),
+    permissionRow("PUT /admin/permissions/{permissionIri}/hasPermissions", freshAp)(fixture =>
+      put(
+        anythingPermissions.addPath(fixture.iri.value, "hasPermissions"),
+        ChangePermissionHasPermissionsApiRequestADM(Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll))),
+      ),
+    ),
+    permissionRow("PUT /admin/permissions/{permissionIri}/property", freshDoap)(fixture =>
+      put(
+        anythingPermissions.addPath(fixture.iri.value, "property"),
+        ChangePermissionPropertyApiRequestADM(ANYTHING_HasDate_PROPERTY_LocalHost),
+      ),
+    ),
+    permissionRow("PUT /admin/permissions/{permissionIri}/resourceClass", freshDoap)(fixture =>
+      put(
+        anythingPermissions.addPath(fixture.iri.value, "resourceClass"),
+        ChangePermissionResourceClassApiRequestADM(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
+      ),
+    ),
+    Row[String](
+      "PUT /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders",
+      systemAdminOutcomes,
+      prepare = freshName.tap(name =>
+        post(legalInfo.addPath("copyright-holders"), CopyrightHolderAddRequest(Set(CopyrightHolder.unsafeFrom(name))))(
+          Some(rootUser),
+        ).filterOrFail(_ == StatusCode.Ok)(Exception("could not add the matrix copyright holder")),
+      ),
+      send = (name, user) =>
+        put(
+          legalInfo.addPath("copyright-holders"),
+          CopyrightHolderReplaceRequest(CopyrightHolder.unsafeFrom(name), CopyrightHolder.unsafeFrom(name.reverse)),
+        )(user),
+      readBack = Some(copyrightHolderPresent),
+    ),
     Row[String](
       "POST /admin/groups",
       outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
