@@ -7,6 +7,7 @@ package org.knora.webapi.slice.common.api
 
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
+import sttp.tapir.EndpointInput
 import sttp.tapir.EndpointOutput
 import sttp.tapir.PublicEndpoint
 import sttp.tapir.Validator
@@ -126,6 +127,45 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
   val systemAdminPolicyEndpoint
     : RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
     authorizingEndpoint(Policy.SystemAdmin, user => authorization.ensureSystemAdmin(user).as(user))
+
+  /**
+   * Declares and enforces [[Policy.SelfOrSystemAdmin]]: an active system administrator, or the active user the path
+   * names. The target is a security input, so `userIri` must be the path up to and including the user IRI segment;
+   * the endpoint's own inputs continue after it. The handler gets the caller and the target.
+   */
+  def selfOrSystemAdminPolicyEndpoint(
+    userFrom: String,
+    userIri: EndpointInput[UserIri],
+  ): RequiresMethod[
+    ZPartialServerEndpoint[
+      Any,
+      (Option[String], Option[UsernamePassword], UserIri),
+      BaseEndpoints.UserTarget,
+      Unit,
+      Throwable,
+      Unit,
+      Any,
+    ],
+  ] =
+    RequiresMethod(
+      endpointWithBearerBasicAuthOptional
+        .securityIn(userIri)
+        .attribute(Policy.key, Policy.SelfOrSystemAdmin(userFrom))
+        .zServerSecurityLogic { case (bearer, basic, target) =>
+          authenticateOrFail((bearer, basic)).flatMap(user =>
+            authorization.ensureSelfOrSystemAdmin(user, target).as(BaseEndpoints.UserTarget(user, target)),
+          )
+        },
+      _.method(_),
+    )
+
+  /** Declares and enforces [[Policy.ProjectAdminOfAnyProject]]: an active system administrator or project admin. */
+  val projectAdminOfAnyProjectPolicyEndpoint
+    : RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
+    authorizingEndpoint(
+      Policy.ProjectAdminOfAnyProject,
+      user => authorization.ensureSystemAdminOrProjectAdminInAnyProject(user).as(user),
+    )
 
   /**
    * Declares [[Policy.ProjectAdmin]]. The security logic refuses anonymous and inactive users; the project is only
@@ -379,6 +419,9 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
 
 object BaseEndpoints {
   val layer = ZLayer.derive[BaseEndpoints]
+
+  /** What [[BaseEndpoints.selfOrSystemAdminPolicyEndpoint]] hands the handler: the caller and the user the path names. */
+  final case class UserTarget(caller: User, userIri: UserIri)
 
   /**
    * Why [[BaseEndpoints.bearerSystemAdminEndpoint]] turned a caller away, for a surface that has to attribute the

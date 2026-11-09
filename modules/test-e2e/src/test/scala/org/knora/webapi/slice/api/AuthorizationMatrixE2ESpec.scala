@@ -74,7 +74,8 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
   /**
    * One endpoint of the matrix. `prepare` creates a fresh target per cell through the API, so cells stay independent
    * and no shared dataset gains records. `readBack` renders what the request may change; it is `None` for an
-   * endpoint that writes nothing.
+   * endpoint that writes nothing. `selfOf` names the caller who is the row's target user; only a row with a `Self`
+   * outcome has one.
    */
   private final case class Row[T](
     key: String,
@@ -82,6 +83,7 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
     prepare: RIO[env, T],
     send: (T, Option[User]) => RIO[env, StatusCode],
     readBack: Option[T => RIO[env, String]],
+    selfOf: Option[T => User] = None,
   )
 
   private def outcomes(
@@ -221,7 +223,7 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       .getJson[Json](uri"/admin/projects/shortcode/${fixture.shortcode}", rootUser)
       .map(response => s"project ${fixture.shortcode} exists: ${response.code == StatusCode.Ok}")
 
-  private val freshUser: RIO[env, UserIri] =
+  private val freshUserWithEmail: RIO[env, (UserIri, Email)] =
     for {
       uuid <- Random.nextUUID
       name  = s"matrix-${uuid.toString.take(8)}"
@@ -242,7 +244,62 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
                   rootUser,
                 )
                 .flatMap(_.assert200)
-    } yield UserIri.unsafeFrom(user.user.id)
+    } yield (UserIri.unsafeFrom(user.user.id), Email.unsafeFrom(s"$name@example.org"))
+
+  private val freshUser: RIO[env, UserIri] = freshUserWithEmail.map(_._1)
+
+  private def userCreateRequest(name: String) =
+    UserCreateRequest(
+      id = None,
+      username = Username.unsafeFrom(name),
+      email = Email.unsafeFrom(s"$name@example.org"),
+      givenName = GivenName.unsafeFrom("matrix"),
+      familyName = FamilyName.unsafeFrom("matrix"),
+      password = Password.unsafeFrom("test"),
+      status = UserStatus.Active,
+      lang = EN,
+      systemAdmin = SystemAdmin.IsNotSystemAdmin,
+    )
+
+  private def userExists(name: String): RIO[env, String] =
+    TestApiClient
+      .getJson[Json](uri"/admin/users/username/$name", rootUser)
+      .map(response => s"user $name exists: ${response.code == StatusCode.Ok}")
+
+  // The caller who is the target; the API reads the user from the token's subject, so only the IRI matters.
+  private def selfUser(iri: UserIri) =
+    User(iri.value, "self", "self@example.org", "Self", "Self", status = true, "en")
+
+  private def userRow(key: String, send: UserIri => Option[User] => RIO[env, StatusCode]) =
+    Row[UserIri](
+      key,
+      selfOrAdminOutcomes,
+      freshUser,
+      (iri, user) => send(iri)(user),
+      Some(userState),
+      Some(selfUser),
+    )
+
+  private def selfOrAdminRead(key: String, kind: String) =
+    Row[UserIri](
+      key,
+      selfOrAdminOutcomes,
+      freshUser,
+      (iri, user) => get(uri"/admin/users/iri/${iri.value}/$kind")(user),
+      readBack = None,
+      selfOf = Some(selfUser),
+    )
+
+  private def canLogIn(fixture: (UserIri, Email)): RIO[env, String] =
+    ZIO
+      .foreach(List("test", matrixPassword))(password =>
+        TestApiClient
+          .getJson[Json](uri"/v2/authentication", _.auth.basic(fixture._2.value, password))
+          .map(response => s"$password: ${response.code}"),
+      )
+      .map(_.mkString("\n"))
+
+  private val matrixPassword = "matrix-password"
 
   private def userState(iri: UserIri): RIO[env, String] =
     TestApiClient.getJson[Json](uri"/admin/users/iri/${iri.value}", rootUser).map(_.body.toString)
@@ -354,6 +411,11 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
   private val freshName = Random.nextUUID.map(uuid => s"matrix-${uuid.toString.take(8)}")
 
   private val projectAdminOutcomes = outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed)
+
+  private val selfOrAdminOutcomes =
+    outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed) + (Self -> allowed)
+
+  private val anyProjectAdminOutcomes = outcomes(unauthorized, forbidden, forbidden, allowed, allowed, allowed)
 
   private def copyrightHolderPresent(name: String): RIO[env, String] =
     TestApiClient
@@ -656,6 +718,48 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
           .map(_.code),
       readBack = Some(mappingExists),
     ),
+    userRow("DELETE /admin/users/iri/{userIri}", iri => delete(uri"/admin/users/iri/${iri.value}")),
+    userRow(
+      "PUT /admin/users/iri/{userIri}/BasicUserInformation",
+      iri =>
+        put(
+          uri"/admin/users/iri/${iri.value}/BasicUserInformation",
+          BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("changed"))),
+        ),
+    ),
+    userRow(
+      "PUT /admin/users/iri/{userIri}/Status",
+      iri => put(uri"/admin/users/iri/${iri.value}/Status", StatusChangeRequest(UserStatus.Inactive)),
+    ),
+    Row[(UserIri, Email)](
+      "PUT /admin/users/iri/{userIri}/Password",
+      selfOrAdminOutcomes,
+      prepare = freshUserWithEmail,
+      send = (fixture, user) =>
+        put(
+          uri"/admin/users/iri/${fixture._1.value}/Password",
+          PasswordChangeRequest(Password.unsafeFrom("test"), Password.unsafeFrom(matrixPassword)),
+        )(user),
+      readBack = Some(canLogIn),
+      selfOf = Some(fixture => selfUser(fixture._1)),
+    ),
+    Row[Unit](
+      "GET /admin/users",
+      anyProjectAdminOutcomes,
+      prepare = ZIO.unit,
+      send = (_, user) => get(uri"/admin/users")(user),
+      readBack = None,
+    ),
+    Row[String](
+      "POST /admin/users",
+      anyProjectAdminOutcomes,
+      prepare = freshName,
+      send = (name, user) => post(uri"/admin/users", userCreateRequest(name))(user),
+      readBack = Some(userExists),
+    ),
+    selfOrAdminRead("GET /admin/users/iri/{userIri}/project-memberships", "project-memberships"),
+    selfOrAdminRead("GET /admin/users/iri/{userIri}/project-admin-memberships", "project-admin-memberships"),
+    selfOrAdminRead("GET /admin/users/iri/{userIri}/group-memberships", "group-memberships"),
     anythingRead("GET /admin/projects/iri/{projectIri}/AllData", anythingByIri.addPath("AllData")),
     anythingRead("GET /admin/projects/iri/{projectIri}/members", anythingByIri.addPath("members")),
     anythingRead("GET /admin/projects/iri/{projectIri}/admin-members", anythingByIri.addPath("admin-members")),
@@ -983,21 +1087,22 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
   )
 
   private def cells[T](row: Row[T]): List[Spec[env, Throwable]] =
-    Principal.values.toList.map { principal =>
-      val expected = row.expected(principal)
-      val writes   = row.readBack.nonEmpty
-      test(s"${row.key} as $principal: $expected") {
-        for {
-          target <- row.prepare
-          before <- ZIO.foreach(row.readBack)(_(target))
-          status <- row.send(target, principal.user)
-          after  <- ZIO.foreach(row.readBack)(_(target))
-        } yield expected match {
-          // A changed read-back proves the read-back would see a write that a denied request made.
-          case Allowed          => assertTrue(status == StatusCode.Ok, !writes || before != after)
-          case Denied(response) => assertTrue(status == response, before == after)
+    Principal.values.toList.flatMap(principal => row.expected.get(principal).map(principal -> _)).map {
+      case (principal, expected) =>
+        val writes = row.readBack.nonEmpty
+        test(s"${row.key} as $principal: $expected") {
+          for {
+            target <- row.prepare
+            caller  = if principal == Principal.Self then row.selfOf.map(_(target)) else principal.user
+            before <- ZIO.foreach(row.readBack)(_(target))
+            status <- row.send(target, caller)
+            after  <- ZIO.foreach(row.readBack)(_(target))
+          } yield expected match {
+            // A changed read-back proves the read-back would see a write that a denied request made.
+            case Allowed          => assertTrue(status == StatusCode.Ok, !writes || before != after)
+            case Denied(response) => assertTrue(status == response, before == after)
+          }
         }
-      }
     }
 
   override val e2eSpec = suite("Authorization matrix")(
@@ -1073,6 +1178,9 @@ object AuthorizationMatrixE2ESpec {
     case IncunabulaAdmin extends Principal(Some(incunabulaProjectAdminUser))
     case AnythingAdmin   extends Principal(Some(anythingAdminUser))
     case Root            extends Principal(Some(rootUser))
+
+    /** The user a self-or-admin row targets; which user that is depends on the row's fresh target. */
+    case Self extends Principal(None)
   }
 
   enum Expected {
@@ -1093,8 +1201,10 @@ object AuthorizationMatrixE2ESpec {
     policy match {
       case Policy.ProjectAdmin(_)                       => Some(Set(AnythingAdmin, Root))
       case Policy.ProjectMember(_)                      => Some(Set(AnythingMember, AnythingAdmin, Root))
-      case Policy.Authenticated(_)                      => Some(Principal.values.toSet - Anonymous)
+      case Policy.Authenticated(_)                      => Some(Principal.values.toSet - Anonymous - Self)
       case Policy.SystemAdmin                           => Some(Set(Root))
+      case Policy.SelfOrSystemAdmin(_)                  => Some(Set(Self, Root))
+      case Policy.ProjectAdminOfAnyProject              => Some(Set(IncunabulaAdmin, AnythingAdmin, Root))
       case Policy.Public(_) | Policy.ObjectAccess(_, _) => None
     }
   }

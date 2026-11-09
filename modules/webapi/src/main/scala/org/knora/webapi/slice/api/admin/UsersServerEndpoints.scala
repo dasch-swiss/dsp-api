@@ -22,9 +22,15 @@ import org.knora.webapi.slice.api.admin.service.UserRestService
 
 final class UsersServerEndpoints(usersEndpoints: UsersEndpoints, restService: UserRestService) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
-    usersEndpoints.get.usersByIriProjectMemberShips.zServerLogic(restService.getProjectMemberShipsByUserIri),
-    usersEndpoints.get.usersByIriProjectAdminMemberShips.zServerLogic(restService.getProjectAdminMemberShipsByUserIri),
-    usersEndpoints.get.usersByIriGroupMemberships.zServerLogic(restService.getGroupMemberShipsByIri),
+    usersEndpoints.get.usersByIriProjectMemberShips.serverLogic(target =>
+      _ => restService.getProjectMemberShipsByUserIri(target.userIri),
+    ),
+    usersEndpoints.get.usersByIriProjectAdminMemberShips.serverLogic(target =>
+      _ => restService.getProjectAdminMemberShipsByUserIri(target.userIri),
+    ),
+    usersEndpoints.get.usersByIriGroupMemberships.serverLogic(target =>
+      _ => restService.getGroupMemberShipsByIri(target.userIri),
+    ),
     usersEndpoints.get.users.serverLogic(user => _ => restService.getAllUsers(user)),
     usersEndpoints.get.userByIri.serverLogic(restService.getUserByIri),
     usersEndpoints.get.userByEmail.serverLogic(restService.getUserByEmail),
@@ -37,7 +43,7 @@ final class UsersServerEndpoints(usersEndpoints: UsersEndpoints, restService: Us
     usersEndpoints.put.usersIriPassword.serverLogic(restService.changePassword),
     usersEndpoints.put.usersIriStatus.serverLogic(restService.changeStatus),
     usersEndpoints.put.usersIriSystemAdmin.serverLogic(restService.changeSystemAdmin),
-    usersEndpoints.delete.deleteUser.serverLogic(restService.deleteUser),
+    usersEndpoints.delete.deleteUser.serverLogic(target => _ => restService.deleteUser(target)),
     usersEndpoints.delete.usersByIriProjectMemberShips.serverLogic(restService.removeUserFromProject),
     usersEndpoints.delete.usersByIriProjectAdminMemberShips.serverLogic(restService.removeUserFromProjectAsAdmin),
     usersEndpoints.delete.usersByIriGroupMemberShips.serverLogic(restService.removeUserFromGroup),

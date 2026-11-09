@@ -15,12 +15,17 @@ import zio.http.Status
 import zio.http.URL
 import zio.test.*
 
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo.builtIn.SystemProject
+import org.knora.webapi.slice.api.admin.PathVars
 import org.knora.webapi.slice.api.admin.service.SparqlPassthroughTestEnv
 import org.knora.webapi.slice.security.AuthenticatorError
 
@@ -38,10 +43,32 @@ class BaseEndpointsSpec extends ZIOSpecDefault {
 
   private val inactiveSystemAdmin = systemAdmin.copy(status = false)
 
+  private val inactiveUser = activeUser.copy(id = "http://rdfh.ch/users/sleeping", status = false)
+
+  private val otherUserIri   = UserIri.unsafeFrom("http://rdfh.ch/users/other1")
+  private val builtInUserIri = AnonymousUser.userIri
+
+  private val projectAdmin = activeUser.copy(
+    id = "http://rdfh.ch/users/projectadmin",
+    permissions = PermissionsDataADM(
+      groupsPerProject = Map("http://rdfh.ch/projects/0001" -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value)),
+      administrativePermissionsPerProject = Map.empty,
+    ),
+  )
+  private val inactiveProjectAdmin = projectAdmin.copy(status = false)
+
   // The real authenticator refuses inactive and built-in users; this one hands them out, so the factories' own
   // checks are what is tested.
   private val usersByToken =
-    Map("normal" -> activeUser, "admin" -> systemAdmin, "inactive" -> inactiveSystemAdmin, "anonymous" -> AnonymousUser)
+    Map(
+      "normal"               -> activeUser,
+      "admin"                -> systemAdmin,
+      "inactive"             -> inactiveSystemAdmin,
+      "inactiveUser"         -> inactiveUser,
+      "projectAdmin"         -> projectAdmin,
+      "inactiveProjectAdmin" -> inactiveProjectAdmin,
+      "anonymous"            -> AnonymousUser,
+    )
 
   private val base = BaseEndpoints(
     SparqlPassthroughTestEnv.authenticatorAnswering(token =>
@@ -80,6 +107,29 @@ class BaseEndpointsSpec extends ZIOSpecDefault {
     status: Status,
   ) =
     call(factory, token).map((actual, principal) => assertTrue(actual == status, principal.isEmpty))
+
+  private val selfOrAdmin = base.selfOrSystemAdminPolicyEndpoint("path userIri", "users" / PathVars.userIriPathVar)
+
+  /** The status, and what the handler received, when `token` calls the self-or-admin endpoint targeting `target`. */
+  private def callTarget(token: Option[String], target: UserIri): Task[(Status, Option[BaseEndpoints.UserTarget])] =
+    for {
+      reached <- Ref.make(Option.empty[BaseEndpoints.UserTarget])
+      app      = ZioHttpInterpreter().toHttp(
+              List(selfOrAdmin.get.in("probe").serverLogic[Any](principal => _ => reached.set(Some(principal)))),
+            )
+      encoded   = URLEncoder.encode(target.value, StandardCharsets.UTF_8)
+      request   = Request.get(URL.decode(s"/users/$encoded/probe").toOption.get)
+      response <-
+        ZIO.scoped(
+          app.runZIO(token.fold(request)(t => request.addHeader(Header.Custom("Authorization", s"Bearer $t")))),
+        )
+      principal <- reached.get
+    } yield (response.status, principal)
+
+  private def refusedTarget(token: Option[String], target: UserIri, status: Status) =
+    callTarget(token, target).map((actual, principal) => assertTrue(actual == status, principal.isEmpty))
+
+  private val ownIri = activeUser.userIri
 
   val spec: Spec[Any, Any] = suite("BaseEndpoints policy factories")(
     suite("set their policy on the completed server endpoint")(
@@ -152,6 +202,81 @@ class BaseEndpointsSpec extends ZIOSpecDefault {
       test("and lets an active user through") {
         call(base.authenticatedPolicyEndpoint("reason"), Some("normal"))
           .map((status, principal) => assertTrue(status == Status.Ok, principal.contains(activeUser)))
+      },
+    ),
+    suite("SelfOrSystemAdmin")(
+      test("declares its policy") {
+        val policy = selfOrAdmin.get.in("probe").serverLogic[Any](_ => _ => ZIO.unit).endpoint.attribute(Policy.key)
+        assertTrue(policy.contains(Policy.SelfOrSystemAdmin("path userIri")))
+      },
+      test("refuses a caller without credentials with 401") {
+        refusedTarget(None, ownIri, Status.Unauthorized)
+      },
+      test("refuses an invalid token with 401") {
+        refusedTarget(Some("invalid"), ownIri, Status.Unauthorized)
+      },
+      test("refuses the anonymous user with 403, even when targeting the anonymous user") {
+        refusedTarget(Some("anonymous"), otherUserIri, Status.Forbidden) &&
+        refusedTarget(Some("anonymous"), builtInUserIri, Status.Forbidden)
+      },
+      test("refuses another active user with 403") {
+        refusedTarget(Some("normal"), otherUserIri, Status.Forbidden)
+      },
+      test("refuses an active user who targets a built-in user with 403") {
+        refusedTarget(Some("normal"), builtInUserIri, Status.Forbidden)
+      },
+      test("refuses an inactive user targeting themselves with 403") {
+        refusedTarget(Some("inactiveUser"), inactiveUser.userIri, Status.Forbidden)
+      },
+      test("refuses an inactive system admin with 403") {
+        refusedTarget(Some("inactive"), otherUserIri, Status.Forbidden)
+      },
+      test("lets an active user target themselves") {
+        callTarget(Some("normal"), ownIri).map((status, principal) =>
+          assertTrue(status == Status.Ok, principal.contains(BaseEndpoints.UserTarget(activeUser, ownIri))),
+        )
+      },
+      test("lets an active system admin target another user and a built-in user") {
+        for {
+          other   <- callTarget(Some("admin"), otherUserIri)
+          builtIn <- callTarget(Some("admin"), builtInUserIri)
+        } yield assertTrue(
+          other._1 == Status.Ok,
+          builtIn._1 == Status.Ok,
+          other._2.contains(BaseEndpoints.UserTarget(systemAdmin, otherUserIri)),
+          builtIn._2.contains(BaseEndpoints.UserTarget(systemAdmin, builtInUserIri)),
+        )
+      },
+    ),
+    suite("ProjectAdminOfAnyProject refuses in the security logic")(
+      test("declares its policy") {
+        assertTrue(policyOf(base.projectAdminOfAnyProjectPolicyEndpoint).contains(Policy.ProjectAdminOfAnyProject))
+      },
+      test("a caller without credentials with 401") {
+        refused(base.projectAdminOfAnyProjectPolicyEndpoint, None, Status.Unauthorized)
+      },
+      test("the anonymous user with 403") {
+        refused(base.projectAdminOfAnyProjectPolicyEndpoint, Some("anonymous"), Status.Forbidden)
+      },
+      test("an active user who administers no project with 403") {
+        refused(base.projectAdminOfAnyProjectPolicyEndpoint, Some("normal"), Status.Forbidden)
+      },
+      test("an inactive project admin with 403") {
+        refused(base.projectAdminOfAnyProjectPolicyEndpoint, Some("inactiveProjectAdmin"), Status.Forbidden)
+      },
+      test("an inactive system admin with 403") {
+        refused(base.projectAdminOfAnyProjectPolicyEndpoint, Some("inactive"), Status.Forbidden)
+      },
+      test("and lets an active project admin and an active system admin through") {
+        for {
+          pa    <- call(base.projectAdminOfAnyProjectPolicyEndpoint, Some("projectAdmin"))
+          admin <- call(base.projectAdminOfAnyProjectPolicyEndpoint, Some("admin"))
+        } yield assertTrue(
+          pa._1 == Status.Ok,
+          admin._1 == Status.Ok,
+          pa._2.contains(projectAdmin),
+          admin._2.contains(systemAdmin),
+        )
       },
     ),
     suite("ProjectAdmin refuses in the security logic")(

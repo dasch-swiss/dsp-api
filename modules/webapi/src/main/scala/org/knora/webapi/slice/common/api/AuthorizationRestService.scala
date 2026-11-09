@@ -15,6 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortname
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.common.api.AuthorizationRestService.isActive
@@ -36,6 +37,13 @@ final class AuthorizationRestService(
       s"You are logged in with username '${user.username}', but only a system administrator has permissions for this operation."
     checkActiveUser(user, isSystemAdminOrUser, msg)
   }
+
+  def ensureSelfOrSystemAdmin(user: User, target: UserIri): IO[ForbiddenException, Unit] = {
+    lazy val msg =
+      s"You are logged in with username '${user.username}', but only the user themselves or a system administrator has permissions for this operation."
+    checkActiveUser(user, u => isNotAnonymous(u) && (u.userIri == target || isSystemAdminOrUser(u)), msg)
+  }
+
   def ensureSystemAdminOrProjectAdminOfGroup(
     user: User,
     groupIri: GroupIri,

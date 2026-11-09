@@ -13,7 +13,6 @@ import zio.test.Assertion.*
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
-import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
@@ -25,6 +24,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.*
 import org.knora.webapi.slice.api.admin.model.UserDto
+import org.knora.webapi.slice.common.api.BaseEndpoints.UserTarget
 import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.security.Authenticator
@@ -49,10 +49,6 @@ class UserRestServiceSpec extends E2EZSpec {
               !users.exists(_.id == KnoraUserRepo.builtIn.SystemUser.id.value),
             ),
           )
-      },
-      test("fail with unauthorized when asked by an anonymous user") {
-        userRestService(_.getAllUsers(anonymousUser)).exit
-          .map(assert(_)(failsWithA[ForbiddenException]))
       },
     ),
     suite("calling getUserByEmail")(
@@ -157,7 +153,7 @@ class UserRestServiceSpec extends E2EZSpec {
           givenName = Some(GivenName.unsafeFrom("Donald")),
           familyName = Some(FamilyName.unsafeFrom("Duck")),
         )
-        userRestService(_.updateUser(rootUser)(normalUser.userIri, changeRequest))
+        userRestService(_.updateUser(UserTarget(rootUser, normalUser.userIri))(changeRequest))
           .map(_.user)
           .map(user => assertTrue(user.givenName == "Donald", user.familyName == "Duck"))
       },
@@ -166,7 +162,7 @@ class UserRestServiceSpec extends E2EZSpec {
           givenName = Some(GivenName.unsafeFrom(normalUser.givenName)),
           familyName = Some(FamilyName.unsafeFrom(normalUser.familyName)),
         )
-        userRestService(_.updateUser(normalUser)(normalUser.userIri, changeRequest))
+        userRestService(_.updateUser(UserTarget(normalUser, normalUser.userIri))(changeRequest))
           .map(_.user)
           .map(user =>
             assertTrue(
@@ -178,8 +174,7 @@ class UserRestServiceSpec extends E2EZSpec {
       test("return a 'DuplicateValueException' if the supplied 'username' is not unique") {
         val duplicateUsername = Some(Username.unsafeFrom(anythingUser1.username))
         userRestService(
-          _.updateUser(rootUser)(
-            normalUser.userIri,
+          _.updateUser(UserTarget(rootUser, normalUser.userIri))(
             BasicUserInformationChangeRequest(username = duplicateUsername),
           ),
         ).exit.map(
@@ -193,7 +188,7 @@ class UserRestServiceSpec extends E2EZSpec {
       test("return a 'DuplicateValueException' if the supplied 'email' is not unique") {
         val duplicateEmail = Some(Email.unsafeFrom(anythingUser1.email))
         val changeRequest  = BasicUserInformationChangeRequest(email = duplicateEmail)
-        userRestService(_.updateUser(rootUser)(normalUser.userIri, changeRequest)).exit
+        userRestService(_.updateUser(UserTarget(rootUser, normalUser.userIri))(changeRequest)).exit
           .map(
             assert(_)(
               E2EZSpec.failsWithMessageEqualTo[DuplicateValueException](
@@ -206,7 +201,9 @@ class UserRestServiceSpec extends E2EZSpec {
         val requesterPassword = Password.unsafeFrom("test")
         val newPassword       = Password.unsafeFrom("test123456")
         userRestService(
-          _.changePassword(normalUser)(normalUser.userIri, PasswordChangeRequest(requesterPassword, newPassword)),
+          _.changePassword(UserTarget(normalUser, normalUser.userIri))(
+            PasswordChangeRequest(requesterPassword, newPassword),
+          ),
         ) *>
           ZIO
             .serviceWithZIO[Authenticator](_.authenticate(normalUser.getUsername, newPassword.value))
@@ -218,7 +215,9 @@ class UserRestServiceSpec extends E2EZSpec {
         val requesterPassword = Password.unsafeFrom("test")
         val newPassword       = Password.unsafeFrom("test654321")
         userRestService(
-          _.changePassword(rootUser)(normalUser.userIri, PasswordChangeRequest(requesterPassword, newPassword)),
+          _.changePassword(UserTarget(rootUser, normalUser.userIri))(
+            PasswordChangeRequest(requesterPassword, newPassword),
+          ),
         ) *>
           ZIO
             .serviceWithZIO[Authenticator](_.authenticate(normalUser.getUsername, newPassword.value))
@@ -228,12 +227,12 @@ class UserRestServiceSpec extends E2EZSpec {
       },
       test("UPDATE the user's status, making them inactive ") {
         userRestService(
-          _.changeStatus(rootUser)(normalUser.userIri, StatusChangeRequest(UserStatus.Inactive)),
+          _.changeStatus(UserTarget(rootUser, normalUser.userIri))(StatusChangeRequest(UserStatus.Inactive)),
         ).map(r => assertTrue(!r.user.status))
       },
       test("UPDATE the user's status, making them active ") {
         userRestService(
-          _.changeStatus(rootUser)(normalUser.userIri, StatusChangeRequest(UserStatus.Active)),
+          _.changeStatus(UserTarget(rootUser, normalUser.userIri))(StatusChangeRequest(UserStatus.Active)),
         ).map(r => assertTrue(r.user.status))
       },
       test("UPDATE the user's system admin membership true") {
