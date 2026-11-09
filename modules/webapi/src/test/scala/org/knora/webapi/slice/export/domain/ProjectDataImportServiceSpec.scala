@@ -190,7 +190,7 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
         } yield assertTrue(exit == Exit.fail(ImportSlotBusyError()), stored.isEmpty)
       }
     },
-  ).provide(TestAppConfig.layer()) @@ TestAspect.withLiveClock
+  ).provide(TestAppConfig.layer()) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom
 
   def spec: Spec[Any, Any] =
     suite("ProjectDataImportService")(declaredLengthSuite, saveWithinLimitSuite, serviceSuite)
