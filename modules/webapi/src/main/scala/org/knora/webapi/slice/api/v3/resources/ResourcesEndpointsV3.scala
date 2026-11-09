@@ -24,10 +24,11 @@ import org.knora.webapi.slice.ontology.domain.model.RepresentationClass
 class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) extends EndpointHelper {
 
   val getResourcesResourcesPerOntology = baseEndpoint
-    .public(
+    .publicPolicy(
       oneOf(
         notFoundVariant(project_not_found),
       ),
+      "aggregate counts per class, no resource data",
     )
     .get
     .in(ApiV3.V3ProjectsProjectIri / "resourcesPerOntology")
@@ -67,7 +68,7 @@ class ResourcesEndpointsV3(baseEndpoint: V3BaseEndpoint) extends EndpointHelper 
     )
     .description(
       "This endpoint returns all ontologies in a project along with their resource classes and the count of resource instances for each class. " +
-        "Note that the `itemCount` includes only non-deleted resources and it includes resources even if the current user may not be permitted to see some of them, for performance reasons.",
+        "Note that the `itemCount` includes only non-deleted resources and it includes resources even if the current user may not be permitted to see some of them, for performance reasons. Does not require authentication.",
     )
 
 }

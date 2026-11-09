@@ -98,6 +98,18 @@ class V3BaseEndpointSpec extends ZIOSpecDefault {
 
   val spec: Spec[Any, Any] = suite("V3BaseEndpoint policy factories")(
     suite("set their policy on the completed server endpoint")(
+      test("Public") {
+        assertTrue(
+          base
+            .publicPolicy(errorOut, "the reason")
+            .get
+            .in("probe")
+            .zServerLogic(_ => ZIO.unit)
+            .endpoint
+            .attribute(Policy.key)
+            .contains(Policy.Public("the reason")),
+        )
+      },
       test("SystemAdmin") {
         assertTrue(policyOf(base.systemAdminPolicy(errorOut)).contains(Policy.SystemAdmin))
       },
@@ -144,6 +156,24 @@ class V3BaseEndpointSpec extends ZIOSpecDefault {
       },
       test("hands an active user a candidate; the project decision is the handler's") {
         admitted(base.projectAdminPolicy(errorOut, "path projectIri"), Some("normal"))
+      },
+    ),
+    suite("publicPolicy")(
+      test("admits a caller without credentials") {
+        for {
+          reached <- Ref.make(false)
+          app      = ZioHttpInterpreter().toHttp(
+                  List(
+                    base
+                      .publicPolicy(errorOut, "the reason")
+                      .get
+                      .in("probe")
+                      .zServerLogic(_ => reached.set(true)),
+                  ),
+                )
+          response <- ZIO.scoped(app.runZIO(Request.get(URL.decode("/probe").toOption.get)))
+          ran      <- reached.get
+        } yield assertTrue(response.status == Status.Ok, ran)
       },
     ),
     suite("objectAccessPolicy")(
