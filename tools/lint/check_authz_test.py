@@ -150,6 +150,26 @@ class CheckAuthzTest(unittest.TestCase):
         self.assertEqual(out.getvalue().count(check_authz.UNUSED_USER_HINT), 1)
         self.assertNotIn(check_authz.SYSTEM_USER_HINT, out.getvalue())
 
+    def test_policy_key_outside_the_factories_fails(self):
+        src = self._source("val e = endpoint.attribute(Policy.key, Policy.SystemAdmin)\n", "slice/api/X.scala")
+        self.assertOnlyError(self._errors(src), "Policy.key or withInfo")
+
+    def test_with_info_outside_the_factories_fails(self):
+        src = self._source("val e = ep.withInfo(info)\n", "slice/api/X.scala")
+        self.assertOnlyError(self._errors(src), "Policy.key or withInfo")
+
+    def test_policy_key_and_with_info_in_the_factories_pass(self):
+        common = self._source("val e = endpoint.attribute(Policy.key, p)\n", "slice/common/api/B.scala")
+        v3 = self._source("val e = ep.withInfo(i)\n", "slice/api/v3/V3BaseEndpoint.scala")
+        self.assertEqual(self._errors(common, v3), [])
+
+    def test_policy_key_in_comments_and_longer_names_pass(self):
+        src = self._source(
+            "// Policy.key and withInfo are set elsewhere\nval a = 1 // Policy.key\nval b = withInfoX + NegotiatesOwnAccept.key\n",
+            "slice/api/X.scala",
+        )
+        self.assertEqual(self._errors(src), [])
+
     def test_test_sources_are_ignored(self):
         main_src = self._source("val ok = 1\n")
         test_src = self._write("m/src/test/scala/A.scala", "val u = SystemUser\ndef f(@unused u: User) = 1\n")

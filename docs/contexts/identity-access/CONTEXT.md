@@ -46,6 +46,24 @@ _Avoid_: Object-access permission
 The default access assigned to objects created in a Project, also called DOAP.
 _Avoid_: Administrative permission
 
+**Policy**:
+The function-level requirement an endpoint declares, such as Public, Authenticated, SystemAdmin,
+ProjectAdmin, ProjectMember, SelfOrSystemAdmin, ProjectAdminOfAnyProject or ObjectAccess
+([ADR-0013](../../adr/0013-authorization-policy-enforcement.md)). SelfOrSystemAdmin admits the User
+named by the request and System administrators; ProjectAdminOfAnyProject admits System administrators
+and Project administrators of at least one Project.
+_Avoid_: Administrative permission, Permission policy, Scope
+
+**Project candidate**:
+An authenticated User who passed the endpoint's Policy but has not yet been checked against a specific
+Project.
+_Avoid_: Project administrator
+
+**Project admin grant** and **Project member grant**:
+Proof that the decision point checked a User against one Project; the domain write takes its target from
+the grant's Project.
+_Avoid_: Administrative permission
+
 ## Relationships
 
 - **Identity & Access** owns Project and Group **Memberships** and computes a User's **Permission

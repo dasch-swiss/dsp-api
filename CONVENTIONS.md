@@ -32,12 +32,14 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
   `EndpointsE2ESpec` catches an endpoint built from tapir's raw `endpoint`, which bypasses the bases.
 - Every new endpoint is built with a policy-declaring factory in `BaseEndpoints` (`publicPolicyEndpoint`,
   `authenticatedPolicyEndpoint`, `systemAdminPolicyEndpoint`, `projectAdminPolicyEndpoint`,
-  `objectAccessPolicyEndpoint`; ADR-0013), never with `publicEndpoint`, `securedEndpoint`, `withUserEndpoint` or
+  `projectMemberPolicyEndpoint`, `selfOrSystemAdminPolicyEndpoint`, `projectAdminOfAnyProjectPolicyEndpoint`,
+  `objectAccessPolicyEndpoint`; ADR-0013), never with `publicEndpoint`, `withUserEndpoint` or
   `bearerSystemAdminEndpoint`, and its description contains the policy's `requirement` sentence. The e2e test
   `EndpointPolicyE2ESpec` (CI, not `just test-unit`) fails for an endpoint without a policy unless it is listed in
   `modules/test-e2e/src/test/resources/endpoints-without-policy.txt`; that baseline only shrinks, and a new endpoint
   never extends it. The spec pins the baseline's size (`baselineSize`); the commit that removes lines lowers it. A
-  slice never sets `Policy.key` and never calls `withInfo` (it replaces all attributes). See
+  slice never sets `Policy.key` and never calls `withInfo` (it replaces all attributes; `//tools/lint:check_authz`
+  enforces it). Every role-based endpoint has an `AuthorizationMatrixE2ESpec` row or an `exempt` entry. See
   `docs/development/dsp-api-conventions.md#endpoint-authorization-policy`.
 - `*ServerEndpoints.scala` — wiring of endpoint to RestService method. `.zServerLogic(_ => …)` for public, `.serverLogic(restService.x)` for secured.
 - `*RestService.scala` — handler logic: auth and presentation only, with a minimal amount of business logic. The actual business logic lives in plain `*Service`s. Every secured method uses multiple parameter lists `def x(user: User)(args…): Task[Resp]` (a `ProjectCandidate` in place of the `User` for `projectAdminPolicyEndpoint`, which obtains a `ProjectAdminGrant` from `AuthorizationRestService.authorizeProjectAdminById` before it acts), which lets the `*ServerEndpoints` wire it concisely without enumerating every param. The body follows: **auth check → delegate to service → `format.toExternal(...)`**.

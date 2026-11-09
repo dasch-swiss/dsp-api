@@ -75,11 +75,10 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
     case _                 => ZIO.succeed(AnonymousUser)
   }
 
-  /** Declares no [[Policy]]; a new endpoint uses one of the policy-declaring factories below. */
-  val securedEndpoint: RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
-    RequiresMethod(endpointWithBearerBasicAuthOptional.zServerSecurityLogic(authenticateOrFail), _.method(_))
-
-  /** Declares no [[Policy]]; a new endpoint uses one of the policy-declaring factories below. */
+  /**
+   * Declares no [[Policy]]; kept only for the five count endpoints that wait on DEV-7718 (counts that ignore the
+   * caller's permissions). A new endpoint uses one of the policy-declaring factories below.
+   */
   val withUserEndpoint: RequiresMethod[ZPartialServerEndpoint[Any, SecurityIn, User, Unit, Throwable, Unit, Any]] =
     RequiresMethod(endpointWithBearerBasicAuthOptional.zServerSecurityLogic(authenticateOrAnonymous), _.method(_))
 
@@ -298,7 +297,7 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
     )
 
   /**
-   * A narrowing of [[securedEndpoint]] that accepts a bearer JWT and nothing else -- no HTTP basic, and (like every
+   * A bearer-only variant of the authenticated factories that accepts a bearer JWT and nothing else -- no HTTP basic, and (like every
    * endpoint here) no cookie -- and that authorizes the caller as a SystemAdmin **in the security logic**. Use it for a
    * route where accepting basic credentials would be a liability rather than a convenience, and where an unauthorized
    * caller must not be able to cause work.

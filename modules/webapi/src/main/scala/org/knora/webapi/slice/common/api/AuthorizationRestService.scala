@@ -44,7 +44,7 @@ final class AuthorizationRestService(
     checkActiveUser(user, u => isNotAnonymous(u) && (u.userIri == target || isSystemAdminOrUser(u)), msg)
   }
 
-  def ensureSystemAdminOrProjectAdminOfGroup(
+  private def ensureSystemAdminOrProjectAdminOfGroup(
     user: User,
     groupIri: GroupIri,
   ): IO[ForbiddenException, (KnoraGroup, KnoraProject)] =
@@ -59,7 +59,7 @@ final class AuthorizationRestService(
       project <- ensureSystemAdminOrProjectAdminById(user, projectIri)
     } yield (group, project)
 
-  def ensureSystemAdminOrProjectAdminById(
+  private def ensureSystemAdminOrProjectAdminById(
     user: User,
     projectIri: ProjectIri,
   ): IO[ForbiddenException, KnoraProject] =
@@ -69,7 +69,7 @@ final class AuthorizationRestService(
       .someOrFail(ForbiddenException(s"Project with id ${projectIri.value} not found."))
       .tap(ensureSystemAdminOrProjectAdmin(user, _))
 
-  def ensureSystemAdminOrProjectAdminByShortcode(
+  private def ensureSystemAdminOrProjectAdminByShortcode(
     user: User,
     shortcode: Shortcode,
   ): IO[ForbiddenException, KnoraProject] =
@@ -81,7 +81,7 @@ final class AuthorizationRestService(
       .orDie
       .someOrFail(ForbiddenException(s"Project with shortcode ${shortcode.value} not found."))
 
-  def ensureSystemAdminOrProjectAdminByShortname(
+  private def ensureSystemAdminOrProjectAdminByShortname(
     user: User,
     shortname: Shortname,
   ): IO[ForbiddenException, KnoraProject] =
@@ -91,7 +91,7 @@ final class AuthorizationRestService(
       .someOrFail(ForbiddenException(s"Project with shortname ${shortname.value} not found."))
       .tap(ensureSystemAdminOrProjectAdmin(user, _))
 
-  def ensureSystemAdminOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit] = {
+  private def ensureSystemAdminOrProjectAdmin(user: User, project: KnoraProject): IO[ForbiddenException, Unit] = {
     lazy val msg =
       s"You are logged in with username '${user.username}', but only a system administrator or project administrator has permissions for this operation."
     checkActiveUser(user, isSystemOrProjectAdmin(project), msg)
@@ -134,10 +134,10 @@ final class AuthorizationRestService(
     checkActiveUser(requestingUser, isSystemAdminOrProjectAdminInAnyProject, msg)
   }
 
-  def ensureProjectMember(user: User, shortcode: Shortcode): IO[ForbiddenException, KnoraProject] =
+  private def ensureProjectMember(user: User, shortcode: Shortcode): IO[ForbiddenException, KnoraProject] =
     ensureProject(shortcode).tap(ensureProjectMember(user, _))
 
-  def ensureProjectMember(user: User, project: KnoraProject): IO[ForbiddenException, KnoraProject] = {
+  private def ensureProjectMember(user: User, project: KnoraProject): IO[ForbiddenException, KnoraProject] = {
     lazy val msg = s"User '${user.username}' is not a member of project '${project.shortcode.value}'."
     checkActiveUser(user, isProjectMember(project.id), msg).as(project)
   }

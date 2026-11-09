@@ -148,41 +148,6 @@ class AuthorizationRestServiceSpec extends ZIOSpecDefault {
           ),
         )
       },
-      test(
-        "and given a project for which the user is project admin when ensureSystemAdminOrProjectAdmin then succeed",
-      ) {
-        val project = TestDataFactory.someProject
-        for {
-          _          <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project))
-          userIsAdmin =
-            activeNormalUser.copy(permissions =
-              PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
-            )
-          actualProject <- authorizationRestService(_.ensureSystemAdminOrProjectAdminById(userIsAdmin, project.id))
-        } yield assertTrue(project == actualProject)
-      },
-      test(
-        "and given the project does not exists for which the user is project admin when ensureSystemAdminOrProjectAdmin then succeed",
-      ) {
-        val project     = TestDataFactory.someProject
-        val userIsAdmin =
-          activeNormalUser.copy(permissions =
-            PermissionsDataADM(Map(project.id.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
-          )
-        for {
-          exit <- authorizationRestService(_.ensureSystemAdminOrProjectAdminById(userIsAdmin, project.id)).exit
-        } yield assert(exit)(failsWithA[ForbiddenException])
-      },
-      test(
-        "and given a project for which the user is _not_ project admin  when ensureSystemAdminOrProjectAdmin then fail",
-      ) {
-        val project = TestDataFactory.someProject
-        for {
-          _             <- ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project))
-          userIsNotAdmin = activeNormalUser.copy(permissions = PermissionsDataADM(Map.empty))
-          exit          <- authorizationRestService(_.ensureSystemAdminOrProjectAdminById(userIsNotAdmin, project.id)).exit
-        } yield assert(exit)(failsWithA[ForbiddenException])
-      },
     ),
     suite("authorizeProjectAdminById")(
       test("issues a grant for the project to an active system admin") {
