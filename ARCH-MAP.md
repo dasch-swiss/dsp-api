@@ -80,9 +80,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         review.
     - `DspApiServer` skips the server's `406` check for endpoints marked `NegotiatesOwnAccept`
         (`negotiatesItsOwnAccept`), the SPARQL passthrough and the fair routes - enforcement: review.
-    - A route whose server logic can reject a streamed request body without reading it carries
-        `ClosesOnUnreadBody` (the SPARQL passthrough has `routeMarker`), so `DspApiServer` closes the connection on
-        its rejections - enforcement: `StreamingBodyMarkerE2ESpec`.
+    - `DspApiServer` closes the connection on a rejection that leaves a streamed request body unread; the marker
+        rule for routes is in webapi-api - enforcement: see webapi-api.
     - Wiring: shared inventory. `LayersLive.scala` is the one file every slice's `*Module.layer` is added to,
         and `AppConfig.AppConfigurations` is the one place a new config section is projected. `Main.bootstrap`
         composes `LayersLive.bootstrap >+> ApiModule.layer`, so `ApiModule` (webapi-api) is a second adjacent
@@ -120,6 +119,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/admin/AdminApiServerEndpoints.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/BaseEndpoints.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v3/V3BaseEndpoint.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v3/projects/ClosesOnUnreadBody.scala`
     - Sufficiency gap: the v2 and v3 aggregators (`ApiV2ServerEndpoints`, `ApiV3ServerEndpoints`,
         `ApiV2Module`, `ApiV3Module`) plus `docs/development/dsp-api-v3-iri-handling.md` are also required
         when the change touches v2 or v3 rather than admin.
@@ -165,6 +165,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `FairApiModule.layer` is composed in `ApiModule` and `FairServerEndpoints` is listed in `Endpoints`. The
         fair endpoints are public and built on raw `endpoint` plus `RequiresMethod`, not `BaseEndpoints`,
         so none carries a security input or the shared `errorOutputs` - enforcement: review.
+    - An endpoint whose server logic can reject a streamed body without reading it carries the marker
+        `ClosesOnUnreadBody` (the SPARQL passthrough has `routeMarker`), so `DspApiServer` closes the connection on
+        its rejections - enforcement: test (E2E: `StreamingBodyMarkerE2ESpec`).
     - `POST /admin/sparql/query` is the only surface forwarding a client-supplied SPARQL string unparsed; no
         other endpoint may accept raw SPARQL - enforcement: review (`CONVENTIONS.md` line 69).
     - No `unsafeFrom` and no `.die` on IRI conversion in a RestService; a malformed client IRI is a 400 -
@@ -1079,6 +1082,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/export/api/ExportApiModule.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/export/domain/ProjectMigrationImportService.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/export/domain/DataTaskState.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/export/domain/ImportSlot.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v3/projects/V3ProjectsRestService.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/core/LayersLive.scala`
     - `CONVENTIONS.md`
@@ -1102,6 +1106,12 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `slice/export/api/**`, whose three files declare `package org.knora.webapi.slice.api.v3.export_`.
     - Every import kind runs its background work through `ImportSlot.run`; `ImportSlot` is built only in
         `ExportModule` - enforcement: structure (`private[domain]` constructor and layer).
+    - The bulk data import accepts at most `ProjectDataImportService.maxPayloadBytes` (250 MiB). Both checkers
+        enforce it: `checkDeclaredLength` (called in `V3ProjectsRestService`) on the declared length and
+        `saveWithinLimit` (in the service) on the bytes read - enforcement: test (`ProjectDataImportServiceSpec`,
+        `PayloadTooLargeSpec`, E2E: `ProjectDataImportE2ESpec`).
+    - The bulk import validates against a plain Jena model, never an inference model: see shacl-validator
+        (`memory_test`).
     - webapi-export must not import webapi-api - enforcement: docs-only. Currently violated by `ExportService`
         importing `slice.api.v3.export.{FileLink, LegalInfo, MetadataRecord}` and `Models.scala` importing
         `slice.api.admin.Codecs`, while webapi-api imports webapi-export back, forming a cycle.
@@ -1456,7 +1466,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Paths**: `modules/shacl-validator/**`
 - **Purpose**: Pure library wrapping TopBraid SHACL and Apache Jena to validate loaded RDF, ontology shapes
     first then data shapes, returning a Turtle validation report on failure. No bounded context of its own;
-    it is the RDF-platform primitive webapi-export's migration import path uses to gate incoming project data.
+    it is the RDF-platform primitive webapi-export's migration import and bulk data import paths use to gate
+    incoming project data.
 - **Key entities**: `ShaclValidator`, `RdfData`, `RdfGraphs`, `ShaclShapes`, `ShaclValidationError`
 - **Public interface**: `ShaclValidator.validate(graphs, shapes)`, returning
     `IO[ShaclValidationError, Unit]`;
@@ -1471,7 +1482,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/shacl-validator/src/test/scala/org/knora/shacl/ShaclValidatorMemorySpec.scala`
 - **Depends on**: build-toolchain. No other inventory component; `zio`, `jena-core`, `jena-arq` and
     `org.topbraid:shacl` only.
-- **Used by**: webapi-export (`ProjectMigrationImportValidator`).
+- **Used by**: webapi-export (`ProjectMigrationImportValidator`, used by the migration import and by
+    `ProjectDataImportService`).
 - **Boundary rules**:
     - Two-phase validation is fixed in order: ontology graphs against ontology shapes must conform before
         data graphs and data shapes are even loaded - enforcement: structure (a sequential `for`

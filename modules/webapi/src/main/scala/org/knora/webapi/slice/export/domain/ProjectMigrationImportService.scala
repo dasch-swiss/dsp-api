@@ -73,24 +73,16 @@ final class ProjectMigrationImportService(
   ): IO[ImportExistsError | ImportSlotBusyError, CurrentDataTask] =
     slot
       .run(
-        // Once the task exists, any abnormal end of the save, interruption included, fails it.
-        ZIO.uninterruptibleMask { restore =>
-          state
-            .makeNew(projectIri, createdBy)
-            .mapError { case StatesExistError(t) => ImportExistsError(t) }
-            .flatMap { importTask =>
-              restore(saveZipStream(importTask.id, stream))
-                .onError(state.failWith(importTask.id, _))
-                .orDie
-                .as(importTask)
-            }
-        },
-      ) { importTask =>
+        state
+          .startWith(state.makeNew(projectIri, createdBy))(saveZipStream(_, stream))
+          .mapError { case StatesExistError(t) => ImportExistsError(t) },
+      ) { case (importTask, _) =>
         doImport(importTask.id, projectIri)
           .whenZIO(state.isInProgress(importTask.id))
           .unit
           .onError(state.failWith(importTask.id, _))
       }
+      .map(_._1)
 
   private def saveZipStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]): Task[Unit] =
     for {

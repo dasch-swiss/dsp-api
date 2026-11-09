@@ -22,8 +22,8 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
-import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.api.DataImportLimit.overLimitBytes
 import org.knora.webapi.slice.api.RawHeadOnlyPost
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
@@ -43,7 +43,6 @@ class ProjectDataImportE2ESpec extends E2EZSpec {
   private val titleText   = "An imported title"
 
   /** One byte above the 250 MiB limit on the raw request body. */
-  private val overLimitBytes = ProjectDataImportService.maxPayloadBytes + 1
 
   private val onto     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
   private val knoraApi = "http://api.knora.org/ontology/knora-api/v2#"

@@ -12,12 +12,17 @@ import sttp.tapir.AttributeKey
 case object ClosesOnUnreadBodyRoute
 
 /**
- * Marks an endpoint that streams a large request body, so the server can end the connection when it answers without
- * having read that body. Without it the next keep-alive request on the connection is silently dropped.
+ * Marks an endpoint that streams a large request body, so the server ends the connection (`Connection: close`) when
+ * it answers without having read that body.
  *
- * The SPARQL passthrough carries its own marker, [[org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints.routeMarker]],
- * for the same hazard (an unread streamed body under `autoRead=false`). A route whose server logic can reject a
- * streamed body without reading it must carry one of the two; `StreamingBodyMarkerE2ESpec` enforces this.
+ * A body declaring a length above the aggregation threshold is streamed, and zio-http leaves such a connection with
+ * `autoRead=false` when the handler answers without consuming the body; the next keep-alive request on it is silently
+ * dropped and the client hangs until its own timeout. Closing takes the connection out of the client's pool. See
+ * `DspApiServer` (`closeConnectionIfBodyUnread`) for when it applies.
+ *
+ * The SPARQL passthrough carries its own marker, [[org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints.routeMarker]].
+ * A route whose server logic can reject a streamed body without reading it must carry one of the two;
+ * `StreamingBodyMarkerE2ESpec` enforces this.
  */
 object ClosesOnUnreadBody {
 

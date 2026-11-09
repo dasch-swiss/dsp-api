@@ -13,6 +13,8 @@ import java.net.Socket
 import java.net.SocketTimeoutException
 import java.nio.charset.StandardCharsets
 
+import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
+
 /**
  * What a raw socket read back after a request head was sent: the response text, and whether the server then hung up.
  * `serverClosed` is `false` when the read ran out its own timeout instead of reaching EOF, so a server that answered
@@ -32,6 +34,11 @@ final case class RawExchange(text: String, serverClosed: Boolean) {
 
   /** The text after the blank line that ends the response head. */
   def body: String = text.split("\r\n\r\n", 2).lift(1).getOrElse("")
+}
+
+/** A declared length one byte above the bulk data import limit. */
+object DataImportLimit {
+  val overLimitBytes: Long = ProjectDataImportService.maxPayloadBytes + 1
 }
 
 object RawHeadOnlyPost {

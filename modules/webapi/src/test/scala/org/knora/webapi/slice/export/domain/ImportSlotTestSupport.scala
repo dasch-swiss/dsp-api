@@ -28,5 +28,9 @@ object ImportSlotTestSupport {
       .orElse(ZIO.die(new IllegalStateException("The import slot was not released within 10 seconds.")))
       .withClock(Clock.ClockLive)
 
+  /** Re-runs `effect` every 10 milliseconds until its result satisfies `done`; needs a live clock. */
+  def awaitUntil[A](effect: UIO[A])(done: A => Boolean): UIO[A] =
+    effect.repeat(Schedule.spaced(10.millis) *> Schedule.recurUntil[A](done))
+
   private case object ProbeDone
 }

@@ -54,20 +54,11 @@ final class V3ProjectsRestService(
   userService: UserService,
 ) {
 
+  import V3ProjectsRestService.conflict
+  import V3ProjectsRestService.importConflict
+
   private def ensureProjectExists(projectIri: ProjectIri) =
     projectService.findById(projectIri).orDie.someOrFail(NotFound.from(projectIri))
-
-  private def conflict(code: Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
-    Conflict(
-      code,
-      code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
-      Map("id" -> id.value, "projectIri" -> prj.value),
-    )
-
-  private def importConflict(e: ImportExistsError | ImportSlotBusyError): Conflict = e match
-    case ImportExistsError(t)  => conflict(import_exists, t.projectIri, t.id)
-    case ImportSlotBusyError() =>
-      Conflict(import_running, import_running.template, Map.empty)
 
   private def notFound(code: NotFounds, prj: ProjectIri, id: DataTaskId) =
     NotFound(
@@ -294,4 +285,16 @@ final class V3ProjectsRestService(
 
 object V3ProjectsRestService {
   val layer = ZLayer.derive[V3ProjectsRestService]
+
+  private[projects] def conflict(code: Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
+    Conflict(
+      code,
+      code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
+      Map("id" -> id.value, "projectIri" -> prj.value),
+    )
+
+  def importConflict(e: ImportExistsError | ImportSlotBusyError): Conflict = e match
+    case ImportExistsError(t)  => conflict(import_exists, t.projectIri, t.id)
+    case ImportSlotBusyError() =>
+      Conflict(import_running, import_running.template, Map.empty)
 }

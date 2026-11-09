@@ -60,18 +60,11 @@ final class ProjectDataImportService(
   ): IO[ImportExistsError | ImportSlotBusyError, CurrentDataTask] =
     slot
       .run(
-        // Once the task exists, any abnormal end of the save, interruption included, fails it.
-        ZIO.uninterruptibleMask { restore =>
-          state
-            .makeNew(project.id, createdBy, Some(onBehalfOf.userIri))
-            .mapError { case StatesExistError(t) => ImportExistsError(t) }
-            .flatMap { task =>
-              restore(saveJsonLdStream(task.id, stream, limit))
-                .onError(state.failWith(task.id, _))
-                .orDie
-                .map(withinLimit => (task, withinLimit))
-            }
-        },
+        state
+          .startWith(state.makeNew(project.id, createdBy, Some(onBehalfOf.userIri)))(
+            saveJsonLdStream(_, stream, limit),
+          )
+          .mapError { case StatesExistError(t) => ImportExistsError(t) },
       ) { case (task, withinLimit) =>
         doImport(task.id, project, onBehalfOf)
           .whenZIO(state.isInProgress(task.id))

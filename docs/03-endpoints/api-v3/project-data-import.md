@@ -91,7 +91,7 @@ above the limit is rejected with `413 Payload Too Large` and error code `payload
 }
 ```
 
-The server closes the connection after any rejection (4xx) of a request that declares more than 1 MiB
+The server closes the connection after a non-2xx response to a request that declares more than 1 MiB
 (`Connection: close`), including this `413`, because the unread body is still on the wire. A client must open a new
 connection for its next request, and may see the connection reset while it is still sending the body.
 
@@ -138,8 +138,9 @@ a new import of either kind is rejected with `409 Conflict` and error code `impo
 
 The slot check runs before the `import_exists` check: a second import of the same kind while the first one runs gets
 `import_running`, not `import_exists`. The request validation checks of the endpoint (`400`, `404`,
-`project_ontologies_missing` and `data_graph_exists`) still run before the slot check. The slot covers the running import, not the task's lifetime. A failed task that waits for its
-`DELETE` does not block the other kind of import, but still blocks its own kind with `import_exists`.
+`project_ontologies_missing` and `data_graph_exists`) still run before the slot check. The slot covers the running
+import, not the task's lifetime. A failed task that waits for its `DELETE` does not block the other kind of import, but
+still blocks its own kind with `import_exists`.
 
 The upload to Fuseki is **atomic** — if the upload fails, no partial data is written to the triplestore.
 

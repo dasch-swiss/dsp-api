@@ -39,8 +39,7 @@ scala_junit_test(
     ],
 )
 
-# Runs under a small heap so a validation model that grows with inference fails
-# with OutOfMemoryError (JVM exit) instead of passing.
+# Plain-model rule of `ShaclValidator.validate`: a regression ends as a JVM exit (OutOfMemoryError), not a test failure.
 scala_junit_test(
     name = "memory_test",
     size = "medium",

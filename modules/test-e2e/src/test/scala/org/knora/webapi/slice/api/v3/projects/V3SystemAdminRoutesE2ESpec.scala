@@ -17,8 +17,8 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
-import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.DataImportLimit.overLimitBytes
 import org.knora.webapi.slice.api.RawHeadOnlyPost
 import org.knora.webapi.testservices.TestApiClient
 
@@ -58,8 +58,6 @@ class V3SystemAdminRoutesE2ESpec extends E2EZSpec {
     "DELETE" -> uri"/v3/projects/$projectIri/data-imports/$taskId",
     "POST"   -> uri"/v3/export/resources/oai",
   )
-
-  private val overLimitBytes = ProjectDataImportService.maxPayloadBytes + 1
 
   private val dataImportPostWithoutCredentials =
     test("POST data-imports without credentials declaring a Content-Length above the size limit returns 401, not 413") {

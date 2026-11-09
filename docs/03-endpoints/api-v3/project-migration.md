@@ -88,7 +88,7 @@ Export status, delete and download resolve the task by its `exportId` alone; the
 
 The import endpoint requires the `{projectIri}` in the URL to match the `External-Identifier` in the BagIt `bag-info.txt`. The request body is the zip file with content type `application/zip`.
 
-A rejected import `POST` (any 4xx) that declares a `Content-Length` above 1 MiB closes the connection (`Connection: close`), because the unread body is still on the wire. Open a new connection for the next request.
+An import `POST` that gets a non-2xx response and declares a `Content-Length` above 1 MiB closes the connection (`Connection: close`), because the unread body is still on the wire. Open a new connection for the next request.
 
 Exports can optionally exclude assets via `?skipAssets=true`.
 
@@ -230,5 +230,6 @@ curl --request DELETE \
 - **Project must not exist on target**: The import fails if the project IRI or shortcode already exists.
 - **One task at a time**: Only one export and one import can exist server-wide. Delete the previous task before triggering a new one.
 - **One import at a time**: An import is rejected with `import_running` while another import, of either kind, runs on this server. See [Project Data Import](project-data-import.md#key-behaviors).
+- **No payload size limit**: The migration import accepts a bag of any size. A very large bag can exhaust the API heap during validation, because the data files load into the validation model.
 - **Root user references**: Projects where resources or values reference the root user cannot be imported directly. The references must be reassigned before export.
 - **Assets**: Asset export/import is handled via dsp-ingest. If dsp-ingest has no assets for the project, the export continues without them.

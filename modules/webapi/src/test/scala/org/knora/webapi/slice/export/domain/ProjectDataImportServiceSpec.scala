@@ -48,8 +48,6 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
   private def cleanup(fx: Fixture, id: DataTaskId): UIO[Unit] =
     fx.storage.dataImportJsonLdPath(id).flatMap(p => Files.deleteRecursive(p.parent.get)).ignore.unit
 
-  private def awaitSlotFree(slot: ImportSlot): UIO[Unit] = ImportSlotTestSupport.awaitFree(slot)
-
   private val declaredLengthSuite = suite("checkDeclaredLength")(
     test("passes without a declared length") {
       assertTrue(checkDeclaredLength(None, 10) == Right(()))
@@ -119,7 +117,7 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
           path    <- storage.dataImportJsonLdPath(task.id)
           exists  <- Files.exists(path)
           _       <- Files.deleteRecursive(path.parent.get).ignore
-          _       <- awaitSlotFree(slot)
+          _       <- ImportSlotTestSupport.awaitFree(slot)
         } yield assertTrue(
           current.isFailed,
           current.errorMessage.contains(payloadTooLargeMessage(5L)),
@@ -132,7 +130,7 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
         for {
           fx   <- fixture
           task <- fx.service.importDataGraph(project, root, root, bytes(3))
-          _    <- awaitSlotFree(fx.slot)
+          _    <- ImportSlotTestSupport.awaitFree(fx.slot)
           cur  <- fx.state.find(task.id)
           _    <- cleanup(fx, task.id)
         } yield assertTrue(cur.isFailed)
@@ -145,13 +143,13 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
           fiber <- fx.service
                      .importDataGraph(project, root, root, bytes(3) ++ ZStream.never)
                      .fork
-          task   <- fx.ref.get.repeatUntil(_.isDefined).map(_.get)
+          task   <- ImportSlotTestSupport.awaitUntil(fx.ref.get)(_.isDefined).map(_.get)
           path   <- fx.storage.dataImportJsonLdPath(task.id)
-          _      <- Files.exists(path).repeatUntil(identity)
+          _      <- ImportSlotTestSupport.awaitUntil(Files.exists(path))(identity)
           _      <- fiber.interrupt
           cur    <- fx.state.find(task.id)
           exists <- Files.exists(path)
-          _      <- awaitSlotFree(fx.slot)
+          _      <- ImportSlotTestSupport.awaitFree(fx.slot)
           _      <- cleanup(fx, task.id)
         } yield assertTrue(cur.isFailed, !exists)
       }
@@ -165,7 +163,7 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
           task   <- fx.ref.get.map(_.get)
           path   <- fx.storage.dataImportJsonLdPath(task.id)
           exists <- Files.exists(path)
-          _      <- awaitSlotFree(fx.slot)
+          _      <- ImportSlotTestSupport.awaitFree(fx.slot)
           _      <- cleanup(fx, task.id)
         } yield assertTrue(exit.isFailure, task.isFailed, !exists)
       }
@@ -190,7 +188,7 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
           _     <- gate.succeed(())
           _     <- fiber.await
           task  <- ref.get.map(_.get)
-          _     <- awaitSlotFree(slot)
+          _     <- ImportSlotTestSupport.awaitFree(slot)
           _     <- cleanup(Fixture(service, null, storage, ref, slot), task.id)
         } yield assertTrue(task.isFailed)
       }

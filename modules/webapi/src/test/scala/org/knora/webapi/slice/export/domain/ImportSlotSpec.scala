@@ -34,7 +34,9 @@ class ImportSlotSpec extends ZIOSpecDefault {
       for {
         slot   <- ZIO.service[ImportSlot]
         gate   <- Promise.make[Nothing, Unit]
-        first  <- slot.run(gate.await.as(1))(noWork).fork
+        inside <- Promise.make[Nothing, Unit]
+        first  <- slot.run(inside.succeed(()) *> gate.await.as(1))(noWork).fork
+        _      <- inside.await
         second <- slot.run(ZIO.succeed(2))(noWork).either
         _      <- gate.succeed(())
         _      <- first.join

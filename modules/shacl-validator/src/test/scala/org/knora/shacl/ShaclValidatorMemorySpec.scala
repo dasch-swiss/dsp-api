@@ -17,10 +17,9 @@ import java.nio.file.Path
 import org.knora.testrunner.DspZTestJUnitRunner
 
 /**
- * Guards that validation heap stays bounded for data typed only with leaf classes below a class and property
- * hierarchy: validation must use a plain model, not an RDFS inference model. Runs under a small heap
- * (see `memory_test` in BUILD.bazel). A regression ends as a JVM exit with OutOfMemoryError, because
- * `validateModel` runs in `ZIO.attemptBlocking` and the timeout cannot interrupt it.
+ * Guards the plain-model rule of `ShaclValidator.validate` under a small heap (`memory_test`). A regression ends as a
+ * JVM exit with OutOfMemoryError, because `validateModel` runs in `ZIO.attemptBlocking` and the timeout cannot
+ * interrupt it.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class ShaclValidatorMemorySpec extends ZIOSpecDefault {

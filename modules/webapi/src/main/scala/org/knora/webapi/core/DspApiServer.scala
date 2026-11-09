@@ -268,22 +268,15 @@ object DspApiServer {
     }
 
     /**
-     * Marks a response produced *before* the request body was read as the last one on its connection.
+     * Marks a response produced *before* the request body was read as the last one on its connection (`Connection:
+     * close`, added once).
      *
-     * `applies` says whether the endpoint is one whose rejections can leave the body unread: the SPARQL passthrough
-     * ([[SparqlPassthroughEndpoints.isPassthroughRoute]]) or a [[ClosesOnUnreadBody]] route. Their rejections
-     * answer without consuming the body: the security logic's `401`/`403`, which runs before body decoding by
-     * design, a `400`/`415` from body decoding, and, on a [[ClosesOnUnreadBody]] route, a status from server logic
-     * that never read the stream. Bodies declaring a length above the server's aggregation threshold are streamed,
-     * and zio-http leaves such a connection with `autoRead=false` when the handler answers without consuming it --
-     * the next keep-alive request on that connection is silently dropped and the client hangs until its own
-     * timeout. `Connection: close` takes the connection out of the client's pool instead, which is the same remedy
-     * tapir applies to its own over-cap `413`; the header is added only once, since that `413` already carries it.
-     *
-     * It is applied only when the body plausibly went unread, which is a property of the *request*, not of the
-     * rejection: see [[bodyPlausiblyUnread]]. Closing on every rejection also killed healthy connections -- a missing
-     * `query` form field or an unsupported `Content-Type` on a small body is answered after zio-http has already read
-     * the whole thing, so there is nothing left in the channel and nothing to fix.
+     * `applies` says whether the endpoint can reject without reading its body: the SPARQL passthrough
+     * ([[SparqlPassthroughEndpoints.isPassthroughRoute]]) or a [[ClosesOnUnreadBody]] route. Bodies declaring a length
+     * above the aggregation threshold are streamed, and zio-http leaves a connection with `autoRead=false` when the
+     * handler answers without consuming such a body; the next keep-alive request on it is dropped and the client
+     * hangs. The close applies only if the body plausibly went unread, a property of the *request*:
+     * see [[bodyPlausiblyUnread]].
      */
     private def closeConnectionIfBodyUnread[B](
       applies: Boolean,
