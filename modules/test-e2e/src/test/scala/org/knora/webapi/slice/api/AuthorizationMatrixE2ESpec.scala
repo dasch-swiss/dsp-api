@@ -1195,6 +1195,35 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
         ontologyBody(onto, graph = Seq(cardinality(onto, """"owl:maxCardinality": 1,"""))),
       ),
     ),
+    Row[OntologyFixture](
+      "GET /v2/ontologies/canreplacecardinalities/{resourceClassIri}",
+      projectAdminOutcomes,
+      prepare = ontologyWithClass,
+      send = (onto, user) =>
+        TestApiClient
+          .getJsonLd(uri"/v2/ontologies/canreplacecardinalities/${classOf(onto)}", user, identity)
+          .map(_.code),
+      readBack = None,
+    ),
+    Row[OntologyFixture](
+      "POST /v2/ontologies/candeletecardinalities",
+      projectAdminOutcomes,
+      prepare = ontologyWithCardinality,
+      send = (onto, user) =>
+        postJsonLd(
+          uri"/v2/ontologies/candeletecardinalities",
+          ontologyBody(onto, graph = Seq(cardinality(onto, """"owl:maxCardinality": 1,"""))),
+        )(user),
+      readBack = None,
+    ),
+    Row[OntologyFixture](
+      "GET /v2/ontologies/candeleteontology/{ontologyIri}",
+      outcomes(unauthorized, allowed, allowed, allowed, allowed, allowed),
+      prepare = freshOntology,
+      send = (onto, user) =>
+        TestApiClient.getJsonLd(uri"/v2/ontologies/candeleteontology/${onto.iri}", user, identity).map(_.code),
+      readBack = None,
+    ),
     Row[String](
       "POST /v2/standoff/canonicalize",
       outcomes(unauthorized, allowed, allowed, allowed, allowed, allowed),

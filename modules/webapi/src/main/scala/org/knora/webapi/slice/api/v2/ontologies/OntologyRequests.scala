@@ -16,7 +16,6 @@ import org.knora.webapi.messages.store.triplestoremessages.LanguageTaggedStringL
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 
@@ -26,13 +25,11 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the cardinalities to be removed.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param requestingUser       the user making the request.
  */
 final case class CanDeleteCardinalitiesFromClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  requestingUser: User,
 )
 
 /**

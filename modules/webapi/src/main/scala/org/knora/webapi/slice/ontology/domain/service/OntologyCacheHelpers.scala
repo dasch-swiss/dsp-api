@@ -13,7 +13,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
@@ -294,81 +293,6 @@ final case class OntologyCacheHelpers(ontologyCache: OntologyCache, ontologyRepo
       _ <- OntologyHelpers.checkExternalOntologyIriForUpdate(externalOntologyIri)
       _ <- OntologyHelpers.checkExternalEntityIriForUpdate(externalEntityIri)
     } yield ()
-
-  /**
-   * Like [[validateOntologyAndEntityIrisForUpdate]], and also checks that the user has permission to update the
-   * ontology.
-   *
-   * @param externalOntologyIri the external IRI of the ontology.
-   * @param externalEntityIri   the external IRI of the entity.
-   * @param requestingUser      the user making the request.
-   */
-  def checkOntologyAndEntityIrisForUpdate(
-    externalOntologyIri: SmartIri,
-    externalEntityIri: SmartIri,
-    requestingUser: User,
-  ): Task[Unit] =
-    for {
-      _ <- validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalEntityIri)
-      _ <- checkPermissionsForOntologyUpdate(
-             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
-             requestingUser = requestingUser,
-           )
-    } yield ()
-
-  /**
-   * Throws an exception if the requesting user does not have permission to update an ontology.
-   *
-   * @param internalOntologyIri the internal IRI of the ontology.
-   * @param requestingUser      the user making the request.
-   * @return the project IRI.
-   */
-  def checkPermissionsForOntologyUpdate(
-    internalOntologyIri: SmartIri,
-    requestingUser: User,
-  ): Task[ProjectIri] =
-    for {
-      cacheData  <- ontologyCache.getCacheData
-      projectIri <-
-        ZIO
-          .succeed(cacheData.ontologies.get(internalOntologyIri).flatMap(_.ontologyMetadata.projectIri))
-          .someOrFail(NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found"))
-      _ <-
-        ZIO
-          .fail(ForbiddenException("Ontologies can be modified only by a project or system admin."))
-          .unless(
-            requestingUser.permissions.isProjectAdmin(projectIri) ||
-              requestingUser.permissions.isSystemAdmin,
-          )
-
-    } yield projectIri
-
-  /**
-   * Checks whether the requesting user has permission to update an ontology.
-   *
-   * @param ontologyIri the internal IRI of the ontology.
-   * @param requestingUser      the user making the request.
-   * @return `true` if the user has permission to update the ontology
-   */
-  def canUserUpdateOntology(ontologyIri: OntologyIri, requestingUser: User): Task[Boolean] = for {
-    ontology <- ontologyRepo
-                  .findById(ontologyIri)
-                  .someOrFail(NotFoundException(s"Ontology ${ontologyIri.toComplexSchema} not found"))
-    projectIri <- ZIO
-                    .fromOption(ontology.projectIri)
-                    .orElseFail(NotFoundException(s"Project IRI not found for ontology ${ontologyIri.toComplexSchema}"))
-    canUpdate = requestingUser.permissions.isProjectAdmin(projectIri) || requestingUser.permissions.isSystemAdmin
-  } yield canUpdate
-
-  /**
-   * Checks whether the requesting user has permission to update an ontology.
-   *
-   * @param ontologyIri the internal IRI of the ontology.
-   * @param requestingUser      the user making the request.
-   * @return `true` if the user has permission to update the ontology
-   */
-  def canUserUpdateOntology(ontologyIri: SmartIri, requestingUser: User): Task[Boolean] =
-    canUserUpdateOntology(OntologyIri.unsafeFrom(ontologyIri), requestingUser)
 }
 
 object OntologyCacheHelpers {

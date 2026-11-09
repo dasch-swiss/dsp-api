@@ -36,7 +36,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -283,13 +282,8 @@ final class OntologyV2RequestParser(iriConverter: IriConverter) {
   def canDeleteCardinalitiesFromClassRequestV2(
     jsonLd: String,
     apiRequestId: UUID,
-    requestingUser: User,
   ): IO[String, CanDeleteCardinalitiesFromClassRequestV2] =
-    constructClassRelatedRequest(
-      jsonLd,
-      apiRequestId,
-      CanDeleteCardinalitiesFromClassRequestV2(_, _, _, requestingUser),
-    )
+    constructClassRelatedRequest(jsonLd, apiRequestId, CanDeleteCardinalitiesFromClassRequestV2.apply)
 
   def deleteCardinalitiesFromClassRequestV2(
     jsonLd: String,

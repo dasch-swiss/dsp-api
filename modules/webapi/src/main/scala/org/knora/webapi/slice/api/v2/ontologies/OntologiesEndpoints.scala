@@ -49,7 +49,7 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
 
   private val base = "v2" / "ontologies"
 
-  private val requiresOntologyAdmin = "Requires SystemAdmin or ProjectAdmin permissions for the ontology's project."
+  private val canDoReason = "answers only whether the caller could delete"
 
   private val adminProjectFrom = "ontology's project"
   private val adminRequirement = Policy.ProjectAdmin(adminProjectFrom).requirement
@@ -166,7 +166,9 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
         "For more info check out the <a href=\"https://docs.dasch.swiss/DSP-API/03-endpoints/api-v2/ontology-information/#adding-cardinalities-to-a-class\">documentation</a>.",
     )
 
-  val getOntologiesCanreplacecardinalities = baseEndpoints.withUserEndpoint.get
+  val getOntologiesCanreplacecardinalities = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .get
     .in(base / "canreplacecardinalities" / resourceClassIriPath)
     .in(query[Option[IriDto]]("propertyIri"))
     .in(
@@ -186,7 +188,7 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
         "If a property IRI and a new cardinality are provided, it checks if the cardinality can be set for the property " +
         "on the specific class. " +
         "Fails if not both a property IRI and a new cardinality is provided. " +
-        "Fails if the user does not have write access to the ontology of the class.",
+        "Fails if the user does not have write access to the ontology of the class. " + adminRequirement,
     )
 
   val putOntologiesCardinalities = baseEndpoints
@@ -201,7 +203,9 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
       "Update cardinalities of a class. " + adminRequirement,
     )
 
-  val postOntologiesCandeletecardinalities = baseEndpoints.withUserEndpoint.post
+  val postOntologiesCandeletecardinalities = baseEndpoints
+    .projectAdminPolicyEndpoint(adminProjectFrom)
+    .post
     .in(base / "candeletecardinalities")
     .in(stringJsonBody)
     .in(ApiV2.Inputs.formatOptions)
@@ -209,7 +213,7 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
       "Check if cardinalities can be deleted from a class. " +
-        requiresOntologyAdmin,
+        adminRequirement,
     )
 
   val patchOntologiesCardinalities = baseEndpoints
@@ -246,12 +250,14 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(s"Get a class definition by IRI. $entitiesRequirement")
 
-  val getOntologiesCandeleteclass = baseEndpoints.withUserEndpoint.get
+  val getOntologiesCandeleteclass = baseEndpoints
+    .publicPolicyEndpointWithUser(canDoReason)
+    .get
     .in(base / "candeleteclass" / resourceClassIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Check if a class can be deleted. Publicly accessible.")
+    .description(s"Check if a class can be deleted. ${Policy.Public(canDoReason).requirement}")
 
   val deleteOntologiesClasses = baseEndpoints
     .projectAdminPolicyEndpoint(adminProjectFrom)
@@ -333,12 +339,14 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(s"Get a property definition by IRI. $entitiesRequirement")
 
-  val getOntologiesCandeleteproperty = baseEndpoints.withUserEndpoint.get
+  val getOntologiesCandeleteproperty = baseEndpoints
+    .publicPolicyEndpointWithUser(canDoReason)
+    .get
     .in(base / "candeleteproperty" / propertyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Check if a property can be deleted. Publicly accessible.")
+    .description(s"Check if a property can be deleted. ${Policy.Public(canDoReason).requirement}")
 
   val deleteOntologiesProperty = baseEndpoints
     .projectAdminPolicyEndpoint(adminProjectFrom)
@@ -363,12 +371,14 @@ final class OntologiesEndpoints(baseEndpoints: BaseEndpoints) {
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(s"Create a new ontology. ${Policy.ProjectAdmin(bodyAttachedToProject).requirement}")
 
-  val getOntologiesCandeleteontology = baseEndpoints.securedEndpoint.get
+  val getOntologiesCandeleteontology = baseEndpoints
+    .authenticatedPolicyEndpoint(canDoReason)
+    .get
     .in(base / "candeleteontology" / ontologyIriPath)
     .in(ApiV2.Inputs.formatOptions)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Check if an ontology can be deleted. Requires authentication.")
+    .description(s"Check if an ontology can be deleted. ${Policy.Authenticated(canDoReason).requirement}")
 
   private val ontologyProject = "path ontology's project"
   val deleteOntologies        = baseEndpoints

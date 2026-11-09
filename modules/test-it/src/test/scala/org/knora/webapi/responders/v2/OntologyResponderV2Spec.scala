@@ -531,6 +531,28 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
         _.changeOntologyMetadata(anythingOntologyIri, Some("hijacked"), None, anythingLastModDate, randomUUID, _),
       )
     },
+    test("not check the cardinalities of a class with a grant for another project") {
+      val classIri         = anythingOntologyIri.makeEntityIri("Thing")
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(Owl.Class.toSmartIri)),
+          ),
+        ),
+        directCardinalities = Map(
+          anythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(ZeroOrOne),
+        ),
+        ontologySchema = ApiV2Complex,
+      )
+      notAllowedWithGrantForAnotherProject(
+        _.canDeleteCardinalitiesFromClass(
+          CanDeleteCardinalitiesFromClassRequestV2(classInfoContent, anythingLastModDate, randomUUID),
+          _,
+        ),
+      )
+    },
     test("not allow a user to create a property with a grant for another project") {
       val propertyIri         = anythingOntologyIri.makeEntityIri("hasName")
       val propertyInfoContent = PropertyInfoContentV2(
@@ -2300,14 +2322,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
             subClassOf = Set(anythingOntologyIri.makeEntityIri("Thing")),
             ontologySchema = ApiV2Complex,
           )
-        canDeleteResponse <- ontologyResponder(
+        canDeleteResponse <- asAnythingAdmin(
                                _.canDeleteCardinalitiesFromClass(
                                  CanDeleteCardinalitiesFromClassRequestV2(
                                    classInfoContent = classInfoContentWithCardinalityToDeleteDontAllow,
                                    lastModificationDate = anythingLastModDate,
                                    apiRequestID = randomUUID,
-                                   requestingUser = anythingAdminUser,
                                  ),
+                                 _,
                                ),
                              )
       } yield assertTrue(
@@ -2409,14 +2431,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
             ontologySchema = ApiV2Complex,
           )
         canDeleteResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.canDeleteCardinalitiesFromClass(
               CanDeleteCardinalitiesFromClassRequestV2(
                 classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = randomUUID,
-                requestingUser = anythingAdminUser,
               ),
+              _,
             ),
           )
       } yield assertTrue(
@@ -4704,7 +4726,7 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
 
         // Successfully check if the cardinality can be deleted
         canDeleteResponse <-
-          ontologyResponder(
+          asAnythingAdmin(
             _.canDeleteCardinalitiesFromClass(
               CanDeleteCardinalitiesFromClassRequestV2(
                 classInfoContent = ClassInfoContentV2(
@@ -4724,8 +4746,8 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
                 ),
                 lastModificationDate = freetestLastModDate,
                 apiRequestID = randomUUID,
-                requestingUser = anythingAdminUser,
               ),
+              _,
             ),
           )
 
@@ -4969,14 +4991,14 @@ class OntologyResponderV2Spec extends E2EZSpec { self =>
       )
 
       for {
-        response <- ontologyResponder(
+        response <- asAnythingAdmin(
                       _.canDeleteCardinalitiesFromClass(
                         CanDeleteCardinalitiesFromClassRequestV2(
                           classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
                           lastModificationDate = anythingLastModDate,
                           apiRequestID = randomUUID,
-                          requestingUser = anythingAdminUser,
                         ),
+                        _,
                       ),
                     )
         // remove cardinalities on the class anything:FoafPerson

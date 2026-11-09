@@ -27,6 +27,7 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v2.ontologies.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.ChangeClassLabelsOrCommentsRequestV2
@@ -42,6 +43,7 @@ import org.knora.webapi.slice.api.v2.ontologies.ReplaceClassCardinalitiesRequest
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.ProjectAdminGrant
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
@@ -93,6 +95,7 @@ final class OntologyResponderV2(
   cardinalityHandler: CardinalityHandler,
   cardinalityService: CardinalityService,
   iriService: IriService,
+  knoraProjectService: KnoraProjectService,
   ontologyCache: OntologyCache,
   ontologyCacheHelpers: OntologyCacheHelpers,
   ontologyTriplestoreHelpers: OntologyTriplestoreHelpers,
@@ -335,6 +338,18 @@ final class OntologyResponderV2(
         s"Ontology ${ontologyIri.toComplexSchema} does not belong to project ${grant.project.id.value}.",
       ),
     )
+
+  private def isOntologyAdmin(ontologyIri: OntologyIri, user: User): Task[Boolean] = for {
+    ontology <- ontologyRepo
+                  .findById(ontologyIri)
+                  .someOrFail(NotFoundException(s"Ontology ${ontologyIri.toComplexSchema} not found"))
+    projectIri <- ZIO
+                    .fromOption(ontology.projectIri)
+                    .orElseFail(NotFoundException(s"Project IRI not found for ontology ${ontologyIri.toComplexSchema}"))
+    project <- knoraProjectService
+                 .findById(projectIri)
+                 .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
+  } yield AuthorizationRestService.isSystemOrProjectAdmin(project)(user)
 
   def deleteOntologyComment(
     ontologyIri: OntologyIri,
@@ -928,19 +943,18 @@ final class OntologyResponderV2(
    * Checks if cardinalities can be removed from a class.
    *
    * @param canDeleteCardinalitiesFromClassRequest the request to remove cardinalities.
+   * @param grant                                  the grant for the project the ontology belongs to.
    * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
    */
   def canDeleteCardinalitiesFromClass(
     canDeleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
+    grant: ProjectAdminGrant,
   ): Task[CanDoResponseV2] =
     for {
-      requestingUser <- ZIO.succeed(canDeleteCardinalitiesFromClassRequest.requestingUser)
-
-      externalClassIri    = canDeleteCardinalitiesFromClassRequest.classInfoContent.classIri
+      externalClassIri   <- ZIO.succeed(canDeleteCardinalitiesFromClassRequest.classInfoContent.classIri)
       externalOntologyIri = externalClassIri.getOntologyFromEntity
 
-      _ <-
-        ontologyCacheHelpers.checkOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri, requestingUser)
+      _ <- ontologyCacheHelpers.validateOntologyAndEntityIrisForUpdate(externalOntologyIri, externalClassIri)
 
       internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
@@ -948,11 +962,12 @@ final class OntologyResponderV2(
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <-
         IriLocker.runWithIriLock(canDeleteCardinalitiesFromClassRequest.apiRequestID, ONTOLOGY_CACHE_LOCK_IRI)(
-          cardinalityHandler.canDeleteCardinalitiesFromClass(
-            deleteCardinalitiesFromClassRequest = canDeleteCardinalitiesFromClassRequest,
-            internalClassIri = internalClassIri,
-            internalOntologyIri = internalOntologyIri,
-          ),
+          ensureOntologyBelongsToGrant(OntologyIri.unsafeFrom(internalOntologyIri), grant) *>
+            cardinalityHandler.canDeleteCardinalitiesFromClass(
+              deleteCardinalitiesFromClassRequest = canDeleteCardinalitiesFromClassRequest,
+              internalClassIri = internalClassIri,
+              internalOntologyIri = internalOntologyIri,
+            ),
         )
     } yield taskResult
 
@@ -1000,7 +1015,7 @@ final class OntologyResponderV2(
     _ <- ontologyRepo
            .findClassBy(classIri)
            .someOrFail(BadRequestException(s"Class $classIri does not exist"))
-    userCanUpdateOntology <- ontologyCacheHelpers.canUserUpdateOntology(classIri.ontologyIri, requestingUser)
+    userCanUpdateOntology <- isOntologyAdmin(classIri.ontologyIri, requestingUser)
     classIsUsed           <- iriService.isEntityUsed(classIri.toInternalSchema)
   } yield CanDoResponseV2.of(userCanUpdateOntology && !classIsUsed)
 
@@ -1063,7 +1078,6 @@ final class OntologyResponderV2(
     val externalPropertyIri = propertyIri.toComplexSchema
     val internalPropertyIri = propertyIri.toInternalSchema
     val externalOntologyIri = externalPropertyIri.getOntologyFromEntity
-    val internalOntologyIri = internalPropertyIri.getOntologyFromEntity
     for {
       property <- ontologyRepo
                     .findProperty(propertyIri)
@@ -1073,7 +1087,7 @@ final class OntologyResponderV2(
                s"A link value property cannot be deleted directly; check the corresponding link property instead"
              BadRequestException(msg)
            })
-      userCanUpdateOntology <- ontologyCacheHelpers.canUserUpdateOntology(internalOntologyIri, requestingUser)
+      userCanUpdateOntology <- isOntologyAdmin(propertyIri.ontologyIri, requestingUser)
       propertyIsUsed        <- iriService.isEntityUsed(internalPropertyIri)
     } yield CanDoResponseV2.of(userCanUpdateOntology && !propertyIsUsed)
   }
@@ -1173,7 +1187,7 @@ final class OntologyResponderV2(
     ontology <- ontologyRepo
                   .findById(ontologyIri)
                   .someOrFail(BadRequestException(s"Ontology ${ontologyIri.toComplexSchema.toIri} does not exist"))
-    userCanUpdateOntology <- ontologyCacheHelpers.canUserUpdateOntology(ontologyIri.toInternalSchema, requestingUser)
+    userCanUpdateOntology <- isOntologyAdmin(ontologyIri, requestingUser)
     subjectsUsingOntology <- ontologyTriplestoreHelpers.getSubjectsUsingOntology(ontology)
   } yield CanDoResponseV2.of(userCanUpdateOntology && subjectsUsingOntology.isEmpty)
 
