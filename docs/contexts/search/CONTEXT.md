@@ -29,6 +29,11 @@ a body of logic with its own shape, distinct from both the model and the instanc
 dsp-api's Data-Model-aware query language for retrieving Resources.
 _Avoid_: SPARQL public interface
 
+**Main resource**:
+The variable a Gravsearch query returns as its top-level result, marked in the CONSTRUCT clause with
+`knora-api:isMainResource true`; other matched Resources are nested under it as dependent resources.
+_Avoid_: result resource
+
 **Full-text retrieval**:
 Text-oriented Resource retrieval that currently requires little Data Model knowledge. A
 project-restricted lookup is scoped to the project's data graph

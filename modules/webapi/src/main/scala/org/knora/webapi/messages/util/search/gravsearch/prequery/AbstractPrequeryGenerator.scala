@@ -258,43 +258,8 @@ abstract class AbstractPrequeryGenerator(
   /**
    * The variable in the CONSTRUCT clause that represents the main resource.
    */
-  val mainResourceVariable: QueryVariable = {
-    val mainResourceQueryVariables = constructClause.statements.foldLeft(Set.empty[QueryVariable]) {
-      case (acc: Set[QueryVariable], statementPattern) =>
-        statementPattern.pred match {
-          case IriRef(iri, _) =>
-            val iriStr = iri.toString
-
-            if (
-              iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource || iriStr == OntologyConstants.KnoraApiV2Complex.IsMainResource
-            ) {
-              statementPattern.obj match {
-                case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean =>
-                  statementPattern.subj match {
-                    case queryVariable: QueryVariable => acc + queryVariable
-                    case _                            => throw GravsearchException(s"The subject of knora-api:isMainResource must be a variable")
-                  }
-
-                case _ => acc
-              }
-            } else {
-              acc
-            }
-
-          case _ => acc
-        }
-    }
-
-    if (mainResourceQueryVariables.isEmpty) {
-      throw GravsearchException("CONSTRUCT clause contains no knora-api:isMainResource")
-    }
-
-    if (mainResourceQueryVariables.size > 1) {
-      throw GravsearchException("CONSTRUCT clause contains more than one knora-api:isMainResource")
-    }
-
-    mainResourceQueryVariables.head
-  }
+  val mainResourceVariable: QueryVariable =
+    GravsearchQueryChecker.mainResourceVariable(constructClause).fold(error => throw error, identity)
 
   /**
    * Creates additional statements for a non property type (e.g., a resource).
