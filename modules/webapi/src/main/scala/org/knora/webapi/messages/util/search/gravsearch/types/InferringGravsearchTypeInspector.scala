@@ -840,23 +840,27 @@ final class InferringGravsearchTypeInspector(
       usageIndex    = t._1
       allEntityInfo = t._2
 
-      // Iterate over the inference rules until no new type information can be inferred.
-      intermediateResult = doIterations(
-                             iterationNumber = 1,
-                             intermediateResult = previousResult,
-                             entityInfo = allEntityInfo,
-                             usageIndex = usageIndex,
-                           )
+      // The inference rules reject invalid queries by throwing GravsearchException; it must stay a typed
+      // failure (a 400), while any other exception remains a defect.
+      sanitizedResults <- ZIO.attempt {
+                            // Iterate over the inference rules until no new type information can be inferred.
+                            val intermediateResult = doIterations(
+                              iterationNumber = 1,
+                              intermediateResult = previousResult,
+                              entityInfo = allEntityInfo,
+                              usageIndex = usageIndex,
+                            )
 
-      // refine the determined types before sending to the next inspector
-      refinedIntermediateResult = refineDeterminedTypes(intermediateResult, allEntityInfo)
+                            // refine the determined types before sending to the next inspector
+                            val refinedIntermediateResult = refineDeterminedTypes(intermediateResult, allEntityInfo)
 
-      // sanitize the inconsistent resource types inferred for an entity
-      sanitizedResults = sanitizeInconsistentResourceTypes(
-                           refinedIntermediateResult,
-                           usageIndex.querySchema,
-                           entityInfo = allEntityInfo,
-                         )
+                            // sanitize the inconsistent resource types inferred for an entity
+                            sanitizeInconsistentResourceTypes(
+                              refinedIntermediateResult,
+                              usageIndex.querySchema,
+                              entityInfo = allEntityInfo,
+                            )
+                          }.refineOrDie { case e: GravsearchException => e }
     } yield sanitizedResults
 
   /**
