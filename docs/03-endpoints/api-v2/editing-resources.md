@@ -263,6 +263,11 @@ want to change:
   in [Permissions](../../02-dsp-ontologies/knora-base.md#permissions)
 - `knora-api:newModificationDate`: an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp).
 
+To change the label, the user must have modify permission on the resource. To change `knora-api:hasPermissions`, the
+user must also have change rights permission on the resource, as when
+[changing a value's permissions](editing-values.md#updating-a-value); otherwise the request is
+refused with 403. An anonymous request is refused with 401.
+
 Here is an example:
 
 ```json
@@ -418,6 +423,8 @@ is not relevant and will be ignored.
 
 To do this, a user must be a system administrator or an administrator of the project containing the resource. The user's
 permissions on the resource are not otherwise checked.
+
+An anonymous request is refused with 401.
 
 A resource cannot be erased if any other resource has a link to it. Any such links must first be changed or marked as
 deleted (see [Updating a Value](editing-values.md#updating-a-value) and

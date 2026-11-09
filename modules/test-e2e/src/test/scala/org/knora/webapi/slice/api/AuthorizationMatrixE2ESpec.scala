@@ -712,6 +712,86 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
     TestApiClient.getJson[Json](restrictedViewUri, rootUser).map(_.body.toString)
 
   // The oracle. Columns: anonymous, normalUser, anythingUser1, incunabulaProjectAdminUser, anythingAdminUser, rootUser.
+  private val thingContext =
+    s"""|"@context": {
+        |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+        |    "rdfs": "${Rdfs.RdfsPrefixExpansion}",
+        |    "knora-api": "${KA.KnoraApiV2PrefixExpansion}"
+        |  }""".stripMargin
+
+  /** A fresh anything:Thing; where `value` is set, also an integer value of it with the version `previous` before it. */
+  private final case class ThingFixture(resource: String, value: Option[String], previous: Option[String])
+
+  private val freshThing: RIO[env, ThingFixture] =
+    for {
+      label <- Random.nextUUID
+      body   = s"""{
+                  |  "@type": "anything:Thing",
+                  |  "knora-api:attachedToProject": { "@id": "${anythingProjectIri.value}" },
+                  |  "rdfs:label": "matrix $label",
+                  |  $thingContext
+                  |}""".stripMargin
+      doc      <- TestApiClient.postJsonLdDocument(uri"/v2/resources", body, rootUser).flatMap(_.assert200)
+      resource <- ZIO.fromEither(doc.body.getRequiredString("@id")).mapError(Exception(_))
+    } yield ThingFixture(resource, None, None)
+
+  private val freshThingWithValue: RIO[env, ThingFixture] =
+    for {
+      thing <- freshThing
+      body   = s"""{
+                  |  "@id": "${thing.resource}",
+                  |  "@type": "anything:Thing",
+                  |  "anything:hasInteger": { "@type": "knora-api:IntValue", "knora-api:intValueAsInt": 1 },
+                  |  $thingContext
+                  |}""".stripMargin
+      doc   <- TestApiClient.postJsonLdDocument(uri"/v2/values", body, rootUser).flatMap(_.assert200)
+      first <- ZIO.fromEither(doc.body.getRequiredString("@id")).mapError(Exception(_))
+      // A second version, so that erasing the history has an old version to erase.
+      update = s"""{
+                  |  "@id": "${thing.resource}",
+                  |  "@type": "anything:Thing",
+                  |  "anything:hasInteger": {
+                  |    "@id": "$first",
+                  |    "@type": "knora-api:IntValue",
+                  |    "knora-api:intValueAsInt": 2
+                  |  },
+                  |  $thingContext
+                  |}""".stripMargin
+      updated <-
+        ZIO
+          .serviceWithZIO[TestApiClient](_.putJsonLdDocument(uri"/v2/values", update, Some(rootUser), identity))
+          .flatMap(_.assert200)
+      value <- ZIO.fromEither(updated.body.getRequiredString("@id")).mapError(Exception(_))
+    } yield thing.copy(value = Some(value), previous = Some(first))
+
+  private def eraseBody(thing: ThingFixture) = {
+    val valueField =
+      thing.value.fold("")(value => s""""anything:hasInteger": { "@id": "$value", "@type": "knora-api:IntValue" },""")
+    s"""{
+       |  "@id": "${thing.resource}",
+       |  "@type": "anything:Thing",
+       |  $valueField
+       |  $thingContext
+       |}""".stripMargin
+  }
+
+  /** The triples of the resource and of its values, which vanish with what an erase removes. */
+  private def readThing(thing: ThingFixture): RIO[env, String] = {
+    val subjects = (thing.resource +: (thing.value.toList ++ thing.previous.toList)).map(iri => s"<$iri>")
+    val query    =
+      s"SELECT ?s ?p ?o WHERE { GRAPH ?g { VALUES ?s { ${subjects.mkString(" ")} } ?s ?p ?o } } ORDER BY ?s ?p ?o"
+    TestApiClient.postSparql(uri"/admin/sparql/query", query, rootUser).map(_.body.merge)
+  }
+
+  private def eraseRow(key: String, prepare: RIO[env, ThingFixture], outcome: Map[Principal, Expected])(uri: Uri) =
+    Row[ThingFixture](
+      key,
+      outcome,
+      prepare = prepare,
+      send = (thing, user) => postJsonLd(uri, eraseBody(thing))(user),
+      readBack = Some(readThing),
+    )
+
   private val rows: List[Row[?]] = List(
     listRow("POST /admin/lists", outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed))(_ =>
       post(uri"/admin/lists", rootRequest),
@@ -1259,6 +1339,21 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       propertyDefinitionUri,
       addMapping(propertyMappingUri, AddPropertyMappingsRequest(List(externalIri))),
     )(delete(mappingParam(propertyMappingUri))),
+    eraseRow(
+      "POST /v2/resources/erase",
+      freshThing,
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+    )(uri"/v2/resources/erase"),
+    eraseRow(
+      "POST /v2/values/erase",
+      freshThingWithValue,
+      outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),
+    )(uri"/v2/values/erase"),
+    eraseRow(
+      "POST /v2/values/erasehistory",
+      freshThingWithValue,
+      outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),
+    )(uri"/v2/values/erasehistory"),
     Row[Unit](
       "POST /admin/sparql/query",
       outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),

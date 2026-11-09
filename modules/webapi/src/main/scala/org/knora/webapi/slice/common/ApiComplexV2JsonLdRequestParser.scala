@@ -28,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceReq
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.EraseResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceAuthorshipRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.UpdateResourceMetadataRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
@@ -227,6 +228,14 @@ final case class ApiComplexV2JsonLdRequestParser(
       requestingUser,
       uuid,
     )
+  }
+
+  def eraseResourceRequestV2(str: String, uuid: UUID): IO[String, EraseResourceRequestV2] = ZIO.scoped {
+    for {
+      r                    <- RootResource.fromJsonLd(str)
+      resourceIri          <- r.resourceIriOrFail
+      lastModificationDate <- r.lastModificationDateOption
+    } yield EraseResourceRequestV2(resourceIri, r.resourceClassSmartIri, lastModificationDate, uuid)
   }
 
   def deleteValueV2FromJsonLd(str: String): IO[String, DeleteValueV2] = ZIO.scoped {

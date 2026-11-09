@@ -13,6 +13,7 @@ import org.knora.webapi.config.Resources
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.service.IriConverter
@@ -44,8 +45,8 @@ final class ResourcesServerEndpoints(resourcesEndpoints: ResourcesEndpoints, res
 
 object ResourcesServerEndpoints {
 
-  type Dependencies = ApiComplexV2JsonLdRequestParser & BaseEndpoints & GraphRoute & IriConverter &
-    KnoraResponseRenderer & ReadResourcesService & Resources & ResourcesResponderV2 & SearchResponderV2
+  type Dependencies = ApiComplexV2JsonLdRequestParser & AuthorizationRestService & BaseEndpoints & GraphRoute &
+    IriConverter & KnoraResponseRenderer & ReadResourcesService & Resources & ResourcesResponderV2 & SearchResponderV2
 
   type Provided = ResourcesServerEndpoints
 

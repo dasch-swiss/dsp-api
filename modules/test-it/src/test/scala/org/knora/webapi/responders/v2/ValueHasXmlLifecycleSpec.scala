@@ -11,11 +11,13 @@ import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
-import org.knora.webapi.messages.v2.responder.resourcemessages.DeleteOrEraseResourceRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.EraseResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ValueIri
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.service.ActiveValue
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResource
@@ -63,15 +65,18 @@ class ValueHasXmlLifecycleSpec extends E2EZSpec {
         xmlBefore <- valueHasXmlOf(value.iri)
         fresh     <- TestHelper.findActiveResource(res.iri)
         uuid      <- Random.nextUUID
-        _         <- ZIO.serviceWithZIO[TestHelper](
+        grant     <- ZIO.serviceWithZIO[AuthorizationRestService](
+                   _.authorizeProjectAdminByShortcode(TestCandidates.of(rootUser), fresh.iri.shortcode),
+                 )
+        _ <- ZIO.serviceWithZIO[TestHelper](
                _.resourcesResponderV2.eraseResourceV2(
-                 DeleteOrEraseResourceRequestV2(
+                 EraseResourceRequestV2(
                    resourceIri = fresh.iri,
                    resourceClassIri = fresh.resourceClassIri.toComplexSchema,
                    maybeLastModificationDate = fresh.lastModificationDate,
-                   requestingUser = rootUser,
                    apiRequestID = uuid,
                  ),
+                 grant,
                ),
              )
         triples <- triplesOf(value.iri)

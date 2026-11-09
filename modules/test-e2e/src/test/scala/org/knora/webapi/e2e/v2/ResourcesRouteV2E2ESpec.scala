@@ -1118,6 +1118,49 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
         lastModificationDate == newModificationDate,
       )
     },
+    test("change the label but not the permissions of a resource with Modify but without ChangeRights") {
+      val iri                    = "http://rdfh.ch/0001/" + UuidUtil.makeRandomBase64EncodedUuid
+      val permissions            = "CR knora-admin:Creator|M knora-admin:ProjectMember"
+      def update(change: String) =
+        s"""|{
+            |  "@id" : "$iri",
+            |  "@type" : "anything:Thing",
+            |  $change,
+            |  "@context" : {
+            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+            |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+            |  }
+            |}""".stripMargin
+      for {
+        _ <- TestApiClient
+               .postJsonLd(
+                 uri"/v2/resources",
+                 createResourceWithCustomIRI(iri).replace(
+                   "\"rdfs:label\"",
+                   s"\"knora-api:hasPermissions\" : \"$permissions\",\n  \"rdfs:label\"",
+                 ),
+                 anythingUser1,
+               )
+               .flatMap(_.assert200)
+        _ <- TestApiClient
+               .putJsonLd(
+                 uri"/v2/resources",
+                 update("\"knora-api:hasPermissions\" : \"CR knora-admin:Creator|D knora-admin:ProjectMember\""),
+                 anythingUser2,
+               )
+               .flatMap(_.assert403)
+        _ <- TestApiClient
+               .putJsonLd(uri"/v2/resources", update("\"rdfs:label\" : \"new label\""), anythingUser2)
+               .flatMap(_.assert200)
+        preview <- TestApiClient.getJsonLdDocument(uri"/v2/resourcespreview/$iri", anythingUser1).flatMap(_.assert200)
+        label    = preview.body.getRequiredString(OntologyConstants.Rdfs.Label)
+        stored   = preview.body.getRequiredString(KnoraApiV2Complex.HasPermissions)
+      } yield assertTrue(
+        label == Right("new label"),
+        stored.map(PermissionUtilADM.parsePermissions(_)) == Right(PermissionUtilADM.parsePermissions(permissions)),
+      )
+    },
     test("check if a resource is allowed to be deleted") {
       for {
         responseJsonDoc <- TestApiClient

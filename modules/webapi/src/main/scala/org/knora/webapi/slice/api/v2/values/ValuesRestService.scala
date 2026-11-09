@@ -33,7 +33,6 @@ import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
@@ -42,7 +41,6 @@ import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final class ValuesRestService(
-  auth: AuthorizationRestService,
   valuesService: ValuesResponderV2,
   readResources: ReadResourcesService,
   requestParser: ApiComplexV2JsonLdRequestParser,
@@ -185,7 +183,6 @@ final class ValuesRestService(
   def eraseValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       eraseReq <- requestParser.eraseValueV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
-      _        <- auth.ensureSystemAdmin(user)
       project  <- knoraProjectService
                    .findByShortcode(eraseReq.shortcode)
                    .orDie
@@ -197,7 +194,6 @@ final class ValuesRestService(
   def eraseValueHistory(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       eraseReq <- requestParser.eraseValueHistoryV2FromJsonLd(jsonLd).mapError(BadRequestException.apply)
-      _        <- auth.ensureSystemAdmin(user)
       project  <- knoraProjectService
                    .findByShortcode(eraseReq.shortcode)
                    .orDie
