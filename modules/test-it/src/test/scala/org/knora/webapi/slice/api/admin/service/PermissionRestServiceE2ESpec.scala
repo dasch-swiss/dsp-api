@@ -390,6 +390,16 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
           ),
         )
       },
+      test("return 'BadRequest' for a default object access permission for a class that is not a Knora IRI") {
+        createDoap(forResourceClass = Some("http://www.w3.org/2000/01/rdf-schema#Resource")).exit.map(
+          assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("is not a Knora resource class IRI")),
+        )
+      },
+      test("return 'BadRequest' for a default object access permission for an ontology IRI as class") {
+        createDoap(forResourceClass = Some(IMAGES_ONTOLOGY_IRI_LocalHost)).exit.map(
+          assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("is not a Knora resource class IRI")),
+        )
+      },
       test("create a default object access permission for a built-in group") {
         createDoap(forGroup = Some(KnoraGroupRepo.builtIn.ProjectAdmin.id)).exit.map(e => assertTrue(e.isSuccess))
       },

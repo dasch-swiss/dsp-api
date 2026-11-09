@@ -50,9 +50,9 @@ final class PermissionRestService(
     candidate: ProjectCandidate,
   )(request: CreateAdministrativePermissionAPIRequestADM): Task[AdministrativePermissionCreateResponseADM] =
     for {
-      _      <- auth.authorizeProjectAdminById(candidate, request.forProject)
+      grant  <- auth.authorizeProjectAdminById(candidate, request.forProject)
       uuid   <- Random.nextUUID
-      result <- responder.createAdministrativePermission(request, uuid)
+      result <- responder.createAdministrativePermission(grant.project, request, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 
@@ -85,9 +85,9 @@ final class PermissionRestService(
     request: CreateDefaultObjectAccessPermissionAPIRequestADM,
   ): Task[DefaultObjectAccessPermissionCreateResponseADM] =
     for {
-      _      <- auth.authorizeProjectAdminById(candidate, request.forProject)
+      grant  <- auth.authorizeProjectAdminById(candidate, request.forProject)
       uuid   <- Random.nextUUID
-      result <- responder.createDefaultObjectAccessPermission(request, uuid)
+      result <- responder.createDefaultObjectAccessPermission(grant.project, request, uuid)
       ext    <- format.toExternal(result)
     } yield ext
 

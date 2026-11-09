@@ -142,7 +142,7 @@ always reference a project, but can only reference **either** a group
 or a combination of resource class **and** property.
 
 Creating a permission requires a system administrator or an administrator of the project named in `forProject`;
-an unknown `forProject` answers `403 Forbidden`. The request fails with `400 Bad Request` if `forGroup` is neither a built-in group nor a group of that project, or if `forResourceClass` or `forProperty` is neither from a built-in ontology nor from an ontology of that project.
+an unknown `forProject` answers `403 Forbidden`. The request fails with `400 Bad Request` if `forGroup` is neither a built-in group nor a group of that project, or if `forResourceClass` or `forProperty` is not an entity IRI, or is neither from a built-in or shared ontology nor from an ontology of that project.
 
 For example, to create a new default object access permission for a group of a project the request body would be
  
