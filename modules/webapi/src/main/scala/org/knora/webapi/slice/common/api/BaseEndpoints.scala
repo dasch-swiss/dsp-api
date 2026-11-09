@@ -53,10 +53,6 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       ),
     )
 
-  /** Declares no [[Policy]]; a new endpoint uses [[publicPolicyEndpoint]]. */
-  val publicEndpoint: RequiresMethod[PublicEndpoint[Unit, Throwable, Unit, Any]] =
-    RequiresMethod(endpoint.errorOut(errorOutputs), _.method(_))
-
   private type SecurityIn = (Option[String], Option[UsernamePassword])
   private val endpointWithBearerBasicAuthOptional = endpoint
     .errorOut(errorOutputs)

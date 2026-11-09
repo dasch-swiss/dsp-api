@@ -184,7 +184,7 @@ Every new endpoint declares its function-level authorization with a policy-decla
 | `projectAdminOfAnyProjectPolicyEndpoint` | `ProjectAdminOfAnyProject`: a system admin or admin of at least one project | `User` |
 | `objectAccessPolicyEndpoint(enforcedIn)` | `ObjectAccess`: per-object permissions, anonymous admitted | `User` |
 
-- `publicEndpoint`, `withUserEndpoint` and `bearerSystemAdminEndpoint` declare no policy. Do not use them for new
+- `withUserEndpoint` and `bearerSystemAdminEndpoint` declare no policy. Do not use them for new
   endpoints; `withUserEndpoint` remains only for the five count endpoints that wait on DEV-7718.
 - A `Public` or `Authenticated` reason says why the endpoint needs no stronger rule; it is reviewed.
 - A `ProjectAdmin` handler receives a `ProjectCandidate` and must obtain a `ProjectAdminGrant` from

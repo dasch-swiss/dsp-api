@@ -1568,7 +1568,7 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLabel = Some(newLabel),
           maybePermissions = Some(newPermissions),
-          requestingUser = anythingUser2,
+          requestingUser = anythingAdminUser,
           apiRequestID = randomUUID,
         )
 
