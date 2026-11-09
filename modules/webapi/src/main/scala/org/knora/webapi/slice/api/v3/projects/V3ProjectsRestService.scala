@@ -16,6 +16,7 @@ import org.knora.webapi.slice.`export`.domain.ExportFailedError
 import org.knora.webapi.slice.`export`.domain.ExportInProgressError
 import org.knora.webapi.slice.`export`.domain.ImportExistsError
 import org.knora.webapi.slice.`export`.domain.ImportInProgressError
+import org.knora.webapi.slice.`export`.domain.ImportSlotBusyError
 import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
@@ -39,6 +40,7 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode.export_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_exists
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_in_progress
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_not_found
+import org.knora.webapi.slice.api.v3.V3ErrorCode.import_running
 import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_ineligible
 import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorCode.project_ontologies_missing
@@ -61,6 +63,11 @@ final class V3ProjectsRestService(
       code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
       Map("id" -> id.value, "projectIri" -> prj.value),
     )
+
+  private def importConflict(e: ImportExistsError | ImportSlotBusyError): Conflict = e match
+    case ImportExistsError(t)  => conflict(import_exists, t.projectIri, t.id)
+    case ImportSlotBusyError() =>
+      Conflict(import_running, import_running.template, Map.empty)
 
   private def notFound(code: NotFounds, prj: ProjectIri, id: DataTaskId) =
     NotFound(
@@ -128,7 +135,7 @@ final class V3ProjectsRestService(
       state <-
         importService
           .importDataExport(projectIri, user, stream)
-          .mapError { case ImportExistsError(t) => conflict(import_exists, t.projectIri, t.id) }
+          .mapError(importConflict)
     } yield DataTaskStatusResponse.from(state))
 
   def getProjectImportStatus(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
@@ -258,7 +265,7 @@ final class V3ProjectsRestService(
       state <-
         dataImportService
           .importDataGraph(project = project, createdBy = user, onBehalfOf = onBehalfOf, stream = stream)
-          .mapError { case ImportExistsError(t) => conflict(import_exists, t.projectIri, t.id) }
+          .mapError(importConflict)
     } yield DataTaskStatusResponse.from(state))
 
   def getProjectDataImportStatus(

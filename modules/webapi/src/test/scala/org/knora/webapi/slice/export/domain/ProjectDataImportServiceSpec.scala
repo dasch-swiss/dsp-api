@@ -26,6 +26,39 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
     def onDeleted(taskId: DataTaskId): UIO[Unit]    = ZIO.unit
   }
 
+  private val project = TestDataFactory.someProject
+  private val root    = TestDataFactory.User.rootUser
+
+  // The collaborators that only `doImport` reaches are null: a defect there fails the task.
+  private final case class Fixture(
+    service: ProjectDataImportService,
+    state: DataTaskState,
+    storage: ProjectDataImportStorageService,
+    ref: Ref[Option[CurrentDataTask]],
+    slot: ImportSlot,
+  )
+
+  private val fixture: URIO[Scope, Fixture] = for {
+    ref    <- Ref.make[Option[CurrentDataTask]](None)
+    slot   <- ImportSlot.layer.build.map(_.get)
+    state   = new DataTaskState(ref, noopPersistence)
+    storage = new ProjectDataImportStorageService()
+  } yield Fixture(new ProjectDataImportService(state, storage, null, null, null, null, slot), state, storage, ref, slot)
+
+  private def cleanup(fx: Fixture, id: DataTaskId): UIO[Unit] =
+    fx.storage.dataImportJsonLdPath(id).flatMap(p => Files.deleteRecursive(p.parent.get)).ignore.unit
+
+  private def slotIsFree(slot: ImportSlot): UIO[Boolean] =
+    slot.run(ZIO.unit)(_ => ZIO.unit).as(true).orElse(ZIO.succeed(false))
+
+  private def awaitSlotFree(slot: ImportSlot): UIO[Unit] =
+    slot
+      .run(ZIO.unit)(_ => ZIO.unit)
+      .retry(Schedule.spaced(20.millis) && Schedule.recurs(250))
+      .orElseFail(new IllegalStateException("The slot was not released."))
+      .orDie
+      .unit
+
   private val declaredLengthSuite = suite("checkDeclaredLength")(
     test("passes without a declared length") {
       assertTrue(checkDeclaredLength(None, 10) == Right(()))
@@ -79,10 +112,11 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
       ZIO.scoped {
         for {
           ref    <- Ref.make[Option[CurrentDataTask]](None)
+          slot   <- ImportSlot.layer.build.map(_.get)
           state   = new DataTaskState(ref, noopPersistence)
           storage = new ProjectDataImportStorageService()
           // null collaborators are only reachable from `doImport`; a call would die with an NPE
-          service = new ProjectDataImportService(state, storage, null, null, null, null)
+          service = new ProjectDataImportService(state, storage, null, null, null, null, slot)
           task   <- service.importDataGraph(
                     TestDataFactory.someProject,
                     TestDataFactory.User.rootUser,
@@ -94,14 +128,69 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
           path    <- storage.dataImportJsonLdPath(task.id)
           exists  <- Files.exists(path)
           _       <- Files.deleteRecursive(path.parent.get).ignore
+          free    <- slotIsFree(slot)
         } yield assertTrue(
           current.isFailed,
           current.errorMessage.contains(payloadTooLargeMessage(5L)),
           !exists,
+          free,
         )
       }
     },
-  ).provide(TestAppConfig.layer())
+    test("an import that fails with a defect fails the task and frees the slot") {
+      ZIO.scoped {
+        for {
+          fx   <- fixture
+          task <- fx.service.importDataGraph(project, root, root, bytes(3))
+          _    <- awaitSlotFree(fx.slot)
+          cur  <- fx.state.find(task.id)
+          _    <- cleanup(fx, task.id)
+        } yield assertTrue(cur.isFailed)
+      }
+    },
+    test("an interrupted save fails the task, deletes the partial file and frees the slot") {
+      ZIO.scoped {
+        for {
+          fx    <- fixture
+          fiber <- fx.service
+                     .importDataGraph(project, root, root, bytes(3) ++ ZStream.never)
+                     .fork
+          task   <- fx.ref.get.repeatUntil(_.isDefined).map(_.get)
+          path   <- fx.storage.dataImportJsonLdPath(task.id)
+          _      <- Files.exists(path).repeatUntil(identity)
+          _      <- fiber.interrupt
+          cur    <- fx.state.find(task.id)
+          exists <- Files.exists(path)
+          free   <- slotIsFree(fx.slot)
+          _      <- cleanup(fx, task.id)
+        } yield assertTrue(cur.isFailed, !exists, free)
+      }
+    },
+    test("a save defect fails the task, deletes the partial file and frees the slot") {
+      ZIO.scoped {
+        for {
+          fx   <- fixture
+          exit <-
+            fx.service.importDataGraph(project, root, root, bytes(3) ++ ZStream.die(new RuntimeException("boom"))).exit
+          task   <- fx.ref.get.map(_.get)
+          path   <- fx.storage.dataImportJsonLdPath(task.id)
+          exists <- Files.exists(path)
+          free   <- slotIsFree(fx.slot)
+          _      <- cleanup(fx, task.id)
+        } yield assertTrue(exit.isFailure, task.isFailed, !exists, free)
+      }
+    },
+    test("a taken slot gives ImportSlotBusyError and creates no task") {
+      ZIO.scoped {
+        for {
+          fx     <- fixture
+          _      <- fx.slot.run(ZIO.unit)(_ => ZIO.never)
+          exit   <- fx.service.importDataGraph(project, root, root, bytes(3)).exit
+          stored <- fx.ref.get
+        } yield assertTrue(exit == Exit.fail(ImportSlotBusyError()), stored.isEmpty)
+      }
+    },
+  ).provide(TestAppConfig.layer()) @@ TestAspect.withLiveClock
 
   def spec: Spec[Any, Any] =
     suite("ProjectDataImportService")(declaredLengthSuite, saveWithinLimitSuite, serviceSuite)

@@ -63,25 +63,41 @@ final class ProjectMigrationImportService(
   triplestore: TriplestoreService,
   ontologyCache: OntologyCache,
   userService: KnoraUserService,
+  slot: ImportSlot,
 ) { self =>
 
   def importDataExport(
     projectIri: ProjectIri,
     createdBy: User,
     stream: ZStream[Any, Throwable, Byte],
-  ): IO[ImportExistsError, CurrentDataTask] = for {
-    importTask <- state.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
-    _          <- saveZipStream(importTask.id, stream)
-    _          <- doImport(importTask.id, projectIri).whenZIO(state.isInProgress(importTask.id)).forkDaemon
-  } yield importTask
+  ): IO[ImportExistsError | ImportSlotBusyError, CurrentDataTask] =
+    slot
+      .run(
+        for {
+          importTask <- state.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) =>
+                          ImportExistsError(t)
+                        }
+          _ <- saveZipStream(importTask.id, stream)
+        } yield importTask,
+      ) { importTask =>
+        doImport(importTask.id, projectIri)
+          .whenZIO(state.isInProgress(importTask.id).orElseSucceed(false))
+          .unit
+          .onError(failTask(importTask.id, _))
+      }
+
+  private def failTask(taskId: DataTaskId, cause: Cause[Throwable]): UIO[Unit] = {
+    val t = cause.squash
+    state.fail(taskId, Option(t.getMessage).getOrElse(t.getClass.getSimpleName)).ignore
+  }
 
   private def saveZipStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]) = (
     for {
       _         <- storage.importDir(taskId)
       bagItPath <- storage.importBagItZipPath(taskId)
-      _         <- stream.run(ZSink.fromFile(bagItPath.toFile))
+      _         <- stream.run(ZSink.fromFile(bagItPath.toFile)).onError(_ => Files.deleteIfExists(bagItPath).ignore)
     } yield ()
-  ).tapError(e => state.fail(taskId, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore).orDie
+  ).onError(failTask(taskId, _)).orDie
 
   private def doImport(taskId: DataTaskId, projectIri: ProjectIri): UIO[Unit] =
     ZIO.scoped {
@@ -524,7 +540,7 @@ final class ProjectMigrationImportService(
 object ProjectMigrationImportService {
   val layer: URLayer[
     DspIngestClient & KnoraGroupService & KnoraProjectService & ProjectMigrationImportValidator &
-      ProjectMigrationStorageService & TriplestoreService & OntologyCache & KnoraUserService,
+      ProjectMigrationStorageService & TriplestoreService & OntologyCache & KnoraUserService & ImportSlot,
     ProjectMigrationImportService,
   ] = FilesystemDataTaskPersistence.importLayer >>> ZLayer.derive[ProjectMigrationImportService]
 }

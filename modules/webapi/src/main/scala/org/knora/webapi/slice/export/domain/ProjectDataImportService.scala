@@ -34,6 +34,7 @@ final class ProjectDataImportService(
   transformer: OntologyTransformer,
   validator: ProjectMigrationImportValidator,
   triplestore: TriplestoreService,
+  slot: ImportSlot,
 ) { self =>
 
   /** Whether the project's data named graph already contains data other than list nodes (create-only precondition, R7). */
@@ -56,26 +57,43 @@ final class ProjectDataImportService(
     onBehalfOf: User,
     stream: ZStream[Any, Throwable, Byte],
     limit: Long = ProjectDataImportService.maxPayloadBytes,
-  ): IO[ImportExistsError, CurrentDataTask] = for {
-    task <- state
-              .makeNew(project.id, createdBy, Some(onBehalfOf.userIri))
-              .mapError { case StatesExistError(t) => ImportExistsError(t) }
-    withinLimit <- saveJsonLdStream(task.id, stream, limit)
-    _           <- doImport(task.id, project, onBehalfOf).whenZIO(state.isInProgress(task.id)).forkDaemon.when(withinLimit)
-  } yield task
+  ): IO[ImportExistsError | ImportSlotBusyError, CurrentDataTask] =
+    slot
+      .run(
+        for {
+          task <- state
+                    .makeNew(project.id, createdBy, Some(onBehalfOf.userIri))
+                    .mapError { case StatesExistError(t) => ImportExistsError(t) }
+          withinLimit <- saveJsonLdStream(task.id, stream, limit)
+        } yield (task, withinLimit),
+      ) { case (task, withinLimit) =>
+        doImport(task.id, project, onBehalfOf)
+          .whenZIO(state.isInProgress(task.id).orElseSucceed(false))
+          .when(withinLimit)
+          .unit
+          .onError(failTask(task.id, _))
+      }
+      .map(_._1)
+
+  private def failTask(taskId: DataTaskId, cause: Cause[Throwable]): UIO[Unit] = {
+    val t = cause.squash
+    state.fail(taskId, Option(t.getMessage).getOrElse(t.getClass.getSimpleName)).ignore
+  }
 
   /** Saves the payload; if it exceeds the limit, fails the task and returns `false`. */
   private def saveJsonLdStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte], limit: Long): UIO[Boolean] = (
     for {
       _           <- storage.dataImportDir(taskId)
       jsonLdPath  <- storage.dataImportJsonLdPath(taskId)
-      withinLimit <- ProjectDataImportService.saveWithinLimit(stream, jsonLdPath, limit)
-      _           <- state
+      withinLimit <- ProjectDataImportService
+                       .saveWithinLimit(stream, jsonLdPath, limit)
+                       .onError(_ => Files.deleteIfExists(jsonLdPath).ignore)
+      _ <- state
              .fail(taskId, ProjectDataImportService.payloadTooLargeMessage(limit))
              .ignore
              .unless(withinLimit)
     } yield withinLimit
-  ).tapError(e => state.fail(taskId, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore).orDie
+  ).onError(failTask(taskId, _)).orDie
 
   // The `onBehalfOf` user is captured once at trigger time; per-entity permissions are resolved later inside the
   // transformer from this snapshot. `doImport` does not re-fetch or re-validate the user, so this service needs no
@@ -210,7 +228,7 @@ object ProjectDataImportService {
     } yield withinLimit
 
   val layer: URLayer[
-    KnoraProjectService & OntologyTransformer & ProjectMigrationImportValidator & TriplestoreService,
+    ImportSlot & KnoraProjectService & OntologyTransformer & ProjectMigrationImportValidator & TriplestoreService,
     ProjectDataImportService,
   ] = (ProjectDataImportStorageService.layer >+> FilesystemDataTaskPersistence.dataImportLayer) >>>
     ZLayer.derive[ProjectDataImportService]
