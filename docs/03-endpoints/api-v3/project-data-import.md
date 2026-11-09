@@ -120,6 +120,26 @@ project with no ontologies is rejected whatever its data graph holds, so the lis
 Only **one data-graph import** can exist at a time. Attempting to create a second returns `409 Conflict` with the
 existing task's `id` in the error details. Delete the previous task before triggering a new one.
 
+Only **one import runs at a time** on this server, whether it is a bulk import or a migration import. While one runs,
+a new import of either kind is rejected with `409 Conflict` and error code `import_running`:
+
+```json
+{
+  "message": "Another import runs on this server. Try again later.",
+  "errors": [
+    {
+      "code": "import_running",
+      "message": "Another import runs on this server. Try again later.",
+      "details": {}
+    }
+  ]
+}
+```
+
+The slot check runs first: a second import of the same kind while the first one runs gets `import_running`, not
+`import_exists`. The slot covers the running import, not the task's lifetime. A failed task that waits for its
+`DELETE` does not block the other kind of import, but still blocks its own kind with `import_exists`.
+
 The upload to Fuseki is **atomic** — if the upload fails, no partial data is written to the triplestore.
 
 ## Import Validation

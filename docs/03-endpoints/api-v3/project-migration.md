@@ -78,6 +78,26 @@ The `status` field is one of: `in_progress`, `completed`, `failed`.
 
 Only **one export task and one import task** can exist at a time — the slots are server-wide, not per project. Delete the previous task before triggering a new one. Attempting to create a second returns `409 Conflict` with the existing task's `id` and the owning project's IRI in the error details.
 
+Only **one import runs at a time** on this server, whether it is a bulk import or a migration import. While one runs,
+a new import of either kind is rejected with `409 Conflict` and error code `import_running`:
+
+```json
+{
+  "message": "Another import runs on this server. Try again later.",
+  "errors": [
+    {
+      "code": "import_running",
+      "message": "Another import runs on this server. Try again later.",
+      "details": {}
+    }
+  ]
+}
+```
+
+The slot check runs first: a second import of the same kind while the first one runs gets `import_running`, not
+`import_exists`. The slot covers the running import, not the task's lifetime. A failed task that waits for its
+`DELETE` does not block the other kind of import, but still blocks its own kind with `import_exists`.
+
 Export status, delete and download resolve the task by its `exportId` alone; the `{projectIri}` in the path is not used for the lookup and does not have to resolve to an existing project. An export therefore stays inspectable and deletable after its project has been erased, which is what keeps the export slot from getting stuck.
 
 The import endpoint requires the `{projectIri}` in the URL to match the `External-Identifier` in the BagIt `bag-info.txt`. The request body is the zip file with content type `application/zip`.

@@ -57,6 +57,10 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   private val importsBase     = basePath / "imports"
   private val dataImportsBase = basePath / "data-imports"
 
+  private val ImportSlotNote =
+    "Only one import (bulk import or migration import) runs at a time on this server. " +
+      "While one runs, a new import of either kind gets 409 `import_running`, also where it would otherwise get `import_exists`. "
+
   private val exportIdPathVar = path[DataTaskId]("exportId")
   private val importIdPathVar = path[DataTaskId]("importId")
 
@@ -146,7 +150,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   val postProjectIriImports = self.base
     .systemAdminPolicy(
       oneOf(
-        conflictVariant(V3ErrorCode.import_exists),
+        conflictVariant(V3ErrorCode.import_exists, V3ErrorCode.import_running),
       ),
     )
     .post
@@ -158,7 +162,8 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
     .description(
       "Initiates an import of a project from an export zip file. " +
         "The import will be performed asynchronously, and the response will indicate that the import has been accepted. " +
-        "An import can only be triggered when no other import exists." +
+        "An import can only be triggered when no other import exists. " +
+        ImportSlotNote +
         s" ${Policy.SystemAdmin.requirement}",
     )
 
@@ -175,7 +180,8 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
         s" ${Policy.SystemAdmin.requirement}",
     )
 
-  // Three distinct 409s: `import_exists` (a previous data-graph import task still exists - the per-kind task mutex),
+  // Four distinct 409s: `import_running` (another import of either kind runs on this server),
+  // `import_exists` (a previous data-graph import task still exists - the per-kind task mutex),
   // `data_graph_exists` (the create-only precondition - the project already holds data other than list nodes), and
   // `project_ontologies_missing` (the project has no ontologies, so no data can be imported).
   val postProjectIriDataImports = self.base
@@ -189,6 +195,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
         badRequestVariant,
         conflictVariant(
           V3ErrorCode.import_exists,
+          V3ErrorCode.import_running,
           V3ErrorCode.data_graph_exists,
           V3ErrorCode.project_ontologies_missing,
         ),
@@ -220,6 +227,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
         "The import is create-only: it fails with 409 `data_graph_exists` if the project data graph already holds data other than list nodes. A graph containing only list nodes is permitted. " +
         "The project must have at least one ontology: an ontology-less project is rejected with 409 `project_ontologies_missing`, evaluated before the create-only check. " +
         "An import can only be triggered when no other data-graph import exists. " +
+        ImportSlotNote +
         s"The raw request body is limited to ${ProjectDataImportService.humanLimit(ProjectDataImportService.maxPayloadBytes)}. " +
         "The client should send the `Content-Length` header: a larger declared length is rejected with 413 `payload_too_large`. " +
         "Without it, only the server's 1 MiB request cap applies, and a chunked body above 1 MiB is rejected with a bare 413. " +
