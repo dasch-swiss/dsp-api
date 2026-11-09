@@ -1129,6 +1129,7 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
             |  "@context" : {
             |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
             |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+            |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
             |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
             |  }
             |}""".stripMargin
@@ -1153,11 +1154,29 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
         _ <- TestApiClient
                .putJsonLd(uri"/v2/resources", update("\"rdfs:label\" : \"new label\""), anythingUser2)
                .flatMap(_.assert200)
+        modified            <- TestApiClient.getJsonLdDocument(uri"/v2/resourcespreview/$iri", anythingUser1).flatMap(_.assert200)
+        lastModificationDate = modified.body.requireDatatypeValueInObject(
+                                 key = KnoraApiV2Complex.LastModificationDate,
+                                 expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                 validationFun =
+                                   (s, errorFun) => ValuesValidator.xsdDateTimeStampToInstant(s).getOrElse(errorFun),
+                               )
+        _ <- TestApiClient
+               .putJsonLd(
+                 uri"/v2/resources",
+                 update(
+                   s"""\"rdfs:label\" : \"newer label\",
+                      |  \"knora-api:hasPermissions\" : \"$permissions\",
+                      |  \"knora-api:lastModificationDate\" : { \"@type\" : \"xsd:dateTimeStamp\", \"@value\" : \"$lastModificationDate\" }""".stripMargin,
+                 ),
+                 anythingUser2,
+               )
+               .flatMap(_.assert200)
         preview <- TestApiClient.getJsonLdDocument(uri"/v2/resourcespreview/$iri", anythingUser1).flatMap(_.assert200)
         label    = preview.body.getRequiredString(OntologyConstants.Rdfs.Label)
         stored   = preview.body.getRequiredString(KnoraApiV2Complex.HasPermissions)
       } yield assertTrue(
-        label == Right("new label"),
+        label == Right("newer label"),
         stored.map(PermissionUtilADM.parsePermissions(_)) == Right(PermissionUtilADM.parsePermissions(permissions)),
       )
     },

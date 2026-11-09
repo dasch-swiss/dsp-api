@@ -145,8 +145,14 @@ final class ResourcesResponderV2(
                updateResourceMetadataRequestV2.requestingUser,
              )
 
-        // Changing the permissions needs ChangeRights, as for values.
-        _ <- ZIO.when(updateResourceMetadataRequestV2.maybePermissions.isDefined)(
+        // Changing the permissions needs ChangeRights, as for values; resending the current ones does not.
+        permissionsChanged <- ZIO.attempt(
+                                updateResourceMetadataRequestV2.maybePermissions.exists(newPermissions =>
+                                  PermissionUtilADM.parsePermissions(newPermissions) !=
+                                    PermissionUtilADM.parsePermissions(resource.permissions),
+                                ),
+                              )
+        _ <- ZIO.when(permissionsChanged)(
                resourceUtilV2.checkResourcePermission(
                  resource,
                  Permission.ObjectAccess.ChangeRights,
