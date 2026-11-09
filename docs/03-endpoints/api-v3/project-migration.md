@@ -78,25 +78,11 @@ The `status` field is one of: `in_progress`, `completed`, `failed`.
 
 Only **one export task and one import task** can exist at a time — the slots are server-wide, not per project. Delete the previous task before triggering a new one. Attempting to create a second returns `409 Conflict` with the existing task's `id` and the owning project's IRI in the error details.
 
-Only **one import runs at a time** on this server, whether it is a bulk import or a migration import. While one runs,
-a new import of either kind is rejected with `409 Conflict` and error code `import_running`:
-
-```json
-{
-  "message": "Another import runs on this server. Try again later.",
-  "errors": [
-    {
-      "code": "import_running",
-      "message": "Another import runs on this server. Try again later.",
-      "details": {}
-    }
-  ]
-}
-```
-
-The slot check runs first: a second import of the same kind while the first one runs gets `import_running`, not
-`import_exists`. The slot covers the running import, not the task's lifetime. A failed task that waits for its
-`DELETE` does not block the other kind of import, but still blocks its own kind with `import_exists`.
+Only **one import runs at a time** on this server, whether it is a bulk import or a migration import. A second import
+is rejected with `409 Conflict` and error code `import_running`. The slot check runs before the `import_exists` check,
+and the request validation checks of the endpoint (`400`, `404`) still run before it. The error body and the
+difference between the slot and the task's lifetime are described in
+[Project Data Import](project-data-import.md#key-behaviors).
 
 Export status, delete and download resolve the task by its `exportId` alone; the `{projectIri}` in the path is not used for the lookup and does not have to resolve to an existing project. An export therefore stays inspectable and deletable after its project has been erased, which is what keeps the export slot from getting stuck.
 
@@ -243,5 +229,6 @@ curl --request DELETE \
 - **No cross-version compatibility**: Export and import require the same `KnoraBase-Version`.
 - **Project must not exist on target**: The import fails if the project IRI or shortcode already exists.
 - **One task at a time**: Only one export and one import can exist server-wide. Delete the previous task before triggering a new one.
+- **One import at a time**: An import is rejected with `import_running` while another import, of either kind, runs on this server. See [Project Data Import](project-data-import.md#key-behaviors).
 - **Root user references**: Projects where resources or values reference the root user cannot be imported directly. The references must be reassigned before export.
 - **Assets**: Asset export/import is handled via dsp-ingest. If dsp-ingest has no assets for the project, the export continues without them.

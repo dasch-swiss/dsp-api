@@ -136,8 +136,9 @@ a new import of either kind is rejected with `409 Conflict` and error code `impo
 }
 ```
 
-The slot check runs first: a second import of the same kind while the first one runs gets `import_running`, not
-`import_exists`. The slot covers the running import, not the task's lifetime. A failed task that waits for its
+The slot check runs before the `import_exists` check: a second import of the same kind while the first one runs gets
+`import_running`, not `import_exists`. The request validation checks of the endpoint (`400`, `404`,
+`project_ontologies_missing` and `data_graph_exists`) still run before the slot check. The slot covers the running import, not the task's lifetime. A failed task that waits for its
 `DELETE` does not block the other kind of import, but still blocks its own kind with `import_exists`.
 
 The upload to Fuseki is **atomic** — if the upload fails, no partial data is written to the triplestore.

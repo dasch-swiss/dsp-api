@@ -48,16 +48,7 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
   private def cleanup(fx: Fixture, id: DataTaskId): UIO[Unit] =
     fx.storage.dataImportJsonLdPath(id).flatMap(p => Files.deleteRecursive(p.parent.get)).ignore.unit
 
-  private def slotIsFree(slot: ImportSlot): UIO[Boolean] =
-    slot.run(ZIO.unit)(_ => ZIO.unit).as(true).orElse(ZIO.succeed(false))
-
-  private def awaitSlotFree(slot: ImportSlot): UIO[Unit] =
-    slot
-      .run(ZIO.unit)(_ => ZIO.unit)
-      .retry(Schedule.spaced(20.millis) && Schedule.recurs(250))
-      .orElseFail(new IllegalStateException("The slot was not released."))
-      .orDie
-      .unit
+  private def awaitSlotFree(slot: ImportSlot): UIO[Unit] = ImportSlotTestSupport.awaitFree(slot)
 
   private val declaredLengthSuite = suite("checkDeclaredLength")(
     test("passes without a declared length") {
@@ -128,12 +119,11 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
           path    <- storage.dataImportJsonLdPath(task.id)
           exists  <- Files.exists(path)
           _       <- Files.deleteRecursive(path.parent.get).ignore
-          free    <- slotIsFree(slot)
+          _       <- awaitSlotFree(slot)
         } yield assertTrue(
           current.isFailed,
           current.errorMessage.contains(payloadTooLargeMessage(5L)),
           !exists,
-          free,
         )
       }
     },
@@ -161,9 +151,9 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
           _      <- fiber.interrupt
           cur    <- fx.state.find(task.id)
           exists <- Files.exists(path)
-          free   <- slotIsFree(fx.slot)
+          _      <- awaitSlotFree(fx.slot)
           _      <- cleanup(fx, task.id)
-        } yield assertTrue(cur.isFailed, !exists, free)
+        } yield assertTrue(cur.isFailed, !exists)
       }
     },
     test("a save defect fails the task, deletes the partial file and frees the slot") {
@@ -175,16 +165,43 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
           task   <- fx.ref.get.map(_.get)
           path   <- fx.storage.dataImportJsonLdPath(task.id)
           exists <- Files.exists(path)
-          free   <- slotIsFree(fx.slot)
+          _      <- awaitSlotFree(fx.slot)
           _      <- cleanup(fx, task.id)
-        } yield assertTrue(exit.isFailure, task.isFailed, !exists, free)
+        } yield assertTrue(exit.isFailure, task.isFailed, !exists)
+      }
+    },
+    test("an interruption right after the task exists fails the task and frees the slot") {
+      ZIO.scoped {
+        for {
+          ref     <- Ref.make[Option[CurrentDataTask]](None)
+          slot    <- ImportSlot.layer.build.map(_.get)
+          entered <- Promise.make[Nothing, Unit]
+          gate    <- Promise.make[Nothing, Unit]
+          blocking = new DataTaskPersistence {
+                       def onChanged(task: CurrentDataTask): UIO[Unit] = entered.succeed(()) *> gate.await
+                       def onDeleted(taskId: DataTaskId): UIO[Unit]    = ZIO.unit
+                     }
+          storage = new ProjectDataImportStorageService()
+          service =
+            new ProjectDataImportService(new DataTaskState(ref, blocking), storage, null, null, null, null, slot)
+          fiber <- service.importDataGraph(project, root, root, bytes(3)).fork
+          _     <- entered.await
+          _     <- fiber.interruptFork
+          _     <- gate.succeed(())
+          _     <- fiber.await
+          task  <- ref.get.map(_.get)
+          _     <- awaitSlotFree(slot)
+          _     <- cleanup(Fixture(service, null, storage, ref, slot), task.id)
+        } yield assertTrue(task.isFailed)
       }
     },
     test("a taken slot gives ImportSlotBusyError and creates no task") {
       ZIO.scoped {
         for {
           fx     <- fixture
-          _      <- fx.slot.run(ZIO.unit)(_ => ZIO.never)
+          gate   <- Promise.make[Nothing, Unit]
+          _      <- ZIO.addFinalizer(gate.succeed(()))
+          _      <- fx.slot.run(ZIO.unit)(_ => gate.await)
           exit   <- fx.service.importDataGraph(project, root, root, bytes(3)).exit
           stored <- fx.ref.get
         } yield assertTrue(exit == Exit.fail(ImportSlotBusyError()), stored.isEmpty)

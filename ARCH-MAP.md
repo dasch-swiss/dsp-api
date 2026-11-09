@@ -1067,12 +1067,13 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `ProjectMigrationImportValidator`, `ProjectDataImportService`, `ProjectMigrationStorageService`,
     `ProjectDataImportStorageService`, `DataTaskState`, `DataTaskPersistence`,
     `FilesystemDataTaskPersistence`, `CurrentDataTask`, `DataTaskId`, `DataTaskStatus`, `AdminDataQuery`,
-    `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`
+    `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`, `ImportSlot`
 - **Public interface**: `ExportModule.layer`, providing `ProjectMigrationExportService &
     ProjectMigrationImportService & ProjectDataImportService`; `ExportApiModule.layer`, providing
     `ExportService`; the value types `DataTaskId`, `DataTaskStatus`, `CurrentDataTask`; the task error types
     `ExportExistsError`, `ExportInProgressError`, `ExportFailedError`, `ImportExistsError`,
-    `ImportInProgressError`.
+    `ImportInProgressError`, `ImportSlotBusyError`. `ExportModule.layer` builds one `ImportSlot`: in memory,
+    for one API instance, not durable state.
 - **Local-context kit**:
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/export/domain/ExportModule.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/export/api/ExportApiModule.scala`
@@ -1099,6 +1100,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `ProjectDataGraphExistsQuery.build` and the three `FindResourcesService` query builders.
     - A slice's Scala package matches its directory - enforcement: docs-only. Currently violated by
         `slice/export/api/**`, whose three files declare `package org.knora.webapi.slice.api.v3.export_`.
+    - Every import kind runs its background work through `ImportSlot.run`; `ImportSlot` is built only in
+        `ExportModule` - enforcement: structure (`private[domain]` constructor and layer).
     - webapi-export must not import webapi-api - enforcement: docs-only. Currently violated by `ExportService`
         importing `slice.api.v3.export.{FileLink, LegalInfo, MetadataRecord}` and `Models.scala` importing
         `slice.api.admin.Codecs`, while webapi-api imports webapi-export back, forming a cycle.

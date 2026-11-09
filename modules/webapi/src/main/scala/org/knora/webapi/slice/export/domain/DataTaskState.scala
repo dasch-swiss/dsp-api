@@ -121,7 +121,17 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]], persistence: DataTa
       .someOrFail(None)
       .tap(task => persistence.onChanged(task))
 
-  def isInProgress(taskId: DataTaskId): IO[Option[Nothing], Boolean] =
+  /**
+   * Fails the task with the message of the squashed cause, or its class name if it has none. Never fails: an unknown
+   * or already finished task is left as it is.
+   */
+  def failWith(taskId: DataTaskId, cause: Cause[Throwable]): UIO[Unit] = {
+    val t = cause.squash
+    fail(taskId, Option(t.getMessage).getOrElse(t.getClass.getSimpleName)).ignore
+  }
+
+  /** `false` for an unknown task. */
+  def isInProgress(taskId: DataTaskId): UIO[Boolean] =
     self.ref.get.map {
       case Some(exp) if exp.id == taskId => exp.isInProgress
       case _                             => false

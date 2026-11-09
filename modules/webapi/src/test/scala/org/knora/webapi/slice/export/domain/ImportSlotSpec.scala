@@ -16,17 +16,7 @@ class ImportSlotSpec extends ZIOSpecDefault {
 
   private val noWork: Int => UIO[Unit] = _ => ZIO.unit
 
-  /** A following run succeeds and runs its prepare. */
-  private def isFree(slot: ImportSlot): UIO[Boolean] =
-    for {
-      ran    <- Ref.make(false)
-      result <- slot.run(ran.set(true).as(1))(noWork).either
-      did    <- ran.get
-    } yield result.isRight && did
-
-  /** Waits until the slot is free; `work` has released it by then. */
-  private def awaitFree(slot: ImportSlot): UIO[Boolean] =
-    isFree(slot).repeatUntil(identity)
+  private def awaitFree(slot: ImportSlot): UIO[Unit] = ImportSlotTestSupport.awaitFree(slot)
 
   private val busySuite = suite("busy slot")(
     test("a second run fails while work runs and does not run its prepare") {
@@ -57,15 +47,15 @@ class ImportSlotSpec extends ZIOSpecDefault {
       for {
         slot   <- ZIO.service[ImportSlot]
         failed <- slot.run(ZIO.fail("boom"))(noWork).either
-        free   <- isFree(slot)
-      } yield assertTrue(failed == Left("boom"), free)
+        _      <- awaitFree(slot)
+      } yield assertTrue(failed == Left("boom"))
     },
     test("the slot is free after a defect") {
       for {
         slot <- ZIO.service[ImportSlot]
         exit <- slot.run(ZIO.die(new IllegalStateException("boom")))(noWork).exit
-        free <- isFree(slot)
-      } yield assertTrue(exit.isFailure, free)
+        _    <- awaitFree(slot)
+      } yield assertTrue(exit.isFailure)
     },
     test("the slot is free after an interruption") {
       for {
@@ -74,8 +64,8 @@ class ImportSlotSpec extends ZIOSpecDefault {
         fiber   <- slot.run(started.succeed(()) *> ZIO.never)(noWork).fork
         _       <- started.await
         _       <- fiber.interrupt
-        free    <- isFree(slot)
-      } yield assertTrue(free)
+        _       <- awaitFree(slot)
+      } yield assertTrue(true)
     },
   )
 
@@ -84,29 +74,31 @@ class ImportSlotSpec extends ZIOSpecDefault {
       for {
         slot <- ZIO.service[ImportSlot]
         _    <- slot.run(ZIO.succeed(1))(noWork)
-        free <- awaitFree(slot)
-      } yield assertTrue(free)
+        _    <- awaitFree(slot)
+      } yield assertTrue(true)
     },
     test("the slot is free after a defect") {
       for {
         slot <- ZIO.service[ImportSlot]
         _    <- slot.run(ZIO.succeed(1))(_ => ZIO.die(new IllegalStateException("boom")))
-        free <- awaitFree(slot)
-      } yield assertTrue(free)
+        _    <- awaitFree(slot)
+      } yield assertTrue(true)
     },
-    test("the slot is free after an interruption of work, which stays interruptible") {
+    test("work runs interruptibly") {
       for {
-        slot    <- ZIO.service[ImportSlot]
-        started <- Promise.make[Nothing, Unit]
-        workId  <- Promise.make[Nothing, FiberId]
-        _       <- slot.run(ZIO.succeed(1))(_ => ZIO.fiberId.flatMap(workId.succeed) *> started.succeed(()).unit *> ZIO.never)
-        _       <- started.await
-        id      <- workId.await
-        roots   <- Fiber.roots
-        daemon   = roots.filter(_.id == id)
-        _       <- ZIO.foreachDiscard(daemon)(_.interrupt)
-        free    <- awaitFree(slot)
-      } yield assertTrue(daemon.size == 1, free)
+        slot          <- ZIO.service[ImportSlot]
+        interruptible <- Promise.make[Nothing, Boolean]
+        _             <- slot.run(ZIO.succeed(1))(_ => ZIO.checkInterruptible(i => interruptible.succeed(i.isInterruptible)).unit)
+        result        <- interruptible.await
+        _             <- awaitFree(slot)
+      } yield assertTrue(result)
+    },
+    test("the slot is free after an interruption of work") {
+      for {
+        slot <- ZIO.service[ImportSlot]
+        _    <- slot.run(ZIO.succeed(1))(_ => ZIO.interrupt)
+        _    <- awaitFree(slot)
+      } yield assertTrue(true)
     },
   )
 

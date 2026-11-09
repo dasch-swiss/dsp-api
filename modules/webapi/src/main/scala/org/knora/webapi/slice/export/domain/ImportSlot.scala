@@ -12,8 +12,11 @@ final case class ImportSlotBusyError()
 
 /**
  * Admits one import at a time on this API instance. The slot is in memory and does not span instances.
+ *
+ * Build it only in `ExportModule`, so that there is one instance; every import kind runs its background work through
+ * [[run]].
  */
-final class ImportSlot(taken: Ref[Boolean]) {
+final class ImportSlot private[domain] (taken: Ref[Boolean]) {
 
   /**
    * Takes the slot, runs `prepare` on the caller's fiber and hands its result to `work` on a daemon fiber. The slot is
@@ -37,5 +40,5 @@ final class ImportSlot(taken: Ref[Boolean]) {
 }
 
 object ImportSlot {
-  val layer: ULayer[ImportSlot] = ZLayer.fromZIO(Ref.make(false).map(new ImportSlot(_)))
+  private[domain] val layer: ULayer[ImportSlot] = ZLayer.fromZIO(Ref.make(false).map(new ImportSlot(_)))
 }

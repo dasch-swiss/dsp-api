@@ -73,31 +73,31 @@ final class ProjectMigrationImportService(
   ): IO[ImportExistsError | ImportSlotBusyError, CurrentDataTask] =
     slot
       .run(
-        for {
-          importTask <- state.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) =>
-                          ImportExistsError(t)
-                        }
-          _ <- saveZipStream(importTask.id, stream)
-        } yield importTask,
+        // Once the task exists, any abnormal end of the save, interruption included, fails it.
+        ZIO.uninterruptibleMask { restore =>
+          state
+            .makeNew(projectIri, createdBy)
+            .mapError { case StatesExistError(t) => ImportExistsError(t) }
+            .flatMap { importTask =>
+              restore(saveZipStream(importTask.id, stream))
+                .onError(state.failWith(importTask.id, _))
+                .orDie
+                .as(importTask)
+            }
+        },
       ) { importTask =>
         doImport(importTask.id, projectIri)
-          .whenZIO(state.isInProgress(importTask.id).orElseSucceed(false))
+          .whenZIO(state.isInProgress(importTask.id))
           .unit
-          .onError(failTask(importTask.id, _))
+          .onError(state.failWith(importTask.id, _))
       }
 
-  private def failTask(taskId: DataTaskId, cause: Cause[Throwable]): UIO[Unit] = {
-    val t = cause.squash
-    state.fail(taskId, Option(t.getMessage).getOrElse(t.getClass.getSimpleName)).ignore
-  }
-
-  private def saveZipStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]) = (
+  private def saveZipStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]): Task[Unit] =
     for {
       _         <- storage.importDir(taskId)
       bagItPath <- storage.importBagItZipPath(taskId)
       _         <- stream.run(ZSink.fromFile(bagItPath.toFile)).onError(_ => Files.deleteIfExists(bagItPath).ignore)
     } yield ()
-  ).onError(failTask(taskId, _)).orDie
 
   private def doImport(taskId: DataTaskId, projectIri: ProjectIri): UIO[Unit] =
     ZIO.scoped {
