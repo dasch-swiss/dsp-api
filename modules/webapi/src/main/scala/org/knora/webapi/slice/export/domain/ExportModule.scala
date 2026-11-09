@@ -36,6 +36,6 @@ object ExportModule {
     // format: on
 
   val layer: URLayer[Dependencies, Provided] =
-    (ProjectMigrationStorageService.layer ++ ProjectMigrationImportValidator.layer) >>>
+    (ImportSlot.layer ++ ProjectMigrationStorageService.layer ++ ProjectMigrationImportValidator.layer) >>>
       (ProjectMigrationExportService.layer ++ ProjectMigrationImportService.layer ++ ProjectDataImportService.layer)
 }

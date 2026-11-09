@@ -12,15 +12,19 @@ import zio.*
 import zio.json.ast.Json
 import zio.test.*
 
+import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
+import org.knora.webapi.slice.api.DataImportLimit.overLimitBytes
+import org.knora.webapi.slice.api.RawHeadOnlyPost
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.testservices.TestApiClient
@@ -37,6 +41,8 @@ class ProjectDataImportE2ESpec extends E2EZSpec {
   private val resourceIri = ResourceIri.makeNew(Shortcode.unsafeFrom("0803"))
   private val valueIri    = ValueIri.makeNew(resourceIri)
   private val titleText   = "An imported title"
+
+  /** One byte above the 250 MiB limit on the raw request body. */
 
   private val onto     = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
   private val knoraApi = "http://api.knora.org/ontology/knora-api/v2#"
@@ -133,6 +139,28 @@ class ProjectDataImportE2ESpec extends E2EZSpec {
       } yield assertTrue(
         response.code == StatusCode.BadRequest,
         bodyContains(response, "malformed_identifier"),
+      )
+    },
+    test("reject a declared Content-Length above the limit with 413 and close, leaving no task behind") {
+      // Only the request head is sent, so the 413 cannot come from reading the body.
+      val path = s"/v3/projects/${URLEncoder.encode(projectIri, StandardCharsets.UTF_8)}/data-imports" +
+        s"?onBehalfOfUser=$memberUsername"
+      for {
+        api      <- ZIO.service[KnoraApi]
+        jwt      <- ZIO.serviceWithZIO[TestApiClient](_.jwtFor(rootUser))
+        rejected <- RawHeadOnlyPost(
+                      api.externalHost,
+                      api.externalPort,
+                      path,
+                      jsonLdType.toString,
+                      overLimitBytes,
+                      Some(jwt),
+                    )
+      } yield assertTrue(
+        rejected.statusLine.startsWith("HTTP/1.1 413"),
+        rejected.header(HeaderNames.Connection).exists(_.equalsIgnoreCase("close")),
+        rejected.serverClosed,
+        rejected.body.contains("payload_too_large"),
       )
     },
     test("attribute imported data to the on-behalf-of user, expose it on status, read back, and clean up") {

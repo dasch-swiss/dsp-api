@@ -70,6 +70,37 @@ without reading a resource.
 `@graph` declarations in the payload are ignored: all data is written exclusively into the project's data named
 graph, which is derived from the project.
 
+### Size limit
+
+The raw request body is limited to **250 MiB**. The client should send the `Content-Length` header. A declared length
+above the limit is rejected with `413 Payload Too Large` and error code `payload_too_large` before the body is read:
+
+```json
+{
+  "message": "The payload of 262144001 bytes exceeds the limit of 262144000 bytes.",
+  "errors": [
+    {
+      "code": "payload_too_large",
+      "message": "The payload of 262144001 bytes exceeds the limit of 262144000 bytes.",
+      "details": {
+        "size": "262144001",
+        "max": "262144000"
+      }
+    }
+  ]
+}
+```
+
+The server closes the connection after a non-2xx response to a request that declares more than 1 MiB
+(`Connection: close`), including this `413`, because the unread body is still on the wire. A client must open a new
+connection for its next request, and may see the connection reset while it is still sending the body.
+
+Without a `Content-Length` header, only the server's 1 MiB cap applies: a chunked body above 1 MiB is rejected by the
+server with a bare `413` that carries no v3 error body.
+
+A body that is longer than its declared length and exceeds the limit is accepted with `202`. The task then fails with
+the message "The payload exceeds the limit of 250 MiB."
+
 ## Key Behaviors
 
 The import is **asynchronous**. Triggering an import returns `202 Accepted` with a task ID.
@@ -88,6 +119,28 @@ project with no ontologies is rejected whatever its data graph holds, so the lis
 
 Only **one data-graph import** can exist at a time. Attempting to create a second returns `409 Conflict` with the
 existing task's `id` in the error details. Delete the previous task before triggering a new one.
+
+Only **one import runs at a time** on this server, whether it is a bulk import or a migration import. While one runs,
+a new import of either kind is rejected with `409 Conflict` and error code `import_running`:
+
+```json
+{
+  "message": "Another import runs on this server. Try again later.",
+  "errors": [
+    {
+      "code": "import_running",
+      "message": "Another import runs on this server. Try again later.",
+      "details": {}
+    }
+  ]
+}
+```
+
+The slot check runs before the `import_exists` check: a second import of the same kind while the first one runs gets
+`import_running`, not `import_exists`. The request validation checks of the endpoint (`400`, `404`,
+`project_ontologies_missing` and `data_graph_exists`) still run before the slot check. The slot covers the running
+import, not the task's lifetime. A failed task that waits for its `DELETE` does not block the other kind of import, but
+still blocks its own kind with `import_exists`.
 
 The upload to Fuseki is **atomic** — if the upload fails, no partial data is written to the triplestore.
 

@@ -78,9 +78,17 @@ The `status` field is one of: `in_progress`, `completed`, `failed`.
 
 Only **one export task and one import task** can exist at a time — the slots are server-wide, not per project. Delete the previous task before triggering a new one. Attempting to create a second returns `409 Conflict` with the existing task's `id` and the owning project's IRI in the error details.
 
+Only **one import runs at a time** on this server, whether it is a bulk import or a migration import. A second import
+is rejected with `409 Conflict` and error code `import_running`. The slot check runs before the `import_exists` check,
+and the request validation checks of the endpoint (`400`, `404`) still run before it. The error body and the
+difference between the slot and the task's lifetime are described in
+[Project Data Import](project-data-import.md#key-behaviors).
+
 Export status, delete and download resolve the task by its `exportId` alone; the `{projectIri}` in the path is not used for the lookup and does not have to resolve to an existing project. An export therefore stays inspectable and deletable after its project has been erased, which is what keeps the export slot from getting stuck.
 
 The import endpoint requires the `{projectIri}` in the URL to match the `External-Identifier` in the BagIt `bag-info.txt`. The request body is the zip file with content type `application/zip`.
+
+An import `POST` that gets a non-2xx response and declares a `Content-Length` above 1 MiB closes the connection (`Connection: close`), because the unread body is still on the wire. Open a new connection for the next request.
 
 Exports can optionally exclude assets via `?skipAssets=true`.
 
@@ -111,14 +119,24 @@ The import fails if:
 
 ### SHACL Validation
 
-The import validates the ontology files using SHACL shapes. It checks that:
+The import validates all files using SHACL shapes. It validates in two steps:
+
+1. The ontology files are validated against the ontology shapes.
+2. The data files (`admin.nq`, `data.nq`, `permission.nq`) are validated against `data-shapes.ttl` and the migration-mode shapes.
+
+The ontology check verifies that:
 
 - Each project ontology has 1-5 `rdfs:label` values with valid language tags (`en`, `de`, `fr`, `it`, `rm`), unique per language, and single-line.
 - Each project ontology is attached to the correct project IRI and has a `lastModificationDate`.
 - Each resource class and property has 1-5 labels with valid language tags.
 
-The data files (`admin.nq`, `data.nq`, `permission.nq`) are not validated against SHACL shapes.
-The import only checks that each data file is valid N-Quads and contains exactly one named graph.
+The data check has these consequences:
+
+- A bag is rejected if a resource or value is attached to the built-in SystemUser or AnonymousUser.
+- A bag is rejected if a resource or value is attached to a user that is not in the bag's `admin.nq`.
+- A previous value needs no `hasPermissions`.
+
+Each NQuad file must also be valid N-Quads and contain exactly one named graph.
 
 ### User Handling
 
@@ -211,5 +229,7 @@ curl --request DELETE \
 - **No cross-version compatibility**: Export and import require the same `KnoraBase-Version`.
 - **Project must not exist on target**: The import fails if the project IRI or shortcode already exists.
 - **One task at a time**: Only one export and one import can exist server-wide. Delete the previous task before triggering a new one.
+- **One import at a time**: An import is rejected with `import_running` while another import, of either kind, runs on this server. See [Project Data Import](project-data-import.md#key-behaviors).
+- **No payload size limit**: The migration import accepts a bag of any size. A very large bag can exhaust the API heap during validation, because the data files load into the validation model.
 - **Root user references**: Projects where resources or values reference the root user cannot be imported directly. The references must be reassigned before export.
 - **Assets**: Asset export/import is handled via dsp-ingest. If dsp-ingest has no assets for the project, the export continues without them.

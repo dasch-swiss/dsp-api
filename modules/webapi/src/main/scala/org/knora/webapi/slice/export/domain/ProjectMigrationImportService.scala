@@ -26,6 +26,7 @@ import org.knora.bagit.domain.Bag
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.http.version.BuildInfo
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin
+import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportValidator.ImportMode
 import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.GroupIri
@@ -62,25 +63,33 @@ final class ProjectMigrationImportService(
   triplestore: TriplestoreService,
   ontologyCache: OntologyCache,
   userService: KnoraUserService,
+  slot: ImportSlot,
 ) { self =>
 
   def importDataExport(
     projectIri: ProjectIri,
     createdBy: User,
     stream: ZStream[Any, Throwable, Byte],
-  ): IO[ImportExistsError, CurrentDataTask] = for {
-    importTask <- state.makeNew(projectIri, createdBy).mapError { case StatesExistError(t) => ImportExistsError(t) }
-    _          <- saveZipStream(importTask.id, stream)
-    _          <- doImport(importTask.id, projectIri).whenZIO(state.isInProgress(importTask.id)).forkDaemon
-  } yield importTask
+  ): IO[ImportExistsError | ImportSlotBusyError, CurrentDataTask] =
+    slot
+      .run(
+        state
+          .startWith(state.makeNew(projectIri, createdBy))(saveZipStream(_, stream))
+          .mapError { case StatesExistError(t) => ImportExistsError(t) },
+      ) { case (importTask, _) =>
+        doImport(importTask.id, projectIri)
+          .whenZIO(state.isInProgress(importTask.id))
+          .unit
+          .onError(state.failWith(importTask.id, _))
+      }
+      .map(_._1)
 
-  private def saveZipStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]) = (
+  private def saveZipStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]): Task[Unit] =
     for {
       _         <- storage.importDir(taskId)
       bagItPath <- storage.importBagItZipPath(taskId)
-      _         <- stream.run(ZSink.fromFile(bagItPath.toFile))
+      _         <- stream.run(ZSink.fromFile(bagItPath.toFile)).onError(_ => Files.deleteIfExists(bagItPath).ignore)
     } yield ()
-  ).tapError(e => state.fail(taskId, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore).orDie
 
   private def doImport(taskId: DataTaskId, projectIri: ProjectIri): UIO[Unit] =
     ZIO.scoped {
@@ -125,9 +134,9 @@ final class ProjectMigrationImportService(
                      }
         _ <- ZIO.logInfo(s"$taskId: Admin data validation passed for project '$projectIri'")
 
-        _ <- ZIO.logInfo(s"$taskId: Starting ontology validation for project '$projectIri'")
-        _ <- projectImportValidator.validateWithoutDataShapes(ontologyFiles, dataFiles, projectIri)
-        _ <- ZIO.logInfo(s"$taskId: Ontology validation passed for project '$projectIri'")
+        _ <- ZIO.logInfo(s"$taskId: Starting SHACL validation for project '$projectIri'")
+        _ <- projectImportValidator.validate(ontologyFiles, dataFiles, projectIri, ImportMode.Migration)
+        _ <- ZIO.logInfo(s"$taskId: SHACL validation passed for project '$projectIri'")
 
         // Second parse of admin.nq: idempotent user handling rewrites user triples.
         _               <- ZIO.logInfo(s"$taskId: Starting user preparation for project '$projectIri'")
@@ -523,7 +532,7 @@ final class ProjectMigrationImportService(
 object ProjectMigrationImportService {
   val layer: URLayer[
     DspIngestClient & KnoraGroupService & KnoraProjectService & ProjectMigrationImportValidator &
-      ProjectMigrationStorageService & TriplestoreService & OntologyCache & KnoraUserService,
+      ProjectMigrationStorageService & TriplestoreService & OntologyCache & KnoraUserService & ImportSlot,
     ProjectMigrationImportService,
   ] = FilesystemDataTaskPersistence.importLayer >>> ZLayer.derive[ProjectMigrationImportService]
 }

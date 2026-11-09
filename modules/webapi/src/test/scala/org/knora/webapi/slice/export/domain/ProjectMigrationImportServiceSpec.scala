@@ -242,6 +242,9 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
   private def cleanupImport(env: TestEnv, taskId: DataTaskId): UIO[Unit] =
     pollUntilDone(env.service, taskId).ignore *> env.service.deleteImport(taskId).ignore
 
+  private val failingSave: ZStream[Any, Throwable, Byte] =
+    ZStream.fromChunk(Chunk[Byte](1, 2, 3)) ++ ZStream.die(new RuntimeException("boom"))
+
   // === Layer Setup ===
   // Creates a fresh test environment with all stubs, returns Refs for configuration
   private case class TestEnv(
@@ -257,6 +260,8 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     uploadedBytesRef: Ref[Chunk[Byte]],
     refreshCacheCalled: Ref[Boolean],
     ingestImportCalls: Ref[Option[(Shortcode, Path)]],
+    slot: ImportSlot,
+    taskStateRef: Ref[Option[CurrentDataTask]],
   )
 
   private val configLayer: ULayer[Unit] = TestAppConfig.layer()
@@ -274,7 +279,28 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
       ingestImportCalls.set(Some((shortcode, fileToImport))).as(fileToImport)
   }
 
-  private val makeTestEnv: ZIO[Any, Nothing, TestEnv] = for {
+  private val noopPersistence = new DataTaskPersistence {
+    def onChanged(task: CurrentDataTask): UIO[Unit] = ZIO.unit
+    def onDeleted(taskId: DataTaskId): UIO[Unit]    = ZIO.unit
+  }
+
+  private val bulkProject = TestDataFactory.someProject
+
+  private final case class BulkService(service: ProjectDataImportService, stateRef: Ref[Option[CurrentDataTask]])
+
+  // The collaborators that only the bulk `doImport` reaches are null: a defect there fails the task.
+  private def bulkServiceSharing(slot: ImportSlot): UIO[BulkService] =
+    Ref.make[Option[CurrentDataTask]](None).map { ref =>
+      val state = new DataTaskState(ref, noopPersistence)
+      BulkService(
+        new ProjectDataImportService(state, new ProjectDataImportStorageService(), null, null, null, null, slot),
+        ref,
+      )
+    }
+
+  private val makeTestEnv: ZIO[Any, Nothing, TestEnv] = makeTestEnvWith(noopPersistence)
+
+  private def makeTestEnvWith(persistence: DataTaskPersistence): ZIO[Any, Nothing, TestEnv] = for {
     projectFindByIdRef        <- Ref.make[ProjectIri => Task[Option[KnoraProject]]](_ => ZIO.none)
     projectFindByShortcodeRef <- Ref.make[Shortcode => Task[Option[KnoraProject]]](_ => ZIO.none)
     userFindByIdRef           <- Ref.make[UserIri => Task[Option[KnoraUser]]](_ => ZIO.none)
@@ -300,10 +326,7 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     storage        = new ProjectMigrationStorageService()
 
     // Build the import service layer
-    persistence = new DataTaskPersistence {
-                    def onChanged(task: CurrentDataTask): UIO[Unit] = ZIO.unit
-                    def onDeleted(taskId: DataTaskId): UIO[Unit]    = ZIO.unit
-                  }
+    slot          <- Ref.make(false).map(new ImportSlot(_))
     taskStateRef  <- Ref.make[Option[CurrentDataTask]](None)
     taskState      = new DataTaskState(taskStateRef, persistence)
     shaclValidator = new ProjectMigrationImportValidator()
@@ -318,6 +341,7 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         triplestore,
         ontologyCache,
         userService,
+        slot,
       )
   } yield TestEnv(
     service,
@@ -332,9 +356,130 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     uploadedBytesRef,
     refreshCacheCalled,
     ingestImportCalls,
+    slot,
+    taskStateRef,
   )
 
   override def spec: Spec[Any, Any] = suite("ProjectMigrationImportService")(
+    test("an import that fails frees the slot and, once deleted, a next import is accepted") {
+      ZIO.scoped {
+        for {
+          env     <- makeTestEnv
+          stream  <- buildBagItZip(bagInfoFields = List("Dsp-Api-Version" -> BuildInfo.version))
+          task    <- env.service.importDataExport(testProjectIri, testUser, stream)
+          result  <- pollUntilDone(env.service, task.id)
+          _       <- ImportSlotTestSupport.awaitFree(env.slot)
+          _       <- env.service.deleteImport(task.id).ignore
+          stream2 <- buildBagItZip(bagInfoFields = List("Dsp-Api-Version" -> BuildInfo.version))
+          next    <- env.service.importDataExport(testProjectIri, testUser, stream2)
+          _       <- cleanupImport(env, next.id)
+        } yield assertTrue(result.status == DataTaskStatus.Failed, next.id != task.id)
+      }
+    },
+    test("an interruption right after the task exists fails the task and frees the slot") {
+      ZIO.scoped {
+        for {
+          entered <- Promise.make[Nothing, Unit]
+          gate    <- Promise.make[Nothing, Unit]
+          blocking = new DataTaskPersistence {
+                       def onChanged(task: CurrentDataTask): UIO[Unit] = entered.succeed(()) *> gate.await
+                       def onDeleted(taskId: DataTaskId): UIO[Unit]    = ZIO.unit
+                     }
+          env   <- makeTestEnvWith(blocking)
+          fiber <- env.service.importDataExport(testProjectIri, testUser, ZStream.fromChunk(Chunk[Byte](1, 2, 3))).fork
+          _     <- entered.await
+          _     <- fiber.interruptFork
+          _     <- gate.succeed(())
+          _     <- fiber.await
+          task  <- env.taskStateRef.get.map(_.get)
+          _     <- ImportSlotTestSupport.awaitFree(env.slot)
+          _     <- cleanupImport(env, task.id)
+        } yield assertTrue(task.status == DataTaskStatus.Failed)
+      }
+    },
+    test("an interrupted save fails the task, deletes the partial file and frees the slot") {
+      ZIO.scoped {
+        for {
+          env   <- makeTestEnv
+          fiber <-
+            env.service
+              .importDataExport(testProjectIri, testUser, ZStream.fromChunk(Chunk[Byte](1, 2, 3)) ++ ZStream.never)
+              .fork
+          task   <- ImportSlotTestSupport.awaitUntil(env.taskStateRef.get)(_.isDefined).map(_.get)
+          path   <- env.storage.importBagItZipPath(task.id)
+          _      <- ImportSlotTestSupport.awaitUntil(Files.exists(path))(identity)
+          _      <- fiber.interrupt
+          cur    <- env.service.getImportStatus(task.id).orElseFail(new IllegalStateException("Task not found.")).orDie
+          exists <- Files.exists(path)
+          _      <- ImportSlotTestSupport.awaitFree(env.slot)
+          _      <- cleanupImport(env, task.id)
+        } yield assertTrue(cur.status == DataTaskStatus.Failed, !exists)
+      }
+    },
+    test("a save defect fails the task, deletes the partial file and frees the slot") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          exit   <- env.service.importDataExport(testProjectIri, testUser, failingSave).exit
+          task   <- env.taskStateRef.get.map(_.get)
+          path   <- env.storage.importBagItZipPath(task.id)
+          exists <- Files.exists(path)
+          _      <- ImportSlotTestSupport.awaitFree(env.slot)
+          _      <- cleanupImport(env, task.id)
+        } yield assertTrue(exit.isFailure, task.status == DataTaskStatus.Failed, !exists)
+      }
+    },
+    test("a taken slot gives ImportSlotBusyError and creates no task") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          gate   <- Promise.make[Nothing, Unit]
+          _      <- ZIO.addFinalizer(gate.succeed(()))
+          _      <- env.slot.run(ZIO.unit)(_ => gate.await)
+          exit   <- env.service.importDataExport(testProjectIri, testUser, ZStream.empty).exit
+          stored <- env.taskStateRef.get
+        } yield assertTrue(exit == Exit.fail(ImportSlotBusyError()), stored.isEmpty)
+      }
+    },
+    test("a migration import holding the slot blocks a bulk import of the same slot, and frees it afterwards") {
+      ZIO.scoped {
+        for {
+          env      <- makeTestEnv
+          bulk     <- bulkServiceSharing(env.slot)
+          gate     <- Promise.make[Nothing, Unit]
+          _        <- ZIO.addFinalizer(gate.succeed(()))
+          blocked   = ZStream.fromChunk(Chunk[Byte](1, 2, 3)) ++ ZStream.fromZIO(gate.await).drain
+          fiber    <- env.service.importDataExport(testProjectIri, testUser, blocked).fork
+          _        <- ImportSlotTestSupport.awaitUntil(env.taskStateRef.get)(_.isDefined)
+          exit     <- bulk.service.importDataGraph(bulkProject, testUser, testUser, ZStream.empty).exit
+          stored   <- bulk.stateRef.get
+          _        <- gate.succeed(())
+          task     <- fiber.join
+          _        <- ImportSlotTestSupport.awaitFree(env.slot)
+          accepted <- bulk.service.importDataGraph(bulkProject, testUser, testUser, ZStream.empty)
+          _        <- ImportSlotTestSupport.awaitFree(env.slot)
+          _        <- cleanupImport(env, task.id)
+        } yield assertTrue(exit == Exit.fail(ImportSlotBusyError()), stored.isEmpty, accepted.id != task.id)
+      }
+    },
+    test("a bulk import holding the slot blocks a migration import of the same slot") {
+      ZIO.scoped {
+        for {
+          env    <- makeTestEnv
+          bulk   <- bulkServiceSharing(env.slot)
+          gate   <- Promise.make[Nothing, Unit]
+          _      <- ZIO.addFinalizer(gate.succeed(()))
+          blocked = ZStream.fromChunk(Chunk[Byte](1, 2, 3)) ++ ZStream.fromZIO(gate.await).drain
+          fiber  <- bulk.service.importDataGraph(bulkProject, testUser, testUser, blocked).fork
+          _      <- ImportSlotTestSupport.awaitUntil(bulk.stateRef.get)(_.isDefined)
+          exit   <- env.service.importDataExport(testProjectIri, testUser, ZStream.empty).exit
+          stored <- env.taskStateRef.get
+          _      <- gate.succeed(())
+          _      <- fiber.join
+          _      <- ImportSlotTestSupport.awaitFree(env.slot)
+        } yield assertTrue(exit == Exit.fail(ImportSlotBusyError()), stored.isEmpty)
+      }
+    },
     test("rejects corrupt archive") {
       ZIO.scoped {
         for {
@@ -787,11 +932,16 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           stream1 <- buildBagItZip()
           stream2 <- buildBagItZip()
           task    <- env.service.importDataExport(testProjectIri, testUser, stream1)
+          _       <- pollUntilDone(env.service, task.id)
+          _       <- ImportSlotTestSupport.awaitFree(env.slot)
           exit    <- env.service.importDataExport(testProjectIri, testUser, stream2).exit
           _       <- cleanupImport(env, task.id)
         } yield assertTrue(
           exit.isFailure,
-          exit == Exit.fail(ImportExistsError(task)),
+          exit.causeOption.flatMap(_.failureOption).exists {
+            case ImportExistsError(t) => t.id == task.id
+            case _                    => false
+          },
         )
       }
     },
@@ -1120,7 +1270,7 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
         }
       },
     ),
-    test("does not apply data shapes: accepts data.nq with attachedToUser pointing at SystemUser") {
+    test("applies data shapes: rejects data.nq with attachedToUser pointing at SystemUser") {
       val dataGraph            = "http://www.knora.org/data/9999/test"
       val resourceType         = "http://www.knora.org/ontology/9999/test#TestResource"
       val attachedToUser       = "http://www.knora.org/ontology/knora-base#attachedToUser"
@@ -1141,7 +1291,10 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
           task   <- env.service.importDataExport(testProjectIri, testUser, stream)
           result <- pollUntilDone(env.service, task.id)
           _      <- cleanupImport(env, task.id)
-        } yield assertTrue(result.status == DataTaskStatus.Completed)
+        } yield assertTrue(
+          result.status == DataTaskStatus.Failed,
+          result.errorMessage.exists(_.contains("AttachedToUserNotBuiltIn-Shape")),
+        )
       }
     },
   ).provide(configLayer) @@ TestAspect.withLiveClock @@ TestAspect.withLiveRandom @@ TestAspect.timeout(30.seconds)

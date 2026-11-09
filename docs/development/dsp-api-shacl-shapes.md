@@ -10,14 +10,31 @@ network). These conventions keep the shapes readable, correctly placed, and test
 - `data-shapes.ttl` holds constraints that always apply. It loads in every validation mode.
 - `migration-shapes.ttl` and `bulk-import-shapes.ttl` layer mode-specific constraints on
   top. The two never load together. Each reopens a node shape by IRI and adds constraints.
-- The migration import endpoint validates only the ontologies at runtime. It does not load
-  `data-shapes.ttl` or `migration-shapes.ttl`. `ProjectMigrationImportValidatorSpec` still
-  tests both files through `ProjectMigrationImportValidator.validate`.
 
 Placement is a decision, not a version step. When you add or change a knora-base value
 predicate, decide where its constraint belongs. Put it in `data-shapes.ttl` when it always
 holds. Put it in a layer when it is mode-specific. This decision is independent of the
 knora-base version bump.
+
+## Validation model
+
+`ShaclValidator` loads the ontologies, the data and the admin data into one plain Jena model.
+No inference runs. An RDFS inference model grows with the data and runs out of memory on
+large imports. The `memory_test` target of `modules/shacl-validator` guards this.
+
+The plain model keeps the class semantics of SHACL Core:
+
+- `sh:targetClass C` and `sh:class C` match a node with `rdf:type/rdfs:subClassOf* C`. The
+  `rdfs:subClassOf` triples come from the loaded ontologies. Thus a shape on
+  `knora-base:Resource` also checks instances of project subclasses.
+- A shape whose `sh:path` is a super-property does not see triples of its sub-properties.
+  Use the leaf property as the path. A `sh:minCount` on a property that a project can
+  sub-property gives a false violation when a subclass overrides the cardinality with the
+  sub-property. The existing `sh:minCount` constraints on `hasLinkTo`, `hasLinkToValue`,
+  `hasComment` and the other parent paths of `LinkObj`, `Annotation`, `Region`, `Segment`,
+  `AudioSegment` and `VideoSegment` stay, because no project class subclasses these classes.
+  Check this again before a project subclasses one of them. Do not add a new `sh:minCount`
+  on such a path: the project-ontology shapes, which use the effective cardinality, own it.
 
 ## Documenting shapes
 
@@ -67,7 +84,13 @@ guarantees the value and a backfill covers existing data.
   `sh:class`.
 - Split complex validation into separate property shapes, each with its own message.
 - Put `sh:message` on the specific property or constraint shape that fails. Never put it on
-  the node shape. A node-level message bleeds onto every sibling constraint.
+  a node shape that has sibling constraints. A node-level message bleeds onto every sibling
+  constraint.
+- Exception: a node shape whose only constraint is one `sh:or` gets its own `sh:message`.
+  TopBraid reports the `sh:or` result on the node shape, and without a message the result
+  says only "at least one of the following shapes". Example:
+  `knora-base:ValueHasPermissions-Shape`. When you add a sibling constraint to such a shape,
+  move the message to the property shapes.
 
 The test for all three: a reader identifies the violation from the message and the data
 alone, without opening the shapes file.
