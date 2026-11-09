@@ -1997,7 +1997,9 @@ The response will look like this:
 }
 ```
 
-The `ontologies/canreplacecardinalities/CLASS_IRI` request is only checking if the class is in use. 
+The `ontologies/canreplacecardinalities/CLASS_IRI` request is only checking if the class is in use.
+
+Both checks require a system or project administrator of the class's project: anonymous callers get _401 Unauthorized_, and a class in a built-in ontology gets _400 Bad Request_.
 
 
 ### Delete a single cardinality from a class
@@ -2056,6 +2058,8 @@ To check whether a class's cardinality can be deleted:
 ```text
 HTTP POST to http://host/v2/ontologies/candeletecardinalities
 ```
+
+Both checks require a system or project administrator of the class's project: anonymous callers get _401 Unauthorized_, and a class in a built-in ontology gets _400 Bad Request_.
 
 The response will look like this:
 

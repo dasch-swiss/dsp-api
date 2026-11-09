@@ -27,7 +27,6 @@ import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
-import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v2.ontologies.AddCardinalitiesToClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.CanDeleteCardinalitiesFromClassRequestV2
 import org.knora.webapi.slice.api.v2.ontologies.ChangeClassLabelsOrCommentsRequestV2
@@ -43,7 +42,6 @@ import org.knora.webapi.slice.api.v2.ontologies.ReplaceClassCardinalitiesRequest
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.ProjectAdminGrant
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.model.OntologyName
@@ -95,7 +93,6 @@ final class OntologyResponderV2(
   cardinalityHandler: CardinalityHandler,
   cardinalityService: CardinalityService,
   iriService: IriService,
-  knoraProjectService: KnoraProjectService,
   ontologyCache: OntologyCache,
   ontologyCacheHelpers: OntologyCacheHelpers,
   ontologyTriplestoreHelpers: OntologyTriplestoreHelpers,
@@ -346,10 +343,7 @@ final class OntologyResponderV2(
     projectIri <- ZIO
                     .fromOption(ontology.projectIri)
                     .orElseFail(NotFoundException(s"Project IRI not found for ontology ${ontologyIri.toComplexSchema}"))
-    project <- knoraProjectService
-                 .findById(projectIri)
-                 .someOrFail(NotFoundException(s"Project ${projectIri.value} not found"))
-  } yield AuthorizationRestService.isSystemOrProjectAdmin(project)(user)
+  } yield user.permissions.isSystemAdmin || user.permissions.isProjectAdmin(projectIri)
 
   def deleteOntologyComment(
     ontologyIri: OntologyIri,
