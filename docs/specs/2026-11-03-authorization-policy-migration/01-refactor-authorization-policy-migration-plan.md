@@ -130,7 +130,7 @@ cover the active check.
 - **Ontology writes run inside the ontology lock.** The belongs-to-project assertion goes inside the lock, next to
   the existing `lastModificationDate` check, as the list node check does (`ListsResponder`).
 - **Conventions.** RestService methods use a second parameter list for the principal (`CONVENTIONS.md`). Typed IRIs
-  are converted at the API boundary (`docs/development/dsp-api-iri-handling.md`). SmartIri-backed ontology IRIs
+  are converted at the API boundary (`docs/development/iri-handling.md`). SmartIri-backed ontology IRIs
   stay `IriDto` in v3 (`docs/development/dsp-api-v3-iri-handling.md`).
 
 ## Implementation Approach

@@ -40,7 +40,7 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
   never extends it. The spec pins the baseline's size (`baselineSize`); the commit that removes lines lowers it. A
   slice never sets `Policy.key` and never calls `withInfo` (it replaces all attributes; `//tools/lint:check_authz`
   enforces it). Every role-based endpoint has an `AuthorizationMatrixE2ESpec` row or an `exempt` entry. See
-  `docs/development/conventions.md#endpoint-authorization-policy`.
+  `docs/development/code-conventions.md#endpoint-authorization-policy`.
 - `*ServerEndpoints.scala` — wiring of endpoint to RestService method. `.zServerLogic(_ => …)` for public, `.serverLogic(restService.x)` for secured.
 - `*RestService.scala` — handler logic: auth and presentation only, with a minimal amount of business logic. The actual business logic lives in plain `*Service`s. Every secured method uses multiple parameter lists `def x(user: User)(args…): Task[Resp]` (a `ProjectCandidate` in place of the `User` for `projectAdminPolicyEndpoint`, which obtains a `ProjectAdminGrant` from `AuthorizationRestService.authorizeProjectAdminById` before it acts), which lets the `*ServerEndpoints` wire it concisely without enumerating every param. The body follows: **auth check → delegate to service → `format.toExternal(...)`**.
 - Register new endpoints in the API's aggregator — `AdminApiServerEndpoints` for admin, and the matching `*ServerEndpoints` aggregator for the other APIs.
@@ -89,7 +89,7 @@ diffing rendered SPARQL against the old `getQueryString` output). See
 
 ### Ontology & RDF
 
-- Overridable project-wide defaults: `hasDefault*` in the ontology, `default*` as payload key (precedent `default_permissions`, `hasDefaultDataAuthorship`). Details in `docs/development/conventions.md` § Ontology Conventions.
+- Overridable project-wide defaults: `hasDefault*` in the ontology, `default*` as payload key (precedent `default_permissions`, `hasDefaultDataAuthorship`). Details in `docs/development/code-conventions.md` § Ontology Conventions.
 - Stored values that fail validation on read: skip + `ZIO.logWarning` — never 500 the whole read, never drop silently. See `docs/development/error-handling.md` § Reading persisted data leniently.
 - Changing `knora-base.ttl` / `knora-admin.ttl`: version-bump rules (incl. when *not* to bump, and `MigrateOnlyBuiltInGraphs` for reload-only changes) in `docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies. Generated fixtures (e.g. `knoraApiOntologyWithValueObjects.jsonld`) are rewritten by `OntologyFormatsE2ESpec` — never hand-edited.
 - Single-graph updates use `` .`with`(graph) `` so the WHERE is graph-scoped too — an ungraphed WHERE silently no-ops on stores without a union default graph. Invariant + `USING`/`GRAPH` caveat in `docs/development/sparql-queries.md`.
@@ -103,7 +103,7 @@ When adding or changing tracing/telemetry (spans, span attributes, metrics), rea
 
 ### Scala idioms
 
-- Collapse an `Option` with `opt.fold(default)(f)`, not `opt.map(f).getOrElse(default)`. Details + argument-order note in `docs/development/conventions.md` § Scala Idioms.
+- Collapse an `Option` with `opt.fold(default)(f)`, not `opt.map(f).getOrElse(default)`. Details + argument-order note in `docs/development/code-conventions.md` § Scala Idioms.
 
 ### Imports & formatting
 
@@ -174,7 +174,7 @@ Do **not** use "Knora" in free-form human-readable text — commit messages, PR 
 - Test data: prefer self-contained fixtures next to the component. Only fall back to shared `test_data/` sets when unavoidable. When adding to a shared set, verify an actual *instance* of the scenario exists — not just that the schema supports it.
 - Repeated datatype triples are **unordered** — never assert their insertion order in tests (use sorted lists or sets; entity reads sort small literal lists at the read boundary, see `keywords` / `defaultDataAuthorship` in `KnoraProjectRepoLive`). If result order matters in production, it is `ORDER BY` in the query, not post-hoc sorting. See `docs/development/sparql-queries.md` § Repeated Properties Have No Order.
 - Test locations: unit → `modules/webapi/src/test/scala/`; integration → `modules/test-it/`; ingest integration → `modules/test-ingest-integration/`; E2E → `modules/test-e2e/`; shared utilities → `modules/testkit/`.
-- For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. `modules/webapi` and `modules/sparql-builder` each carry their own `GoldenTest` (e.g. `modules/webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`) with no other regeneration route, while specs in `modules/test-it` and `modules/test-e2e` use the testkit copy (`modules/testkit/src/main/scala/org/knora/webapi/GoldenTest.scala`), which can also be regenerated without a source edit via `--test_env=GOLDEN_REWRITE=1`. See `docs/development/conventions.md` § "Golden snapshot tests" for the full recipe. This is the **preferred** way to test query builders — not scattered `q.contains(...)` substring assertions (see `docs/development/sparql-queries.md` § Testing Query Builders).
+- For large or generated string output (SPARQL, serialized responses), mix in `GoldenTest` and assert with `assertGolden(actual, "suffix")`. The expected value is stored next to the spec under `src/test/resources/`; regenerate with `rewrite = true` (or `rewriteAll = true`) and inspect the `git diff`. `modules/webapi` and `modules/sparql-builder` each carry their own `GoldenTest` (e.g. `modules/webapi/src/test/scala/org/knora/webapi/GoldenTest.scala`) with no other regeneration route, while specs in `modules/test-it` and `modules/test-e2e` use the testkit copy (`modules/testkit/src/main/scala/org/knora/webapi/GoldenTest.scala`), which can also be regenerated without a source edit via `--test_env=GOLDEN_REWRITE=1`. See `docs/development/code-conventions.md` § "Golden snapshot tests" for the full recipe. This is the **preferred** way to test query builders — not scattered `q.contains(...)` substring assertions (see `docs/development/sparql-queries.md` § Testing Query Builders).
 
 ## Commit Conventions
 
@@ -189,7 +189,7 @@ Types, scopes, commit bodies, stacks and the PR description: `docs/development/c
 
 ## Where to go for depth
 
-- `docs/development/conventions.md` — full code conventions (services, value objects, three-tier API, naming, imports, STM, ZIO Test)
+- `docs/development/code-conventions.md` — full code conventions (services, value objects, three-tier API, naming, imports, STM, ZIO Test)
 - `docs/development/error-handling.md` — fail vs die, typed errors, the `throw` carve-out
 - `docs/development/iri-handling.md` — universal IRI handling rules
 - `docs/development/v3-iri-handling.md` — V3 IRI conventions
