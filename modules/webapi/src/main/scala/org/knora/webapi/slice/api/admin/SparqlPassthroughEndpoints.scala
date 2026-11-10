@@ -145,7 +145,7 @@ object SparqlPassthroughEndpoints {
    * neither, and it costs a map lookup rather than rebuilding the template on every request.
    *
    * It also makes the server close the connection on a rejection that leaves a streamed body unread; see
-   * [[org.knora.webapi.slice.api.v3.projects.ClosesOnUnreadBody]].
+   * [[org.knora.webapi.slice.common.api.ClosesOnUnreadBody]].
    */
   val routeMarker: AttributeKey[SparqlPassthroughRoute.type] = AttributeKey[SparqlPassthroughRoute.type]
 

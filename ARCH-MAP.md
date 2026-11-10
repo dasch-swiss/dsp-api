@@ -107,11 +107,11 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
 - **Key entities**: `ApiModule`, `Endpoints`, `AdminApiModule`, `AdminApiServerEndpoints`, `ApiV2Module`,
     `ApiV2ServerEndpoints`, `ApiV3Module`, `ApiV3ServerEndpoints`, `ManagementServerEndpoints`,
     `OntologyApiModule`, `V3BaseEndpoint`, `V3ErrorInfo`, `V3ErrorCode`, `V3Authorizer`, `PageAndSize`,
-    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `ClosesOnUnreadBody`, `Codecs`, `FairApiModule` (webapi-fair)
+    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `Codecs`, `FairApiModule` (webapi-fair)
 - **Public interface**: `ApiModule.layer`; `Endpoints.serverEndpoints`; the four `*RestService`s re-exported
     by `AdminApiModule.Provided` (`GroupRestService`, `PermissionRestService`, `ProjectRestService`,
     `UserRestService`, exposed for the integration tests); `SparqlPassthroughEndpoints.isPassthroughRoute` /
-    `routeMarker`; `ClosesOnUnreadBody` (`key`, `isMarked`); `ApiV2.Headers`, `ApiV2.QueryParams`, `ApiV3.basePath`; `PageAndSize` / `PagedResponse`;
+    `routeMarker`; `ApiV2.Headers`, `ApiV2.QueryParams`, `ApiV3.basePath`; `PageAndSize` / `PagedResponse`;
     and, de facto, the DTO and codec objects `Codecs.TapirCodec`, `Codecs.ZioJsonCodec`, `admin.model.Project`,
     `admin.model.MaintenanceRequests`, `v2.ontologies.LastModificationDate`.
 - **Local-context kit**:
@@ -122,7 +122,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/admin/AdminApiServerEndpoints.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/BaseEndpoints.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v3/V3BaseEndpoint.scala`
-    - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v3/projects/ClosesOnUnreadBody.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/ClosesOnUnreadBody.scala`
     - Sufficiency gap: the v2 and v3 aggregators (`ApiV2ServerEndpoints`, `ApiV3ServerEndpoints`,
         `ApiV2Module`, `ApiV3Module`) plus `docs/development/v3-iri-handling.md` are also required
         when the change touches v2 or v3 rather than admin.
@@ -148,18 +148,11 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     - Never add a variant to the shared `BaseEndpoints.errorOutputs`; declare route-specific variants with
         `errorOutVariantsPrepend`, precedent `V3BaseEndpoint` - enforcement: review (`CONVENTIONS.md` line 52).
     - Domain slices must not import `org.knora.webapi.slice.api.*`; DTOs, Tapir and zio-json codecs and
-        pagination types belong above the domain - enforcement: docs-only. Currently violated broadly: about
-        30 main-source files outside `slice/api` import it. In `slice/admin/domain/model`:
-        `KnoraProject`, `KnoraGroup`, `User`, `ListProperties`, `PermissionIri`, `InternalFilename`,
-        `LegalInfoModel`. In `slice/admin/domain/service`: `KnoraUserService`, `KnoraProjectService`,
-        `KnoraGroupService`, `GroupService`, `ProjectService`, `LegalInfoService`, `ViewRestrictionsService`,
-        `ViewRestrictionsByPropertyService`, `DspIngestClient`. Also `slice/admin/repo/ViewRestrictionsRepo.scala`,
-        `responders/v2/OntologyResponderV2.scala` (17 request DTOs),
-        `responders/v2/ResourcesResponderV2.scala`, the four files under `responders/admin`
-        (`ListsResponder`, `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`),
-        the three under `store/iiif` (`api/SipiService`, `impl/SipiServiceLive`, `impl/SipiServiceMock`),
-        and `slice/common/QueryBuilderHelper.scala` plus
-        `slice/common/ApiComplexV2JsonLdRequestParser.scala`.
+        pagination types belong above the domain - enforcement: lint, ratchet (`//tools/lint:api_imports`
+        in `just check`: webapi main code outside `slice/api` may not reference the package). The 71 files
+        that already do, mostly in `slice/admin`, `slice/ontology`, `slice/resources` and `responders`, are
+        listed in `tools/lint/api_imports_allowlist.txt`, which only shrinks; the composition root (`Main`,
+        `LayersLive`, `DspApiServer`) stays on it.
     - RestServices go through domain services, not repos - enforcement: docs-only. Currently violated by
         `v3/resources/ResourcesRestServiceV3.scala` and `ApiV3Module`, which import
         `slice.resources.repo.service.ResourcesRepo` and `ValueRepo`,
@@ -225,7 +218,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     `ValueIri`, `StandoffMappingIri`, `IriConverter`, `InternalIri`, `Value`, `StringValue`, `WithFrom`,
     `LanguageCode`, `BaseEndpoints`, `AuthorizationRestService`, `KnoraResponseRenderer`, `Vocabulary`,
     `PredicateObjectMapper`, `Repository`, `CrudRepository`, `IriLocker`, `IriService`,
-    `KnoraSystemInstances`, `PermissionUtilADM`, `NegotiatesOwnAccept`, `OwnAcceptNegotiation`,
+    `KnoraSystemInstances`, `PermissionUtilADM`, `NegotiatesOwnAccept`, `ClosesOnUnreadBody`, `OwnAcceptNegotiation`,
     `RequiresMethod`, `JsonLDUtil`, `RdfFormatUtil`, `SparqlSelectResult`,
     `ModelOps`, `ResourceOps`, `StatementOps`, `ConstructResponseUtilV2`, `ApiComplexV2JsonLdRequestParser`,
     `QueryBuilderHelper`, `SalsahGui`, `UuidUtil`, `BadRequestException`, `NotFoundException`,
@@ -2138,7 +2131,7 @@ failure.
 | String-built SPARQL, or a new rdf4j `SparqlBuilder` site | Escaping and injection safety are re-derived per call site, and rendered output drifts with no pinned diff | The `sparql"..."` interpolator from `modules/sparql-builder/`, one explicit template per query | review |
 | Adding a variant to `BaseEndpoints.errorOutputs` | It is attached to every endpoint, so one line serializes an exception `message` verbatim on every route including unauthenticated ones | `errorOutVariantsPrepend` on the producing endpoint, enumerating every outcome, precedent `V3BaseEndpoint` | review |
 | `unsafeFrom` or `.die` on a client IRI in a RestService or responder | A malformed client IRI becomes a 500 and a defect rather than a 400, and the pattern is copied by the next handler | `ZIO.fromEither(X.from(...))` mapped to `BadRequestException`, or to the typed `V3ErrorInfo` variant in v3 | review |
-| A domain slice importing `slice.api.*` DTOs or codecs | The domain becomes unbuildable without HTTP delivery, and the dependency arrow inverts; already true for six components | DTOs stay in webapi-api, domain types in the slice, translated at the RestService boundary | docs-only, target structure |
+| A domain slice importing `slice.api.*` DTOs or codecs | The domain becomes unbuildable without HTTP delivery, and the dependency arrow inverts; already true for six components | DTOs stay in webapi-api, domain types in the slice, translated at the RestService boundary | lint, ratchet (`//tools/lint:api_imports`) |
 | Importing another slice's `repo/*Query` class | Query internals become a de facto public surface, so the owning slice cannot change its persistence without breaking callers | Declare a port in your slice's `ports` package; the owning slice implements `<Port>Live` next to its data; wire in `LayersLive` ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)) | docs-only |
 | Raw SPARQL against the admin or permission graphs from another context | Two contexts encode the same graph shape, and an admin schema change silently breaks the other | Declare a port in your slice's `ports` package; the owning slice implements `<Port>Live` next to its data; wire in `LayersLive` ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)) | docs-only, ratchet |
 | Reading or writing another context's named graph | Two owners for one graph means no single answer to who changed it, and extraction becomes impossible | A port implemented by the graph's owner; whole-graph movement by Project Migration is the only exception | review ([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md)) |

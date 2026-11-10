@@ -49,7 +49,7 @@ import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.api.Endpoints
 import org.knora.webapi.slice.api.admin.SparqlPassthroughAudit
 import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
-import org.knora.webapi.slice.api.v3.projects.ClosesOnUnreadBody
+import org.knora.webapi.slice.common.api.ClosesOnUnreadBody
 import org.knora.webapi.slice.common.api.NegotiatesOwnAccept
 
 final class DspApiServer(
