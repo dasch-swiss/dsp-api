@@ -15,6 +15,7 @@ Typed value objects already exist for most of them:
 - `UserIri` (`http://rdfh.ch/users/...`)
 - `GroupIri` (`http://rdfh.ch/groups/...`)
 - `PermissionIri` (`http://rdfh.ch/permissions/...`)
+- `ResourceIri` (`http://rdfh.ch/0001/...`) and `ValueIri`, standalone types in `slice/common/Iris.scala`
 - `ListIri`, `ListNodeIri`, etc.
 
 **In endpoint definitions** use the typed value object directly - Tapir picks up the codec
@@ -32,7 +33,7 @@ No conversion is needed in the RestService - the value object is used as-is.
 
 ### 2. SmartIri-backed IRIs - different internal and external representation
 
-Ontology IRIs, resource class IRIs, resource IRIs, value IRIs  and property IRIs are backed by `SmartIri`.
+Ontology IRIs, resource class IRIs and property IRIs are backed by `SmartIri`.
 Their external (API) representation depends on server configuration (complex schema) and differs from the internal representation stored in the triplestore.
 
 Example domain types: `KnoraIris.OntologyIri`, `KnoraIris.ResourceClassIri`, `KnoraIris.PropertyIri`
