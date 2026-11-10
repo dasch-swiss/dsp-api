@@ -100,17 +100,27 @@ Cross-project queries — those referencing more than one project, a shape worth
 
 ## 5. Errors and interruptions
 
-Any failed Gravsearch stage (the status description is sanitized — `"<stage>: <Class>"`, no SPARQL):
+Any failed Gravsearch stage (the status description is sanitized — `"<stage>: <Class>"`, no SPARQL).
+A client rejection (below) is not `ERROR`, so this no longer matches one:
 
 ```traceql
 { span:name =~ "gravsearch.*" && span:status = error }
 ```
 
-Queries that were interrupted (client disconnect / timeout / cancellation) — these are slow queries
-that got cut off, and exactly what you are usually hunting:
+`span.gravsearch.exit_reason` says why a stage ended without a result; select on its value.
+`interrupted` marks queries that were interrupted (client disconnect / timeout / cancellation) —
+these are slow queries that got cut off, and exactly what you are usually hunting:
 
 ```traceql
 { span:name =~ "gravsearch.*" && span.gravsearch.exit_reason = "interrupted" }
+```
+
+`bad_request` marks client rejections: a `BadRequestException` answered with a 400 (an over-broad
+`matchFulltext` term refused by the breadth guard, invalid Lucene syntax, a generator input check).
+Their spans keep status `UNSET`; the attribute is on the failed stage and on the root:
+
+```traceql
+{ span:name = "gravsearch" && span.gravsearch.exit_reason = "bad_request" }
 ```
 
 !!! note "Attribute name syntax"

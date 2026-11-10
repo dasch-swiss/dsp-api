@@ -137,7 +137,7 @@
         "spec": {
           "id": 2,
           "title": "Error / interrupt share (range)",
-          "description": "Share of executions whose root span ended with STATUS_CODE_ERROR. IMPORTANT: this conflates genuine failures with client disconnects and timeouts — both set ERROR, and the distinction (gravsearch.exit_reason=interrupted, error.type) is deliberately not a metric dimension. A high value here is a prompt to open the traces in Tempo, not on its own evidence of breakage. Note also that successful executions report STATUS_CODE_UNSET, never OK, because the status mapper only sets a status on failure.",
+          "description": "Share of executions whose root span ended with STATUS_CODE_ERROR. IMPORTANT: this conflates genuine failures with client disconnects and timeouts — both set ERROR, and the distinction (gravsearch.exit_reason=interrupted, error.type) is deliberately not a metric dimension. A high value here is a prompt to open the traces in Tempo, not on its own evidence of breakage. Note also that successful executions report STATUS_CODE_UNSET, never OK, because the status mapper only sets a status on failure. Client rejections (a BadRequestException answered with a 400, e.g. a breadth-guard refusal; gravsearch.exit_reason=bad_request) also report STATUS_CODE_UNSET, so they are not counted here.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -309,7 +309,7 @@
         "spec": {
           "id": 4,
           "title": "Query rate by outcome",
-          "description": "Gravsearch executions per second, split by span status. STATUS_CODE_UNSET is success; STATUS_CODE_ERROR covers both real failures and interruptions.",
+          "description": "Gravsearch executions per second, split by span status. STATUS_CODE_UNSET is success or a 400 client rejection (a BadRequestException, e.g. a breadth-guard refusal; gravsearch.exit_reason=bad_request); STATUS_CODE_ERROR covers both real failures and interruptions.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
