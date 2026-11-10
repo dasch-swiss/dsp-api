@@ -186,6 +186,8 @@ maven.install(
         "org.scala-lang.modules:scala-xml_3:2.4.0",
         "com.github.tototoshi:scala-csv_3:2.0.0",
         # -- RDF / Jena / rdf4j (Java) --
+        # org.apache.jena moves only to a version org.topbraid:shacl (below) is
+        # compatible with; check both together on a bump.
         "org.apache.jena:jena-core:6.2.0",
         "org.apache.jena:jena-text:6.2.0",
         # rdf4j is on its way out (DEV-7303). Only two things still use it: the
@@ -258,7 +260,7 @@ maven.install(
 )
 
 # Artifacts needing exclusions. MODULE.bazel is the sole source of dependency
-# versions (Renovate keeps them current; see .github/renovate.json).
+# versions.
 maven.artifact(
     name = "maven",
     artifact = "commons-validator",
@@ -345,7 +347,7 @@ use_repo(
 # rules_oci has no ADD-from-URL, so fetch the OpenTelemetry agent + Pyroscope
 # extension hermetically and pack them into a layer (see the *_layer pkg_tar
 # targets in modules/webapi and modules/ingest BUILD files). These versions live
-# here in MODULE.bazel and are Renovate-updatable.
+# here in MODULE.bazel.
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(
