@@ -208,7 +208,7 @@ against the old builder's `getQueryString` output). For details see
 
 ### Development Conventions
 
-When writing code, follow the conventions outlined in `docs/development/conventions.md` for consistency across
+When writing code, follow the conventions outlined in `docs/development/code-conventions.md` for consistency across
 the codebase. This includes structuring test suites, naming conventions, and using ZIO Test features effectively.
 
 See also `CONVENTIONS.md` (work-phase agent reference card — code/testing/commit conventions, with pointers into

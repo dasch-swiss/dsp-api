@@ -124,10 +124,10 @@ Update the trailing comment block (`:386-397`). Tests: `ViewRestrictionsByProper
 
 ### 7. Docs
 
-- `docs/development/dsp-api-fuseki-query-execution.md`: new fact with the `ReorderFixed` weight table; Fact 1
+- `docs/development/fuseki-query-execution.md`: new fact with the `ReorderFixed` weight table; Fact 1
   corollary (fix = barrier *after* the fan-out, or variable object + filter); per-row cost of
   `OPTIONAL`/`NOT EXISTS`; Fact 5: `GRAPH` over the *enumerated* project graphs replaces `attachedToProject`.
-- `docs/development/dsp-api-sparql-queries.md` (three sections from this PR) and `REVIEW.md` (three rules):
+- `docs/development/sparql-queries.md` (three sections from this PR) and `REVIEW.md` (three rules):
   rule 1 adds "or `rdf:type` with a bound class"; rule 2 adds the `VALUES`-in-`GRAPH` alternative; rule 3
   becomes "scope the scan to the project's graphs first; batch only if still over the timeout".
 - Design doc `01-…-design.md`: follow-up section with the handoff numbers and the C3 correction.

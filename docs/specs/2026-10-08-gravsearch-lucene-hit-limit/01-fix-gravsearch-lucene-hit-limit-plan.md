@@ -223,7 +223,7 @@ final case class LuceneQueryArgs(term: String, limit: Int) extends Entity {
       `matchTextInStandoff` are not capped
 - [x] `docs/03-endpoints/api-v2/query-language.md` (escaping notes around `:467-476` and `:733`): state that all
       text functions escape the term
-- [x] `docs/development/dsp-api-fuseki-query-execution.md` Fact 9 (`:153-159`): list which `text:query`
+- [x] `docs/development/fuseki-query-execution.md` Fact 9 (`:153-159`): list which `text:query`
       emissions pass `luceneHitLimit`, and name `matchFulltext` as the remaining capped one (DEV-7489)
 - [x] Grep `jena.apache.org/text#query` and `luceneQueryPredicate` across `modules/*/src/main`. Exactly one
       emission (`matchFulltextLuceneStatement`) passes no limit, and it carries the `TODO(DEV-7489)` comment.
@@ -287,5 +287,5 @@ final case class LuceneQueryArgs(term: String, limit: Int) extends Entity {
 - Timeout precedent: `SearchResponderV2.scala:554-577,813,900-903`, `slice/search/SearchTimeoutException.scala`,
   `slice/api/v2/search/SearchEndpoints.scala:69-118,197-220`, `slice/api/v2/search/SearchRestService.scala:60-78`
 - Goldens: `modules/test-it/src/test/resources/org/knora/webapi/messages/util/search/gravsearch/prequery/`;
-  rewrite procedure in `docs/development/dsp-api-conventions.md:254-271`
+  rewrite procedure in `docs/development/code-conventions.md:254-271`
 - Escaping tests: `modules/test-e2e/src/test/scala/org/knora/webapi/e2e/v2/MatchFulltextE2ESpec.scala:256-295`

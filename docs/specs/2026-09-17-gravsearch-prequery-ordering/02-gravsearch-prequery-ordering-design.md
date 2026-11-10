@@ -34,7 +34,7 @@ document are the record). It is kept on Balduin's machine under `~/Desktop/gravs
 ## What Fuseki actually does with written order
 
 The plan and the ticket are sometimes phrased as "Fuseki executes patterns in written order". That is not
-quite what Fact 1 of `docs/development/dsp-api-fuseki-query-execution.md` says, and the difference matters for
+quite what Fact 1 of `docs/development/fuseki-query-execution.md` says, and the difference matters for
 reading the results below.
 
 Fact 1: TDB2 **does** reorder triple patterns for selectivity within a single basic graph pattern, but
@@ -531,8 +531,8 @@ corpus sequence — which is what keeps the Phase 5 diff readable.
 
 ## References
 
-- `docs/development/dsp-api-fuseki-query-execution.md` — Fact 1 (BGP-local heuristic reordering and its
+- `docs/development/fuseki-query-execution.md` — Fact 1 (BGP-local heuristic reordering and its
   bound-object corollary), Fact 5 (`GRAPH` scoping replaces the `attachedToProject` join), Fact 6 (`GROUP BY`
   materialises, so `LIMIT` cannot short-circuit), Fact 7 (large `VALUES` tables poison join order), Fact 8
   (isolating plan cost from response cost). These are relied on and not re-derived.
-- `docs/development/dsp-api-sparql-queries.md` — how SPARQL is written and tested in this repo.
+- `docs/development/sparql-queries.md` — how SPARQL is written and tested in this repo.
