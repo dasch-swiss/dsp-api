@@ -18,8 +18,8 @@ import zio.telemetry.opentelemetry.context.ContextStorage
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
-import org.knora.webapi.slice.api.v3.projects.ClosesOnUnreadBody
-import org.knora.webapi.slice.api.v3.projects.ClosesOnUnreadBodyRoute
+import org.knora.webapi.slice.common.api.ClosesOnUnreadBody
+import org.knora.webapi.slice.common.api.ClosesOnUnreadBodyRoute
 
 /** Runs tiny endpoints through [[DspApiServer.serverOptions]], the interceptor chain the running server installs. */
 @RunWith(classOf[DspZTestJUnitRunner])

@@ -45,6 +45,7 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 - `*RestService.scala` — handler logic: auth and presentation only, with a minimal amount of business logic. The actual business logic lives in plain `*Service`s. Every secured method uses multiple parameter lists `def x(user: User)(args…): Task[Resp]` (a `ProjectCandidate` in place of the `User` for `projectAdminPolicyEndpoint`, which obtains a `ProjectAdminGrant` from `AuthorizationRestService.authorizeProjectAdminById` before it acts), which lets the `*ServerEndpoints` wire it concisely without enumerating every param. The body follows: **auth check → delegate to service → `format.toExternal(...)`**.
 - Register new endpoints in the API's aggregator — `AdminApiServerEndpoints` for admin, and the matching `*ServerEndpoints` aggregator for the other APIs.
 - Request / response DTOs live in a sibling object inside the `*Endpoints.scala` file (or a `*RequestsAndResponses.scala` next to it), not in a separate `model/` package.
+- The dependency points one way: code outside `slice/api` never references `org.knora.webapi.slice.api`. Translate between DTOs and domain types in the RestService. `//tools/lint:api_imports` (in `just check`) enforces this; its baseline `tools/lint/api_imports_allowlist.txt` only shrinks, and a new file never extends it.
 
 ### Value objects
 

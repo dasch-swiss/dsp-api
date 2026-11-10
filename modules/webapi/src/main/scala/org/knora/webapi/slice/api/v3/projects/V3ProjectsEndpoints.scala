@@ -23,6 +23,8 @@ import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.v3.*
+import org.knora.webapi.slice.common.api.ClosesOnUnreadBody
+import org.knora.webapi.slice.common.api.ClosesOnUnreadBodyRoute
 import org.knora.webapi.slice.common.api.Policy
 
 final case class DataTaskStatusResponse(

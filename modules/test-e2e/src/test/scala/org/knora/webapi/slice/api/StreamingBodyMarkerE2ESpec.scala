@@ -15,7 +15,7 @@ import zio.test.*
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.E2EZSpec
 import org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints
-import org.knora.webapi.slice.api.v3.projects.ClosesOnUnreadBody
+import org.knora.webapi.slice.common.api.ClosesOnUnreadBody
 
 /**
  * A route whose server logic can reject a streamed request body without reading it must carry [[ClosesOnUnreadBody]]
