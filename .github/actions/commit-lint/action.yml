@@ -1,0 +1,62 @@
+name: commit-lint
+description: >
+  Run the deterministic commit check: commitlint-rs (type allowlist + mandatory
+  scope from `.commitlintrc.yml`) plus the one-commit-per-PR cap. Runs the same
+  `just commit-lint` recipe developers run locally. See
+  docs/development/commit-conventions.md.
+
+inputs:
+  base-ref:
+    description: >
+      Base commit/ref; commits in `<base-ref>..HEAD` are checked. Pass the base
+      branch (origin/<base.ref>), which the caller must have fetched.
+    required: true
+  pr-body:
+    description: >
+      PR description. The count check looks here for a ticked
+      `allow-many-commits` box, which lifts the one-commit cap.
+    required: false
+    default: ""
+  version:
+    description: commitlint-rs version to install via cargo.
+    default: "0.2.4"
+
+runs:
+  using: composite
+  steps:
+    - uses: extractions/setup-just@v4
+
+    # Cache the compiled binary so `cargo install` only pays the build cost when
+    # the pinned version changes.
+    - name: Cache commitlint-rs
+      id: cache
+      uses: actions/cache@v5
+      with:
+        path: ~/.cargo/bin/commitlint
+        key: commitlint-rs-${{ runner.os }}-${{ inputs.version }}
+
+    - name: Install commitlint-rs
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: cargo install commitlint-rs --version "${{ inputs.version }}" --locked
+
+    - name: Check commit messages and count
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base-ref }}
+        # Passed as an env var (never interpolated into the script) so PR text
+        # cannot be injected into the shell.
+        PR_BODY: ${{ inputs.pr-body }}
+      run: |
+        set +e
+        out="$(just commit-lint "$BASE_REF" 2>&1)"
+        rc=$?
+        echo "$out"
+        {
+          echo '## Commit hygiene'
+          echo ''
+          echo '```'
+          echo "$out"
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"
+        exit $rc

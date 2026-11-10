@@ -13,6 +13,12 @@ The legacy project name **"Knora"** still appears in the codebase (package `org.
 
 However, **do not use "Knora" in human-readable text**: PR titles, commit messages, documentation, comments, spec files, or learning documents. Use "dsp-api" instead.
 
+## Commits and PRs
+
+PRs are rebase-merged, so every branch commit lands on `main` verbatim: curate the branch before merge, and land one
+`type(scope): subject` commit per PR unless the PR ticks `allow-many-commits`. The rules (types, scopes, commit
+bodies, stacks, PR description) are in `docs/development/commit-conventions.md`; check with `just commit-lint`.
+
 ## Specs
 
 dsp-api specs (project briefs, PRDs, implementation plans, design docs, execution journals) live in

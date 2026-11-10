@@ -1,0 +1,66 @@
+name: Commit Hygiene
+
+# Checks that a PR's commit history is clean before it is rebase-merged onto
+# main (branch commits land on main verbatim). See
+# docs/development/commit-conventions.md.
+#
+# The `Commit hygiene` job is deterministic:
+#   - commitlint-rs: type allowlist + mandatory scope (.commitlintrc.yml)
+#   - commit count: one commit unless `allow-many-commits` is ticked, and no
+#     merge commits on the branch
+#   - the tests of the .github/scripts gates (`just test-scripts`)
+#
+# Whether `Commit hygiene` *blocks* a merge is a repo ruleset setting (mark the
+# check required), not something configured here, so this workflow can ship as
+# a non-blocking signal first and be promoted later without changing this file.
+
+on:
+  pull_request:
+    # `opened` covers PRs created directly as non-draft (ready_for_review does
+    # NOT fire for those); `edited` lets the `allow-many-commits` body override
+    # re-trigger the check.
+    types: [opened, ready_for_review, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: commit-hygiene-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  commit-hygiene:
+    name: Commit hygiene
+    runs-on: ubuntu-latest
+    steps:
+      # Always checks out; the history checks below are the ones gated on draft,
+      # so the "Commit hygiene" status context always reports (a skipped check
+      # would leave a required status pending and wedge the PR).
+      - name: Checkout PR head (full history for merge-base)
+        uses: actions/checkout@v5
+        with:
+          # The PR branch tip, not the synthetic pull_request merge commit.
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      # The gate scripts' own tests do not depend on the branch's history, so
+      # they run on drafts too. The commit-lint action installs `just` only for
+      # non-drafts, so this step needs its own.
+      - uses: extractions/setup-just@v4
+      - name: Test the gate scripts
+        run: just test-scripts
+
+      - name: Fetch base branch
+        if: github.event.pull_request.draft == false
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+        run: git fetch --no-tags origin "$BASE_BRANCH"
+
+      # Type allowlist + mandatory scope, then the one-commit cap. Runs the same
+      # `just commit-lint` recipe developers run locally.
+      - name: Check commit hygiene
+        if: github.event.pull_request.draft == false
+        uses: ./.github/actions/commit-lint
+        with:
+          base-ref: origin/${{ github.event.pull_request.base.ref }}
+          pr-body: ${{ github.event.pull_request.body }}

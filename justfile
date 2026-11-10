@@ -99,6 +99,53 @@ check *FLAGS='': require-bazel
 header-fix: require-bazel
     bazel run //tools/license:fix
 
+# Run the tests of every .github/scripts/*.sh gate. Needs bash and git.
+test-scripts:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    # Every file, not a list: a new gate's tests run without an edit here. All
+    # run, so one report names every failing gate.
+    rc=0
+    for t in .github/scripts/*.test.sh; do
+        bash "$t" || rc=1
+    done
+    exit "$rc"
+
+# Run the commit check over `<base>..HEAD`: message rules, then the one-commit cap (docs/development/commit-conventions.md)
+commit-lint $base="origin/main":
+    #!/usr/bin/env bash
+    # Feeds one message at a time on stdin instead of commitlint's `--from/--to`
+    # range mode: commitlint-rs reads stdin whenever stdin is not a TTY (always
+    # true in CI and under `just`), so range mode is unreachable in automation.
+    # The loop also attributes each failure to its commit, and is a no-op on an
+    # empty range. `--no-merges` skips merge commits: message rules do not apply
+    # to them, and check-commit-count.sh rejects them.
+    #
+    # Both checks always run, so a branch with two problems reports both. The
+    # count check reads PR_BODY from the environment for the `allow-many-commits`
+    # override: CI passes the PR description; locally it is empty, so the cap
+    # applies strictly.
+    #
+    # `base` reaches the script as an environment variable, never as text: a ref
+    # name may contain `$`, quotes or parentheses.
+    set -uo pipefail
+    merge_base="$(git merge-base "$base" HEAD)" || { echo "✗ cannot resolve the base '$base'" >&2; exit 1; }
+    fail=0
+    while IFS= read -r sha; do
+        [ -n "$sha" ] || continue
+        if ! git log -1 --pretty=%B "$sha" | commitlint; then
+            echo "  ↳ offending commit: $(git log -1 --pretty='%h %s' "$sha")" >&2
+            fail=1
+        fi
+    done < <(git rev-list --no-merges --reverse "$merge_base..HEAD")
+    if [ "$fail" -eq 0 ]; then
+        echo "✓ commit messages: all commits in $merge_base..HEAD OK"
+    else
+        echo "✗ commit messages: one or more commits violate the convention (see above)" >&2
+    fi
+    BASE_REF="$base" bash .github/scripts/check-commit-count.sh || fail=1
+    exit "$fail"
+
 ## Scala language intelligence (Metals MCP)
 
 # Metals connects to the Bazel build via bazel-bsp, which it bootstraps itself from the

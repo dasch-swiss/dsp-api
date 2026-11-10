@@ -1,0 +1,33 @@
+# commitlint-rs config, enforced by the `Commit hygiene` CI job and `just commit-lint`.
+# See docs/development/commit-conventions.md for the human-facing rules.
+#
+# The `type` allowlist is the nine types whose changelog sections the release-please
+# config renders; a type added here needs a changelog section there too. `scope-empty`
+# makes the scope mandatory, so every changelog line reads `concern: subject`.
+# There is deliberately NO `scope` allowlist: the vocabulary in commit-conventions.md
+# is advisory, so adding a component does not require a config edit.
+rules:
+  type:
+    level: error
+    options:
+      - feat
+      - fix
+      - perf
+      - refactor
+      - docs
+      - test
+      - build
+      - chore
+      - deprecated
+  type-empty:
+    level: error
+  scope-empty:
+    level: error
+  # `subject` is the whole header line, `description` is the text after the
+  # colon, so `subject-empty` alone lets `feat(search):` through. Both are
+  # listed: subject-empty for a wholly empty message, description-empty for a
+  # missing subject line.
+  subject-empty:
+    level: error
+  description-empty:
+    level: error
