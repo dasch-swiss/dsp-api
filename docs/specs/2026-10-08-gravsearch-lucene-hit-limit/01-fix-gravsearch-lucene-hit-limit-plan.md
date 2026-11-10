@@ -287,5 +287,5 @@ final case class LuceneQueryArgs(term: String, limit: Int) extends Entity {
 - Timeout precedent: `SearchResponderV2.scala:554-577,813,900-903`, `slice/search/SearchTimeoutException.scala`,
   `slice/api/v2/search/SearchEndpoints.scala:69-118,197-220`, `slice/api/v2/search/SearchRestService.scala:60-78`
 - Goldens: `modules/test-it/src/test/resources/org/knora/webapi/messages/util/search/gravsearch/prequery/`;
-  rewrite procedure in `docs/development/conventions.md:254-271`
+  rewrite procedure in `docs/development/code-conventions.md:254-271`
 - Escaping tests: `modules/test-e2e/src/test/scala/org/knora/webapi/e2e/v2/MatchFulltextE2ESpec.scala:256-295`

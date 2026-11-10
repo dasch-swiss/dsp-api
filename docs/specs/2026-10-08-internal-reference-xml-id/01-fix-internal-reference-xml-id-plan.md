@@ -104,4 +104,4 @@ The E2E mutual-reference test compares stored and served XML without a workaroun
 - Linear: DEV-7468. Related: DEV-7458 (backfill, PR #4380).
 - Backfill plan, "Dependencies & Risks": dasch-specs `specs/2026-09-10-store-xml-with-standoff/03-feat-backfill-value-has-xml-plan.md`.
 - Learnings: `dasch-specs/learnings/logic-errors/resource-query-templates-enumerate-predicates.md`, `dasch-specs/learnings/best-practices/test-fixture-isolation-shared-data-scope.md`, `dasch-specs/learnings/configuration-errors/union-default-graph-differs-across-environments.md`.
-- Bazel `--test_filter` is a regex, not a glob (`docs/development/conventions.md`).
+- Bazel `--test_filter` is a regex, not a glob (`docs/development/code-conventions.md`).

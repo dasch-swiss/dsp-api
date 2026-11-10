@@ -124,6 +124,6 @@ it to `internalPropertiesToRemove` in both `KnoraBaseToApiV2ComplexTransformatio
 
 ## Related
 
-- `docs/development/conventions.md` § Ontology Conventions
+- `docs/development/code-conventions.md` § Ontology Conventions
 - `docs/05-internals/development/updating-repositories.md` § Changing the Built-in Ontologies
 - Shape files: `modules/webapi/src/main/resources/shacl/`

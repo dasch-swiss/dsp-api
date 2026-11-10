@@ -207,7 +207,7 @@ visible.
 - [ ] If the baseline is empty: delete it, and `EndpointPolicyE2ESpec` asserts that every endpoint declares a policy
 - [x] `CONTEXT.md` and `docs/contexts/identity-access/CONTEXT.md` define `Policy`, `ProjectCandidate`, `ProjectAdminGrant`, `ProjectMemberGrant` and the new policy cases, distinct from **Administrative permission**
 - [x] ADR-0013: decision 4 lists the new policy cases; decision 9 records the completed migration
-- [x] `CONVENTIONS.md`, `REVIEW.md` and `docs/development/conventions.md` name the new factories and the matrix rule
+- [x] `CONVENTIONS.md`, `REVIEW.md` and `docs/development/code-conventions.md` name the new factories and the matrix rule
 - [x] Run `/dune:dune-map update` so `ARCH-MAP.md` names the policy factories, the grants and the ratchet state
 - [x] Run `just check`; it passes
 - [x] Run `just test-unit`; it passes

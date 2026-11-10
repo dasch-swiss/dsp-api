@@ -49,7 +49,7 @@ status: complete
 | P1-C4 | complete | 71a03b1cf | `ValuesPattern.toSparql` renders its entries sorted; `getSelectColumns` returns the main resource variable then the GROUP_CONCAT columns sorted by output variable name; two golden files regenerated | none |
 | P1-C5 | complete | 2872253aa | `ConstructTransformerSpec` gains a nested suite with a populated `classToSubclassLookup`; transforming the same CONSTRUCT query twice renders identical SPARQL containing a `VALUES` block | none |
 | P2-C0 | complete | (rebase step, no own commit) | `GoldenTest.scala` rebase conflict resolved as a union of upstream's reworded watch-mode line and PR 1's `GOLDEN_REWRITE` / placeholder paragraphs; the remaining six commits replayed cleanly | none |
-| P2-C0b | complete | 51c02e173 | the 24-line `GoldenTest` block comment reduced to the invariants plus a pointer; the regeneration recipe (three rewrite routes, the Java-regex `--test_filter` caveat, the fail-by-design rerun, the module-scope caveat, the placeholder rule, the determinism note) moved to `docs/development/conventions.md` § "Golden snapshot tests"; `sparql-queries.md` § "Golden tests (preferred)" gained a pointer sentence | none |
+| P2-C0b | complete | 51c02e173 | the 24-line `GoldenTest` block comment reduced to the invariants plus a pointer; the regeneration recipe (three rewrite routes, the Java-regex `--test_filter` caveat, the fail-by-design rerun, the module-scope caveat, the placeholder rule, the determinism note) moved to `docs/development/code-conventions.md` § "Golden snapshot tests"; `sparql-queries.md` § "Golden tests (preferred)" gained a pointer sentence | none |
 | P2-C1 | complete | 60a451069 | `limitResultsToProject: Option[ProjectIri] = None` threaded through `GravsearchInferencePipelineTestSupport.transformQueryWithInference` into `transformSelectToSelect`, and through both specs' private one-argument wrappers (the count wrapper keeps `dropOrderBy = true`); every existing golden unchanged | none |
 | P2-C2 | complete | 931495f5b | `GravsearchInferencePipelineTestSupport.shapeSummary(SelectQuery): String`, an exhaustive match on the sealed `QueryPattern` trait rendering one line per top-level WHERE pattern (`STMT <kind> <pred> <kind>`, `VALUES (n)`, `BIND`, `FILTER`, `FNE`, `OPTIONAL`, `UNION`, `MINUS`, `GROUP`); predicate local name splits on the last `#` and falls back to the last `/`, with `*` appended for a property path | none |
 | P2-C3 | complete | 68b4f62a5 | `ARCH-MAP.md` § `webapi-search` boundary rules gains a sibling bullet naming both prequery E2E specs as pinning the rendered SPARQL after the inference pass, under the same `enforcement: review (REVIEW.md section SPARQL)` marker | none |
@@ -481,14 +481,14 @@ nothing is left half-done.
 - **`GoldenTest` comment placement** (`eng:review:code-simplicity-reviewer`, Warning, verbatim claim):
   "the added 'Placeholder rule for NEW golden cases' paragraph documents a Bazel-runfiles-symlink quirk
   discovered while doing this work ... This is procedural how-to knowledge, not an invariant the code below
-  enforces ... belongs in a dev doc (e.g. `docs/development/conventions.md` or a golden-test doc)
+  enforces ... belongs in a dev doc (e.g. `docs/development/code-conventions.md` or a golden-test doc)
   with a one-line pointer left in the trait's Scaladoc." Not acted on: the plan's Phase 1 checklist item
   explicitly specifies this content in this file, and the "Decision record" is settled for this run. Worth
   raising with Balduin as a follow-up.
   **RESOLVED in round 2 (chunk P2-C0b, commit `51c02e173`).** The upstream commit `eefb07ebc` the rebase
   brought in adopts exactly the convention the reviewer was arguing from, which turns the finding from a
   reviewer's preference into a repo rule, so the plan's Phase 1 checklist is now the stale side and the move was
-  made. The recipe lives in `docs/development/conventions.md` § "Golden snapshot tests"; the trait keeps
+  made. The recipe lives in `docs/development/code-conventions.md` § "Golden snapshot tests"; the trait keeps
   the invariants plus a one-line pointer. The plan's Phase 1 wording should be corrected at ship time.
 - **Confirm the spike's premise against the optimised algebra** (`eng:review:performance-reviewer`, checkpoint
   3, Warning, verbatim claim): "the spike's data is in fact *compatible* with Fact 1 … but the write-up asserts

@@ -413,7 +413,7 @@ statements whose IRIs collide under the old escape (different variables).
 
 ### Conventions to follow
 
-- `CLAUDE.md`, `CONVENTIONS.md`, `docs/development/conventions.md` § Testing (ZIO Test suite
+- `CLAUDE.md`, `CONVENTIONS.md`, `docs/development/code-conventions.md` § Testing (ZIO Test suite
   structure, `GoldenTest` preferred for query builders), `REVIEW.md` § SPARQL (emitted-SPARQL changes must show
   up as golden diffs). Methods in `src/main` at most 50 lines, immutable style, no fully qualified names in
   code (import at top), ASCII-only source, no "Knora" in commit messages or docs prose.
@@ -477,7 +477,7 @@ worktree and the Nix dev shell (`direnv` loads it).
       comment to describe `--test_env=GOLDEN_REWRITE=1` and the placeholder-file rule for new goldens; drop the
       stale sbt `~` remark. *Superseded in execution (round 2):* the repo adopted the shared code-comment
       convention (#4337) mid-run, so the regeneration recipe and the placeholder rule moved to
-      `docs/development/conventions.md` and the trait keeps a one-line pointer.
+      `docs/development/code-conventions.md` and the trait keeps a one-line pointer.
 - [x] Add `SparqlTransformer.createInferenceVariable(statement, kind)` as specified under "Determinism
       design", with unit tests in `SparqlTransformerSpec` (literal-object statement yields a valid `VARNAME`;
       `.../0001/ab#cd` vs `.../0001/abc#d` yield different variables; same statement twice yields the same one).
