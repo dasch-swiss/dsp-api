@@ -1,5 +1,8 @@
 load("//tools/scalafmt:defs.bzl", "scala_junit_test", "scala_library")
 
+# Memory specs run only in :memory_test, under its small heap.
+_MEMORY_SPEC_PATTERN = "src/test/scala/**/*MemorySpec.scala"
+
 # SHACL validator. Pure leaf module.
 scala_library(
     name = "shacl-validator",
@@ -19,11 +22,34 @@ scala_library(
 scala_junit_test(
     name = "test",
     format = True,
-    srcs = glob(["src/test/scala/**/*.scala"]),
+    srcs = glob(
+        ["src/test/scala/**/*.scala"],
+        exclude = [_MEMORY_SPEC_PATTERN],
+    ),
     # Discovery is by class-name suffix; a missed suffix silently skips specs.
     suffixes = ["Spec", "IT", "Test"],
     # test-onto-shapes.ttl fixture read by ShaclValidatorSpec.
     resources = glob(["src/test/resources/**"]),
+    deps = [
+        ":shacl-validator",
+        "//modules/test-runner",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_test_3",
+        "@maven//:org_slf4j_slf4j_simple",
+    ],
+)
+
+# Plain-model rule of `ShaclValidator.validate`: a regression ends as a JVM exit (OutOfMemoryError), not a test failure.
+scala_junit_test(
+    name = "memory_test",
+    size = "medium",
+    format = True,
+    srcs = glob([_MEMORY_SPEC_PATTERN]),
+    jvm_flags = [
+        "-Xmx256m",
+        "-XX:+ExitOnOutOfMemoryError",
+    ],
+    suffixes = ["Spec", "IT", "Test"],
     deps = [
         ":shacl-validator",
         "//modules/test-runner",

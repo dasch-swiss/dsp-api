@@ -70,22 +70,19 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     adminNq: String = defaultAdminNq,
     allowPlaceholder: Boolean = true,
     mode: ImportMode = ImportMode.Migration,
+    permissionNq: Option[String] = None,
   ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
-    runValidator(ontologyNq, dataNq, adminNq, allowPlaceholder) { (validator, ontologyFiles, dataFiles) =>
+    runValidator(ontologyNq, dataNq, adminNq, allowPlaceholder, permissionNq) { (validator, ontologyFiles, dataFiles) =>
       validator.validate(ontologyFiles, dataFiles, testProjectIri, mode)
     }
 
-  private def validateWithoutDataShapes(
+  private def runValidator(
     ontologyNq: String,
-    dataNq: String = baselineDataNq,
-    adminNq: String = defaultAdminNq,
-    allowPlaceholder: Boolean = true,
-  ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
-    runValidator(ontologyNq, dataNq, adminNq, allowPlaceholder) { (validator, ontologyFiles, dataFiles) =>
-      validator.validateWithoutDataShapes(ontologyFiles, dataFiles, testProjectIri)
-    }
-
-  private def runValidator(ontologyNq: String, dataNq: String, adminNq: String, allowPlaceholder: Boolean)(
+    dataNq: String,
+    adminNq: String,
+    allowPlaceholder: Boolean,
+    permissionNq: Option[String],
+  )(
     run: (
       ProjectMigrationImportValidator,
       NonEmptyChunk[Path],
@@ -97,8 +94,13 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       ontologyFile <- writeNqFile(dir, "ontology-0.nq", ontologyNq)
       dataFile     <- writeNqFile(dir, "data.nq", dataNq)
       adminFile    <- writeNqFile(dir, "admin.nq", adminNq)
+      permFiles    <- ZIO.foreach(Chunk.fromIterable(permissionNq))(writeNqFile(dir, "permission.nq", _))
       result       <-
-        run(new ProjectMigrationImportValidator(), NonEmptyChunk(ontologyFile), NonEmptyChunk(adminFile, dataFile))
+        run(
+          new ProjectMigrationImportValidator(),
+          NonEmptyChunk(ontologyFile),
+          NonEmptyChunk(adminFile, dataFile) ++ permFiles,
+        )
           .provideSomeLayer[Scope](TestAppConfig.layer("app.features.allow-placeholder" -> allowPlaceholder))
           .either
     } yield result
@@ -260,7 +262,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       },
     ),
     suite("ResourceShape (data)") {
-      // Ontology that declares a resource class — needed for RDFS inference
+      // Ontology that declares a resource class — its rdfs:subClassOf triple lets the Resource shape target the instance
       val ontologyWithClass = validOntologyNq +
         s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
            |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
@@ -489,6 +491,123 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
           ZIO.scoped {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isLeft))
           }
+        },
+      )
+    },
+    suite("ValueShape previous values (data)") {
+      val ontologyWithClass = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      val CurrentValue  = "http://rdfh.ch/9999/thing001/values/current"
+      val PreviousValue = "http://rdfh.ch/9999/thing001/values/previous"
+
+      val validResourceNq =
+        s"""<http://rdfh.ch/9999/thing001> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <$RdfsLabel> "Thing 1" <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<http://rdfh.ch/9999/thing001> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin
+
+      def valueNq(node: String, permissions: Seq[String]): String =
+        s"""<$node> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+           |<$node> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$node> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$node> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$node> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
+           |<$node> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+           |""".stripMargin +
+          permissions.map(p => s"""<$node> <${KnoraBase}hasPermissions> "$p"^^<$XsdString> <$DataGraph> .\n""").mkString
+
+      val permission      = "CR knora-admin:ProjectAdmin"
+      val otherPermission = "V knora-admin:UnknownUser"
+      val previousLink    = s"<$CurrentValue> <${KnoraBase}previousValue> <$PreviousValue> <$DataGraph> .\n"
+
+      suite("hasPermissions")(
+        test("accepts a previous value without knora-base:hasPermissions") {
+          val nq = validResourceNq + valueNq(CurrentValue, Seq(permission)) + previousLink +
+            valueNq(PreviousValue, Seq.empty)
+          ZIO.scoped(validate(ontologyWithClass, nq).map(result => assertTrue(result.isRight)))
+        },
+        test("rejects a current value without knora-base:hasPermissions") {
+          val nq = validResourceNq + valueNq(CurrentValue, Seq.empty) + previousLink +
+            valueNq(PreviousValue, Seq(permission))
+          ZIO.scoped(
+            validate(ontologyWithClass, nq).map(result =>
+              assertTrue(result.isLeft) && assertTrue(
+                result.left.exists(_.getMessage.contains("unless it is a previous value")),
+              ),
+            ),
+          )
+        },
+        test("rejects a previous value with two knora-base:hasPermissions") {
+          val nq = validResourceNq + valueNq(CurrentValue, Seq(permission)) + previousLink +
+            valueNq(PreviousValue, Seq(permission, otherPermission))
+          ZIO.scoped(
+            validate(ontologyWithClass, nq).map(result =>
+              assertTrue(result.left.exists(_.getMessage.contains("at most one knora-base:hasPermissions"))),
+            ),
+          )
+        },
+      )
+    },
+    suite("project class hierarchy (data)") {
+      val ontologyWithChain = validOntologyNq +
+        s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+           |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+           |<${OntologyGraph}#ChildThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+           |<${OntologyGraph}#ChildThing> <$RdfsSubClassOf> <${OntologyGraph}#TestThing> <$OntologyGraph> .
+           |<${OntologyGraph}#ChildThing> <$RdfsLabel> "Child Thing"@en <$OntologyGraph> .
+           |""".stripMargin
+
+      def resourceNq(node: String, resourceType: String, label: Option[String]): String =
+        s"""<$node> <$RdfType> <${OntologyGraph}#$resourceType> <$DataGraph> .
+           |<$node> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$node> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$node> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |<$node> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$node> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |""".stripMargin + label.fold("")(l => s"""<$node> <$RdfsLabel> "$l" <$DataGraph> .\n""")
+
+      val Child1   = "http://rdfh.ch/9999/child001"
+      val Thing1   = "http://rdfh.ch/9999/thing001"
+      val LinkVal1 = "http://rdfh.ch/9999/thing001/values/link001"
+
+      val linkValueNq =
+        s"""<$LinkVal1> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}attachedToUser> <http://rdfh.ch/users/test001> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+           |<$LinkVal1> <$RdfSubject> <$Thing1> <$DataGraph> .
+           |<$LinkVal1> <$RdfPredicate> <${OntologyGraph}#hasRelation> <$DataGraph> .
+           |<$LinkVal1> <$RdfObject> <$Child1> <$DataGraph> .
+           |<$LinkVal1> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+           |""".stripMargin
+
+      suite("subclass matching")(
+        test("rejects an instance of a subclass of a project class without rdfs:label") {
+          val nq = resourceNq(Child1, "ChildThing", None)
+          ZIO.scoped(
+            validate(ontologyWithChain, nq).map(result =>
+              assertTrue(
+                result.left.exists(_.getMessage.contains("Resource instance must have at least one rdfs:label")),
+              ),
+            ),
+          )
+        },
+        test("accepts a LinkValue whose rdf:object is an instance of a project subclass") {
+          val nq = resourceNq(Thing1, "TestThing", Some("Thing 1")) +
+            resourceNq(Child1, "ChildThing", Some("Child 1")) + linkValueNq
+          ZIO.scoped(validate(ontologyWithChain, nq).map(result => assertTrue(result.isRight)))
         },
       )
     },
@@ -1194,7 +1313,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     bulkImportShapesSuite,
     migrationShapesSuite,
     placeholderGateSuite,
-    withoutDataShapesSuite,
+    migrationAdminAndPermissionSuite,
   ) @@ TestAspect.timeout(30.seconds)
 
   private val bulkImportShapesSuite = {
@@ -1444,63 +1563,140 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     )
   }
 
-  private val withoutDataShapesSuite = {
+  // Keep in sync with the admin.nq / permission.nq that AdminDataQuery and PermissionDataQuery export.
+  // A user who left the project but still owns data: AdminDataQuery.buildWithReferencedUsers exports them without
+  // an isInProject triple.
+  private val ReferencedUser = "http://rdfh.ch/users/former001"
+
+  private val exportedAdminNq =
+    s"""<http://rdfh.ch/projects/9999> <$RdfType> <${KnoraAdmin}knoraProject> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectShortname> "test"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectShortcode> "9999"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectLongname> "Test Project"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectDescription> "Test Project"@en <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectDescription> "Testprojekt"@de <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectRestrictedViewSize> "!512,512"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectRestrictedViewWatermark> "true"^^<$XsdBoolean> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}hasSelfJoinEnabled> "false"^^<$XsdBoolean> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectKeyword> "things"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/projects/9999> <${KnoraAdmin}projectKeyword> "testing"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}username> "test.user01"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}givenName> "Test"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}familyName> "User01"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}password> "$$2a$$12$$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}email> "test.user01@example.org"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}preferredLanguage> "de"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}status> "true"^^<$XsdBoolean> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}isInProject> <http://rdfh.ch/projects/9999> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}isInGroup> <http://rdfh.ch/groups/9999/searcher> <$AdminGraph> .
+       |<http://rdfh.ch/users/test001> <${KnoraAdmin}isInSystemAdminGroup> "false"^^<$XsdBoolean> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}username> "test.admin"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}givenName> "Test"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}familyName> "Admin"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}password> "$$2a$$12$$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}email> "test.admin@example.org"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}preferredLanguage> "de"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}status> "true"^^<$XsdBoolean> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}isInProject> <http://rdfh.ch/projects/9999> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}isInProjectAdminGroup> <http://rdfh.ch/projects/9999> <$AdminGraph> .
+       |<http://rdfh.ch/users/admin001> <${KnoraAdmin}isInSystemAdminGroup> "false"^^<$XsdBoolean> <$AdminGraph> .
+       |<$ReferencedUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}username> "former.member"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}givenName> "Former"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}familyName> "Member"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}password> "$$2a$$12$$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}email> "former.member@example.org"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}preferredLanguage> "en"^^<$XsdString> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}status> "false"^^<$XsdBoolean> <$AdminGraph> .
+       |<$ReferencedUser> <${KnoraAdmin}isInSystemAdminGroup> "false"^^<$XsdBoolean> <$AdminGraph> .
+       |<http://rdfh.ch/groups/9999/searcher> <$RdfType> <${KnoraAdmin}UserGroup> <$AdminGraph> .
+       |<http://rdfh.ch/groups/9999/searcher> <${KnoraAdmin}groupName> "Searcher"^^<$XsdString> <$AdminGraph> .
+       |<http://rdfh.ch/groups/9999/searcher> <${KnoraAdmin}groupDescriptions> "A group for searchers."@en <$AdminGraph> .
+       |<http://rdfh.ch/groups/9999/searcher> <${KnoraAdmin}belongsToProject> <http://rdfh.ch/projects/9999> <$AdminGraph> .
+       |<http://rdfh.ch/groups/9999/searcher> <${KnoraAdmin}status> "true"^^<$XsdBoolean> <$AdminGraph> .
+       |<http://rdfh.ch/groups/9999/searcher> <${KnoraAdmin}hasSelfJoinEnabled> "true"^^<$XsdBoolean> <$AdminGraph> .
+       |""".stripMargin
+
+  private val PermissionGraph = "http://www.knora.org/data/permissions"
+
+  private val exportedPermissionNq =
+    s"""<http://rdfh.ch/permissions/9999/adm001> <$RdfType> <${KnoraAdmin}AdministrativePermission> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/adm001> <${KnoraAdmin}forProject> <http://rdfh.ch/projects/9999> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/adm001> <${KnoraAdmin}forGroup> <${KnoraAdmin}ProjectMember> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/adm001> <${KnoraBase}hasPermissions> "ProjectResourceCreateAllPermission"^^<$XsdString> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap001> <$RdfType> <${KnoraAdmin}DefaultObjectAccessPermission> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap001> <${KnoraAdmin}forProject> <http://rdfh.ch/projects/9999> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap001> <${KnoraAdmin}forGroup> <http://rdfh.ch/groups/9999/searcher> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap001> <${KnoraBase}hasPermissions> "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser"^^<$XsdString> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap002> <$RdfType> <${KnoraAdmin}DefaultObjectAccessPermission> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap002> <${KnoraAdmin}forProject> <http://rdfh.ch/projects/9999> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap002> <${KnoraAdmin}forResourceClass> <${OntologyGraph}#TestThing> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap002> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin|D knora-admin:ProjectMember|V knora-admin:UnknownUser"^^<$XsdString> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap003> <$RdfType> <${KnoraAdmin}DefaultObjectAccessPermission> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap003> <${KnoraAdmin}forProject> <http://rdfh.ch/projects/9999> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap003> <${KnoraAdmin}forProperty> <${OntologyGraph}#hasText> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap003> <${KnoraBase}hasPermissions> "CR knora-admin:Creator|M knora-admin:ProjectMember"^^<$XsdString> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap004> <$RdfType> <${KnoraAdmin}DefaultObjectAccessPermission> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap004> <${KnoraAdmin}forProject> <http://rdfh.ch/projects/9999> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap004> <${KnoraAdmin}forGroup> <${KnoraAdmin}KnownUser> <$PermissionGraph> .
+       |<http://rdfh.ch/permissions/9999/doap004> <${KnoraBase}hasPermissions> "CR knora-admin:Creator|V knora-admin:KnownUser"^^<$XsdString> <$PermissionGraph> .
+       |""".stripMargin
+
+  private val migrationAdminAndPermissionSuite = {
+    val resource          = "http://rdfh.ch/9999/thing001"
     val ontologyWithClass = validOntologyNq +
       s"""<${OntologyGraph}#TestThing> <$RdfType> <$OwlClass> <$OntologyGraph> .
          |<${OntologyGraph}#TestThing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
          |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
          |""".stripMargin
-    // A resource without rdfs:label violates ResourceShape in data-shapes.ttl.
-    val resourceMissingLabelNq =
-      s"""<http://rdfh.ch/9999/thing001> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
-         |""".stripMargin
-    val ontologyMissingLastModificationDate =
-      s"""<$OntologyGraph> <$RdfType> <$OwlOntology> <$OntologyGraph> .
-         |<$OntologyGraph> <$RdfsLabel> "Test Ontology" <$OntologyGraph> .
-         |<$OntologyGraph> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$OntologyGraph> .
+    def resourceNq(user: String, iri: String = resource) =
+      s"""<$iri> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
+         |<$iri> <$RdfsLabel> "Thing 1" <$DataGraph> .
+         |<$iri> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+         |<$iri> <${KnoraBase}attachedToUser> <$user> <$DataGraph> .
+         |<$iri> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+         |<$iri> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin|V knora-admin:KnownUser"^^<$XsdString> <$DataGraph> .
+         |<$iri> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
          |""".stripMargin
 
-    suite("validateWithoutDataShapes")(
-      test("accepts data that violates a data shape") {
+    suite("migration admin.nq and permission.nq")(
+      test("exported admin.nq and permission.nq conform to the data shapes") {
         ZIO.scoped {
-          for {
-            full    <- validate(ontologyWithClass, resourceMissingLabelNq)
-            ontOnly <- validateWithoutDataShapes(ontologyWithClass, resourceMissingLabelNq)
-          } yield assertTrue(full.isLeft, ontOnly.isRight)
+          validate(
+            ontologyWithClass,
+            resourceNq("http://rdfh.ch/users/test001") + resourceNq(ReferencedUser, "http://rdfh.ch/9999/thing002"),
+            exportedAdminNq,
+            permissionNq = Some(exportedPermissionNq),
+          ).map(result => assertTrue(result.isRight))
         }
       },
-      test("rejects an ontology that violates an ontology shape") {
+      test("rejects a resource attached to the built-in AnonymousUser") {
         ZIO.scoped {
-          validateWithoutDataShapes(ontologyMissingLastModificationDate).map { result =>
-            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("Ontology check failed")))
+          validate(ontologyWithClass, resourceNq(s"${KnoraAdmin}AnonymousUser"), exportedAdminNq).map { result =>
+            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("AttachedToUserNotBuiltIn-Shape")))
           }
         }
       },
-      test("rejects malformed data N-Quads") {
-        ZIO.scoped {
-          validateWithoutDataShapes(validOntologyNq, dataNq = "not valid { nquads } content").map { result =>
-            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("Error loading data")))
-          }
-        }
-      },
-      test("rejects a data file with more than one named graph") {
-        val twoGraphsNq =
-          s"""<http://rdfh.ch/9999/thing001> <$RdfsLabel> "a" <$DataGraph> .
-             |<http://rdfh.ch/9999/thing002> <$RdfsLabel> "b" <http://www.knora.org/data/9999/other> .
+      test("rejects a value attached to the built-in AnonymousUser") {
+        val value = "http://rdfh.ch/9999/thing001/values/val001"
+        val nq    = resourceNq("http://rdfh.ch/users/test001") +
+          s"""<$value> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
+             |<$value> <${KnoraBase}attachedToUser> <${KnoraAdmin}AnonymousUser> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
-          validateWithoutDataShapes(validOntologyNq, dataNq = twoGraphsNq).map { result =>
-            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("exactly one named graph")))
+          validate(ontologyWithClass, nq, exportedAdminNq).map { result =>
+            assert(result.left.toOption.map(_.getMessage))(isSome(containsString("AttachedToUserNotBuiltIn-Shape")))
           }
         }
       },
-      test("rejects sentinel in object position when allow-placeholder=false") {
+      test("rejects a resource whose attachedToUser is not in the bag admin.nq") {
         ZIO.scoped {
-          validateWithoutDataShapes(validOntologyNq, dataNq = placeholderIriDataNq, allowPlaceholder = false).map {
-            result =>
-              assert(result.left.toOption.map(_.getMessage))(
-                isSome(containsString(s"placeholder sentinel '$SentinelValue' in object position")),
-              )
+          validate(ontologyWithClass, resourceNq("http://rdfh.ch/users/unknown999"), exportedAdminNq).map { result =>
+            assert(result.left.toOption.map(_.getMessage))(
+              isSome(containsString("knora-base:attachedToUser must reference a knora-admin:User instance")),
+            )
           }
         }
       },

@@ -805,6 +805,13 @@ In the `CONSTRUCT` clause of a Gravsearch query, the variable representing the
 main resource must be indicated with `knora-api:isMainResource true`. Exactly
 one variable representing a resource must be marked in this way.
 
+`knora-api:isMainResource` does not need to appear in the `WHERE` clause. If it
+does, it is ignored, as long as it is at the top level of the `WHERE` clause
+(not inside a nested block such as `OPTIONAL`, `UNION`, `MINUS` or
+`FILTER NOT EXISTS`), marks the same variable as the `CONSTRUCT` clause, and
+is not the only statement in the `WHERE` clause. Any other use is rejected with
+an error.
+
 Any other statements in the `CONSTRUCT` clause must also be present in the WHERE
 clause. If a variable representing a resource or value is used in the `WHERE`
 clause but not in the `CONSTRUCT` clause, the matching resources or values

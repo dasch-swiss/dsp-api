@@ -85,6 +85,7 @@ jobs:
           cp -L bazel-testlogs/modules/bagit/test/test.xml test-xml/bagit-test.xml || true
           cp -L bazel-testlogs/modules/jwt/test/test.xml test-xml/jwt-test.xml || true
           cp -L bazel-testlogs/modules/shacl-validator/test/test.xml test-xml/shacl-validator-test.xml || true
+          cp -L bazel-testlogs/modules/shacl-validator/memory_test/test.xml test-xml/shacl-validator-memory-test.xml || true
       - name: Unit Test Report
         uses: dorny/test-reporter@v1
         if: success() || failure()

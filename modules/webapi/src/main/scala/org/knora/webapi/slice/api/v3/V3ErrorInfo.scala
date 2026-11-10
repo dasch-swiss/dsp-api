@@ -76,6 +76,21 @@ object Conflict {
     Conflict(message, Chunk(ErrorDetail(code, message, details)))
 }
 
+final case class PayloadTooLarge(message: String = "", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo
+object PayloadTooLarge {
+
+  given JsonCodec[PayloadTooLarge] = DeriveJsonCodec.gen[PayloadTooLarge]
+
+  def apply(code: V3ErrorCode.PayloadTooLarges, message: String, details: Map[String, String]): PayloadTooLarge =
+    PayloadTooLarge(message, Chunk(ErrorDetail(code, message, details)))
+
+  def of(declared: Long, limit: Long): PayloadTooLarge = {
+    val code: V3ErrorCode.PayloadTooLarges = V3ErrorCode.payload_too_large
+    val message                            = code.template.replace("{size}", declared.toString).replace("{max}", limit.toString)
+    apply(code, message, Map("size" -> declared.toString, "max" -> limit.toString))
+  }
+}
+
 final case class Unauthorized(message: String = "Unauthorized", errors: Chunk[ErrorDetail] = Chunk.empty)
     extends V3ErrorInfo
 final case class Forbidden(message: String = "Forbidden", errors: Chunk[ErrorDetail] = Chunk.empty) extends V3ErrorInfo

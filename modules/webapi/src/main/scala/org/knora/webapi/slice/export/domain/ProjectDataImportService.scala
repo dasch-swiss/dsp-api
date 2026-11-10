@@ -34,6 +34,7 @@ final class ProjectDataImportService(
   transformer: OntologyTransformer,
   validator: ProjectMigrationImportValidator,
   triplestore: TriplestoreService,
+  slot: ImportSlot,
 ) { self =>
 
   /** Whether the project's data named graph already contains data other than list nodes (create-only precondition, R7). */
@@ -48,27 +49,44 @@ final class ProjectDataImportService(
    * @param onBehalfOf the project user every imported resource and value is attributed to, and whose default object
    *                   access permissions are resolved. Its eligibility is captured once at trigger time (no
    *                   mid-flight re-check).
+   * @param limit      the payload size limit in bytes; only tests lower it.
    */
   def importDataGraph(
     project: KnoraProject,
     createdBy: User,
     onBehalfOf: User,
     stream: ZStream[Any, Throwable, Byte],
-  ): IO[ImportExistsError, CurrentDataTask] = for {
-    task <- state
-              .makeNew(project.id, createdBy, Some(onBehalfOf.userIri))
-              .mapError { case StatesExistError(t) => ImportExistsError(t) }
-    _ <- saveJsonLdStream(task.id, stream)
-    _ <- doImport(task.id, project, onBehalfOf).whenZIO(state.isInProgress(task.id)).forkDaemon
-  } yield task
+    limit: Long = ProjectDataImportService.maxPayloadBytes,
+  ): IO[ImportExistsError | ImportSlotBusyError, CurrentDataTask] =
+    slot
+      .run(
+        state
+          .startWith(state.makeNew(project.id, createdBy, Some(onBehalfOf.userIri)))(
+            saveJsonLdStream(_, stream, limit),
+          )
+          .mapError { case StatesExistError(t) => ImportExistsError(t) },
+      ) { case (task, withinLimit) =>
+        doImport(task.id, project, onBehalfOf)
+          .whenZIO(state.isInProgress(task.id))
+          .when(withinLimit)
+          .unit
+          .onError(state.failWith(task.id, _))
+      }
+      .map(_._1)
 
-  private def saveJsonLdStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte]) = (
+  /** Saves the payload; if it exceeds the limit, fails the task and returns `false`. */
+  private def saveJsonLdStream(taskId: DataTaskId, stream: ZStream[Any, Throwable, Byte], limit: Long): Task[Boolean] =
     for {
-      _          <- storage.dataImportDir(taskId)
-      jsonLdPath <- storage.dataImportJsonLdPath(taskId)
-      _          <- stream.run(ZSink.fromFile(jsonLdPath.toFile))
-    } yield ()
-  ).tapError(e => state.fail(taskId, Option(e.getMessage).getOrElse(e.getClass.getSimpleName)).ignore).orDie
+      _           <- storage.dataImportDir(taskId)
+      jsonLdPath  <- storage.dataImportJsonLdPath(taskId)
+      withinLimit <- ProjectDataImportService
+                       .saveWithinLimit(stream, jsonLdPath, limit)
+                       .onError(_ => Files.deleteIfExists(jsonLdPath).ignore)
+      _ <- state
+             .fail(taskId, ProjectDataImportService.payloadTooLargeMessage(limit))
+             .ignore
+             .unless(withinLimit)
+    } yield withinLimit
 
   // The `onBehalfOf` user is captured once at trigger time; per-entity permissions are resolved later inside the
   // transformer from this snapshot. `doImport` does not re-fetch or re-validate the user, so this service needs no
@@ -88,9 +106,9 @@ final class ProjectDataImportService(
         _ <- validate(taskId, project, Path.fromJava(transformed), onBehalfOf)
         _ <- ZIO.logInfo(s"$taskId: Validation passed for project '${project.id}'")
 
-        // Re-verify the create-only precondition immediately before the upload: non-list data may have appeared
-        // since the synchronous check in the RestService (e.g. via a concurrent migration import). This narrows but
-        // does not fully close the race window — acceptable for an admin-only, single-in-flight-task operation.
+        // Re-verify the create-only precondition immediately before the upload: the slot blocks concurrent imports
+        // on this instance, so this narrows the race against writes outside the slot (other API paths, other
+        // instances) but does not close it — acceptable for an admin-only operation.
         // Wording kept aligned with `V3ErrorCode.data_graph_exists` ("exists" now means "holds non-list data").
         _ <- ZIO
                .fail(new RuntimeException(s"The data graph for project '${project.id}' already exists."))
@@ -165,8 +183,45 @@ final class ProjectDataImportService(
 }
 
 object ProjectDataImportService {
+
+  private val BytesPerMiB = 1024L * 1024L
+
+  /**
+   * The maximum accepted size of the JSON-LD payload: 250 MiB.
+   *
+   * The JSON-LD parser holds the whole document in the heap, at 10-16 times the payload size, and an out-of-memory
+   * error stops the whole API. Do not raise it before the JSON-LD parsing streams.
+   */
+  val maxPayloadBytes: Long = 250L * BytesPerMiB
+
+  /** The limit in human-readable form, e.g. "250 MiB". */
+  def humanLimit(limit: Long): String = s"${limit / BytesPerMiB} MiB"
+
+  def payloadTooLargeMessage(limit: Long): String = s"The payload exceeds the limit of ${humanLimit(limit)}."
+
+  /** A declared `Content-Length` above the limit. */
+  final case class PayloadTooLargeError(declared: Long, limit: Long)
+
+  /** A missing declared length passes; a length equal to the limit passes. */
+  def checkDeclaredLength(declared: Option[Long], limit: Long): Either[PayloadTooLargeError, Unit] =
+    declared match {
+      case Some(d) if d > limit => Left(PayloadTooLargeError(d, limit))
+      case _                    => Right(())
+    }
+
+  /**
+   * Writes at most `limit + 1` bytes of the stream to the file. Returns `true` if the stream fits within the limit.
+   * Otherwise deletes the partial file and returns `false`.
+   */
+  def saveWithinLimit(stream: ZStream[Any, Throwable, Byte], path: Path, limit: Long): Task[Boolean] =
+    for {
+      written    <- stream.take(limit + 1).run(ZSink.fromFile(path.toFile))
+      withinLimit = written <= limit
+      _          <- Files.deleteIfExists(path).unless(withinLimit)
+    } yield withinLimit
+
   val layer: URLayer[
-    KnoraProjectService & OntologyTransformer & ProjectMigrationImportValidator & TriplestoreService,
+    ImportSlot & KnoraProjectService & OntologyTransformer & ProjectMigrationImportValidator & TriplestoreService,
     ProjectDataImportService,
   ] = (ProjectDataImportStorageService.layer >+> FilesystemDataTaskPersistence.dataImportLayer) >>>
     ZLayer.derive[ProjectDataImportService]

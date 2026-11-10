@@ -127,6 +127,11 @@ trait SearchResponderV2 {
   protected final def setProjectsOnRoot(query: ConstructQuery, limitToProject: Option[ProjectIri]): UIO[Unit] =
     SearchResponderV2.setProjectsOnRoot(tracing, query, limitToProject)
 
+  private def parseGravsearch(query: String): Task[ConstructQuery] =
+    ZIO
+      .attempt(GravsearchParser.parseQuery(query))
+      .flatMap(parsed => ZIO.fromEither(GravsearchQueryChecker.removeMainResourceStatementsFromWhereClause(parsed)))
+
   /**
    * Performs a search using a Gravsearch query provided by the client.
    *
@@ -152,7 +157,7 @@ trait SearchResponderV2 {
     stageSpan("gravsearch") {
       for {
         _ <- recordQueryOnRoot(query)
-        q <- stageSpan("gravsearch.parse")(ZIO.attempt(GravsearchParser.parseQuery(query)))
+        q <- stageSpan("gravsearch.parse")(parseGravsearch(query))
         _ <- setShapeOnRoot(q, SearchResponderV2.QueryResultType.ResourceList)
         _ <- setProjectsOnRoot(q, limitToProject)
         r <- gravsearchV2(q, rendering, user, limitToProject)
@@ -172,7 +177,7 @@ trait SearchResponderV2 {
     stageSpan("gravsearch") {
       for {
         _ <- recordQueryOnRoot(query)
-        q <- stageSpan("gravsearch.parse")(ZIO.attempt(GravsearchParser.parseQuery(query)))
+        q <- stageSpan("gravsearch.parse")(parseGravsearch(query))
         _ <- setShapeOnRoot(q, SearchResponderV2.QueryResultType.Count)
         _ <- setProjectsOnRoot(q, limitToProject)
         r <- gravsearchCountV2(q, user, limitToProject)
@@ -852,7 +857,7 @@ final class SearchResponderV2Live(
                                              whereClauseWithoutAnnotations,
                                            )
                             gravsearchToCountTransformer <-
-                              ZIO.succeed(
+                              ZIO.attempt(
                                 new GravsearchToCountPrequeryTransformer(
                                   constructClause = query.constructClause,
                                   typeInspectionResult = typeInspectionResult,

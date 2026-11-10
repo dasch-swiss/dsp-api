@@ -16,6 +16,7 @@ import org.knora.webapi.slice.`export`.domain.ExportFailedError
 import org.knora.webapi.slice.`export`.domain.ExportInProgressError
 import org.knora.webapi.slice.`export`.domain.ImportExistsError
 import org.knora.webapi.slice.`export`.domain.ImportInProgressError
+import org.knora.webapi.slice.`export`.domain.ImportSlotBusyError
 import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
@@ -28,6 +29,7 @@ import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.v3.BadRequest
 import org.knora.webapi.slice.api.v3.Conflict
 import org.knora.webapi.slice.api.v3.NotFound
+import org.knora.webapi.slice.api.v3.PayloadTooLarge
 import org.knora.webapi.slice.api.v3.V3ErrorCode.Conflicts
 import org.knora.webapi.slice.api.v3.V3ErrorCode.NotFounds
 import org.knora.webapi.slice.api.v3.V3ErrorCode.data_graph_exists
@@ -38,6 +40,7 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode.export_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_exists
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_in_progress
 import org.knora.webapi.slice.api.v3.V3ErrorCode.import_not_found
+import org.knora.webapi.slice.api.v3.V3ErrorCode.import_running
 import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_ineligible
 import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorCode.project_ontologies_missing
@@ -51,15 +54,11 @@ final class V3ProjectsRestService(
   userService: UserService,
 ) {
 
+  import V3ProjectsRestService.conflict
+  import V3ProjectsRestService.importConflict
+
   private def ensureProjectExists(projectIri: ProjectIri) =
     projectService.findById(projectIri).orDie.someOrFail(NotFound.from(projectIri))
-
-  private def conflict(code: Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
-    Conflict(
-      code,
-      code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
-      Map("id" -> id.value, "projectIri" -> prj.value),
-    )
 
   private def notFound(code: NotFounds, prj: ProjectIri, id: DataTaskId) =
     NotFound(
@@ -127,7 +126,7 @@ final class V3ProjectsRestService(
       state <-
         importService
           .importDataExport(projectIri, user, stream)
-          .mapError { case ImportExistsError(t) => conflict(import_exists, t.projectIri, t.id) }
+          .mapError(importConflict)
     } yield DataTaskStatusResponse.from(state))
 
   def getProjectImportStatus(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
@@ -216,9 +215,16 @@ final class V3ProjectsRestService(
   )(
     projectIri: ProjectIri,
     stream: ZStream[Any, Throwable, Byte],
+    declaredLength: Option[Long],
     onBehalfOfUser: String,
   ): IO[V3ErrorInfo, DataTaskStatusResponse] =
     failDataImportFeatureMissing.zipRight(for {
+      // Rejected before the project lookup and before a task exists, so an oversized request leaves no task.
+      _ <- ZIO
+             .fromEither(
+               ProjectDataImportService.checkDeclaredLength(declaredLength, ProjectDataImportService.maxPayloadBytes),
+             )
+             .mapError { case ProjectDataImportService.PayloadTooLargeError(d, l) => PayloadTooLarge.of(d, l) }
       project <- ensureProjectExists(projectIri)
       // On-behalf-of user: malformed identifier (400), then not-found (404), then eligibility (400). Runs after the
       // project-exists check and before the create-only precondition (G1 order).
@@ -250,7 +256,7 @@ final class V3ProjectsRestService(
       state <-
         dataImportService
           .importDataGraph(project = project, createdBy = user, onBehalfOf = onBehalfOf, stream = stream)
-          .mapError { case ImportExistsError(t) => conflict(import_exists, t.projectIri, t.id) }
+          .mapError(importConflict)
     } yield DataTaskStatusResponse.from(state))
 
   def getProjectDataImportStatus(
@@ -279,4 +285,16 @@ final class V3ProjectsRestService(
 
 object V3ProjectsRestService {
   val layer = ZLayer.derive[V3ProjectsRestService]
+
+  private[projects] def conflict(code: Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
+    Conflict(
+      code,
+      code.template.replace("{id}", id.value).replace("{projectIri}", prj.value),
+      Map("id" -> id.value, "projectIri" -> prj.value),
+    )
+
+  def importConflict(e: ImportExistsError | ImportSlotBusyError): Conflict = e match
+    case ImportExistsError(t)  => conflict(import_exists, t.projectIri, t.id)
+    case ImportSlotBusyError() =>
+      Conflict(import_running, import_running.template, Map.empty)
 }

@@ -77,29 +77,6 @@ final class ProjectMigrationImportValidator() {
              .mapError(err => new RuntimeException(err.message))
     } yield ()
 
-  /**
-   * Validates the ontologies against `shacl/ontology-shapes.ttl`. The data files are only parsed (syntax and one
-   * named graph per file) and scanned for the placeholder sentinel. They are not loaded into the SHACL model and
-   * no data shapes run: over a large project the RDFS-inference expansion of the data shape targets exceeds the
-   * heap (DEV-7440).
-   */
-  def validateWithoutDataShapes(
-    ontologyFiles: NonEmptyChunk[Path],
-    dataFiles: NonEmptyChunk[Path],
-    projectIri: ProjectIri,
-  ): Task[Unit] =
-    for {
-      _              <- assertNoPlaceholderUnlessAllowed(dataFiles)
-      ontologies     <- loadOntologies(ontologyFiles)
-      ontologyShapes <- loadOntologyShapes(projectIri)
-      _              <- ShaclValidator
-             .validateOntologies(ontologies, ontologyShapes)
-             .mapError(err => new RuntimeException(err.message))
-      _ <- ShaclValidator
-             .checkParsable(dataFiles.map(toNQuadFile))
-             .mapError(err => new RuntimeException(err.message))
-    } yield ()
-
   private def assertNoPlaceholderUnlessAllowed(dataFiles: NonEmptyChunk[Path]): Task[Unit] =
     ZIO.unlessZIO(AppConfig.features(_.allowPlaceholder))(assertNoPlaceholderInObjectPosition(dataFiles)).unit
 

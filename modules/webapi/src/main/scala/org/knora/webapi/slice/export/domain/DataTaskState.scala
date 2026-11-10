@@ -48,6 +48,21 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]], persistence: DataTa
     _ <- persistence.onChanged(result)
   } yield result
 
+  /**
+   * Creates a task and runs `save` for it. Once the task exists, any abnormal end of `save`, interruption between
+   * the creation and the start of `save` included, fails the task; errors of `save` are defects, not typed failures.
+   *
+   * @return the created task and the result of `save`; fails with [[StatesExistError]] if a task already exists.
+   */
+  def startWith[A](
+    makeNew: IO[StatesExistError, CurrentDataTask],
+  )(save: DataTaskId => Task[A]): IO[StatesExistError, (CurrentDataTask, A)] =
+    ZIO.uninterruptibleMask { restore =>
+      makeNew.flatMap { task =>
+        restore(save(task.id)).onError(self.failWith(task.id, _)).orDie.map(a => (task, a))
+      }
+    }
+
   def find(taskId: DataTaskId): IO[Option[Nothing], CurrentDataTask] =
     self.ref.get.flatMap {
       case Some(exp) if exp.id == taskId => ZIO.succeed(exp)
@@ -121,7 +136,17 @@ final class DataTaskState(ref: Ref[Option[CurrentDataTask]], persistence: DataTa
       .someOrFail(None)
       .tap(task => persistence.onChanged(task))
 
-  def isInProgress(taskId: DataTaskId): IO[Option[Nothing], Boolean] =
+  /**
+   * Fails the task with the message of the squashed cause, or its class name if it has none. Never fails: an unknown
+   * or already finished task is left as it is.
+   */
+  def failWith(taskId: DataTaskId, cause: Cause[Throwable]): UIO[Unit] = {
+    val t = cause.squash
+    fail(taskId, Option(t.getMessage).getOrElse(t.getClass.getSimpleName)).ignore
+  }
+
+  /** `false` for an unknown task. */
+  def isInProgress(taskId: DataTaskId): UIO[Boolean] =
     self.ref.get.map {
       case Some(exp) if exp.id == taskId => exp.isInProgress
       case _                             => false
