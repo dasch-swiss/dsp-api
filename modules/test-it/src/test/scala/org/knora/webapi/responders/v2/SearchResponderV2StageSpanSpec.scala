@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.v2
 
 import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import org.junit.runner.RunWith
 import zio.*
@@ -14,6 +15,8 @@ import zio.test.*
 
 import scala.jdk.CollectionConverters.*
 
+import dsp.errors.BadRequestException
+import dsp.errors.GravsearchException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.testservices.InMemoryTracing
 import org.knora.webapi.testservices.SpanAssertions
@@ -45,6 +48,38 @@ class SearchResponderV2StageSpanSpec extends ZIOSpecDefault {
           assertTrue(description.exists(!_.contains(sentinel))) &&
           assertTrue(SpanAssertions.findSpan(spans, stage).exists(_.getEvents.isEmpty))
         }).provide(InMemoryTracing.layer)
+      },
+      test("a BadRequestException is a client rejection: UNSET with exit_reason=bad_request on stage and root") {
+        val root = "gravsearch"
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- SearchResponderV2
+                 .stageSpan(tracing, root)(
+                   SearchResponderV2.stageSpan(tracing, stage)(ZIO.fail(BadRequestException(sentinel))),
+                 )
+                 .either
+          spans <- InMemoryTracing.finishedSpans
+        } yield {
+          def isClientRejection(name: String) =
+            SpanAssertions.hasGravsearchExitReason(spans, name, "bad_request") &&
+              SpanAssertions.hasNoAttributeKey(spans, name, errorTypeKey) &&
+              assertTrue(
+                SpanAssertions.findSpan(spans, name).exists(_.getStatus.getStatusCode == StatusCode.UNSET),
+                SpanAssertions.findSpan(spans, name).exists(s => Option(s.getStatus.getDescription).forall(_.isEmpty)),
+                SpanAssertions.findSpan(spans, name).exists(s => !s.toString.contains(sentinel)),
+              )
+          SpanAssertions.isParentChild(spans, root, stage) && isClientRejection(stage) && isClientRejection(root)
+        }).provide(InMemoryTracing.layer)
+      },
+      test("a GravsearchException is not a client rejection: it stays ERROR with no exit reason") {
+        (for {
+          tracing <- ZIO.service[Tracing]
+          _       <- SearchResponderV2.stageSpan(tracing, stage)(ZIO.fail(GravsearchException(sentinel))).either
+          spans   <- InMemoryTracing.finishedSpans
+        } yield SpanAssertions.hasErrorStatus(spans, stage) &&
+          SpanAssertions.hasStatusDescription(spans, stage, s"$stage: GravsearchException") &&
+          SpanAssertions.hasNoAttributeKey(spans, stage, SpanAssertions.GravsearchExitReasonKey))
+          .provide(InMemoryTracing.layer)
       },
       test("an interrupt marks the open stage span with gravsearch.exit_reason=interrupted and ERROR") {
         (for {

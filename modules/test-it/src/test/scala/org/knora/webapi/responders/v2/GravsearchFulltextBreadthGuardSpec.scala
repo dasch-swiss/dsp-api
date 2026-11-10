@@ -108,7 +108,16 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
 
   private def responderWith(probe: BreadthKey => Task[Long]) =
     for {
-      guard     <- FulltextBreadthGuard.make(cap, cacheCapacity = 16, cacheTtl = 1.minute, maxConcurrent = 4)(probe)
+      guard <- FulltextBreadthGuard.make(
+                 cap,
+                 cacheCapacity = 16,
+                 cacheTtl = 1.minute,
+                 maxConcurrent = 4,
+                 verdictWait = 5.seconds,
+                 failureTtl = 30.seconds,
+               )(
+                 probe,
+               )
       responder <- ZLayer
                      .makeSome[ResponderDeps, SearchResponderV2Live](
                        ZLayer.succeed(guard),
@@ -146,7 +155,7 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
         probed          <- probes.get
       } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0, probed == 1)
     },
-    // A failed probe is not cached, so page and count each probe once.
+    // A failed probe is cached for failure-ttl, so the count reuses the page's failed probe.
     test("fails open when the probe errors") {
       for {
         probes    <- Ref.make(0)
@@ -154,7 +163,7 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
         resources <- page(responder, matchFulltextQuery)
         counted   <- count(responder, matchFulltextQuery)
         probed    <- probes.get
-      } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0, probed == 2)
+      } yield assertTrue(resources.resources.nonEmpty, counted.numberOfResources > 0, probed == 1)
     },
     test("never probes a query without matchFulltext") {
       for {
@@ -180,6 +189,20 @@ class GravsearchFulltextBreadthGuardSpec extends E2EZSpec {
         counted   <- count(responder, linkedMatchFulltextQuery, Some(incunabulaProjectIri))
         keys      <- probed.get
       } yield assertTrue(counted.numberOfResources > 0, keys == List(unscopedProbe))
+    },
+    // The probe does not measure the resource class, so a class restriction must not split the cache entry.
+    test("probes a /v2/search count once for the same term with and without a resource class") {
+      for {
+        (probes, probe) <- countingProbe(1L)
+        responder       <- responderWith(probe)
+        bookClass       <- ZIO.serviceWithZIO[IriConverter](
+                       _.asResourceClassIri("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book")
+                         .mapError(BadRequestException(_)),
+                     )
+        _      <- responder.fulltextSearchCountV2("Zeitgl*", None, None, None)
+        _      <- responder.fulltextSearchCountV2("Zeitgl*", None, Some(bookClass), None)
+        probed <- probes.get
+      } yield assertTrue(probed == 1)
     },
     test("never probes a single plain term") {
       for {

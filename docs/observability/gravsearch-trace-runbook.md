@@ -53,13 +53,18 @@ spent *in the triplestore* from time spent generating SPARQL or transforming res
 
 For a `matchFulltext` query, `gravsearch.prequery.execute` also covers the fulltext breadth probe, a fast
 Lucene candidate `COUNT` run concurrently with the prequery (skipped when the term's breadth is cached or the term
-is a single plain word). A term over the cap ends the stage early with a 400, see the failure table in
-[§4](#4-root-span-attributes).
+is a single plain word). A term over the cap ends the stage early with a 400; like every `BadRequestException`,
+that is a client rejection, so the stage and the root keep status `UNSET` and carry
+`gravsearch.exit_reason = bad_request` (see the failure table in [§4](#4-root-span-attributes)). A term already
+known to be over the cap is refused before the prequery starts, so its trace has no prequery CLIENT span (and no
+probe span) under `gravsearch.prequery.execute`. When the prequery succeeds and the probe still has no verdict
+after `verdict-wait` (5 s), the request returns the results and the probe finishes in the background, so its CLIENT
+span can end after `gravsearch.prequery.execute` and the root span.
 
 A **count** query (`/v2/searchextended/count`) runs only the prequery side: `gravsearch.parse`,
 `gravsearch.type_inspection`, `gravsearch.prequery.generate`, `gravsearch.prequery.execute` under
 the root — four prequery-side stages, no main-query or result-transform spans. This is expected
-(see [§7](#7-absent-spans-four-normal-topologies)), not a truncated trace.
+(see [§7](#7-absent-spans-five-normal-topologies)), not a truncated trace.
 
 ## 4. Root-span attributes
 
@@ -101,10 +106,10 @@ On a failed or interrupted stage span you may also see:
 
 | Attribute / field | Meaning |
 | --- | --- |
-| span status `ERROR`, description `"<stage>: <ClassName>"` | A typed stage failure, e.g. `gravsearch.prequery.execute: TriplestoreException`. The message is sanitized — never the raw SPARQL or FILTER literal |
-| `error.type` | The exception class simple name |
-| `gravsearch.prequery.execute: BadRequestException` | For a `matchFulltext` query, usually the breadth guard refusing an over-broad term (a 400, the prequery is interrupted). Not a triplestore failure |
-| `gravsearch.exit_reason = interrupted` | The fiber was interrupted (client disconnect / timeout / cancellation) — see [§7](#7-absent-spans-four-normal-topologies) |
+| span status `ERROR`, description `"<stage>: <ClassName>"` | A typed stage failure other than a `BadRequestException` (below), e.g. `gravsearch.prequery.execute: TriplestoreException`. The message is sanitized — never the raw SPARQL or FILTER literal |
+| `error.type` | The exception class simple name, on an `ERROR` span only |
+| `gravsearch.exit_reason = bad_request`, status `UNSET` | A client rejection: a `BadRequestException`, always a 400. No description and no `error.type`; set on the failed stage and on the root. On `gravsearch.prequery.execute` of a `matchFulltext` query it is usually the breadth guard refusing an over-broad term (on a first refusal the prequery is interrupted, a repeat refusal never starts it); otherwise invalid Lucene syntax or a generator input check. Not a triplestore failure |
+| `gravsearch.exit_reason = interrupted` | The fiber was interrupted (client disconnect / timeout / cancellation) — see [§7](#7-absent-spans-five-normal-topologies) |
 
 ## 5. Read the submitted query
 
@@ -149,7 +154,7 @@ Regex matches are fully anchored, hence the leading and trailing `.*`.
 
 `gravsearch.query` is recorded **before** the parse stage, so it is present even when the query is
 malformed. That is deliberate: the parse-failure and shape-less-early-interrupt topologies in
-[§7](#7-absent-spans-four-normal-topologies) have almost nothing else on them, and the query text is
+[§7](#7-absent-spans-five-normal-topologies) have almost nothing else on them, and the query text is
 what makes those traces diagnosable at all.
 
 !!! note "Why an event and not a span attribute"
@@ -168,10 +173,10 @@ what makes those traces diagnosable at all.
 4. Stage durations do not perfectly sum to the root (there is glue between stages), but one stage
    normally dominates. `gravsearch.prequery.execute` is the most common hotspot.
 
-## 7. Absent spans: four normal topologies
+## 7. Absent spans: five normal topologies
 
 The instrumentation deliberately **omits** spans for work that did not happen rather than emitting
-zero-duration placeholders. So a trace with fewer than eight spans is usually *correct*. Four
+zero-duration placeholders. So a trace with fewer than eight spans is usually *correct*. Five
 distinct shapes look like "missing spans" but each means something specific — do not read any of
 them as broken instrumentation, and do not mistake one for another.
 
@@ -180,6 +185,7 @@ them as broken instrumentation, and do not mistake one for another.
 | **Empty result** | parse → type_inspection → prequery.generate → prequery.execute present; **no** `mainquery.*`, **no** `result_transform` | The prequery returned zero main resources, so there was nothing to fetch — "no rows", not an error | All present spans are `OK`; root has its shape attributes |
 | **Parse failure** | root + `gravsearch.parse` only, parse span is `ERROR` | The Gravsearch string was malformed; the pipeline never started | Only the parse span exists and it is `ERROR` (`gravsearch.parse: <Class>`) |
 | **Interruption / timeout** | early stages present, later stages absent, **last open span + root are `ERROR`** | The request fiber was interrupted (client disconnect, timeout, cancellation) mid-query | `gravsearch.exit_reason = interrupted` on the open span and the root |
+| **Client rejection** | early stages present, later stages absent, **no span is `ERROR`** | A stage refused the client's input with a 400 (`BadRequestException`): an over-broad `matchFulltext` term, invalid Lucene syntax, a generator input check | `gravsearch.exit_reason = bad_request` on the failed stage and the root, both `UNSET` |
 | **Shape-less early interrupt** | root present but **without `gravsearch.query.shape` / `gravsearch.shape.*` / `gravsearch.project_shortcodes`**, little or nothing below it | Interrupted (or failed) *before* parse completed, so neither the shape nor the target project was ever derived | Missing shape attributes **and** `exit_reason = interrupted` / `ERROR` on the root — not a broken shape derivation. Note the difference from an *empty* `project_shortcodes`, which means the derivation ran and found no project |
 
 How to tell them apart quickly:
@@ -187,6 +193,9 @@ How to tell them apart quickly:
 - **Later stages missing + everything `OK` + shape present** → empty result. Benign.
 - **Only the parse span + it is `ERROR`** → parse failure. Look at the client's query, not the
   instrumentation — read it off the root span's `gravsearch.query` event ([§5](#5-read-the-submitted-query)).
+- **Later stages missing + no `ERROR` span + `exit_reason = bad_request` on the last stage and the root** →
+  client rejection. The request got a 400; the stage that carries the attribute is the one that refused it. Without
+  the attribute this would look like an empty result.
 - **Later stages missing + an `ERROR` span carrying `exit_reason = interrupted`** → interruption.
   The query was probably slow and got cancelled — this is exactly the trace you are hunting; read
   the stages that *did* run to see where the time went before the cut.
