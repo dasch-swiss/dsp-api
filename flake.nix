@@ -47,6 +47,9 @@
               # flake lock instead of a floating `:latest` container image, and
               # needs no Docker on the host.
               markdownlint-cli
+              # `commitlint` for `just commit-lint`: type allowlist + mandatory
+              # scope from `.commitlintrc.yml`. CI installs it via `cargo install`.
+              commitlint-rs
               # `crane` — resolve base-image digests and inspect multi-arch
               # manifests (the same tool sipi uses for publishing).
               go-containerregistry

@@ -8,7 +8,8 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 
 - [ ] `just check` passes (scalafmt formatting, license headers, the relative-import and authorization lints via Bazel, markdownlint via the Nix dev shell)
 - [ ] `bazel test` (or `just test-unit` / `test-it` / `test-e2e`) passes; integration / E2E tests cover changed behaviour
-- [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/) — see `CONVENTIONS.md` for the prefix → changelog mapping enforced by `release-please`
+- [ ] The PR meets the "Before a merge" checklist in `docs/development/commit-conventions.md` (curated history, `just commit-lint`, one commit unless `allow-many-commits` is ticked)
+- [ ] Soft: each commit builds and passes its tests on its own, so `git bisect` can land on it (a recommendation, not a blocker)
 - [ ] "Knora" not used in free-form human-readable text (commit messages, PR titles, docs prose, comments) — exempt: legacy packages, class names, and identifiers naming the `knora-base` / `knora-admin` ontologies
 - [ ] Every new source file has the Apache-2.0 + SPDX header (`//tools/license:spdx_header_check`; insert via `just header-fix`)
 
