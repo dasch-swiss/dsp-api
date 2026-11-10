@@ -1841,7 +1841,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     module: the public mkdocs site, the developer-facing convention docs `CLAUDE.md` and `CONVENTIONS.md`
     cite by path, the C4 architecture model in Structurizr DSL, and the ADR log.
 - **Key entities**: `mkdocs.yml` (`nav`), `docs/adr/`, `workspace.dsl`, `users.dsl`, ADR-0001 through
-    ADR-0010, `rbe.md`, `conventions.md`, `iri-handling.md`,
+    ADR-0010, `rbe.md`, `code-conventions.md`, `iri-handling.md`,
     `v3-iri-handling.md`, `value-types.md`, `metals-mcp.md`,
     `sparql-queries.md`, `sparql-builder.md`, `error-handling.md`,
     `commit-conventions.md`, `fuseki-query-execution.md`, `observability/index.md`,

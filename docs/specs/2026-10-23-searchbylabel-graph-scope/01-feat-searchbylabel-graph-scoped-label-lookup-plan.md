@@ -36,7 +36,7 @@ An unknown project answers with an empty result without querying, exactly as `/v
 A project-restricted typeahead pays for every matching Lucene hit in the repository before the join discards the
 other projects' hits. The label lookup's hits are not only resources: `rdfs:label`, `valueHasString` and
 `valueHasComment` share one Lucene field, so `(rdfs:label "Basel*" N)` also returns every text value containing
-"Basel" (`docs/development/dsp-api-fuseki-query-execution.md`, Fact 10).
+"Basel" (`docs/development/fuseki-query-execution.md`, Fact 10).
 On dev, "Basel*" has 72,809 hits in 080C and 66,519 in lhtt, while a beol-restricted typeahead keeps 1,612.
 Typeahead fires once per keystroke, so 2.4 s per request is noticeable in the UI.
 
@@ -120,7 +120,7 @@ private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option
   `ReadResourcesSequenceV2` with `mayHaveMoreResults = false`. The short-circuit returns the same value
   (the case-class defaults), so the JSON-LD (`{}`) does not change.
 - **SPARQL rules.** `sparql"..."` interpolator only, typed `Iri`/`Literal` holes, no string building
-  (`docs/development/dsp-api-sparql-queries.md`). Imports at the top (`InternalIri`; drop the now unused `ProjectIri`
+  (`docs/development/sparql-queries.md`). Imports at the top (`InternalIri`; drop the now unused `ProjectIri`
   import, which `-Wunused:all -Werror` would otherwise reject). No fully qualified names in code.
 - **Test data trap.** `books-data.ttl` is loaded into `http://www.knora.org/data/0001/books`, which is not project
   0001's data graph (`.../0001/anything`). A scoped label search on 0001 therefore no longer finds books resources.
@@ -131,7 +131,7 @@ private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option
   #4399, #4398, #4395, #4390, #4365, #4361, #4196; no `*6851*` branch).
   DEV-6851 will change the `text:query` argument; with this plan it changes in one place (`labelLookupClause`).
 - **Stacking.** The PR is stacked on #4399 (DEV-7492), restacked at finalization. Execution happens on this branch,
-  based on main. #4399 also edits `ADR-0012`, `ARCH-MAP.md`, `docs/development/dsp-api-fuseki-query-execution.md`
+  based on main. #4399 also edits `ADR-0012`, `ARCH-MAP.md`, `docs/development/fuseki-query-execution.md`
   and `SearchResponderV2.scala` (other methods), so the restack may need small textual conflict resolution in
   those files. The docs edits here are deliberately small, dated additions to keep that cheap.
 
@@ -229,7 +229,7 @@ private def labelLookupClause(luceneQuery: FusekiLucenceQuery, dataGraph: Option
       identical results).
 - [x] `docs/adr/0012-graph-scoped-lucene-text-lookups.md`: in the Consequences bullet on dropping `attachedToProject`
       ("applies to `/v2/search` only"), add a dated note that it also applies to `/v2/searchbylabel`.
-- [x] `docs/development/dsp-api-fuseki-query-execution.md` Fact 10 closing paragraph: name `/v2/searchbylabel` with
+- [x] `docs/development/fuseki-query-execution.md` Fact 10 closing paragraph: name `/v2/searchbylabel` with
       `limitToProject` among the lookups that emit the scoped form.
 - [x] `docs/contexts/search/CONTEXT.md`, **ProjectDataGraphs port**: "A full-text search limited to an unknown Project"
       becomes "A full-text or label search limited to an unknown Project".
@@ -373,5 +373,5 @@ Rejected:
   `modules/test-e2e/src/test/scala/org/knora/webapi/e2e/v2/SearchEndpointsGetSearchE2ESpec.scala`.
 - [ADR-0012](../../adr/0012-graph-scoped-lucene-text-lookups.md),
   [ADR-0011](../../adr/0011-cross-context-access-ports-and-adapters.md).
-- `docs/development/dsp-api-fuseki-query-execution.md` (Fact 10), `docs/development/dsp-api-sparql-queries.md`.
+- `docs/development/fuseki-query-execution.md` (Fact 10), `docs/development/sparql-queries.md`.
 - Related tickets: DEV-6851 (own label field), DEV-6833 (class closure), DEV-6823 (hit limit), DEV-7492 (#4399).

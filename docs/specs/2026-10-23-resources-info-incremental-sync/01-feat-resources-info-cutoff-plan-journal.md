@@ -39,7 +39,7 @@ status: complete
   (construction only); depends_on: 1.1; checkboxes: "Add resourceClass: InternalIri to ResourceInfo", "Replace
   findByProjectAndResourceClass with find(...)", "New query object ... ResourceInfoRepoLive uses it ...", "Update
   ResourceInfoRepoFake"; acceptance: compiles, existing spec green, no `s"..."` SPARQL left in the live repo;
-  context: plan § Row parsing, docs/development/dsp-api-iri-handling.md; replaces: —
+  context: plan § Row parsing, docs/development/iri-handling.md; replaces: —
 - **1.3** (dsp-api) files: none (journal only); depends_on: 1.1; checkboxes: "Re-time the class-restricted call on
   stage"; acceptance: both timings recorded; context: plan § Measurements; replaces: —
 - **1.4** (dsp-api) files: `ResourceInfoDto.scala`, `ResourceInfoRestService.scala`, `ResourceInfoEndpoints.scala`,

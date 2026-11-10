@@ -21,7 +21,7 @@ import scala.util.chaining.scalaUtilChainingOps
  * Beware: a watch-mode run with "rewrite = true" will loop, if the output keeps changing.
  *
  * For how to regenerate goldens (the GOLDEN_REWRITE environment variable, which modules it reaches, and
- * the placeholder rule for new golden files) see docs/development/conventions.md, "Golden snapshot
+ * the placeholder rule for new golden files) see docs/development/code-conventions.md, "Golden snapshot
  * tests".
  */
 trait GoldenTest {
