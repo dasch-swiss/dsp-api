@@ -2,8 +2,9 @@
 # See docs/development/commit-conventions.md for the human-facing rules.
 #
 # The `type` allowlist is the nine types whose changelog sections the release-please
-# config renders; a type added here needs a changelog section there too. `scope-empty`
-# makes the scope mandatory, so every changelog line reads `concern: subject`.
+# config (.github/release-please/config.json) renders; a type added here needs a
+# changelog section there too. `scope-empty` makes the scope mandatory, so every
+# changelog line reads `concern: subject`.
 # There is deliberately NO `scope` allowlist: the vocabulary in commit-conventions.md
 # is advisory, so adding a component does not require a config edit.
 rules:
