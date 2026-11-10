@@ -495,7 +495,7 @@ The helper commit is a refactor with no behaviour change; each fix commit then m
 - [x] Assertion: every endpoint with a policy has a description containing `policy.requirement`.
 - [x] Make the ratchet's failure message print the computed missing set, sorted, one key per line, and write the
       baseline file from that output; check it in.
-- [x] Document the rule in `docs/development/dsp-api-conventions.md`: new endpoints use a policy-declaring factory and
+- [x] Document the rule in `docs/development/conventions.md`: new endpoints use a policy-declaring factory and
       never extend the baseline.
 - [x] Update the three-tier API section in `CONVENTIONS.md` to the same rule.
 - [x] Add a reviewer checklist item to `REVIEW.md`: the declared policy matches what the code enforces,

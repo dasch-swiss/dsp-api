@@ -59,7 +59,7 @@ Paths used throughout:
 ## Problem Statement / Motivation
 
 Fuseki (TDB2, no `stats.opt`) evaluates prequery patterns essentially in the order dsp-api writes them
-(engine Facts 1, 3, 7 in `docs/development/dsp-api-fuseki-query-execution.md`). The prequery pipeline
+(engine Facts 1, 3, 7 in `docs/development/fuseki-query-execution.md`). The prequery pipeline
 produces a wrong order in three ways (DEV-7287): the topological sort puts a bound-IRI object (the most
 selective statement) last and `?mainRes a <Class>` first; `handleListNode` reaches the list-node anchor only
 through a property path emitted last; `OntologyInferencer` inserts class `VALUES` blocks in place, so the
@@ -413,7 +413,7 @@ statements whose IRIs collide under the old escape (different variables).
 
 ### Conventions to follow
 
-- `CLAUDE.md`, `CONVENTIONS.md`, `docs/development/dsp-api-conventions.md` § Testing (ZIO Test suite
+- `CLAUDE.md`, `CONVENTIONS.md`, `docs/development/conventions.md` § Testing (ZIO Test suite
   structure, `GoldenTest` preferred for query builders), `REVIEW.md` § SPARQL (emitted-SPARQL changes must show
   up as golden diffs). Methods in `src/main` at most 50 lines, immutable style, no fully qualified names in
   code (import at top), ASCII-only source, no "Knora" in commit messages or docs prose.
@@ -477,7 +477,7 @@ worktree and the Nix dev shell (`direnv` loads it).
       comment to describe `--test_env=GOLDEN_REWRITE=1` and the placeholder-file rule for new goldens; drop the
       stale sbt `~` remark. *Superseded in execution (round 2):* the repo adopted the shared code-comment
       convention (#4337) mid-run, so the regeneration recipe and the placeholder rule moved to
-      `docs/development/dsp-api-conventions.md` and the trait keeps a one-line pointer.
+      `docs/development/conventions.md` and the trait keeps a one-line pointer.
 - [x] Add `SparqlTransformer.createInferenceVariable(statement, kind)` as specified under "Determinism
       design", with unit tests in `SparqlTransformerSpec` (literal-object statement yields a valid `VARNAME`;
       `.../0001/ab#cd` vs `.../0001/abc#d` yield different variables; same statement twice yields the same one).
@@ -762,7 +762,7 @@ with the plan at ship time.
 - [x] Rewrite `docs/05-internals/design/api-v2/gravsearch.md` § "Query Optimization by Topological Sorting of
       Statements" (lines 307 to 466) into a section describing the connectivity-aware ordering pass (tiers,
       greedy connectivity, type-last, no-anchor fallback, block recursion, determinism), referencing
-      `docs/development/dsp-api-fuseki-query-execution.md` Facts 1, 3, 4, 7 and DEV-7287; the "Cyclic Graphs"
+      `docs/development/fuseki-query-execution.md` Facts 1, 3, 4, 7 and DEV-7287; the "Cyclic Graphs"
       subsection (lines 447 to 466) is replaced by one sentence stating that the greedy pass consumes one unit
       per step and therefore terminates on any input, cycles included; delete the `figures/query_graph.png`
       reference (and the file if nothing else references it).
@@ -783,7 +783,7 @@ with the plan at ship time.
 - [x] Update the same doc's § "Why the Expansion Needs an Opaque Group" and § "Why the Expansion Must Be
       Hoisted" to name `PrequeryPatternOrdering` (T1 Lucene tier) instead of `moveBindToBeginning` /
       `reorderPatternsByDependency` / `moveLuceneToBeginning`.
-- [x] Add a short pointer paragraph to `docs/development/dsp-api-sparql-queries.md` § "Pattern Order and Query
+- [x] Add a short pointer paragraph to `docs/development/sparql-queries.md` § "Pattern Order and Query
       Performance" stating that Gravsearch prequeries get their order from `PrequeryPatternOrdering` and that
       shape changes show up as golden diffs in the two E2E specs.
 - [x] Update `ARCH-MAP.md` component `webapi-search`: mention `PrequeryPatternOrdering` as the single ordering
@@ -1032,8 +1032,8 @@ PR 2 (DEV-7287):
 - Build: `MODULE.bazel:196`, `modules/webapi/BUILD.bazel:115`, `maven_install.json`, `CONVENTIONS.md`
   "Versions single-sourced".
 - Docs to change: `docs/05-internals/design/api-v2/gravsearch.md:307-515`,
-  `docs/development/dsp-api-sparql-queries.md` § Pattern Order, `ARCH-MAP.md` component `webapi-search`.
-- Engine facts: `docs/development/dsp-api-fuseki-query-execution.md` Facts 1, 3, 4, 7.
+  `docs/development/sparql-queries.md` § Pattern Order, `ARCH-MAP.md` component `webapi-search`.
+- Engine facts: `docs/development/fuseki-query-execution.md` Facts 1, 3, 4, 7.
 - Measurements: tanner handoff `~/Desktop/handoff-gravsearch-values-split-bgp.md` (layouts q0 to q13);
   DEV-7287 stage layout matrix (list node); Tempo traces `eba89507b77ff49517ce46387b78294a` (list node, 8.5 s),
   `737abda549f877beca84a60009f87d99` (hasConcept), `ae7d78f9698869c6ffc098ba6e1963c5` /
