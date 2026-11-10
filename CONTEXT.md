@@ -77,8 +77,9 @@ cross-domain test support.
   reference Assets.
 - **Search to Data Model + Resources & Values + Projects, through ports**: Search declares a
   `ResourceSearch` port that Resources & Values implements, consumes the Data Model projection port, and
-  declares a `ProjectDataGraphs` port that Projects implements. Search no longer depends on the RDF
-  platform.
+  declares a `ProjectDataGraphs` port that Projects implements. Target: Search no longer depends on
+  the RDF platform. Today only `ProjectDataGraphs` exists; Gravsearch translation still runs in Search
+  against `TriplestoreService`.
 - **Project Migration to Projects + Identity & Access + Data Model + Resources & Values + Assets +
   RDF platform**: migration coordinates the VRE contexts through ports; its RDF platform edge covers
   whole-graph movement only.
@@ -105,9 +106,9 @@ acyclic. This is worked example 1 of
 
 **Ratchet:** existing cross-context SPARQL may stay until the owning context is extracted. New
 cross-context reads and writes go through a port declared by the consuming context
-([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md) decision 9). Search is no
-longer an intrinsic RDF-platform user: its query translation moves behind a port implemented by
-Resources & Values. Project Migration's whole-graph movement is the single platform exception
+([ADR-0011](docs/adr/0011-cross-context-access-ports-and-adapters.md) decision 9). Search is not
+meant to be an intrinsic RDF-platform user: its query translation is to move behind a port implemented
+by Resources & Values (not done yet). Project Migration's whole-graph movement is the single platform exception
 (decision 10).
 
 ### Target dependency structure
