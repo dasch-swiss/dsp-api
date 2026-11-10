@@ -64,3 +64,28 @@ py_test(
     data = ["//modules/webapi:license_srcs"],
     main = "check_gravsearch_prequery_seam.py",
 )
+
+# Enforce the one-way dependency from slice/api (the HTTP layer) to the domain:
+# webapi main code outside slice/api must not reference org.knora.webapi.slice.api,
+# except the files baselined in api_imports_allowlist.txt, which only shrinks.
+# Wired into `just check`.
+py_test(
+    name = "api_imports",
+    srcs = ["check_api_imports.py"],
+    args = ["--allowlist", "$(rootpath api_imports_allowlist.txt)"] +
+           ["$(rootpaths //modules/webapi:license_srcs)"],
+    data = [
+        "api_imports_allowlist.txt",
+        "//modules/webapi:license_srcs",
+    ],
+    main = "check_api_imports.py",
+)
+
+py_test(
+    name = "api_imports_test",
+    srcs = [
+        "check_api_imports.py",
+        "check_api_imports_test.py",
+    ],
+    main = "check_api_imports_test.py",
+)
