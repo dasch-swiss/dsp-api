@@ -23,7 +23,8 @@ maven.install(
 )
 ```
 
-To add a library, add its coordinate to that list.
+To add a library, add its coordinate to that list. To update one, change its version there; bump
+`org.apache.jena` only to a version `org.topbraid:shacl` is compatible with.
 
 ### Re-pinning the lock file
 
@@ -42,11 +43,12 @@ Reference the resolved artifact from a `BUILD.bazel` target's `deps` using its `
 e.g. `@maven//:dev_zio_zio_3`. Each Bazel module under `modules/` declares only the dependencies
 it actually needs.
 
-## Automated updates
+## Dependency updates
 
-Third-party version bumps are proposed automatically by **Renovate** (configured in
-`.github/renovate.json`), which opens PRs updating the coordinates in `MODULE.bazel` and re-pinning
-`maven_install.json`. The old sbt-native `scala-steward` tooling, the
+There are no automated updates. Library updates that are not security relevant are analysed and made by hand: update
+the coordinates in `MODULE.bazel` and re-pin `maven_install.json` with `bazel run @unpinned_maven//:pin`.
+**Renovate** is disabled (`"enabled": false` in `.github/renovate.json`; the file stays so that the
+Renovate app does not open an onboarding PR). The old sbt-native `scala-steward` tooling, the
 `//tools/deps:maven_versions_match_sbt` drift check, and the `Sync Bazel deps with sbt` workflow
 have all been removed together with the sbt build.
 
@@ -68,7 +70,7 @@ When applying a new `daschswiss/sipi` release, update the two `oci.pull` blocks
 (`sipi_base_amd64`, `sipi_base_arm64`). They are pinned by **per-arch single-manifest digest**, not
 by tag: the arm64 index entry carries a `v8` variant that a bare `linux/arm64` request does not
 match, so pull each platform's manifest directly. Also update the tag and the index digest in the
-comment above them — the comment tag is documentation and a Renovate anchor, while the digests are
+comment above them — the comment tag is documentation, while the digests are
 what the build actually uses.
 
 Get the digests for the target tag with:
