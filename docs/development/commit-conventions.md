@@ -48,7 +48,8 @@ not optional.
 
     body
 
-**Every commit has a type and a scope**; both are mandatory. There are nine types:
+**Every commit has a type and a scope**; both are mandatory. There are nine types; their changelog sections are
+configured in `.github/release-please/config.json` (`changelog-sections`):
 
 | Type         | Meaning                                            | Changelog section        |
 |--------------|----------------------------------------------------|--------------------------|
