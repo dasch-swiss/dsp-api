@@ -18,13 +18,16 @@ import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
+import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final case class ResourcesRestService(
+  private val auth: AuthorizationRestService,
   private val resourcesService: ResourcesResponderV2,
   private val searchService: SearchResponderV2,
   private val iriConverter: IriConverter,
@@ -173,14 +176,15 @@ final case class ResourcesRestService(
     result             <- resourcesService.getResourceAsTeiV2(resIri, textProp, mapping, gravsearchTemplate, headerXslt, user)
   } yield (result.toXML, MediaType.ApplicationXml)
 
-  def eraseResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
+  def eraseResource(
+    candidate: ProjectCandidate,
+  )(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
       uuid         <- Random.nextUUID
-      eraseRequest <- requestParser
-                        .deleteOrEraseResourceRequestV2(jsonLd, user, uuid)
-                        .mapError(BadRequestException.apply)
-      result   <- resourcesService.eraseResourceV2(eraseRequest)
-      response <- renderer.render(result, formatOptions)
+      eraseRequest <- requestParser.eraseResourceRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+      grant        <- auth.authorizeProjectAdminByShortcode(candidate, eraseRequest.resourceIri.shortcode)
+      result       <- resourcesService.eraseResourceV2(eraseRequest, grant)
+      response     <- renderer.render(result, formatOptions)
     } yield response
 
   def canDeleteResource(user: User)(formatOptions: FormatOptions, jsonLd: String): Task[(RenderedResponse, MediaType)] =

@@ -8,22 +8,39 @@ package org.knora.webapi.slice.api.v2.ontologies
 import org.junit.runner.RunWith
 import zio.*
 import zio.test.*
+import zio.test.Assertion.failsWithA
 
+import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.IRI
+import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.KnoraSystemInstances.Users.SystemUser
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.admin.domain.repo.KnoraProjectRepoInMemory
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.KnoraUserService
+import org.knora.webapi.slice.admin.domain.service.PasswordService
+import org.knora.webapi.slice.admin.repo.LicenseRepo
+import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoInMemory
+import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService.replaceSuccess
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityServiceSpec.StubCardinalitiesService.setSuccess
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.common.service.IriConverter
+import org.knora.webapi.slice.infrastructure.CacheManager
+import org.knora.webapi.slice.infrastructure.OtelSetup
 import org.knora.webapi.slice.ontology.domain.OntologyCacheDataBuilder
 import org.knora.webapi.slice.ontology.domain.ReadOntologyV2Builder
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
@@ -34,6 +51,7 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.repo.service.OntologyCacheFake
 import org.knora.webapi.slice.ontology.repo.service.OntologyRepoLive
 import org.knora.webapi.slice.resourceinfo.domain.IriTestConstants
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceLive
 import org.knora.webapi.util.JsonHelper.StringToJson
 import org.knora.webapi.util.JsonHelper.renderResponseJson
 
@@ -46,23 +64,26 @@ class RestCardinalityServiceSpec extends ZIOSpecDefault {
         .assignToProject(IriTestConstants.Project.TestProject),
     )
     .build
-  private val projectIri           = IriTestConstants.Project.TestProject
-  private val classIri: IRI        = IriTestConstants.Biblio.Class.Article.value
-  private val propertyIri: IRI     = IriTestConstants.Biblio.Property.hasTitle.value
+  private val projectIri       = IriTestConstants.Project.TestProject
+  private val classIri: IRI    = IriTestConstants.Biblio.Class.Article.value
+  private val propertyIri: IRI = IriTestConstants.Biblio.Property.hasTitle.value
+  private val normalUser: User =
+    User("http://iri", "username", "email@example.com", "given name", "family name", status = true, "lang")
   private val userWithAccess: User =
-    SystemUser.copy(permissions =
-      SystemUser.permissions
-        .copy(groupsPerProject = Map(projectIri.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
+    normalUser.copy(permissions =
+      PermissionsDataADM(Map(projectIri.value -> List(KnoraGroupRepo.builtIn.ProjectAdmin.id.value))),
     )
+  private val project     = TestDataFactory.someProject.copy(id = projectIri)
+  private val saveProject = ZIO.serviceWithZIO[KnoraProjectRepoInMemory](_.save(project)).orDie
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
-    suite("RestCardinalityServiceLive")(
+    (suite("RestCardinalityServiceLive")(
       suite("canSetCardinality")(
         test("should render a success Response") {
           for {
             _        <- StubCardinalitiesService.setSetResponseSuccess()
             response <- ZIO.serviceWithZIO[RestCardinalityService](
-                          _.canSetCardinality(classIri, propertyIri, "1", userWithAccess),
+                          _.canSetCardinality(classIri, propertyIri, "1", TestCandidates.of(userWithAccess)),
                         )
           } yield assertTrue(response.canDo.value)
         },
@@ -82,7 +103,7 @@ class RestCardinalityServiceSpec extends ZIOSpecDefault {
                    ),
                  )
             response <- ZIO.serviceWithZIO[RestCardinalityService](
-                          _.canSetCardinality(classIri, propertyIri, "1", userWithAccess),
+                          _.canSetCardinality(classIri, propertyIri, "1", TestCandidates.of(userWithAccess)),
                         )
             responseJson <- renderResponseJson(response)
           } yield assertTrue(
@@ -127,7 +148,7 @@ class RestCardinalityServiceSpec extends ZIOSpecDefault {
                    ),
                  )
             response <- ZIO.serviceWithZIO[RestCardinalityService](
-                          _.canSetCardinality(classIri, propertyIri, "1", userWithAccess),
+                          _.canSetCardinality(classIri, propertyIri, "1", TestCandidates.of(userWithAccess)),
                         )
             responseJson <- renderResponseJson(response)
           } yield assertTrue(
@@ -150,17 +171,44 @@ class RestCardinalityServiceSpec extends ZIOSpecDefault {
           )
         },
       ),
+      suite("authorization")(
+        test("refuses a user who is not an admin of the ontology's project") {
+          for {
+            exit <- ZIO
+                      .serviceWithZIO[RestCardinalityService](
+                        _.canReplaceCardinality(classIri, TestCandidates.of(normalUser)),
+                      )
+                      .exit
+          } yield assert(exit)(failsWithA[ForbiddenException])
+        },
+        test("refuses a class of a built-in ontology") {
+          for {
+            exit <- ZIO
+                      .serviceWithZIO[RestCardinalityService](
+                        _.canReplaceCardinality(
+                          "http://www.knora.org/ontology/knora-base#Resource",
+                          TestCandidates.of(userWithAccess),
+                        ),
+                      )
+                      .exit
+          } yield assert(exit)(failsWithA[BadRequestException])
+        },
+      ),
       suite("canReplaceCardinality")(
         test("should render a success Response") {
           for {
             _        <- StubCardinalitiesService.setReplaceResponseSuccess()
-            response <- ZIO.serviceWithZIO[RestCardinalityService](_.canReplaceCardinality(classIri, userWithAccess))
+            response <- ZIO.serviceWithZIO[RestCardinalityService](
+                          _.canReplaceCardinality(classIri, TestCandidates.of(userWithAccess)),
+                        )
           } yield assertTrue(response.canDo.value)
         },
         test("should render a fail Response with correct reason") {
           for {
-            _            <- StubCardinalitiesService.setReplaceResponseFailure(IsInUseCheckFailure)
-            response     <- ZIO.serviceWithZIO[RestCardinalityService](_.canReplaceCardinality(classIri, userWithAccess))
+            _        <- StubCardinalitiesService.setReplaceResponseFailure(IsInUseCheckFailure)
+            response <- ZIO.serviceWithZIO[RestCardinalityService](
+                          _.canReplaceCardinality(classIri, TestCandidates.of(userWithAccess)),
+                        )
             responseJson <- renderResponseJson(response)
           } yield assertTrue(
             responseJson ==
@@ -174,10 +222,23 @@ class RestCardinalityServiceSpec extends ZIOSpecDefault {
           )
         },
       ),
-    ).provide(
+    ) @@ TestAspect.before(saveProject)).provide(
       RestCardinalityService.layer,
+      AuthorizationRestService.layer,
+      CacheManager.layer,
       IriConverter.layer,
+      IriService.layer,
+      KnoraGroupRepoInMemory.layer,
+      KnoraGroupService.layer,
+      KnoraProjectRepoInMemory.layer,
+      KnoraProjectService.layer,
+      KnoraUserRepoLive.layer,
+      KnoraUserService.layer,
+      LicenseRepo.layer,
+      PasswordService.layer,
       StringFormatter.test,
+      TriplestoreServiceLive.layer,
+      OtelSetup.stdOut,
       OntologyRepoLive.layer,
       OntologyCacheFake.withCache(ontology),
       StubCardinalitiesService.layer,

@@ -204,14 +204,17 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
       s"Get a resource as TEI/XML. ${Policy.objectReadRequirement}",
     )
 
-  val postResourcesErase = baseEndpoints.withUserEndpoint.post
+  val postResourcesErase = baseEndpoints
+    .projectAdminPolicyEndpoint("body resource IRI's project")
+    .post
     .in(base / "erase")
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      "Erase a Resource and all of its values from the database completely. Requires SystemAdmin or ProjectAdmin permissions for the resource's project.",
+      "Erase a Resource and all of its values from the database completely. " +
+        Policy.ProjectAdmin("body resource IRI's project").requirement,
     )
 
   val getResourcesCanDelete = baseEndpoints
@@ -246,13 +249,18 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(s"Create a new resource. ${Policy.objectWriteRequirement}")
 
-  val putResources = baseEndpoints.withUserEndpoint.put
+  val putResources = baseEndpoints
+    .authenticatedObjectAccessPolicyEndpoint(resourcesResponder)
+    .put
     .in(base)
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description("Update resource metadata. Requires appropriate object access permissions on the resource.")
+    .description(
+      "Update resource metadata. Requires Modify object access permission on the resource, " +
+        "and ChangeRights if the request changes `knora-api:hasPermissions`. " + Policy.objectWriteRequirement,
+    )
 
   val putResourcesAuthorship = baseEndpoints
     .authenticatedObjectAccessPolicyEndpoint(resourcesResponder)

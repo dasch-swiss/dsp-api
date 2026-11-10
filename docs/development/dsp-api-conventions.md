@@ -179,10 +179,13 @@ Every new endpoint declares its function-level authorization with a policy-decla
 | `authenticatedPolicyEndpoint(reason)` | `Authenticated`: any active, non-anonymous user | `User` |
 | `systemAdminPolicyEndpoint` | `SystemAdmin` | `User` |
 | `projectAdminPolicyEndpoint(projectFrom)` | `ProjectAdmin` of the project named by `projectFrom` | `ProjectCandidate` |
+| `projectMemberPolicyEndpoint(projectFrom)` | `ProjectMember` of the project named by `projectFrom` | `ProjectCandidate` |
+| `selfOrSystemAdminPolicyEndpoint(userFrom)` | `SelfOrSystemAdmin`: the user named in the path, or a system admin | `User` and the target |
+| `projectAdminOfAnyProjectPolicyEndpoint` | `ProjectAdminOfAnyProject`: a system admin or admin of at least one project | `User` |
 | `objectAccessPolicyEndpoint(enforcedIn)` | `ObjectAccess`: per-object permissions, anonymous admitted | `User` |
 
-- `publicEndpoint`, `securedEndpoint`, `withUserEndpoint` and `bearerSystemAdminEndpoint` declare no policy. Do not
-  use them for new endpoints.
+- `withUserEndpoint` and `bearerSystemAdminEndpoint` declare no policy. Do not use them for new
+  endpoints; `withUserEndpoint` remains only for the five count endpoints that wait on DEV-7718.
 - A `Public` or `Authenticated` reason says why the endpoint needs no stronger rule; it is reviewed.
 - A `ProjectAdmin` handler receives a `ProjectCandidate` and must obtain a `ProjectAdminGrant` from
   `AuthorizationRestService.authorizeProjectAdminById` before it acts. The domain write acts on `grant.project`.
@@ -195,6 +198,8 @@ Every new endpoint declares its function-level authorization with a policy-decla
   `modules/test-e2e/src/test/resources/endpoints-without-policy.txt`. That baseline lists the endpoints that predate
   the factories and only shrinks: migrating an endpoint removes its line, and a new endpoint never adds one. The
   spec pins the baseline's size in `baselineSize`; the commit that removes lines lowers it.
+- Every role-based endpoint (any policy except `Public`) has a row in `AuthorizationMatrixE2ESpec`, or an `exempt`
+  entry with a reason; the spec fails for an endpoint with neither.
 
 ## Error Handling
 
@@ -205,17 +210,9 @@ See [`dsp-api-error-handling.md`](dsp-api-error-handling.md) for the full rules:
 These bases declare no authorization policy; new endpoints use the factories in
 [Endpoint authorization policy](#endpoint-authorization-policy).
 
-```scala
-val securedEndpoint: ZPartialServerEndpoint[...] =
-  endpointWithBearerBasicAuthOptional.zServerSecurityLogic {
-    case (Some(jwtToken), _) => authenticateJwt(jwtToken)
-    case (_, Some(basic))    => authenticateBasic(basic)
-    case _                   => ZIO.fail(BadCredentialsException("No credentials provided."))
-  }
-```
-
 - Bearer + Basic auth via Tapir security inputs
-- `securedEndpoint` fails without credentials
+- The policy factories fail without credentials, except `publicPolicyEndpointWithUser` and the object-access ones
+  that admit anonymous callers
 - `withUserEndpoint` succeeds with `AnonymousUser`
 
 ## Concurrency — STM

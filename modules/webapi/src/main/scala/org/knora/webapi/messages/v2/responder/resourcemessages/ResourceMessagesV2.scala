@@ -762,6 +762,21 @@ case class DeleteOrEraseResourceRequestV2(
 )
 
 /**
+ * Requests that a resource be erased from the triplestore. The caller is not part of the request: the responder
+ * acts on the [[org.knora.webapi.slice.common.api.ProjectAdminGrant]] it is given.
+ *
+ * @param resourceIri               the IRI of the resource.
+ * @param resourceClassIri          the IRI of the resource class.
+ * @param maybeLastModificationDate the resource's last modification date, if any.
+ */
+case class EraseResourceRequestV2(
+  resourceIri: ResourceIri,
+  resourceClassIri: SmartIri,
+  maybeLastModificationDate: Option[Instant] = None,
+  apiRequestID: UUID,
+)
+
+/**
  * Represents a sequence of resources read back from Knora.
  *
  * @param resources          a sequence of resources that the user has permission to see.

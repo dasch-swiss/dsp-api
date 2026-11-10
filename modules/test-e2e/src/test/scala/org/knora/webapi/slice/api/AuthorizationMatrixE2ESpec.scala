@@ -27,19 +27,25 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponse
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsGetResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.*
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.responders.IriService
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.ANYTHING_HasDate_PROPERTY_LocalHost
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.ANYTHING_THING_RESOURCE_CLASS_LocalHost
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.*
 import org.knora.webapi.slice.admin.domain.model.ListProperties.*
+import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
 import org.knora.webapi.slice.api.EndpointPolicyE2ESpec.key
 import org.knora.webapi.slice.api.admin.CopyrightHolderAddRequest
+import org.knora.webapi.slice.api.admin.CopyrightHolderReplaceRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupCreateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupStatusUpdateRequest
 import org.knora.webapi.slice.api.admin.GroupsRequests.GroupUpdateRequest
+import org.knora.webapi.slice.api.admin.PermissionEndpointsRequests.ChangeDoapRequest
 import org.knora.webapi.slice.api.admin.Requests.*
 import org.knora.webapi.slice.api.admin.ResourceSideLegalInfo
 import org.knora.webapi.slice.api.admin.UsersEndpoints.Requests.*
@@ -74,7 +80,8 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
   /**
    * One endpoint of the matrix. `prepare` creates a fresh target per cell through the API, so cells stay independent
    * and no shared dataset gains records. `readBack` renders what the request may change; it is `None` for an
-   * endpoint that writes nothing.
+   * endpoint that writes nothing. `selfOf` names the caller who is the row's target user; only a row with a `Self`
+   * outcome has one.
    */
   private final case class Row[T](
     key: String,
@@ -82,6 +89,7 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
     prepare: RIO[env, T],
     send: (T, Option[User]) => RIO[env, StatusCode],
     readBack: Option[T => RIO[env, String]],
+    selfOf: Option[T => User] = None,
   )
 
   private def outcomes(
@@ -221,7 +229,7 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       .getJson[Json](uri"/admin/projects/shortcode/${fixture.shortcode}", rootUser)
       .map(response => s"project ${fixture.shortcode} exists: ${response.code == StatusCode.Ok}")
 
-  private val freshUser: RIO[env, UserIri] =
+  private val freshUserWithEmail: RIO[env, (UserIri, Email)] =
     for {
       uuid <- Random.nextUUID
       name  = s"matrix-${uuid.toString.take(8)}"
@@ -242,7 +250,62 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
                   rootUser,
                 )
                 .flatMap(_.assert200)
-    } yield UserIri.unsafeFrom(user.user.id)
+    } yield (UserIri.unsafeFrom(user.user.id), Email.unsafeFrom(s"$name@example.org"))
+
+  private val freshUser: RIO[env, UserIri] = freshUserWithEmail.map(_._1)
+
+  private def userCreateRequest(name: String) =
+    UserCreateRequest(
+      id = None,
+      username = Username.unsafeFrom(name),
+      email = Email.unsafeFrom(s"$name@example.org"),
+      givenName = GivenName.unsafeFrom("matrix"),
+      familyName = FamilyName.unsafeFrom("matrix"),
+      password = Password.unsafeFrom("test"),
+      status = UserStatus.Active,
+      lang = EN,
+      systemAdmin = SystemAdmin.IsNotSystemAdmin,
+    )
+
+  private def userExists(name: String): RIO[env, String] =
+    TestApiClient
+      .getJson[Json](uri"/admin/users/username/$name", rootUser)
+      .map(response => s"user $name exists: ${response.code == StatusCode.Ok}")
+
+  // The caller who is the target; the API reads the user from the token's subject, so only the IRI matters.
+  private def selfUser(iri: UserIri) =
+    User(iri.value, "self", "self@example.org", "Self", "Self", status = true, "en")
+
+  private def userRow(key: String, send: UserIri => Option[User] => RIO[env, StatusCode]) =
+    Row[UserIri](
+      key,
+      selfOrAdminOutcomes,
+      freshUser,
+      (iri, user) => send(iri)(user),
+      Some(userState),
+      Some(selfUser),
+    )
+
+  private def selfOrAdminRead(key: String, kind: String) =
+    Row[UserIri](
+      key,
+      selfOrAdminOutcomes,
+      freshUser,
+      (iri, user) => get(uri"/admin/users/iri/${iri.value}/$kind")(user),
+      readBack = None,
+      selfOf = Some(selfUser),
+    )
+
+  private def canLogIn(fixture: (UserIri, Email)): RIO[env, String] =
+    ZIO
+      .foreach(List("test", matrixPassword))(password =>
+        TestApiClient
+          .getJson[Json](uri"/v2/authentication", _.auth.basic(fixture._2.value, password))
+          .map(response => s"$password: ${response.code}"),
+      )
+      .map(_.mkString("\n"))
+
+  private val matrixPassword = "matrix-password"
 
   private def userState(iri: UserIri): RIO[env, String] =
     TestApiClient.getJson[Json](uri"/admin/users/iri/${iri.value}", rootUser).map(_.body.toString)
@@ -355,6 +418,13 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
 
   private val projectAdminOutcomes = outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed)
 
+  private val systemAdminOutcomes = outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed)
+
+  private val selfOrAdminOutcomes =
+    outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed) + (Self -> allowed)
+
+  private val anyProjectAdminOutcomes = outcomes(unauthorized, forbidden, forbidden, allowed, allowed, allowed)
+
   private def copyrightHolderPresent(name: String): RIO[env, String] =
     TestApiClient
       .getJson[Json](legalInfo.addPath("copyright-holders"), rootUser)
@@ -377,6 +447,76 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       send = (_, user) => put(legalInfo.addPath("licenses", matrixLicense.value, action), Json.Obj())(user),
       readBack = Some(_ => licenseEnabled),
     )
+
+  private final case class PermissionFixture(iri: PermissionIri, group: GroupIri, other: GroupIri)
+
+  private val memberPermissions = Set(
+    PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
+  )
+
+  private def freshAp: RIO[env, PermissionFixture] =
+    for {
+      group   <- freshGroup
+      other   <- freshGroup
+      created <- TestApiClient
+                   .postJson[AdministrativePermissionCreateResponseADM, CreateAdministrativePermissionAPIRequestADM](
+                     anythingPermissions.addPath("ap"),
+                     CreateAdministrativePermissionAPIRequestADM(
+                       forProject = anythingProjectIri,
+                       forGroup = group,
+                       hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
+                     ),
+                     rootUser,
+                   )
+                   .flatMap(_.assert200)
+    } yield PermissionFixture(created.administrativePermission.iri, group, other)
+
+  private def freshDoap: RIO[env, PermissionFixture] =
+    for {
+      group   <- freshGroup
+      other   <- freshGroup
+      created <-
+        TestApiClient
+          .postJson[DefaultObjectAccessPermissionCreateResponseADM, CreateDefaultObjectAccessPermissionAPIRequestADM](
+            anythingPermissions.addPath("doap"),
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = anythingProjectIri,
+              forGroup = Some(group),
+              hasPermissions = memberPermissions,
+            ),
+            rootUser,
+          )
+          .flatMap(_.assert200)
+    } yield PermissionFixture(created.defaultObjectAccessPermission.iri, group, other)
+
+  /** The administrative and default object access permissions of the anything project whose `field` is `value`. */
+  private def permissionsWith(field: String, value: String): RIO[env, String] = {
+    def find(json: Json): List[Json] = json match {
+      case Json.Obj(fields) =>
+        (if fields.contains(field -> Json.Str(value)) then List(json) else Nil) ++ fields.flatMap(f => find(f._2))
+      case Json.Arr(elements) => elements.toList.flatMap(find)
+      case _                  => Nil
+    }
+    ZIO
+      .foreach(List("ap", "doap"))(kind =>
+        TestApiClient
+          .getJson[Json](permissionsOf(kind), rootUser)
+          .map(_.body.fold(identity, json => find(json).mkString("\n"))),
+      )
+      .map(_.mkString("\n"))
+  }
+
+  private def permissionState(fixture: PermissionFixture) = permissionsWith("iri", fixture.iri.value)
+
+  private def permissionRow(key: String, prepare: RIO[env, PermissionFixture])(
+    send: PermissionFixture => Option[User] => RIO[env, StatusCode],
+  ) = Row[PermissionFixture](
+    key,
+    systemAdminOutcomes,
+    prepare,
+    (fixture, user) => send(fixture)(user),
+    Some(permissionState),
+  )
 
   private def groupUri(iri: GroupIri) = uri"/admin/groups/${iri.value}"
 
@@ -572,6 +712,86 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
     TestApiClient.getJson[Json](restrictedViewUri, rootUser).map(_.body.toString)
 
   // The oracle. Columns: anonymous, normalUser, anythingUser1, incunabulaProjectAdminUser, anythingAdminUser, rootUser.
+  private val thingContext =
+    s"""|"@context": {
+        |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+        |    "rdfs": "${Rdfs.RdfsPrefixExpansion}",
+        |    "knora-api": "${KA.KnoraApiV2PrefixExpansion}"
+        |  }""".stripMargin
+
+  /** A fresh anything:Thing; where `value` is set, also an integer value of it with the version `previous` before it. */
+  private final case class ThingFixture(resource: String, value: Option[String], previous: Option[String])
+
+  private val freshThing: RIO[env, ThingFixture] =
+    for {
+      label <- Random.nextUUID
+      body   = s"""{
+                  |  "@type": "anything:Thing",
+                  |  "knora-api:attachedToProject": { "@id": "${anythingProjectIri.value}" },
+                  |  "rdfs:label": "matrix $label",
+                  |  $thingContext
+                  |}""".stripMargin
+      doc      <- TestApiClient.postJsonLdDocument(uri"/v2/resources", body, rootUser).flatMap(_.assert200)
+      resource <- ZIO.fromEither(doc.body.getRequiredString("@id")).mapError(Exception(_))
+    } yield ThingFixture(resource, None, None)
+
+  private val freshThingWithValue: RIO[env, ThingFixture] =
+    for {
+      thing <- freshThing
+      body   = s"""{
+                  |  "@id": "${thing.resource}",
+                  |  "@type": "anything:Thing",
+                  |  "anything:hasInteger": { "@type": "knora-api:IntValue", "knora-api:intValueAsInt": 1 },
+                  |  $thingContext
+                  |}""".stripMargin
+      doc   <- TestApiClient.postJsonLdDocument(uri"/v2/values", body, rootUser).flatMap(_.assert200)
+      first <- ZIO.fromEither(doc.body.getRequiredString("@id")).mapError(Exception(_))
+      // A second version, so that erasing the history has an old version to erase.
+      update = s"""{
+                  |  "@id": "${thing.resource}",
+                  |  "@type": "anything:Thing",
+                  |  "anything:hasInteger": {
+                  |    "@id": "$first",
+                  |    "@type": "knora-api:IntValue",
+                  |    "knora-api:intValueAsInt": 2
+                  |  },
+                  |  $thingContext
+                  |}""".stripMargin
+      updated <-
+        ZIO
+          .serviceWithZIO[TestApiClient](_.putJsonLdDocument(uri"/v2/values", update, Some(rootUser), identity))
+          .flatMap(_.assert200)
+      value <- ZIO.fromEither(updated.body.getRequiredString("@id")).mapError(Exception(_))
+    } yield thing.copy(value = Some(value), previous = Some(first))
+
+  private def eraseBody(thing: ThingFixture) = {
+    val valueField =
+      thing.value.fold("")(value => s""""anything:hasInteger": { "@id": "$value", "@type": "knora-api:IntValue" },""")
+    s"""{
+       |  "@id": "${thing.resource}",
+       |  "@type": "anything:Thing",
+       |  $valueField
+       |  $thingContext
+       |}""".stripMargin
+  }
+
+  /** The triples of the resource and of its values, which vanish with what an erase removes. */
+  private def readThing(thing: ThingFixture): RIO[env, String] = {
+    val subjects = (thing.resource +: (thing.value.toList ++ thing.previous.toList)).map(iri => s"<$iri>")
+    val query    =
+      s"SELECT ?s ?p ?o WHERE { GRAPH ?g { VALUES ?s { ${subjects.mkString(" ")} } ?s ?p ?o } } ORDER BY ?s ?p ?o"
+    TestApiClient.postSparql(uri"/admin/sparql/query", query, rootUser).map(_.body.merge)
+  }
+
+  private def eraseRow(key: String, prepare: RIO[env, ThingFixture], outcome: Map[Principal, Expected])(uri: Uri) =
+    Row[ThingFixture](
+      key,
+      outcome,
+      prepare = prepare,
+      send = (thing, user) => postJsonLd(uri, eraseBody(thing))(user),
+      readBack = Some(readThing),
+    )
+
   private val rows: List[Row[?]] = List(
     listRow("POST /admin/lists", outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed))(_ =>
       post(uri"/admin/lists", rootRequest),
@@ -656,6 +876,48 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
           .map(_.code),
       readBack = Some(mappingExists),
     ),
+    userRow("DELETE /admin/users/iri/{userIri}", iri => delete(uri"/admin/users/iri/${iri.value}")),
+    userRow(
+      "PUT /admin/users/iri/{userIri}/BasicUserInformation",
+      iri =>
+        put(
+          uri"/admin/users/iri/${iri.value}/BasicUserInformation",
+          BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("changed"))),
+        ),
+    ),
+    userRow(
+      "PUT /admin/users/iri/{userIri}/Status",
+      iri => put(uri"/admin/users/iri/${iri.value}/Status", StatusChangeRequest(UserStatus.Inactive)),
+    ),
+    Row[(UserIri, Email)](
+      "PUT /admin/users/iri/{userIri}/Password",
+      selfOrAdminOutcomes,
+      prepare = freshUserWithEmail,
+      send = (fixture, user) =>
+        put(
+          uri"/admin/users/iri/${fixture._1.value}/Password",
+          PasswordChangeRequest(Password.unsafeFrom("test"), Password.unsafeFrom(matrixPassword)),
+        )(user),
+      readBack = Some(canLogIn),
+      selfOf = Some(fixture => selfUser(fixture._1)),
+    ),
+    Row[Unit](
+      "GET /admin/users",
+      anyProjectAdminOutcomes,
+      prepare = ZIO.unit,
+      send = (_, user) => get(uri"/admin/users")(user),
+      readBack = None,
+    ),
+    Row[String](
+      "POST /admin/users",
+      anyProjectAdminOutcomes,
+      prepare = freshName,
+      send = (name, user) => post(uri"/admin/users", userCreateRequest(name))(user),
+      readBack = Some(userExists),
+    ),
+    selfOrAdminRead("GET /admin/users/iri/{userIri}/project-memberships", "project-memberships"),
+    selfOrAdminRead("GET /admin/users/iri/{userIri}/project-admin-memberships", "project-admin-memberships"),
+    selfOrAdminRead("GET /admin/users/iri/{userIri}/group-memberships", "group-memberships"),
     anythingRead("GET /admin/projects/iri/{projectIri}/AllData", anythingByIri.addPath("AllData")),
     anythingRead("GET /admin/projects/iri/{projectIri}/members", anythingByIri.addPath("members")),
     anythingRead("GET /admin/projects/iri/{projectIri}/admin-members", anythingByIri.addPath("admin-members")),
@@ -812,6 +1074,88 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       permissionsOf("ap").addPath("http://www.knora.org/ontology/knora-admin#ProjectMember"),
     ),
     anythingRead("GET /admin/permissions/doap/{projectIri}", permissionsOf("doap")),
+    Row[GroupIri](
+      "POST /admin/permissions/ap",
+      projectAdminOutcomes,
+      prepare = freshGroup,
+      send = (group, user) =>
+        post(
+          anythingPermissions.addPath("ap"),
+          CreateAdministrativePermissionAPIRequestADM(
+            forProject = anythingProjectIri,
+            forGroup = group,
+            hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
+          ),
+        )(user),
+      readBack = Some(group => permissionsWith("forGroup", group.value)),
+    ),
+    Row[GroupIri](
+      "POST /admin/permissions/doap",
+      projectAdminOutcomes,
+      prepare = freshGroup,
+      send = (group, user) =>
+        post(
+          anythingPermissions.addPath("doap"),
+          CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = anythingProjectIri,
+            forGroup = Some(group),
+            hasPermissions = memberPermissions,
+          ),
+        )(user),
+      readBack = Some(group => permissionsWith("forGroup", group.value)),
+    ),
+    permissionRow("DELETE /admin/permissions/{permissionIri}", freshAp)(fixture =>
+      delete(anythingPermissions.addPath(fixture.iri.value)),
+    ),
+    permissionRow("PUT /admin/permissions/doap/{permissionIri}", freshDoap)(fixture =>
+      put(
+        anythingPermissions.addPath("doap", fixture.iri.value),
+        ChangeDoapRequest(hasPermissions =
+          Some(
+            Set(PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value)),
+          ),
+        ),
+      ),
+    ),
+    permissionRow("PUT /admin/permissions/{permissionIri}/group", freshDoap)(fixture =>
+      put(
+        anythingPermissions.addPath(fixture.iri.value, "group"),
+        ChangePermissionGroupApiRequestADM(fixture.other),
+      ),
+    ),
+    permissionRow("PUT /admin/permissions/{permissionIri}/hasPermissions", freshAp)(fixture =>
+      put(
+        anythingPermissions.addPath(fixture.iri.value, "hasPermissions"),
+        ChangePermissionHasPermissionsApiRequestADM(Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll))),
+      ),
+    ),
+    permissionRow("PUT /admin/permissions/{permissionIri}/property", freshDoap)(fixture =>
+      put(
+        anythingPermissions.addPath(fixture.iri.value, "property"),
+        ChangePermissionPropertyApiRequestADM(ANYTHING_HasDate_PROPERTY_LocalHost),
+      ),
+    ),
+    permissionRow("PUT /admin/permissions/{permissionIri}/resourceClass", freshDoap)(fixture =>
+      put(
+        anythingPermissions.addPath(fixture.iri.value, "resourceClass"),
+        ChangePermissionResourceClassApiRequestADM(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
+      ),
+    ),
+    Row[String](
+      "PUT /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders",
+      systemAdminOutcomes,
+      prepare = freshName.tap(name =>
+        post(legalInfo.addPath("copyright-holders"), CopyrightHolderAddRequest(Set(CopyrightHolder.unsafeFrom(name))))(
+          Some(rootUser),
+        ).filterOrFail(_ == StatusCode.Ok)(Exception("could not add the matrix copyright holder")),
+      ),
+      send = (name, user) =>
+        put(
+          legalInfo.addPath("copyright-holders"),
+          CopyrightHolderReplaceRequest(CopyrightHolder.unsafeFrom(name), CopyrightHolder.unsafeFrom(name.reverse)),
+        )(user),
+      readBack = Some(copyrightHolderPresent),
+    ),
     Row[String](
       "POST /admin/groups",
       outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
@@ -931,6 +1275,35 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
         ontologyBody(onto, graph = Seq(cardinality(onto, """"owl:maxCardinality": 1,"""))),
       ),
     ),
+    Row[OntologyFixture](
+      "GET /v2/ontologies/canreplacecardinalities/{resourceClassIri}",
+      projectAdminOutcomes,
+      prepare = ontologyWithClass,
+      send = (onto, user) =>
+        TestApiClient
+          .getJsonLd(uri"/v2/ontologies/canreplacecardinalities/${classOf(onto)}", user, identity)
+          .map(_.code),
+      readBack = None,
+    ),
+    Row[OntologyFixture](
+      "POST /v2/ontologies/candeletecardinalities",
+      projectAdminOutcomes,
+      prepare = ontologyWithCardinality,
+      send = (onto, user) =>
+        postJsonLd(
+          uri"/v2/ontologies/candeletecardinalities",
+          ontologyBody(onto, graph = Seq(cardinality(onto, """"owl:maxCardinality": 1,"""))),
+        )(user),
+      readBack = None,
+    ),
+    Row[OntologyFixture](
+      "GET /v2/ontologies/candeleteontology/{ontologyIri}",
+      outcomes(unauthorized, allowed, allowed, allowed, allowed, allowed),
+      prepare = freshOntology,
+      send = (onto, user) =>
+        TestApiClient.getJsonLd(uri"/v2/ontologies/candeleteontology/${onto.iri}", user, identity).map(_.code),
+      readBack = None,
+    ),
     Row[String](
       "POST /v2/standoff/canonicalize",
       outcomes(unauthorized, allowed, allowed, allowed, allowed, allowed),
@@ -966,6 +1339,21 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
       propertyDefinitionUri,
       addMapping(propertyMappingUri, AddPropertyMappingsRequest(List(externalIri))),
     )(delete(mappingParam(propertyMappingUri))),
+    eraseRow(
+      "POST /v2/resources/erase",
+      freshThing,
+      outcomes(unauthorized, forbidden, forbidden, forbidden, allowed, allowed),
+    )(uri"/v2/resources/erase"),
+    eraseRow(
+      "POST /v2/values/erase",
+      freshThingWithValue,
+      outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),
+    )(uri"/v2/values/erase"),
+    eraseRow(
+      "POST /v2/values/erasehistory",
+      freshThingWithValue,
+      outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),
+    )(uri"/v2/values/erasehistory"),
     Row[Unit](
       "POST /admin/sparql/query",
       outcomes(unauthorized, forbidden, forbidden, forbidden, forbidden, allowed),
@@ -983,21 +1371,22 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
   )
 
   private def cells[T](row: Row[T]): List[Spec[env, Throwable]] =
-    Principal.values.toList.map { principal =>
-      val expected = row.expected(principal)
-      val writes   = row.readBack.nonEmpty
-      test(s"${row.key} as $principal: $expected") {
-        for {
-          target <- row.prepare
-          before <- ZIO.foreach(row.readBack)(_(target))
-          status <- row.send(target, principal.user)
-          after  <- ZIO.foreach(row.readBack)(_(target))
-        } yield expected match {
-          // A changed read-back proves the read-back would see a write that a denied request made.
-          case Allowed          => assertTrue(status == StatusCode.Ok, !writes || before != after)
-          case Denied(response) => assertTrue(status == response, before == after)
+    Principal.values.toList.flatMap(principal => row.expected.get(principal).map(principal -> _)).map {
+      case (principal, expected) =>
+        val writes = row.readBack.nonEmpty
+        test(s"${row.key} as $principal: $expected") {
+          for {
+            target <- row.prepare
+            caller  = if principal == Principal.Self then row.selfOf.map(_(target)) else principal.user
+            before <- ZIO.foreach(row.readBack)(_(target))
+            status <- row.send(target, caller)
+            after  <- ZIO.foreach(row.readBack)(_(target))
+          } yield expected match {
+            // A changed read-back proves the read-back would see a write that a denied request made.
+            case Allowed          => assertTrue(status == StatusCode.Ok, !writes || before != after)
+            case Denied(response) => assertTrue(status == response, before == after)
+          }
         }
-      }
     }
 
   override val e2eSpec = suite("Authorization matrix")(
@@ -1073,6 +1462,9 @@ object AuthorizationMatrixE2ESpec {
     case IncunabulaAdmin extends Principal(Some(incunabulaProjectAdminUser))
     case AnythingAdmin   extends Principal(Some(anythingAdminUser))
     case Root            extends Principal(Some(rootUser))
+
+    /** The user a self-or-admin row targets; which user that is depends on the row's fresh target. */
+    case Self extends Principal(None)
   }
 
   enum Expected {
@@ -1093,8 +1485,10 @@ object AuthorizationMatrixE2ESpec {
     policy match {
       case Policy.ProjectAdmin(_)                       => Some(Set(AnythingAdmin, Root))
       case Policy.ProjectMember(_)                      => Some(Set(AnythingMember, AnythingAdmin, Root))
-      case Policy.Authenticated(_)                      => Some(Principal.values.toSet - Anonymous)
+      case Policy.Authenticated(_)                      => Some(Principal.values.toSet - Anonymous - Self)
       case Policy.SystemAdmin                           => Some(Set(Root))
+      case Policy.SelfOrSystemAdmin(_)                  => Some(Set(Self, Root))
+      case Policy.ProjectAdminOfAnyProject              => Some(Set(IncunabulaAdmin, AnythingAdmin, Root))
       case Policy.Public(_) | Policy.ObjectAccess(_, _) => None
     }
   }

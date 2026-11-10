@@ -21,7 +21,7 @@ final class ProjectsLegalInfoServerEndpoints(
     endpoints.putProjectLicensesDisable.serverLogic(restService.disableLicense),
     endpoints.getProjectCopyrightHolders.serverLogic(restService.findCopyrightHolders),
     endpoints.postProjectCopyrightHolders.serverLogic(restService.addCopyrightHolders),
-    endpoints.putProjectCopyrightHolders.serverLogic(restService.replaceCopyrightHolder),
+    endpoints.putProjectCopyrightHolders.serverLogic(_ => restService.replaceCopyrightHolder.tupled),
     endpoints.putProjectLegalInfoResourceSide.serverLogic(restService.setResourceSideLegalInfo),
   )
 }

@@ -12,19 +12,21 @@ import zio.ZLayer
 
 import dsp.errors.BadRequestException.invalidQueryParamValue
 import dsp.errors.BadRequestException.missingQueryParamValue
-import dsp.errors.ForbiddenException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
 import org.knora.webapi.messages.util.rdf.JsonLDArray
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.messages.util.rdf.JsonLDValue
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
-import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService.classIriKey
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService.newCardinalityKey
 import org.knora.webapi.slice.api.v2.ontologies.RestCardinalityService.propertyIriKey
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
-import org.knora.webapi.slice.common.domain.InternalIri
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
+import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.model.Cardinality
 import org.knora.webapi.slice.ontology.domain.service.CardinalityService
@@ -34,31 +36,32 @@ import org.knora.webapi.slice.ontology.domain.service.ChangeCardinalityCheckResu
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
 final class RestCardinalityService(
+  auth: AuthorizationRestService,
   cardinalityService: CardinalityService,
   iriConverter: IriConverter,
   ontologyRepo: OntologyRepo,
 ) {
 
-  private val permissionService: PermissionService = PermissionService(ontologyRepo)
-  private val canSetResponsePrefix: String         = s"${KnoraApiV2PrefixExpansion}canSetCardinality"
+  private val canSetResponsePrefix: String = s"${KnoraApiV2PrefixExpansion}canSetCardinality"
 
   def canChangeCardinality(
     classIri: String,
-    user: User,
+    candidate: ProjectCandidate,
     propertyIri: Option[String],
     newCardinality: Option[String],
   ): Task[CanDoResponseV2] =
     (propertyIri, newCardinality) match {
       case (None, Some(_))                           => ZIO.fail(missingQueryParamValue(propertyIriKey))
       case (Some(_), None)                           => ZIO.fail(missingQueryParamValue(newCardinalityKey))
-      case (None, None)                              => canReplaceCardinality(classIri, user)
-      case (Some(propertyIri), Some(newCardinality)) => canSetCardinality(classIri, propertyIri, newCardinality, user)
+      case (None, None)                              => canReplaceCardinality(classIri, candidate)
+      case (Some(propertyIri), Some(newCardinality)) =>
+        canSetCardinality(classIri, propertyIri, newCardinality, candidate)
     }
 
-  def canReplaceCardinality(classIri: String, user: User): Task[CanDoResponseV2] =
+  def canReplaceCardinality(classIri: String, candidate: ProjectCandidate): Task[CanDoResponseV2] =
     for {
       classIri <- iriConverter.asResourceClassIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
-      _        <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
+      _        <- authorizeForClass(candidate, classIri)
       result   <- cardinalityService.canReplaceCardinality(classIri.smartIri)
     } yield toCanDoResponseV2(result)
 
@@ -67,26 +70,23 @@ final class RestCardinalityService(
     case failure: CanReplaceCardinalityCheckResult.Failure => CanDoResponseV2.no(failure.reason)
   }
 
-  private def checkUserHasWriteAccessToOntologyOfClass(user: User, classIri: ResourceClassIri): Task[Unit] = {
-    val hasWriteAccess = for {
-      ontologyIri    <- iriConverter.getOntologyIriFromClassIri(classIri.toInternalIri)
-      hasWriteAccess <- permissionService.hasOntologyWriteAccess(user, ontologyIri)
-    } yield hasWriteAccess
-    ZIO.ifZIO(hasWriteAccess)(
-      onTrue = ZIO.unit,
-      onFalse = ZIO.fail(ForbiddenException(s"User has no write access to ontology")),
-    )
-  }
+  private def authorizeForClass(candidate: ProjectCandidate, classIri: ResourceClassIri): Task[ProjectAdminGrant] =
+    for {
+      _          <- OntologyHelpers.checkOntologyIriForUpdate(classIri.ontologyIri)
+      onto       <- ontologyRepo.findById(classIri.ontologyIri).someOrFail(NotFoundException.notfound(classIri.ontologyIri))
+      projectIri <- ZIO.fromOption(onto.projectIri).orElseFail(NotFoundException.notfound(onto.ontologyIri))
+      grant      <- auth.authorizeProjectAdminById(candidate, projectIri)
+    } yield grant
 
   def canSetCardinality(
     classIri: String,
     propertyIri: String,
     cardinality: String,
-    user: User,
+    candidate: ProjectCandidate,
   ): Task[CanDoResponseV2] =
     for {
       classIri       <- iriConverter.asResourceClassIri(classIri).orElseFail(invalidQueryParamValue(classIriKey))
-      _              <- checkUserHasWriteAccessToOntologyOfClass(user, classIri)
+      _              <- authorizeForClass(candidate, classIri)
       newCardinality <- parseCardinality(cardinality).orElseFail(invalidQueryParamValue(newCardinalityKey))
       propertyIri    <- iriConverter.asPropertyIri(propertyIri).orElseFail(invalidQueryParamValue(propertyIriKey))
       result         <- cardinalityService.canSetCardinality(classIri, propertyIri, newCardinality)
@@ -156,15 +156,4 @@ object RestCardinalityService {
   val newCardinalityKey: String = "newCardinality"
 
   private[ontologies] val layer = ZLayer.derive[RestCardinalityService]
-}
-
-private final case class PermissionService(ontologyRepo: OntologyRepo) {
-  def hasOntologyWriteAccess(user: User, ontologyIri: InternalIri): Task[Boolean] = {
-    val permissions = user.permissions
-    for {
-      data           <- ontologyRepo.findById(ontologyIri)
-      projectIriMaybe = data.flatMap(_.projectIri)
-      hasPermission   = projectIriMaybe.exists(permissions.isSystemAdmin || permissions.isProjectAdmin(_))
-    } yield hasPermission
-  }
 }

@@ -73,3 +73,5 @@ modules/ingest/docs/openapi/*.yml
 
 # ingest
 localdev/storage/
+
+__pycache__/

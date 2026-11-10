@@ -496,5 +496,77 @@ class AdminUsersEndpointsE2ESpec extends E2EZSpec {
           .map(response => assertTrue(response.code == StatusCode.BadRequest))
       },
     ),
+    suite("used by a non-admin to change a built-in user")(
+      test("answer 403 to deleting the system user") {
+        TestApiClient
+          .deleteJson[UserResponse](uri"/admin/users/iri/${KnoraSystemInstances.Users.SystemUser.id}", normalUser)
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
+      test("answer 403 to changing the anonymous user's status") {
+        TestApiClient
+          .putJson[UserResponse, StatusChangeRequest](
+            uri"/admin/users/iri/${KnoraSystemInstances.Users.AnonymousUser.id}/Status",
+            StatusChangeRequest(UserStatus.Inactive),
+            normalUser,
+          )
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
+      test("answer 403 to changing the system user's basic information") {
+        TestApiClient
+          .putJson[UserResponse, BasicUserInformationChangeRequest](
+            uri"/admin/users/iri/${KnoraSystemInstances.Users.SystemUser.id}/BasicUserInformation",
+            BasicUserInformationChangeRequest(givenName = Some(GivenName.unsafeFrom("changed"))),
+            normalUser,
+          )
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
+      test("answer 403 to changing the system user's password") {
+        TestApiClient
+          .putJson[UserResponse, PasswordChangeRequest](
+            uri"/admin/users/iri/${KnoraSystemInstances.Users.SystemUser.id}/Password",
+            PasswordChangeRequest(Password.unsafeFrom("test"), Password.unsafeFrom("test123456")),
+            normalUser,
+          )
+          .map(response => assertTrue(response.code == StatusCode.Forbidden))
+      },
+    ),
+    suite("used to read a user's memberships")(
+      suite("answer 401 without credentials")(
+        List("project-memberships", "project-admin-memberships", "group-memberships").map(kind =>
+          test(kind) {
+            TestApiClient
+              .getJson[Json](uri"/admin/users/iri/${normalUser.id}/$kind")
+              .map(response => assertTrue(response.code == StatusCode.Unauthorized))
+          },
+        )*,
+      ),
+      suite("answer 403 to another user")(
+        List("project-memberships", "project-admin-memberships", "group-memberships").map(kind =>
+          test(kind) {
+            TestApiClient
+              .getJson[Json](uri"/admin/users/iri/${projectAdminUser.id}/$kind", normalUser)
+              .map(response => assertTrue(response.code == StatusCode.Forbidden))
+          },
+        )*,
+      ),
+      suite("answer 200 to the user themselves")(
+        List("project-memberships", "project-admin-memberships", "group-memberships").map(kind =>
+          test(kind) {
+            TestApiClient
+              .getJson[Json](uri"/admin/users/iri/${normalUser.id}/$kind", normalUser)
+              .map(response => assertTrue(response.code == StatusCode.Ok))
+          },
+        )*,
+      ),
+      suite("answer 200 to a SystemAdmin")(
+        List("project-memberships", "project-admin-memberships", "group-memberships").map(kind =>
+          test(kind) {
+            TestApiClient
+              .getJson[Json](uri"/admin/users/iri/${normalUser.id}/$kind", rootUser)
+              .map(response => assertTrue(response.code == StatusCode.Ok))
+          },
+        )*,
+      ),
+    ),
   )
 }

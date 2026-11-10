@@ -16,7 +16,6 @@ import org.knora.webapi.slice.admin.domain.model.Authorship
 import org.knora.webapi.slice.admin.domain.model.CopyrightHolder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.LicenseIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.LegalInfoService
 import org.knora.webapi.slice.api.PageAndSize
@@ -106,12 +105,11 @@ final case class ProjectsLegalInfoRestService(
       _     <- projects.addCopyrightHolders(grant.project.id, req.data)
     } yield ()
 
-  def replaceCopyrightHolder(user: User)(
+  def replaceCopyrightHolder(
     shortcode: Shortcode,
     req: CopyrightHolderReplaceRequest,
   ): Task[Unit] =
     for {
-      _       <- auth.ensureSystemAdmin(user)
       project <- projects.findByShortcode(shortcode).someOrFail(NotFoundException(s"Project $shortcode not found"))
       _       <- projects.replaceCopyrightHolder(project.id, req.`old-value`, req.`new-value`)
     } yield ()

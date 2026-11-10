@@ -60,6 +60,20 @@ that option. If the owner picks another option, the phase's checkboxes are rewri
 | Q8 | resource listings (25) | `GET /v2/resources/info` lists every resource of a project, deleted ones included, without filtering; it is documented as public for incremental sync (DEV-7632). `GET /v3/projects/{projectIri}/resourcesPerOntology` counts over the whole data graph. | **a) Keep both public and declare a reason that names the exposure.** b) Require ProjectMember. c) Filter by permission. |
 | Q9 | counts (26) | The five count endpoints ignore the caller's permissions (DEV-7718), so a gravsearch count can probe hidden values. | **a) Out of this plan:** they stay in the baseline, and DEV-7718 migrates them to `ObjectAccess` once counts are filtered. b) Fix DEV-7718 here. c) Declare `Public` with a reason naming the gap. |
 
+### Owner answers (2026-11-05)
+
+| Id | Answer |
+| --- | --- |
+| Q1 | a) `Policy.SelfOrSystemAdmin(userFrom)` |
+| Q2 | a) `Policy.ProjectAdminOfAnyProject`; the `systemAdmin=true` check stays in the handler |
+| Q3 | a) Restrict the three membership reads to the user themselves or a SystemAdmin (`SelfOrSystemAdmin`). Neither dsp-app nor dsp-tools calls them: dsp-tools only POSTs to these routes (memberships writes) and `dsp-tools get` reads `/admin/projects/shortcode/{shortcode}/members`. |
+| Q4 | Asked in three parts. Create validates `forGroup`, `forResourceClass` and `forProperty` (400 otherwise); changing or deleting a permission stays SystemAdmin; `PUT copyright-holders` stays SystemAdmin. That is option a. |
+| Q5 | a) Declare what they do now |
+| Q6 | a) Keep both |
+| Q7 | a) Require ChangeRights when the body carries `hasPermissions` (403 otherwise), matching values and the [DSP-TOOLS permissions guide](https://docs.dasch.swiss/DSP-TOOLS/permissions-guide/) |
+| Q8 | a) Keep both public, with a reason that names the exposure |
+| Q9 | a) Out of this plan; DEV-7718 |
+
 ## Implementation Phases
 
 Verification commands are those in `CLAUDE.md`: `just test-unit`, `just test-e2e`, `just check`, and filtered
@@ -73,132 +87,132 @@ removes baseline lines runs `EndpointPolicyE2ESpec`, and every phase that adds m
 
 Endpoints (6): Appendix A, phase 18.
 
-- [ ] `Policy.SelfOrSystemAdmin(userFrom)` and `Policy.ProjectAdminOfAnyProject`, with `requirement` sentences
-- [ ] `BaseEndpoints.selfOrSystemAdminPolicyEndpoint` (path `userIri` as a security input, decided in the security logic) and `projectAdminOfAnyProjectPolicyEndpoint`
-- [ ] `BaseEndpointsSpec` covers both factories, including built-in target users
-- [ ] `UsersEndpoints` and `UserRestService`: `DELETE /iri/{userIri}`, `BasicUserInformation`, `Password` and `Status` use the self-or-admin factory; the password re-check stays in the handler
-- [ ] `UsersEndpoints` and `UserRestService`: `GET /admin/users` and `POST /admin/users` use the any-project factory; the `systemAdmin=true` check stays in `POST`
-- [ ] `AuthorizationMatrixE2ESpec.allowedBy` maps the two new cases
-- [ ] e2e test: a non-admin targeting a built-in user now answers 403 (was 400); the users docs say so
-- [ ] Matrix rows for the 6 endpoints, with a "self" principal for the self-or-admin rows
-- [ ] Baseline: remove the 6 lines and lower `baselineSize`
-- [ ] Run `just test-unit`; it passes
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|User).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `Policy.SelfOrSystemAdmin(userFrom)` and `Policy.ProjectAdminOfAnyProject`, with `requirement` sentences
+- [x] `BaseEndpoints.selfOrSystemAdminPolicyEndpoint` (path `userIri` as a security input, decided in the security logic) and `projectAdminOfAnyProjectPolicyEndpoint`
+- [x] `BaseEndpointsSpec` covers both factories, including built-in target users
+- [x] `UsersEndpoints` and `UserRestService`: `DELETE /iri/{userIri}`, `BasicUserInformation`, `Password` and `Status` use the self-or-admin factory; the password re-check stays in the handler
+- [x] `UsersEndpoints` and `UserRestService`: `GET /admin/users` and `POST /admin/users` use the any-project factory; the `systemAdmin=true` check stays in `POST`
+- [x] `AuthorizationMatrixE2ESpec.allowedBy` maps the two new cases
+- [x] e2e test: a non-admin targeting a built-in user now answers 403 (was 400); the users docs say so
+- [x] Matrix rows for the 6 endpoints, with a "self" principal for the self-or-admin rows
+- [x] Baseline: remove the 6 lines and lower `baselineSize`
+- [x] Run `just test-unit`; it passes
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|User).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 19: Admin user reads (Q3)
 
 Endpoints (6): Appendix A, phase 19.
 
-- [ ] `UsersEndpoints`: `GET /iri/{userIri}`, `/email/{email}` and `/username/{username}` use `publicPolicyEndpointWithUser`, reason "answers the public profile; private fields only to the user and SystemAdmin"
-- [ ] `UsersEndpoints`: the three `.../memberships` reads use `selfOrSystemAdminPolicyEndpoint`
-- [ ] e2e tests: anonymous and another user get 401/403 on the membership reads, and self and SystemAdmin get 200
-- [ ] `docs/03-endpoints/api-admin/users.md` records the membership change
-- [ ] Matrix rows for the 3 membership reads
-- [ ] Baseline: remove the 6 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|User).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `UsersEndpoints`: `GET /iri/{userIri}`, `/email/{email}` and `/username/{username}` use `publicPolicyEndpointWithUser`, reason "answers the public profile; private fields only to the user and SystemAdmin"
+- [x] `UsersEndpoints`: the three `.../memberships` reads use `selfOrSystemAdminPolicyEndpoint`
+- [x] e2e tests: anonymous and another user get 401/403 on the membership reads, and self and SystemAdmin get 200
+- [x] `docs/03-endpoints/api-admin/users.md` records the membership change
+- [x] Matrix rows for the 3 membership reads
+- [x] Baseline: remove the 6 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|User).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 20: Admin permission writes (Q4)
 
 Endpoints (8): Appendix A, phase 20.
 
-- [ ] `PermissionsEndpoints`: the 6 `PUT`/`DELETE` routes use `systemAdminPolicyEndpoint`, and their `ensureSystemAdmin` calls are removed
-- [ ] `PermissionsEndpoints` and `PermissionRestService`: `POST ap` and `POST doap` use `projectAdminPolicyEndpoint` (`projectFrom` = "body forProject") and the grant
-- [ ] `PermissionsResponder`: on create, `forGroup` must be built-in or belong to `grant.project`, and `forResourceClass`/`forProperty` must come from an ontology of `grant.project` or a built-in ontology; otherwise 400
-- [ ] Responder tests for each mismatch, and for a built-in group and a knora-base class
-- [ ] `docs/03-endpoints/api-admin/permissions.md` records the new 400s, and that an unknown `forProject` on create answers 403 (was 404)
-- [ ] `PermissionRestService.ensureProjectIriExistsAndUserHasAccess` is deleted (no callers left)
-- [ ] Matrix rows for the 8 endpoints
-- [ ] Baseline: remove the 8 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Permission).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `PermissionsEndpoints`: the 6 `PUT`/`DELETE` routes use `systemAdminPolicyEndpoint`, and their `ensureSystemAdmin` calls are removed
+- [x] `PermissionsEndpoints` and `PermissionRestService`: `POST ap` and `POST doap` use `projectAdminPolicyEndpoint` (`projectFrom` = "body forProject") and the grant
+- [x] `PermissionsResponder`: on create, `forGroup` must be built-in or belong to `grant.project`, and `forResourceClass`/`forProperty` must come from an ontology of `grant.project` or a built-in ontology; otherwise 400
+- [x] Responder tests for each mismatch, and for a built-in group and a knora-base class
+- [x] `docs/03-endpoints/api-admin/permissions.md` records the new 400s, and that an unknown `forProject` on create answers 403 (was 404)
+- [x] `PermissionRestService.ensureProjectIriExistsAndUserHasAccess` is deleted (no callers left)
+- [x] Matrix rows for the 8 endpoints
+- [x] Baseline: remove the 8 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Permission).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 21: Legal-info copyright-holder replacement (Q4)
 
 Endpoints (1): `PUT /admin/projects/shortcode/{projectShortcode}/legal-info/copyright-holders`.
 
-- [ ] `ProjectsLegalInfoEndpoints`: the route uses `systemAdminPolicyEndpoint`; the `ensureSystemAdmin` in `ProjectsLegalInfoRestService` is removed
-- [ ] Matrix row
-- [ ] Baseline: remove the line and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|LegalInfo).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `ProjectsLegalInfoEndpoints`: the route uses `systemAdminPolicyEndpoint`; the `ensureSystemAdmin` in `ProjectsLegalInfoRestService` is removed
+- [x] Matrix row
+- [x] Baseline: remove the line and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|LegalInfo).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 22: Ontology can-do checks (Q5)
 
 Endpoints (5): Appendix A, phase 22.
 
-- [ ] `OntologiesEndpoints`: `candeleteclass` and `candeleteproperty` use `publicPolicyEndpointWithUser`, reason "answers only whether the caller could delete"; `candeleteontology` uses `authenticatedPolicyEndpoint` with the same reason
-- [ ] The three can-delete responders compute "is admin of the ontology's project" with `AuthorizationRestService.isSystemOrProjectAdmin` instead of `OntologyCacheHelpers`
-- [ ] `canreplacecardinalities` and `candeletecardinalities` use `projectAdminPolicyEndpoint`; `RestCardinalityService` and the responder obtain and take the grant (anonymous answers 401, was 403)
-- [ ] `RestCardinalityService`'s own copy of the admin rule (`isSystemAdmin || isProjectAdmin`) is removed
-- [ ] `OntologyCacheHelpers.checkPermissionsForOntologyUpdate` and the permission part of `checkOntologyAndEntityIrisForUpdate` are deleted (no callers left)
-- [ ] Matrix rows for the two cardinality checks and for `candeleteontology` (`Authenticated`: every non-anonymous principal is allowed and gets `canDo`)
-- [ ] Baseline: remove the 5 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Ontolog|Cardinalit).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `OntologiesEndpoints`: `candeleteclass` and `candeleteproperty` use `publicPolicyEndpointWithUser`, reason "answers only whether the caller could delete"; `candeleteontology` uses `authenticatedPolicyEndpoint` with the same reason
+- [x] The three can-delete responders compute "is admin of the ontology's project" with `AuthorizationRestService.isSystemOrProjectAdmin` instead of `OntologyCacheHelpers`
+- [x] `canreplacecardinalities` and `candeletecardinalities` use `projectAdminPolicyEndpoint`; `RestCardinalityService` and the responder obtain and take the grant (anonymous answers 401, was 403)
+- [x] `RestCardinalityService`'s own copy of the admin rule (`isSystemAdmin || isProjectAdmin`) is removed
+- [x] `OntologyCacheHelpers.checkPermissionsForOntologyUpdate` and the permission part of `checkOntologyAndEntityIrisForUpdate` are deleted (no callers left)
+- [x] Matrix rows for the two cardinality checks and for `candeleteontology` (`Authenticated`: every non-anonymous principal is allowed and gets `canDo`)
+- [x] Baseline: remove the 5 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Ontolog|Cardinalit).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 23: Erase (Q6)
 
 Endpoints (3): `POST /v2/resources/erase`, `POST /v2/values/erase`, `POST /v2/values/erasehistory`.
 
-- [ ] `ValuesEndpoints`: both value erase routes use `systemAdminPolicyEndpoint`; their `ensureSystemAdmin` calls in `ValuesRestService` are removed
-- [ ] `ResourcesEndpoints`: `POST /v2/resources/erase` uses `projectAdminPolicyEndpoint` (`projectFrom` = "body resource IRI's project"; anonymous answers 401, was 403)
-- [ ] `ResourcesRestService`: the erase body is parsed without a user (`deleteOrEraseResourceRequestV2` split as in Phase 8); the project comes from the resource IRI's shortcode, so nothing is read as `SystemUser`; then the grant is obtained
-- [ ] `ResourcesResponderV2.eraseResourceV2` takes the grant, reads the resource as `grant.user`, and replaces its inline `isProjectAdmin` check with "the resource's `attachedToProject` is `grant.project`" (403 otherwise)
-- [ ] Responder test: a grant for another project erases nothing
-- [ ] Matrix rows for the 3 endpoints (fresh resource or value per cell)
-- [ ] Baseline: remove the 3 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Erase).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `ValuesEndpoints`: both value erase routes use `systemAdminPolicyEndpoint`; their `ensureSystemAdmin` calls in `ValuesRestService` are removed
+- [x] `ResourcesEndpoints`: `POST /v2/resources/erase` uses `projectAdminPolicyEndpoint` (`projectFrom` = "body resource IRI's project"; anonymous answers 401, was 403)
+- [x] `ResourcesRestService`: the erase body is parsed without a user (`deleteOrEraseResourceRequestV2` split as in Phase 8); the project comes from the resource IRI's shortcode, so nothing is read as `SystemUser`; then the grant is obtained
+- [x] `ResourcesResponderV2.eraseResourceV2` takes the grant, reads the resource as `grant.user`, and replaces its inline `isProjectAdmin` check with "the resource's `attachedToProject` is `grant.project`" (403 otherwise)
+- [x] Responder test: a grant for another project erases nothing
+- [x] Matrix rows for the 3 endpoints (fresh resource or value per cell)
+- [x] Baseline: remove the 3 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|AuthorizationMatrix|Erase).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 24: Resource permission changes (Q7)
 
 Endpoints (1): `PUT /v2/resources`.
 
-- [ ] `ResourcesResponderV2` update: when the request carries `hasPermissions`, the caller needs ChangeRights on the resource (403 otherwise), as for values
-- [ ] e2e test: Modify without ChangeRights cannot change permissions, but can still change the label
-- [ ] `docs/03-endpoints/api-v2/editing-resources.md` records the rule
-- [ ] `ResourcesEndpoints`: the route uses `authenticatedObjectAccessPolicyEndpoint` (a write: anonymous 401, as Phase 3 decided); `AnonymousWritesE2ESpec` lists it
-- [ ] Baseline: remove the line and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|Resources).*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `ResourcesResponderV2` update: when the request carries `hasPermissions`, the caller needs ChangeRights on the resource (403 otherwise), as for values
+- [x] e2e test: Modify without ChangeRights cannot change permissions, but can still change the label
+- [x] `docs/03-endpoints/api-v2/editing-resources.md` records the rule
+- [x] `ResourcesEndpoints`: the route uses `authenticatedObjectAccessPolicyEndpoint` (a write: anonymous 401, as Phase 3 decided); `AnonymousWritesE2ESpec` lists it
+- [x] Baseline: remove the line and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*(EndpointPolicy|Resources).*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 25: Resource listings (Q8)
 
 Endpoints (2): `GET /v2/resources/info` and `GET /v3/projects/{projectIri}/resourcesPerOntology`.
 
-- [ ] `ResourceInfoEndpoints`: `publicPolicyEndpoint`, reason "incremental sync: lists every resource IRI, class and date of a project, deleted included"
-- [ ] V3 public factory: `V3BaseEndpoint.publicPolicy(errorOut, reason)`, declaring `Policy.Public`
-- [ ] `V3ProjectsEndpoints`: `resourcesPerOntology` uses it, reason "aggregate counts per class, no resource data"
-- [ ] Baseline: remove the 2 lines and lower `baselineSize`
-- [ ] Run `bazel test //modules/test-e2e:test --test_filter='.*EndpointPolicyE2ESpec.*'`; it passes
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `ResourceInfoEndpoints`: `publicPolicyEndpoint`, reason "incremental sync: lists every resource IRI, class and date of a project, deleted included"
+- [x] V3 public factory: `V3BaseEndpoint.publicPolicy(errorOut, reason)`, declaring `Policy.Public`
+- [x] `V3ProjectsEndpoints`: `resourcesPerOntology` uses it, reason "aggregate counts per class, no resource data"
+- [x] Baseline: remove the 2 lines and lower `baselineSize`
+- [x] Run `bazel test //modules/test-e2e:test --test_filter='.*EndpointPolicyE2ESpec.*'`; it passes
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 26: Count endpoints (Q9)
 
 Endpoints (5): the five count routes. With option a they stay in the baseline, and this phase only makes that
 visible.
 
-- [ ] The comment at the top of `endpoints-without-policy.txt` says the remaining lines wait on DEV-7718
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] The comment at the top of `endpoints-without-policy.txt` says the remaining lines wait on DEV-7718
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 #### Phase 27: Remove dead checks and tighten the ratchet
 
-- [ ] `OntologyCacheHelpers.checkPermissionsForOntologyUpdate`: if Q5 left a caller, migrate it and delete the method
-- [ ] `AuthorizationRestService`: delete each `ensureSystemAdminOrProjectAdmin*`, `ensureSystemAdminOrProjectAdminInAnyProject` and `ensureProjectMember` overload that has no caller left, and make the ones still used by the PDP private
-- [ ] `V3Authorizer.ensureSystemAdmin` and `ensureSystemAdminOrProjectAdmin`: delete if unused
-- [ ] `BaseEndpoints.securedEndpoint`, `withUserEndpoint` and `publicEndpoint`: delete each one no endpoint uses; if the counts still use `withUserEndpoint`, its scaladoc names DEV-7718
-- [ ] `tools/lint/check_authz.py`: a rule that `Policy.key` and `withInfo` appear only in `slice.common.api` and `slice.api.v3.V3BaseEndpoint`, with tests in `check_authz_test.py`
+- [x] `OntologyCacheHelpers.checkPermissionsForOntologyUpdate`: if Q5 left a caller, migrate it and delete the method
+- [x] `AuthorizationRestService`: delete each `ensureSystemAdminOrProjectAdmin*`, `ensureSystemAdminOrProjectAdminInAnyProject` and `ensureProjectMember` overload that has no caller left, and make the ones still used by the PDP private
+- [x] `V3Authorizer.ensureSystemAdmin` and `ensureSystemAdminOrProjectAdmin`: delete if unused
+- [x] `BaseEndpoints.securedEndpoint`, `withUserEndpoint` and `publicEndpoint`: delete each one no endpoint uses; if the counts still use `withUserEndpoint`, its scaladoc names DEV-7718
+- [x] `tools/lint/check_authz.py`: a rule that `Policy.key` and `withInfo` appear only in `slice.common.api` and `slice.api.v3.V3BaseEndpoint`, with tests in `check_authz_test.py`
 - [ ] If the baseline is empty: delete it, and `EndpointPolicyE2ESpec` asserts that every endpoint declares a policy
-- [ ] `CONTEXT.md` and `docs/contexts/identity-access/CONTEXT.md` define `Policy`, `ProjectCandidate`, `ProjectAdminGrant`, `ProjectMemberGrant` and the new policy cases, distinct from **Administrative permission**
-- [ ] ADR-0013: decision 4 lists the new policy cases; decision 9 records the completed migration
-- [ ] `CONVENTIONS.md`, `REVIEW.md` and `docs/development/dsp-api-conventions.md` name the new factories and the matrix rule
-- [ ] Run `/dune:dune-map update` so `ARCH-MAP.md` names the policy factories, the grants and the ratchet state
-- [ ] Run `just check`; it passes
-- [ ] Run `just test-unit`; it passes
-- [ ] Run `just test-e2e`; it passes, except failures that also fail on `main` (`ValueHasXmlOnValueWriteE2ESpec`'s 6000-tag case times out locally)
-- [ ] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
+- [x] `CONTEXT.md` and `docs/contexts/identity-access/CONTEXT.md` define `Policy`, `ProjectCandidate`, `ProjectAdminGrant`, `ProjectMemberGrant` and the new policy cases, distinct from **Administrative permission**
+- [x] ADR-0013: decision 4 lists the new policy cases; decision 9 records the completed migration
+- [x] `CONVENTIONS.md`, `REVIEW.md` and `docs/development/dsp-api-conventions.md` name the new factories and the matrix rule
+- [x] Run `/dune:dune-map update` so `ARCH-MAP.md` names the policy factories, the grants and the ratchet state
+- [x] Run `just check`; it passes
+- [x] Run `just test-unit`; it passes
+- [x] Run `just test-e2e`; it passes, except failures that also fail on `main` (`ValueHasXmlOnValueWriteE2ESpec`'s 6000-tag case times out locally)
+- [x] Phase review: adversarial review of this phase's commits; verified findings fixed before the next phase starts
 
 ## Human Actions
 
@@ -239,7 +253,7 @@ Under the recommended options:
 
 - **Depends on batch 2**: `publicPolicyEndpointWithUser` (Phase 12), the parser split (Phase 8), the
   permission-free IRI check (Phase 16) and the v3 factories (Phase 14).
-- **Front-end.** The membership-read restriction (Q3) may break dsp-das screens. Check before merging (H3).
+- **Front-end.** The membership-read restriction (Q3) breaks no known client: dsp-app and dsp-tools do not call the three reads (checked 2026-11-06).
 
 ## Success Metrics
 

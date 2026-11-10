@@ -19,6 +19,8 @@ UNUSED_USER_RE = re.compile(
     r"@(?:scala\.annotation\.)?unused\s+(?:(?:implicit|using)\s+)?\w+\s*:\s*(?:[\w.]+\.)?User\b"
 )
 SYSTEM_USER_RE = re.compile(r"\bSystemUser\b")
+POLICY_ATTRIBUTE_RE = re.compile(r"\bPolicy\.key\b|\bwithInfo\b")
+POLICY_ATTRIBUTE_HOMES = ("/slice/common/api/", "/slice/api/v3/V3BaseEndpoint.scala")
 OWNER_RE = re.compile(r"\b(?:def|class|object|trait)\s+(\w+)")
 COMMENT_LINE_RE = re.compile(r"^\s*(?://|/?\*)")
 # Whitespace before `//`, so a URL such as "http://..." in a string is not taken for a comment.
@@ -34,6 +36,10 @@ SYSTEM_USER_HINT = (
     "Read or write as the caller. Load as SystemUser only to prefetch, then check the caller's permission on "
     f"what was loaded before it reaches the response ({ADR}, decision 7). A new file in "
     "tools/lint/system_user_allowlist.txt is an authorization decision that needs review."
+)
+POLICY_ATTRIBUTE_HINT = (
+    "Declare the policy through a policy-declaring factory of BaseEndpoints or V3BaseEndpoint; `Policy.key` and "
+    f"`withInfo` belong only in slice.common.api and slice.api.v3.V3BaseEndpoint ({ADR}, decision 4)."
 )
 
 
@@ -54,8 +60,8 @@ def read_allowlist(path, fields, reason_re=None):
 
 
 def scan(path):
-    """Return ([(lineno, owner)] for rule 1, [lineno] for rule 2) of one file."""
-    unused_user, system_user = [], []
+    """Return ([(lineno, owner)] for rule 1, [lineno] for rule 2, [lineno] for rule 3) of one file."""
+    unused_user, system_user, policy_attribute = [], [], []
     owner = None
     with open(path, encoding="utf-8") as f:
         for lineno, line in enumerate(f, start=1):
@@ -65,9 +71,12 @@ def scan(path):
                 owner = owners[-1]
             if UNUSED_USER_RE.search(line):
                 unused_user.append((lineno, owner))
-            if not comment and SYSTEM_USER_RE.search(TRAILING_COMMENT_RE.sub("", line)):
+            code = "" if comment else TRAILING_COMMENT_RE.sub("", line)
+            if SYSTEM_USER_RE.search(code):
                 system_user.append(lineno)
-    return unused_user, system_user
+            if POLICY_ATTRIBUTE_RE.search(code):
+                policy_attribute.append(lineno)
+    return unused_user, system_user, policy_attribute
 
 
 def check(paths, unused_allowlist, system_user_allowlist):
@@ -79,7 +88,7 @@ def check(paths, unused_allowlist, system_user_allowlist):
     if not main_paths:
         errors.append("no main-source files given; check the _LINT_SRCS wiring in tools/lint/BUILD.bazel")
     for path in main_paths:
-        unused_user, system_user = scan(path)
+        unused_user, system_user, policy_attribute = scan(path)
         for lineno, owner in unused_user:
             if (path, owner) in unused_allowed:
                 unused_seen.add((path, owner))
@@ -90,6 +99,8 @@ def check(paths, unused_allowlist, system_user_allowlist):
                 system_seen.add(path)
             else:
                 errors.append(f"{path}:{system_user[0]}: SystemUser outside the allow-list")
+        if policy_attribute and not any(home in path for home in POLICY_ATTRIBUTE_HOMES):
+            errors.append(f"{path}:{policy_attribute[0]}: Policy.key or withInfo outside the policy factories")
     for entry in sorted(unused_allowed - unused_seen):
         errors.append(f"stale unused-User allow-list entry, remove it: {' '.join(entry)}")
     for entry in sorted(system_allowed - system_seen):
@@ -111,7 +122,11 @@ def main(argv):
         print("Authorization lint failed:")
         for e in errors:
             print(f"  {e}")
-        for marker, hint in (("@unused on a User", UNUSED_USER_HINT), ("SystemUser outside", SYSTEM_USER_HINT)):
+        for marker, hint in (
+            ("@unused on a User", UNUSED_USER_HINT),
+            ("SystemUser outside", SYSTEM_USER_HINT),
+            ("Policy.key or withInfo", POLICY_ATTRIBUTE_HINT),
+        ):
             if any(marker in e for e in errors):
                 print(f"\n{hint}")
         return 1

@@ -37,6 +37,7 @@ import org.knora.webapi.slice.api.v2.ontologies.LastModificationDate
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
+import org.knora.webapi.slice.common.api.ProjectAdminGrant
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.resources.repo.ChangeResourceAuthorshipQuery
 import org.knora.webapi.slice.resources.repo.ChangeResourceMetadataQuery
@@ -142,6 +143,21 @@ final class ResourcesResponderV2(
                resource,
                Permission.ObjectAccess.Modify,
                updateResourceMetadataRequestV2.requestingUser,
+             )
+
+        // Changing the permissions needs ChangeRights, as for values; resending the current ones does not.
+        permissionsChanged <- ZIO.attempt(
+                                updateResourceMetadataRequestV2.maybePermissions.exists(newPermissions =>
+                                  PermissionUtilADM.parsePermissions(newPermissions) !=
+                                    PermissionUtilADM.parsePermissions(resource.permissions),
+                                ),
+                              )
+        _ <- ZIO.when(permissionsChanged)(
+               resourceUtilV2.checkResourcePermission(
+                 resource,
+                 Permission.ObjectAccess.ChangeRights,
+                 updateResourceMetadataRequestV2.requestingUser,
+               ),
              )
 
         // Do the update.
@@ -437,8 +453,9 @@ final class ResourcesResponderV2(
    * Erases a resource from the triplestore.
    *
    * @param eraseResourceV2 the request message.
+   * @param grant           proof that the caller is an admin of the project the resource must belong to.
    */
-  def eraseResourceV2(eraseResourceV2: DeleteOrEraseResourceRequestV2): Task[SuccessResponseV2] = {
+  def eraseResourceV2(eraseResourceV2: EraseResourceRequestV2, grant: ProjectAdminGrant): Task[SuccessResponseV2] = {
     val eraseTask: Task[SuccessResponseV2] =
       for {
         // Get the metadata of the resource to be updated.
@@ -447,17 +464,14 @@ final class ResourcesResponderV2(
             .getResourcePreview(
               resourceIris = Seq(eraseResourceV2.resourceIri),
               targetSchema = ApiV2Complex,
-              requestingUser = eraseResourceV2.requestingUser,
+              requestingUser = grant.user,
             )
             .flatMap(_.toResource(eraseResourceV2.resourceIri))
 
-        // Ensure that the requesting user is a system admin, or an admin of this project.
-        _ <- ZIO.when(
-               !(eraseResourceV2.requestingUser.permissions.isProjectAdmin(resource.projectADM.id.value) ||
-                 eraseResourceV2.requestingUser.permissions.isSystemAdmin),
-             ) {
-               ZIO.fail(ForbiddenException(s"Only a system admin or project admin can erase a resource"))
-             }
+        // The grant is for the project of the resource's IRI; the resource must be attached to it.
+        _ <- ZIO
+               .fail(ForbiddenException(s"Only a system admin or project admin can erase a resource"))
+               .when(resource.projectADM.id != grant.project.id)
 
         internalResourceClassIri = eraseResourceV2.resourceClassIri.toOntologySchema(InternalSchema)
 
@@ -474,7 +488,7 @@ final class ResourcesResponderV2(
 
         // Do the update.
         _ <- ZIO.logInfo(
-               s"User ${eraseResourceV2.requestingUser.id} is erasing resource ${eraseResourceV2.resourceIri}",
+               s"User ${grant.user.id} is erasing resource ${eraseResourceV2.resourceIri}",
              )
         _ <- triplestore.query(EraseResourceQuery.build(resource.projectADM, eraseResourceV2.resourceIri))
 

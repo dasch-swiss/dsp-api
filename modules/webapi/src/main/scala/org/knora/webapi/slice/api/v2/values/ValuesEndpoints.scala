@@ -102,22 +102,22 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
       s"Mark a value as deleted. Requires view permission on the resource and delete permission on the value. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
-  val postValuesErase = baseEndpoint.securedEndpoint.post
+  val postValuesErase = baseEndpoint.systemAdminPolicyEndpoint.post
     .in(base / "erase")
     .in(stringJsonBody.example(ValuesEndpoints.Examples.deleteValue))
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Erase a Value and all of its old versions from the database completely. Requires SystemAdmin permissions. $linkToValuesDocumentation",
+      s"Erase a Value and all of its old versions from the database completely. ${Policy.SystemAdmin.requirement} $linkToValuesDocumentation",
     )
 
-  val postValuesErasehistory = baseEndpoint.securedEndpoint.post
+  val postValuesErasehistory = baseEndpoint.systemAdminPolicyEndpoint.post
     .in(base / "erasehistory")
     .in(stringJsonBody.example(ValuesEndpoints.Examples.deleteValue))
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Erase all old versions of a Value from the database completely and keep only the latest version. Requires SystemAdmin permissions. $linkToValuesDocumentation",
+      s"Erase all old versions of a Value from the database completely and keep only the latest version. ${Policy.SystemAdmin.requirement} $linkToValuesDocumentation",
     )
 }
 

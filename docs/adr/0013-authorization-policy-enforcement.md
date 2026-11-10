@@ -82,6 +82,8 @@ JWT **Scope**, and a grant is a proof of one authorization decision, not an **Ad
     | `Authenticated(reason)` | Any active, non-anonymous user. The reason is reviewed: "logged in" alone was the DEV-7713 and DEV-7714 bug class. |
     | `SystemAdmin` | Active system administrators. |
     | `ProjectAdmin(projectFrom)` | Active system administrators, and active project administrators of the project named by `projectFrom` (for example "path projectIri", "list node"). |
+    | `SelfOrSystemAdmin(userFrom)` | Active system administrators, and the active user named by `userFrom` (for example "path userIri"). |
+    | `ProjectAdminOfAnyProject` | Active system administrators, and active project administrators of at least one project. The check against a specific project stays in the handler. |
     | `ProjectMember(projectFrom)` | Active system administrators, project administrators and members of the project named by `projectFrom`. |
     | `ObjectAccess(enforcedIn, admitsAnonymous)` | Decided per object where the owning domain loads it, and `enforcedIn` names that place. Anonymous callers are included when `admitsAnonymous` is true; a write sets it false, and the factory refuses anonymous callers in the security logic. |
 
@@ -131,16 +133,17 @@ JWT **Scope**, and a grant is a proof of one authorization decision, not an **Ad
     - The same test fails when a `Public` or `Authenticated` policy has a blank reason, or when an endpoint's
       description does not contain its `policy.requirement`.
     - `just check` fails on `@unused` on a `User` parameter and on a `SystemUser` use outside comments in a
-      main-source file, each outside its allow-list (`//tools/lint:check_authz`, allow-lists in `tools/lint/`).
+      main-source file, each outside its allow-list (`//tools/lint:check_authz`, allow-lists in `tools/lint/`), and
+      on `Policy.key` or `withInfo` outside `slice.common.api` and `slice.api.v3.V3BaseEndpoint`.
     - An authorization matrix test sends a valid request per migrated endpoint and principal and compares the
       outcome with a hand-written table, which also must agree with the declared policies.
     - Each responder that checks an object against `grant.project` is tested with a grant for one project on an
       object of another.
 
-9. **Migration is incremental.** Unmigrated endpoints, including those authorized through `V3Authorizer`, keep
-   their hand-called checks and stay in the baseline until they move. The admin lists and v2 standoff slices
-   migrate first and prove the shape; the remaining slices follow, worst first (ontologies, v2 resources and
-   values, admin users; DEV-7725).
+9. **Migration is complete, except the counts.** Every endpoint declares a policy, except the five gravsearch and
+   search count endpoints, which stay in the baseline until DEV-7718 filters counts by the caller's permissions and
+   migrates them to `ObjectAccess` (DEV-7725). The `ensure*` helpers of `AuthorizationRestService` that only the
+   decision point used are private.
 
 10. **This refines, and does not reverse, the decision that authorization is deliberately distributed.**
     Object-level enforcement stays in the owning domain, and administration and profiles stay in Identity &

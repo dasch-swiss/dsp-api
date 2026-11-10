@@ -26,9 +26,11 @@ import org.knora.webapi.sharedtestdata.*
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.PermissionIri
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.admin.service.PermissionRestService
 import org.knora.webapi.slice.common.api.TestCandidates
 
@@ -39,6 +41,19 @@ class PermissionsResponderSpec extends E2EZSpec {
 
   private val permissionResponder   = ZIO.serviceWithZIO[PermissionsResponder]
   private val permissionRestService = ZIO.serviceWithZIO[PermissionRestService]
+
+  private def createAp(createRequest: CreateAdministrativePermissionAPIRequestADM, uuid: UUID) =
+    projectOf(createRequest.forProject).flatMap(p =>
+      permissionResponder(_.createAdministrativePermission(p, createRequest, uuid)),
+    )
+
+  private def createDoap(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM, uuid: UUID) =
+    projectOf(createRequest.forProject).flatMap(p =>
+      permissionResponder(_.createDefaultObjectAccessPermission(p, createRequest, uuid)),
+    )
+
+  private def projectOf(iri: ProjectIri) =
+    ZIO.serviceWithZIO[KnoraProjectService](_.findById(iri).someOrFail(NotFoundException(s"Project $iri not found")))
 
   override val rdfDataObjects: List[RdfDataObject] =
     anythingRdfOntologyAndData ++ incunabulaRdfOntologyAndData :+
@@ -75,15 +90,13 @@ class PermissionsResponderSpec extends E2EZSpec {
         "fail and return a 'DuplicateValueException' when permission for project and group combination already exists",
       ) {
         assertZIO(
-          permissionResponder(
-            _.createAdministrativePermission(
-              CreateAdministrativePermissionAPIRequestADM(
-                forProject = imagesProjectIri,
-                forGroup = KnoraGroupRepo.builtIn.ProjectMember.id,
-                hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
-              ),
-              UUID.randomUUID(),
+          createAp(
+            CreateAdministrativePermissionAPIRequestADM(
+              forProject = imagesProjectIri,
+              forGroup = KnoraGroupRepo.builtIn.ProjectMember.id,
+              hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
             ),
+            UUID.randomUUID(),
           ).exit,
         )(
           fails(
@@ -101,16 +114,14 @@ class PermissionsResponderSpec extends E2EZSpec {
       test("create and return an administrative permission with a custom IRI") {
         val customIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/24RD7QcoTKqEJKrDBE885Q")
         for {
-          actual <- permissionResponder(
-                      _.createAdministrativePermission(
-                        CreateAdministrativePermissionAPIRequestADM(
-                          id = Some(customIri),
-                          forProject = anythingProjectIri,
-                          forGroup = thingSearcherGroup.groupIri,
-                          hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
-                        ),
-                        UUID.randomUUID(),
+          actual <- createAp(
+                      CreateAdministrativePermissionAPIRequestADM(
+                        id = Some(customIri),
+                        forProject = anythingProjectIri,
+                        forGroup = thingSearcherGroup.groupIri,
+                        hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
                       ),
+                      UUID.randomUUID(),
                     )
         } yield assertTrue(
           actual.administrativePermission.iri == customIri,
@@ -137,16 +148,14 @@ class PermissionsResponderSpec extends E2EZSpec {
           ),
         )
         for {
-          actual <- permissionResponder(
-                      _.createAdministrativePermission(
-                        CreateAdministrativePermissionAPIRequestADM(
-                          id = Some(customIri),
-                          forProject = anythingProjectIri,
-                          forGroup = KnoraGroupRepo.builtIn.KnownUser.id,
-                          hasPermissions = hasPermissions,
-                        ),
-                        UUID.randomUUID(),
+          actual <- createAp(
+                      CreateAdministrativePermissionAPIRequestADM(
+                        id = Some(customIri),
+                        forProject = anythingProjectIri,
+                        forGroup = KnoraGroupRepo.builtIn.KnownUser.id,
+                        hasPermissions = hasPermissions,
                       ),
+                      UUID.randomUUID(),
                     )
         } yield assertTrue(
           actual.administrativePermission.iri == customIri,
@@ -168,18 +177,16 @@ class PermissionsResponderSpec extends E2EZSpec {
     suite("ask to create a default object access permission")(
       test("create a DefaultObjectAccessPermission for project and group") {
         for {
-          actual <- permissionResponder(
-                      _.createDefaultObjectAccessPermission(
-                        CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = anythingProjectIri,
-                          forGroup = Some(thingSearcherGroup.groupIri),
-                          hasPermissions = Set(
-                            PermissionADM
-                              .from(Permission.ObjectAccess.RestrictedView, thingSearcherGroup.id),
-                          ),
+          actual <- createDoap(
+                      CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = anythingProjectIri,
+                        forGroup = Some(thingSearcherGroup.groupIri),
+                        hasPermissions = Set(
+                          PermissionADM
+                            .from(Permission.ObjectAccess.RestrictedView, thingSearcherGroup.id),
                         ),
-                        UUID.randomUUID(),
                       ),
+                      UUID.randomUUID(),
                     )
         } yield assertTrue(
           actual.defaultObjectAccessPermission.forProject == anythingProjectIri,
@@ -192,22 +199,20 @@ class PermissionsResponderSpec extends E2EZSpec {
       test("create a DefaultObjectAccessPermission for project and group with custom IRI") {
         val customIri = PermissionIri.unsafeFrom("http://rdfh.ch/permissions/0001/4PnSvolsTEa86KJ2EG76SQ")
         for {
-          received <- permissionResponder(
-                        _.createDefaultObjectAccessPermission(
-                          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-                            id = Some(customIri),
-                            forProject = anythingProjectIri,
-                            forGroup = Some(KnoraGroupRepo.builtIn.UnknownUser.id),
-                            hasPermissions = Set(
-                              PermissionADM
-                                .from(
-                                  Permission.ObjectAccess.RestrictedView,
-                                  KnoraGroupRepo.builtIn.UnknownUser.id.value,
-                                ),
-                            ),
+          received <- createDoap(
+                        createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                          id = Some(customIri),
+                          forProject = anythingProjectIri,
+                          forGroup = Some(KnoraGroupRepo.builtIn.UnknownUser.id),
+                          hasPermissions = Set(
+                            PermissionADM
+                              .from(
+                                Permission.ObjectAccess.RestrictedView,
+                                KnoraGroupRepo.builtIn.UnknownUser.id.value,
+                              ),
                           ),
-                          UUID.randomUUID(),
                         ),
+                        UUID.randomUUID(),
                       )
         } yield assertTrue(
           received.defaultObjectAccessPermission.iri == customIri,
@@ -221,18 +226,16 @@ class PermissionsResponderSpec extends E2EZSpec {
       },
       test("create a DefaultObjectAccessPermission for project and resource class") {
         for {
-          actual <- permissionResponder(
-                      _.createDefaultObjectAccessPermission(
-                        CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = imagesProjectIri,
-                          forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
-                          hasPermissions = Set(
-                            PermissionADM
-                              .from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.KnownUser.id.value),
-                          ),
+          actual <- createDoap(
+                      CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = imagesProjectIri,
+                        forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
+                        hasPermissions = Set(
+                          PermissionADM
+                            .from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.KnownUser.id.value),
                         ),
-                        UUID.randomUUID(),
                       ),
+                      UUID.randomUUID(),
                     )
         } yield assertTrue(
           actual.defaultObjectAccessPermission.forProject == imagesProjectIri,
@@ -244,18 +247,16 @@ class PermissionsResponderSpec extends E2EZSpec {
       },
       test("create a DefaultObjectAccessPermission for project and property") {
         for {
-          actual <- permissionResponder(
-                      _.createDefaultObjectAccessPermission(
-                        CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = imagesProjectIri,
-                          forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
-                          hasPermissions = Set(
-                            PermissionADM
-                              .from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
-                          ),
+          actual <- createDoap(
+                      CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = imagesProjectIri,
+                        forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
+                        hasPermissions = Set(
+                          PermissionADM
+                            .from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
                         ),
-                        UUID.randomUUID(),
                       ),
+                      UUID.randomUUID(),
                     )
         } yield assertTrue(
           actual.defaultObjectAccessPermission.forProject == imagesProjectIri,
@@ -269,18 +270,16 @@ class PermissionsResponderSpec extends E2EZSpec {
         "fail and return a 'DuplicateValueException' when a doap permission for project and group combination already exists",
       ) {
         assertZIO(
-          permissionResponder(
-            _.createDefaultObjectAccessPermission(
-              CreateDefaultObjectAccessPermissionAPIRequestADM(
-                forProject = incunabulaProjectIri,
-                forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id),
-                hasPermissions = Set(
-                  PermissionADM
-                    .from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-                ),
+          createDoap(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = incunabulaProjectIri,
+              forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id),
+              hasPermissions = Set(
+                PermissionADM
+                  .from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
-              UUID.randomUUID(),
             ),
+            UUID.randomUUID(),
           ).exit,
         )(
           fails(
@@ -302,18 +301,16 @@ class PermissionsResponderSpec extends E2EZSpec {
         "fail and return a 'DuplicateValueException' when a doap permission for project and resourceClass combination already exists",
       ) {
         assertZIO(
-          permissionResponder(
-            _.createDefaultObjectAccessPermission(
-              CreateDefaultObjectAccessPermissionAPIRequestADM(
-                forProject = incunabulaProjectIri,
-                forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
-                hasPermissions = Set(
-                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
-                  PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-                ),
+          createDoap(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = incunabulaProjectIri,
+              forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
+              hasPermissions = Set(
+                PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
+                PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
-              UUID.randomUUID(),
             ),
+            UUID.randomUUID(),
           ).exit,
         )(
           fails(
@@ -335,17 +332,15 @@ class PermissionsResponderSpec extends E2EZSpec {
         "fail and return a 'DuplicateValueException' when a doap permission for project and property combination already exists",
       ) {
         assertZIO(
-          permissionResponder(
-            _.createDefaultObjectAccessPermission(
-              CreateDefaultObjectAccessPermissionAPIRequestADM(
-                forProject = incunabulaProjectIri,
-                forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
-                hasPermissions = Set(
-                  PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.KnownUser.id.value),
-                ),
+          createDoap(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = incunabulaProjectIri,
+              forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
+              hasPermissions = Set(
+                PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.KnownUser.id.value),
               ),
-              UUID.randomUUID(),
             ),
+            UUID.randomUUID(),
           ).exit,
         )(
           fails(
@@ -366,19 +361,17 @@ class PermissionsResponderSpec extends E2EZSpec {
         "fail and return a 'DuplicateValueException' when a doap permission for project, resource class, and property combination already exists",
       ) {
         assertZIO(
-          permissionResponder(
-            _.createDefaultObjectAccessPermission(
-              CreateDefaultObjectAccessPermissionAPIRequestADM(
-                forProject = incunabulaProjectIri,
-                forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
-                forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
-                hasPermissions = Set(
-                  PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
-                  PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
-                ),
+          createDoap(
+            CreateDefaultObjectAccessPermissionAPIRequestADM(
+              forProject = incunabulaProjectIri,
+              forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
+              forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
+              hasPermissions = Set(
+                PermissionADM.from(Permission.ObjectAccess.ChangeRights, KnoraGroupRepo.builtIn.Creator.id.value),
+                PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value),
               ),
-              UUID.randomUUID(),
             ),
+            UUID.randomUUID(),
           ).exit,
         )(
           fails(
@@ -405,15 +398,13 @@ class PermissionsResponderSpec extends E2EZSpec {
           ),
         )
         for {
-          actual <- permissionResponder(
-                      _.createDefaultObjectAccessPermission(
-                        CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = imagesProjectIri,
-                          forGroup = Some(KnoraGroupRepo.builtIn.UnknownUser.id),
-                          hasPermissions = hasPermissions,
-                        ),
-                        UUID.randomUUID(),
+          actual <- createDoap(
+                      CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = imagesProjectIri,
+                        forGroup = Some(KnoraGroupRepo.builtIn.UnknownUser.id),
+                        hasPermissions = hasPermissions,
                       ),
+                      UUID.randomUUID(),
                     )
         } yield assertTrue(
           actual.defaultObjectAccessPermission.forProject == imagesProjectIri,
@@ -441,15 +432,13 @@ class PermissionsResponderSpec extends E2EZSpec {
           ),
         )
         for {
-          actual <- permissionResponder(
-                      _.createDefaultObjectAccessPermission(
-                        CreateDefaultObjectAccessPermissionAPIRequestADM(
-                          forProject = imagesProjectIri,
-                          forGroup = Some(KnoraGroupRepo.builtIn.ProjectAdmin.id),
-                          hasPermissions = hasPermissions,
-                        ),
-                        UUID.randomUUID(),
+          actual <- createDoap(
+                      CreateDefaultObjectAccessPermissionAPIRequestADM(
+                        forProject = imagesProjectIri,
+                        forGroup = Some(KnoraGroupRepo.builtIn.ProjectAdmin.id),
+                        hasPermissions = hasPermissions,
                       ),
+                      UUID.randomUUID(),
                     )
         } yield assertTrue(
           actual.defaultObjectAccessPermission.forProject == imagesProjectIri,

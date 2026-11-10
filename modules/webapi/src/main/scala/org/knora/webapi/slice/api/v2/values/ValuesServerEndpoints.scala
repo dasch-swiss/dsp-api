@@ -14,7 +14,6 @@ import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v2.ValueUuid
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
@@ -34,8 +33,8 @@ final class ValuesServerEndpoints(endpoints: ValuesEndpoints, restService: Value
 }
 object ValuesServerEndpoints {
   type Dependencies =
-    ApiComplexV2JsonLdRequestParser & AuthorizationRestService & BaseEndpoints & KnoraProjectService &
-      KnoraResponseRenderer & ReadResourcesService & ResourceUtilV2 & StringFormatter & ValueRepo & ValuesResponderV2
+    ApiComplexV2JsonLdRequestParser & BaseEndpoints & KnoraProjectService & KnoraResponseRenderer &
+      ReadResourcesService & ResourceUtilV2 & StringFormatter & ValueRepo & ValuesResponderV2
 
   type Provided = ValuesServerEndpoints
 

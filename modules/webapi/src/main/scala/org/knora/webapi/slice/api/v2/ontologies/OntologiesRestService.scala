@@ -172,7 +172,7 @@ final class OntologiesRestService(
   } yield response
 
   def canChangeCardinality(
-    user: User,
+    candidate: ProjectCandidate,
   )(
     classIri: IriDto,
     propertyIri: Option[IriDto],
@@ -180,7 +180,7 @@ final class OntologiesRestService(
     formatOptions: FormatOptions,
   ): Task[(RenderedResponse, MediaType)] = for {
     result <-
-      restCardinalityService.canChangeCardinality(classIri.value, user, propertyIri.map(_.value), newCardinality)
+      restCardinalityService.canChangeCardinality(classIri.value, candidate, propertyIri.map(_.value), newCardinality)
     response <- renderer.render(result, formatOptions)
   } yield response
 
@@ -195,12 +195,13 @@ final class OntologiesRestService(
   } yield response
 
   def canDeleteCardinalitiesFromClass(
-    user: User,
+    candidate: ProjectCandidate,
   )(jsonLd: String, formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] = for {
     uuid      <- Random.nextUUID
     updateReq <-
-      requestParser.canDeleteCardinalitiesFromClassRequestV2(jsonLd, uuid, user).mapError(BadRequestException.apply)
-    result   <- ontologyResponder.canDeleteCardinalitiesFromClass(updateReq)
+      requestParser.canDeleteCardinalitiesFromClassRequestV2(jsonLd, uuid).mapError(BadRequestException.apply)
+    grant    <- authorizeForOntology(candidate, updateReq.classInfoContent.resourceClassIri.ontologyIri)
+    result   <- ontologyResponder.canDeleteCardinalitiesFromClass(updateReq, grant)
     response <- renderer.render(result, formatOptions)
   } yield response
 

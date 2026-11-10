@@ -94,7 +94,9 @@ specified by the `id` in the request body as below:
 
 ### Update basic user information**
 
-- Required permission: SystemAdmin / self
+- Required permission: SystemAdmin / self. A caller who is neither gets 403 on a built-in user too (it was 400
+  before); a SystemAdmin changing a built-in user still gets 400. The same holds for the password, status and delete
+  operations below.
 - Changeable information: username, email, given name, family name, language
 - TypeScript Docs: userFormats - ChangeUserApiRequestADM
 - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
@@ -149,6 +151,8 @@ specified by the `id` in the request body as below:
 
 ### Get user's project memberships
 
+- Required permission: SystemAdmin / self. These reads were public before; an anonymous caller now gets 401 and
+  another user 403.
 - GET: `/admin/users/iri/<userIri>/project-memberships`
 
 ### Add/remove user to/from project
@@ -165,6 +169,7 @@ Note: When a user is project admin in the same project, his project admin member
 
 ### Get user's project admin memberships
 
+- Required permission: SystemAdmin / self (as for the project memberships)
 - GET: `/admin/users/iri/<userIri>/project-admin-memberships`
 
 ### Add/remove user to/from project admin group
@@ -179,6 +184,7 @@ Note: In order to add a user to a project admin group, the user needs to be memb
 
 ### Get user's group memberships**
 
+- Required permission: SystemAdmin / self (as for the project memberships)
 - GET: `/admin/users/iri/<userIri>/group-memberships`
 
 ### Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*)

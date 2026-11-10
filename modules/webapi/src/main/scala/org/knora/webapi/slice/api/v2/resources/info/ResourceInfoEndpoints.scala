@@ -20,7 +20,11 @@ import org.knora.webapi.slice.api.v2.IriDto
 import org.knora.webapi.slice.common.api.BaseEndpoints
 
 final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
-  val getResourcesInfo = baseEndpoints.publicEndpoint.get
+  val getResourcesInfo = baseEndpoints
+    .publicPolicyEndpoint(
+      "incremental sync: lists every resource IRI, class and date of a project, deleted included",
+    )
+    .get
     .in("v2" / "resources" / "info")
     .in(header[ProjectIri](ApiV2.Headers.xKnoraAcceptProject))
     .in(
@@ -41,7 +45,7 @@ final case class ResourceInfoEndpoints(baseEndpoints: BaseEndpoints) {
       "List the resources of the project named in the X-Knora-Accept-Project header, with their class and dates, " +
         "deleted resources included. Optionally restricted to one resource class and to resources changed at or " +
         "after a cutoff. `asOf` is the server time read before the listing was queried; to poll for changes, pass " +
-        "the previous `asOf` minus a safety window as the next cutoff. Publicly accessible.",
+        "the previous `asOf` minus a safety window as the next cutoff. Does not require authentication.",
     )
 }
 

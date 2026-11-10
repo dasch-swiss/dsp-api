@@ -47,6 +47,8 @@ import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.TestCandidates
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.resources.repo.GetStandoffTagByUUIDQuery
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
@@ -385,6 +387,13 @@ import org.knora.testrunner.DspZTestJUnitRunner
 class ResourcesResponderV2Spec extends E2EZSpec { self =>
 
   private val resourceResponder = ZIO.serviceWithZIO[ResourcesResponderV2]
+
+  private def eraseAs(user: User, project: ProjectIri, request: EraseResourceRequestV2) =
+    ZIO
+      .serviceWithZIO[AuthorizationRestService](
+        _.authorizeProjectAdminById(TestCandidates.of(user), project),
+      )
+      .flatMap(grant => resourceResponder(_.eraseResourceV2(request, grant)))
 
   private val defaultAnythingResourcePermissions =
     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
@@ -1559,7 +1568,7 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLabel = Some(newLabel),
           maybePermissions = Some(newPermissions),
-          requestingUser = anythingUser2,
+          requestingUser = anythingAdminUser,
           apiRequestID = randomUUID,
         )
 
@@ -2122,16 +2131,28 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
         } yield assertTrue(standoffTagUUIDsToErase.size == 3, standoffTagIrisToErase.size == 4)
       },
       test("not erase a resource if the user is not a system/project admin") {
-        val eraseRequest = DeleteOrEraseResourceRequestV2(
+        val eraseRequest = EraseResourceRequestV2(
           resourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
-          requestingUser = anythingUser2,
           apiRequestID = randomUUID,
         )
-        resourceResponder(_.eraseResourceV2(eraseRequest)).exit.map(actual =>
+        eraseAs(anythingUser2, anythingProjectIri, eraseRequest).exit.map(actual =>
           assert(actual)(failsWithA[ForbiddenException]),
         )
+      },
+      test("not erase a resource with a grant for another project") {
+        val resourceIri  = ResourceIri.unsafeFrom(resourceIriToErase.get)
+        val eraseRequest = EraseResourceRequestV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
+          apiRequestID = randomUUID,
+        )
+        for {
+          exit   <- eraseAs(rootUser, imagesProjectIri, eraseRequest).exit
+          exists <- ZIO.serviceWithZIO[IriService](_.checkIriExists(resourceIri))
+        } yield assert(exit)(failsWithA[ForbiddenException]) && assertTrue(exists)
       },
       test("not erase a resource if another resource has a link to it") {
         val resourceWithLinkIri = ResourceIri.makeNew(anythingProject.shortcode)
@@ -2162,14 +2183,13 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
           outputResource <- getResource(resourceWithLinkIri.value)
           linkValue       = outputResource.findLinkValues(linkValuePropertyIri).head
           // Try to erase the first resource.
-          eraseRequest = DeleteOrEraseResourceRequestV2(
+          eraseRequest = EraseResourceRequestV2(
                            resourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
                            resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                            maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
-                           requestingUser = anythingAdminUser,
                            apiRequestID = randomUUID,
                          )
-          exit <- resourceResponder(_.eraseResourceV2(eraseRequest)).exit
+          exit <- eraseAs(anythingAdminUser, anythingProjectIri, eraseRequest).exit
           // Delete the link.
           _ <- ZIO.serviceWithZIO[ValuesResponderV2](
                  _.deleteValueV2(
@@ -2188,16 +2208,15 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
       },
       test("erase a resource") {
         // Erase the resource.
-        val eraseRequest = DeleteOrEraseResourceRequestV2(
+        val eraseRequest = EraseResourceRequestV2(
           resourceIri = ResourceIri.unsafeFrom(resourceIriToErase.get),
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
-          requestingUser = anythingAdminUser,
           apiRequestID = randomUUID,
         )
 
         for {
-          _ <- resourceResponder(_.eraseResourceV2(eraseRequest))
+          _ <- eraseAs(anythingAdminUser, anythingProjectIri, eraseRequest)
           // Check that all parts of the resource were erased.
           erasedIrisToCheck =
             (standoffTagIrisToErase.toSet + resourceIriToErase.get + firstValueIriToErase.get + secondValueIriToErase.get)
@@ -2249,15 +2268,14 @@ class ResourcesResponderV2Spec extends E2EZSpec { self =>
                                 )
           deletedResource = getDeletedResponse.resources.head
           // Now, erase the deleted resource. This should work without schema validation errors.
-          eraseRequest = DeleteOrEraseResourceRequestV2(
+          eraseRequest = EraseResourceRequestV2(
                            resourceIri = createdResourceIri,
                            resourceClassIri =
                              "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri, // Same external schema IRI
                            maybeLastModificationDate = deletedResource.lastModificationDate,
-                           requestingUser = anythingAdminUser,
                            apiRequestID = randomUUID,
                          )
-          eraseResponse <- resourceResponder(_.eraseResourceV2(eraseRequest))
+          eraseResponse <- eraseAs(anythingAdminUser, anythingProjectIri, eraseRequest)
           // Verify the resource is completely erased.
           resourceExists <- ZIO.serviceWithZIO[IriService](_.checkIriExists(createdResourceIri))
         } yield assertTrue(

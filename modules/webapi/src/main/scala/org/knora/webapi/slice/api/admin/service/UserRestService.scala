@@ -39,6 +39,7 @@ import org.knora.webapi.slice.api.admin.model.UserDto
 import org.knora.webapi.slice.api.admin.service.UserRestService.UserResponse
 import org.knora.webapi.slice.api.admin.service.UserRestService.UsersResponse
 import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.BaseEndpoints.UserTarget
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.ProjectCandidate
 
@@ -54,7 +55,6 @@ final case class UserRestService(
 ) {
 
   def getAllUsers(requestingUser: User): Task[UsersResponse] = for {
-    _        <- auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser)
     internal <- userService.findAllRegularUsers
                   .filterOrFail(_.nonEmpty)(NotFoundException("No users found"))
                   .map(_.map(filterUserInformation(requestingUser, _, UserInformationType.Restricted)).sorted)
@@ -62,12 +62,11 @@ final case class UserRestService(
     external <- format.toExternal(internal)
   } yield external
 
-  def deleteUser(requestingUser: User)(deleteIri: UserIri): Task[UserResponse] = for {
-    _        <- ensureNotABuiltInUser(deleteIri)
-    _        <- ensureSelfUpdateOrSystemAdmin(deleteIri, requestingUser)
-    user     <- getKnoraUserOrNotFound(deleteIri)
+  def deleteUser(target: UserTarget): Task[UserResponse] = for {
+    _        <- ensureNotABuiltInUser(target.userIri)
+    user     <- getKnoraUserOrNotFound(target.userIri)
     updated  <- knoraUserService.deleteUser(user)
-    external <- asExternalUserResponse(requestingUser, updated)
+    external <- asExternalUserResponse(target.caller, updated)
   } yield external
 
   def getUserByEmail(requestingUser: User)(email: Email): Task[UserResponse] = for {
@@ -85,8 +84,7 @@ final case class UserRestService(
       .flatMap(format.toExternal)
 
   def createUser(requestingUser: User)(userCreateRequest: Requests.UserCreateRequest): Task[UserResponse] = for {
-    _ <- if (userCreateRequest.systemAdmin.value) { auth.ensureSystemAdmin(requestingUser) }
-         else { auth.ensureSystemAdminOrProjectAdminInAnyProject(requestingUser) }
+    _        <- ZIO.when(userCreateRequest.systemAdmin.value)(auth.ensureSystemAdmin(requestingUser))
     internal <- knoraUserService.createNewUser(userCreateRequest)
     external <- asExternalUserResponse(requestingUser, internal)
   } yield external
@@ -118,18 +116,12 @@ final case class UserRestService(
     external <- asExternalUserResponse(requestingUser, internal)
   } yield external
 
-  private def ensureSelfUpdateOrSystemAdmin(userIri: UserIri, requestingUser: User) =
-    ZIO.when(userIri != requestingUser.userIri)(auth.ensureSystemAdmin(requestingUser))
   private def ensureNotABuiltInUser(userIri: UserIri) =
     ZIO.when(userIri.isBuiltInUser)(ZIO.fail(BadRequestException("Changes to built-in users are not allowed.")))
 
-  def updateUser(requestingUser: User)(
-    userIri: UserIri,
-    changeRequest: BasicUserInformationChangeRequest,
-  ): Task[UserResponse] = for {
-    _       <- ensureNotABuiltInUser(userIri)
-    _       <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
-    user    <- getKnoraUserOrNotFound(userIri)
+  def updateUser(target: UserTarget)(changeRequest: BasicUserInformationChangeRequest): Task[UserResponse] = for {
+    _       <- ensureNotABuiltInUser(target.userIri)
+    user    <- getKnoraUserOrNotFound(target.userIri)
     updated <- knoraUserService.updateUser(
                  user,
                  changeRequest.username,
@@ -138,40 +130,32 @@ final case class UserRestService(
                  changeRequest.familyName,
                  changeRequest.lang,
                )
-    response <- asExternalUserResponse(requestingUser, updated)
+    response <- asExternalUserResponse(target.caller, updated)
   } yield response
 
-  def changePassword(requestingUser: User)(
-    userIri: UserIri,
-    changeRequest: PasswordChangeRequest,
-  ): Task[UserResponse] =
+  def changePassword(target: UserTarget)(changeRequest: PasswordChangeRequest): Task[UserResponse] =
     for {
-      _ <- ensureNotABuiltInUser(userIri)
-      _ <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
+      _ <- ensureNotABuiltInUser(target.userIri)
       _ <- ZIO // check if supplied password matches requesting user's password
              .fail(ForbiddenException("The supplied password does not match the requesting user's password."))
              .unless(
                passwordService.matches(
                  changeRequest.requesterPassword,
-                 PasswordHash.unsafeFrom(requestingUser.password.getOrElse("")),
+                 PasswordHash.unsafeFrom(target.caller.password.getOrElse("")),
                ),
              )
-      user     <- getKnoraUserOrNotFound(userIri)
+      user     <- getKnoraUserOrNotFound(target.userIri)
       response <- knoraUserService
                     .changePassword(user, changeRequest.newPassword)
-                    .flatMap(asExternalUserResponse(requestingUser, _))
+                    .flatMap(asExternalUserResponse(target.caller, _))
     } yield response
 
-  def changeStatus(requestingUser: User)(
-    userIri: UserIri,
-    changeRequest: StatusChangeRequest,
-  ): Task[UserResponse] =
+  def changeStatus(target: UserTarget)(changeRequest: StatusChangeRequest): Task[UserResponse] =
     for {
-      _        <- ensureNotABuiltInUser(userIri)
-      _        <- ensureSelfUpdateOrSystemAdmin(userIri, requestingUser)
-      user     <- getKnoraUserOrNotFound(userIri)
+      _        <- ensureNotABuiltInUser(target.userIri)
+      user     <- getKnoraUserOrNotFound(target.userIri)
       updated  <- knoraUserService.updateUserStatus(user, changeRequest.status)
-      response <- asExternalUserResponse(requestingUser, updated)
+      response <- asExternalUserResponse(target.caller, updated)
     } yield response
 
   def changeSystemAdmin(requestingUser: User)(

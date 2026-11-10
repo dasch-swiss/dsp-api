@@ -10,7 +10,7 @@ import sttp.tapir.AttributeKey
 /**
  * The function-level authorization an endpoint declares, carried as the tapir attribute [[Policy.key]] (ADR-0013).
  * Every authenticated caller must be active: authentication refuses inactive users, and the factories for
- * `Authenticated`, `SystemAdmin` and `ProjectAdmin` check it again. `ObjectAccess` admits anonymous callers unless
+ * `Authenticated`, `SystemAdmin`, `SelfOrSystemAdmin`, `ProjectAdminOfAnyProject` and `ProjectAdmin` check it again. `ObjectAccess` admits anonymous callers unless
  * `admitsAnonymous` is false.
  */
 enum Policy {
@@ -29,6 +29,12 @@ enum Policy {
   /** SystemAdmin, ProjectAdmin or member of the project named by `projectFrom`. */
   case ProjectMember(projectFrom: String)
 
+  /** SystemAdmin, or the user named by `userFrom` themselves (e.g. "path userIri"). */
+  case SelfOrSystemAdmin(userFrom: String)
+
+  /** SystemAdmin, or ProjectAdmin of at least one project. */
+  case ProjectAdminOfAnyProject
+
   /**
    * Per-object permissions, checked where the owning domain loads the object; `enforcedIn` names that place. A write
    * sets `admitsAnonymous` to false, so an anonymous caller is refused before the body is decoded.
@@ -44,8 +50,11 @@ enum Policy {
       s"Requires SystemAdmin or ProjectAdmin permissions for the project given by the $projectFrom."
     case ProjectMember(projectFrom) =>
       s"Requires SystemAdmin, ProjectAdmin or ProjectMember permissions for the project given by the $projectFrom."
-    case ObjectAccess(_, true)  => Policy.objectReadRequirement
-    case ObjectAccess(_, false) => Policy.objectWriteRequirement
+    case SelfOrSystemAdmin(userFrom) =>
+      s"Requires SystemAdmin permissions, or that the caller is the user given by the $userFrom."
+    case ProjectAdminOfAnyProject => "Requires SystemAdmin or ProjectAdmin permissions in any project."
+    case ObjectAccess(_, true)    => Policy.objectReadRequirement
+    case ObjectAccess(_, false)   => Policy.objectWriteRequirement
   }
 }
 

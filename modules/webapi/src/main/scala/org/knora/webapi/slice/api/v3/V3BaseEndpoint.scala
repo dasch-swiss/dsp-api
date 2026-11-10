@@ -82,6 +82,10 @@ final case class V3BaseEndpoint(
   ): RequiresMethod[ZPartialServerEndpoint[Any, String, User, Unit, V3ErrorInfo, Unit, Any]] =
     policies.bearerSystemAdminPolicyEndpoint(withAuthErrors(errorOut), handleBearerJwt, forbidden)
 
+  /** Declares [[Policy.Public]]; needs no credentials. */
+  def publicPolicy(errorOut: ErrorOut, reason: String): RequiresMethod[PublicEndpoint[Unit, V3ErrorInfo, Unit, Any]] =
+    policies.publicPolicyEndpoint(errorOut, reason)
+
   /** Declares ObjectAccess for a read; anonymous callers are admitted. */
   def objectAccessPolicy(
     errorOut: ErrorOut,

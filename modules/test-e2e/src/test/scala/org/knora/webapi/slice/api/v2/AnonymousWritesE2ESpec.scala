@@ -23,6 +23,7 @@ class AnonymousWritesE2ESpec extends E2EZSpec {
   private val writes: List[(Method, Uri)] = List(
     Method.POST -> uri"/v2/resources",
     Method.POST -> uri"/v2/resources/delete",
+    Method.PUT  -> uri"/v2/resources",
     Method.PUT  -> uri"/v2/resources/authorship",
     Method.POST -> uri"/v2/values",
     Method.PUT  -> uri"/v2/values",

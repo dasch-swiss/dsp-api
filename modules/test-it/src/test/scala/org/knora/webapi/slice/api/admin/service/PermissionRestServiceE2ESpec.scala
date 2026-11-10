@@ -21,19 +21,41 @@ import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.sharedtestdata.*
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.GroupIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.service.KnoraGroupRepo
+import org.knora.webapi.slice.common.api.TestCandidates
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class PermissionRestServiceE2ESpec extends E2EZSpec {
   private val permissionRestService = ZIO.serviceWithZIO[PermissionRestService]
-  val e2eSpec                       = suite("PermissionResponder")(
+
+  private def createDoap(
+    forGroup: Option[GroupIri] = None,
+    forResourceClass: Option[String] = None,
+    forProperty: Option[String] = None,
+  ) =
+    permissionRestService(
+      _.createDefaultObjectAccessPermission(TestCandidates.of(SharedTestDataADM.rootUser))(
+        CreateDefaultObjectAccessPermissionAPIRequestADM(
+          forProject = imagesProjectIri,
+          forGroup = forGroup,
+          forResourceClass = forResourceClass,
+          forProperty = forProperty,
+          hasPermissions =
+            Set(PermissionADM.from(Permission.ObjectAccess.Modify, KnoraGroupRepo.builtIn.ProjectMember.id.value)),
+        ),
+      ),
+    )
+
+  val e2eSpec = suite("PermissionResponder")(
     suite("Administrative Permission Create Requests")(
       test("return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM") {
         val invalidName    = "Delete"
         val hasPermissions = Set(PermissionADM(name = invalidName, additionalInformation = None, permissionCode = None))
         permissionRestService(
-          _.createAdministrativePermission(SharedTestDataADM.imagesUser01)(
+          _.createAdministrativePermission(TestCandidates.of(SharedTestDataADM.imagesUser01))(
             CreateAdministrativePermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri,
               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id,
@@ -53,7 +75,7 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if the a permissions supplied for AdministrativePermissionCreateRequestADM had invalid name",
       ) {
         permissionRestService(
-          _.createAdministrativePermission(SharedTestDataADM.imagesUser01)(
+          _.createAdministrativePermission(TestCandidates.of(SharedTestDataADM.imagesUser01))(
             CreateAdministrativePermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri,
               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id,
@@ -71,7 +93,7 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'ForbiddenException' if the user requesting AdministrativePermissionCreateRequestADM is not system or project admin",
       ) {
         permissionRestService(
-          _.createAdministrativePermission(SharedTestDataADM.imagesReviewerUser)(
+          _.createAdministrativePermission(TestCandidates.of(SharedTestDataADM.imagesReviewerUser))(
             CreateAdministrativePermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri,
               forGroup = KnoraGroupRepo.builtIn.ProjectMember.id,
@@ -91,10 +113,10 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
     suite("Default Object Access Permission Create Requests")(
       test("return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM") {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(SharedTestDataADM.imagesUser01)(
+          _.createDefaultObjectAccessPermission(TestCandidates.of(SharedTestDataADM.imagesUser01))(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = SharedTestDataADM.imagesProjectIri,
-              forGroup = Some(SharedTestDataADM.thingSearcherGroup.groupIri),
+              forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id),
               hasPermissions = Set.empty[PermissionADM],
             ),
           ),
@@ -213,7 +235,7 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionCreateRequestADM is not system or project Admin",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(SharedTestDataADM.anythingUser2)(
+          _.createDefaultObjectAccessPermission(TestCandidates.of(SharedTestDataADM.anythingUser2))(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = SharedTestDataADM.anythingProjectIri,
               forGroup = Some(SharedTestDataADM.thingSearcherGroup.groupIri),
@@ -233,7 +255,7 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if the both group and resource class are supplied for DefaultObjectAccessPermissionCreateRequestADM",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
+          _.createDefaultObjectAccessPermission(TestCandidates.of(SharedTestDataADM.rootUser))(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
               forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id),
@@ -256,7 +278,7 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if the both group and property are supplied for DefaultObjectAccessPermissionCreateRequestADM",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
+          _.createDefaultObjectAccessPermission(TestCandidates.of(SharedTestDataADM.rootUser))(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
               forGroup = Some(KnoraGroupRepo.builtIn.ProjectMember.id),
@@ -279,7 +301,7 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if propertyIri supplied for DefaultObjectAccessPermissionCreateRequestADM is not valid",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
+          _.createDefaultObjectAccessPermission(TestCandidates.of(SharedTestDataADM.rootUser))(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
               forProperty = Some(SharedTestDataADM.customValueIRI),
@@ -300,7 +322,7 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
         "return 'BadRequest' if neither a group, nor a resource class, nor a property is supplied for DefaultObjectAccessPermissionCreateRequestADM",
       ) {
         permissionRestService(
-          _.createDefaultObjectAccessPermission(SharedTestDataADM.rootUser)(
+          _.createDefaultObjectAccessPermission(TestCandidates.of(SharedTestDataADM.rootUser))(
             CreateDefaultObjectAccessPermissionAPIRequestADM(
               forProject = anythingProjectIri,
               hasPermissions = Set(
@@ -316,6 +338,82 @@ class PermissionRestServiceE2ESpec extends E2EZSpec {
             ),
           ),
         )
+      },
+    ),
+    suite("Create Requests that refer to the project's groups and ontologies")(
+      test("return 'Forbidden' for an administrative permission of an unknown project") {
+        permissionRestService(
+          _.createAdministrativePermission(TestCandidates.of(SharedTestDataADM.rootUser))(
+            CreateAdministrativePermissionAPIRequestADM(
+              forProject = ProjectIri.unsafeFrom("http://rdfh.ch/projects/AAAAAAAAAAAAAAAAAAAAAA"),
+              forGroup = KnoraGroupRepo.builtIn.ProjectMember.id,
+              hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectAdminAll)),
+            ),
+          ),
+        ).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageContaining[ForbiddenException](
+              "Project with id http://rdfh.ch/projects/AAAAAAAAAAAAAAAAAAAAAA not found",
+            ),
+          ),
+        )
+      },
+      test("return 'BadRequest' for an administrative permission for the group of another project") {
+        permissionRestService(
+          _.createAdministrativePermission(TestCandidates.of(SharedTestDataADM.rootUser))(
+            CreateAdministrativePermissionAPIRequestADM(
+              forProject = imagesProjectIri,
+              forGroup = SharedTestDataADM.thingSearcherGroup.groupIri,
+              hasPermissions = Set(PermissionADM.from(Permission.Administrative.ProjectResourceCreateAll)),
+            ),
+          ),
+        ).exit.map(
+          assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("does not belong to project")),
+        )
+      },
+      test("return 'BadRequest' for a default object access permission for the group of another project") {
+        createDoap(forGroup = Some(SharedTestDataADM.thingSearcherGroup.groupIri)).exit.map(
+          assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("does not belong to project")),
+        )
+      },
+      test("return 'BadRequest' for a default object access permission for a resource class of another project") {
+        createDoap(forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageContaining[BadRequestException]("does not belong to an ontology of project"),
+          ),
+        )
+      },
+      test("return 'BadRequest' for a default object access permission for a property of another project") {
+        createDoap(forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost)).exit.map(
+          assert(_)(
+            E2EZSpec.failsWithMessageContaining[BadRequestException]("does not belong to an ontology of project"),
+          ),
+        )
+      },
+      test("return 'BadRequest' for a default object access permission for a class that is not a Knora IRI") {
+        createDoap(forResourceClass = Some("http://www.w3.org/2000/01/rdf-schema#Resource")).exit.map(
+          assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("is not a Knora resource class IRI")),
+        )
+      },
+      test("return 'BadRequest' for a default object access permission for an ontology IRI as class") {
+        createDoap(forResourceClass = Some(IMAGES_ONTOLOGY_IRI_LocalHost)).exit.map(
+          assert(_)(E2EZSpec.failsWithMessageContaining[BadRequestException]("is not a Knora resource class IRI")),
+        )
+      },
+      test("create a default object access permission for a built-in group") {
+        createDoap(forGroup = Some(KnoraGroupRepo.builtIn.ProjectAdmin.id)).exit.map(e => assertTrue(e.isSuccess))
+      },
+      test("create a default object access permission for a class of the project's own ontology") {
+        createDoap(forResourceClass = Some(IMAGES_BILD_RESOURCE_CLASS_LocalHost)).exit.map(e => assertTrue(e.isSuccess))
+      },
+      test("create a default object access permission for a property of a built-in ontology") {
+        createDoap(forProperty = Some("http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue")).exit.map(
+          e => assertTrue(e.isSuccess),
+        )
+      },
+      test("create a default object access permission for a class of a built-in ontology") {
+        createDoap(forResourceClass = Some("http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation")).exit
+          .map(e => assertTrue(e.isSuccess))
       },
     ),
     suite("querying the user's 'PermissionsDataADM' with 'hasPermissionFor'")(

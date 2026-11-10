@@ -24,7 +24,11 @@ object MessageResponse {
 final class StoreEndpoints(baseEndpoints: BaseEndpoints) {
 
   val postStoreResetTriplestoreContent =
-    baseEndpoints.publicEndpoint.post
+    baseEndpoints
+      .publicPolicyEndpoint(
+        "test setup only: answers only when `allowReloadOverHttp` is set, which production never sets",
+      )
+      .post
       .in("admin" / "store" / "ResetTriplestoreContent")
       .in(
         jsonBody[Option[List[RdfDataObject]]]
@@ -33,7 +37,7 @@ final class StoreEndpoints(baseEndpoints: BaseEndpoints) {
       .in(query[Boolean]("prependDefaults").default(true).description("Prepend defaults to the data objects."))
       .out(jsonBody[MessageResponse])
       .description(
-        "Resets the content of the triplestore, only available if configuration `allowReloadOverHttp` is set to `true`.",
+        "Resets the content of the triplestore, only available if configuration `allowReloadOverHttp` is set to `true`. Does not require authentication.",
       )
 }
 

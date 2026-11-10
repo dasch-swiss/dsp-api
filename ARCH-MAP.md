@@ -228,8 +228,9 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `QueryBuilderHelper`, `SalsahGui`, `UuidUtil`, `BadRequestException`, `NotFoundException`,
     `ForbiddenException`
 - **Public interface**: `CommonModule.layer` (provides `IriConverter & StringFormatter & TriplestoreService`);
-    `StringFormatter.live`; `IriConverter`; `BaseEndpoints.{publicEndpoint,securedEndpoint,withUserEndpoint}`;
-    `AuthorizationRestService.ensure*`; `KnoraResponseRenderer`; value-type companions via `WithFrom.from` and
+    `StringFormatter.live`; `IriConverter`; the `BaseEndpoints` policy factories (`*PolicyEndpoint`, ADR-0013;
+    `withUserEndpoint` only for the five count routes waiting on DEV-7718); the `AuthorizationRestService` PDP
+    (`authorize*` minting `ProjectAdminGrant` / `ProjectMemberGrant` from a `ProjectCandidate`); `KnoraResponseRenderer`; value-type companions via `WithFrom.from` and
     `unsafeFrom`; `Repository` / `CrudRepository`; `IriLocker.runWithIriLock`; `IriService`;
     `Vocabulary.{KnoraBase,KnoraAdmin,SalsahGui}`; the `dsp.errors.*` hierarchy; `JsonLDUtil` /
     `RdfFormatUtil`; the Jena `ModelOps` / `ResourceOps` / `StatementOps` / `DatasetOps` extension syntax.
@@ -336,12 +337,12 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     webapi-admin (`KnoraProjectService`, `PasswordService`, `UserService`, `KnoraUserRepo.builtIn`, and the
     domain models `User`, `UserIri`, `Username`, `Email`, `Permission`), webapi-app (`AppConfig`, only for
     `knoraApi.externalKnoraApiHostPort` in the cookie name), build-toolchain.
-- **Used by**: webapi-common (`BaseEndpoints` builds `securedEndpoint` / `withUserEndpoint` from
+- **Used by**: webapi-common (`BaseEndpoints` builds its policy factories from
     `Authenticator`), webapi-api (`AuthenticationRestService`, `AuthenticationEndpointsV2`, `ApiV2Module`,
     `V3BaseEndpoint`, `ApiV3Module`), webapi-app, testkit, test-it, test-e2e.
 - **Boundary rules**:
-    - Authenticated routes obtain the current user through `BaseEndpoints`' `securedEndpoint` /
-        `withUserEndpoint`, never by re-deriving credentials from headers or cookies in a rest service -
+    - Authenticated routes obtain the current user through a `BaseEndpoints` policy factory
+        (ADR-0013), never by re-deriving credentials from headers or cookies in a rest service -
         enforcement: review.
     - A logged-out token is checked against `InvalidTokenCache` before being honored;
         `Authenticator.parseToken` and `authenticate` do this on every call, and a new authentication path
