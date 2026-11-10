@@ -5,10 +5,6 @@ This repo rebase-merges: every commit on the branch lands on main verbatim, and 
 safety net. Curate the branch before merge. A PR lands as ONE commit unless the many-commits box
 below is ticked. Every commit is `type(scope): subject`. Check with `just commit-lint`.
 Conventions: docs/development/commit-conventions.md
-
-GRACE PERIOD (until 2026-11-13): squash merge is still allowed. A PR whose history is not clean,
-or which has several commits without that box ticked, is squash-merged instead.
-From 2026-11-13 on, rebase merge only.
 -->
 
 ## Motivation
