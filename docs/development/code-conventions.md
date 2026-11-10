@@ -1,21 +1,22 @@
 # dsp-api Code Conventions
 
-Project-specific conventions for the dsp-api repository. These supplement the generic `scala-zio-patterns` skill — where they differ, these conventions take precedence.
+Project-specific code conventions for the dsp-api repository. The short reference card for agents is the root
+`CONVENTIONS.md`; keep the two in sync.
 
 ## Stack
 
 - Scala 3, ZIO 2, Tapir, zio-json, Bazel
-- Package root: `org.knora.webapi.slice`
+- Package root: `org.knora.webapi`; new code goes under `org.knora.webapi.slice`
 
 ## Service Pattern
 
-Services use `final case class` with private constructor params and `ZLayer.derive`:
+Services use `final class` with plain constructor params and `ZLayer.derive`:
 
 ```scala
 // ✓ Correct
-final case class GroupService(
-  private val knoraGroupService: KnoraGroupService,
-  private val projectService: ProjectService,
+final class GroupService(
+  knoraGroupService: KnoraGroupService,
+  projectService: ProjectService,
 ) {
   def findById(id: GroupIri): Task[Option[Group]] =
     knoraGroupService.findById(id).flatMap(ZIO.foreach(_)(toGroup))
@@ -39,11 +40,15 @@ class GroupServiceLive(...) extends GroupService { ... }
 
 **Rules:**
 
-- Use `final case class` for service implementations
-- Constructor parameters are `private val`
+- Use `final class` for service implementations, not `case class`: equality, `copy` and pattern matching mean
+  nothing for a service
+- Constructor parameters are plain (no `val`): they stay private, and the compiler's unused checks can see them
+- Existing `final case class` services stay as they are; no churn just to convert them
 - Public methods return ZIO effects (`Task[A]` or `IO[Error, A]`)
 - Companion object: `val layer = ZLayer.derive[ServiceName]`
-- No trait abstraction — concrete `final case class` directly
+- No trait abstraction — concrete `final class` directly
+- Exception: a trait + `*Live` split is allowed where a second implementation exists, i.e. repos and other seams with
+  an in-memory test double, and cross-context ports (ADR-0011). See `CONVENTIONS.md` § Services.
 
 ## Value Objects — StringValue Pattern
 
@@ -137,7 +142,7 @@ final class GroupsServerEndpoints(
 }
 ```
 
-- `.zServerLogic()` for public endpoints (ignore auth param with `_`)
+- `.zServerLogic()` for public endpoints (a handler that needs no input takes `_`)
 - `.serverLogic()` for secured endpoints (receives the security output: a `User`, or a `ProjectCandidate` for
   `ProjectAdmin`)
 
@@ -176,13 +181,19 @@ Every new endpoint declares its function-level authorization with a policy-decla
 | Factory | Policy | Security output |
 | --- | --- | --- |
 | `publicPolicyEndpoint(reason)` | `Public`: no credentials read | none |
+| `publicPolicyEndpointWithUser(reason)` | `Public`, but the handler gets the caller (anonymous without credentials; invalid ones are a 401) | `User` |
 | `authenticatedPolicyEndpoint(reason)` | `Authenticated`: any active, non-anonymous user | `User` |
 | `systemAdminPolicyEndpoint` | `SystemAdmin` | `User` |
 | `projectAdminPolicyEndpoint(projectFrom)` | `ProjectAdmin` of the project named by `projectFrom` | `ProjectCandidate` |
 | `projectMemberPolicyEndpoint(projectFrom)` | `ProjectMember` of the project named by `projectFrom` | `ProjectCandidate` |
 | `selfOrSystemAdminPolicyEndpoint(userFrom)` | `SelfOrSystemAdmin`: the user named in the path, or a system admin | `User` and the target |
 | `projectAdminOfAnyProjectPolicyEndpoint` | `ProjectAdminOfAnyProject`: a system admin or admin of at least one project | `User` |
-| `objectAccessPolicyEndpoint(enforcedIn)` | `ObjectAccess`: per-object permissions, anonymous admitted | `User` |
+| `objectAccessPolicyEndpoint(enforcedIn)` | `ObjectAccess` for a read: per-object permissions, anonymous admitted | `User` |
+| `authenticatedObjectAccessPolicyEndpoint(enforcedIn)` | `ObjectAccess` for a route that changes data: anonymous and inactive users refused | `User` |
+
+The v3 API, which has its own error type and takes only a bearer JWT, uses the bearer counterparts
+`bearerSystemAdminPolicyEndpoint`, `bearerProjectAdminPolicyEndpoint` and `bearerObjectAccessPolicyEndpoint` through
+`V3BaseEndpoint` (`systemAdminPolicy`, `projectAdminPolicy`, `objectAccessPolicy`; `publicPolicy` for `Public`).
 
 - `withUserEndpoint` and `bearerSystemAdminEndpoint` declare no policy. Do not use them for new
   endpoints; `withUserEndpoint` remains only for the five count endpoints that wait on DEV-7718.
@@ -331,7 +342,7 @@ rendered SPARQL text.
 | Element | Convention | Example |
 | ------- | ---------- | ------- |
 | Services | `*Service` | `GroupService` |
-| Implementations | `*Live` suffix | `AuthServiceLive` |
+| Trait implementations | `*Live` suffix, only where a trait is allowed (see Service Pattern) | `KnoraGroupRepoLive` |
 | Rest services | `*RestService` | `GroupRestService` |
 | Endpoints | `*Endpoints` | `GroupsEndpoints` |
 | Handlers | `*ServerEndpoints` | `GroupsServerEndpoints` |
@@ -367,17 +378,8 @@ file layering, `sh:description` on complex shapes, `sh:not` for single-case proh
 
 ## Import Organization
 
-```scala
-package org.knora.webapi.slice.admin.domain.service
-
-import zio.*                                                  // 1. ZIO / stdlib
-import sttp.tapir.*                                           // 2. Third-party
-
-import org.knora.webapi.slice.admin.domain.model.Group        // 3. Internal (alphabetical)
-import org.knora.webapi.slice.admin.domain.model.GroupIri
-```
-
-Order: stdlib/ZIO → third-party → internal `org.knora` (alphabetical). Single blank line between groups.
+scalafmt orders and groups imports (`just fmt`); do not order them by hand. Unused imports fail the compiler
+(`-Wunused:all -Werror`).
 
 ## Writing SPARQL queries
 

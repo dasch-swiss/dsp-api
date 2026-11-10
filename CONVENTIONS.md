@@ -4,7 +4,7 @@ Agent reference card for the **work phase**. Pair with `REVIEW.md` (review phase
 
 ## Stack
 
-Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triplestore: Apache Jena Fuseki. Media server: Sipi.
+Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi` (new code under `org.knora.webapi.slice`). Triplestore: Apache Jena Fuseki. Media server: Sipi.
 
 ## Compile & feedback loop
 
@@ -22,7 +22,7 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
 
 ### Services
 
-- `final class ServiceName(val …)` with `val layer = ZLayer.derive[ServiceName]` in the companion. No trait + `*Live` split for new domain services.
+- `final class ServiceName(dep: Dep, …)` (plain params, no `val`, not `case class`) with `val layer = ZLayer.derive[ServiceName]` in the companion. No trait + `*Live` split for new domain services.
 - **Carve-out**: trait + `*Live` is allowed for repos and other seams that need in-memory test doubles (`KnoraGroupRepo` / `KnoraGroupRepoLive`, `OntologyRepo`, `JwtService`, `Authenticator`). New repo traits ship an in-memory companion at `modules/webapi/src/test/.../service/<Name>InMemory.scala`. It is also allowed for cross-context **ports** (`docs/adr/0011-cross-context-access-ports-and-adapters.md`): the consumer declares the trait in its `ports` package, the provider implements `<Port>Live` next to its data, `LayersLive` wires it, and a `<Port>InMemory` double lives in the consumer's tests.
 
 ### API layer — three-tier split (mandatory)
@@ -31,9 +31,10 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi`. Triple
   a method-less endpoint matches every method. The endpoint bases return `RequiresMethod`, so the method comes first;
   `EndpointsE2ESpec` catches an endpoint built from tapir's raw `endpoint`, which bypasses the bases.
 - Every new endpoint is built with a policy-declaring factory in `BaseEndpoints` (`publicPolicyEndpoint`,
-  `authenticatedPolicyEndpoint`, `systemAdminPolicyEndpoint`, `projectAdminPolicyEndpoint`,
-  `projectMemberPolicyEndpoint`, `selfOrSystemAdminPolicyEndpoint`, `projectAdminOfAnyProjectPolicyEndpoint`,
-  `objectAccessPolicyEndpoint`; ADR-0013), never with `publicEndpoint`, `withUserEndpoint` or
+  `publicPolicyEndpointWithUser`, `authenticatedPolicyEndpoint`, `systemAdminPolicyEndpoint`,
+  `projectAdminPolicyEndpoint`, `projectMemberPolicyEndpoint`, `selfOrSystemAdminPolicyEndpoint`,
+  `projectAdminOfAnyProjectPolicyEndpoint`, `objectAccessPolicyEndpoint`, `authenticatedObjectAccessPolicyEndpoint`;
+  in v3 the `V3BaseEndpoint` policies over the `bearer*PolicyEndpoint` factories; ADR-0013), never with `publicEndpoint`, `withUserEndpoint` or
   `bearerSystemAdminEndpoint`, and its description contains the policy's `requirement` sentence. The e2e test
   `EndpointPolicyE2ESpec` (CI, not `just test-unit`) fails for an endpoint without a policy unless it is listed in
   `modules/test-e2e/src/test/resources/endpoints-without-policy.txt`; that baseline only shrinks, and a new endpoint
@@ -108,9 +109,7 @@ When adding or changing tracing/telemetry (spans, span attributes, metrics), rea
 ### Imports & formatting
 
 - No fully-qualified class names in code bodies — import at the top of the file.
-- Import order is handled automatically by scalafmt (`.scalafmt.conf` `rewrite.imports`); don't hand-order
-  imports. Groups: java/scala, then dsp/org.knora, then everything else (third-party last — a scalafmt
-  behavior; scalafix, which put third-party first, was removed). Unused imports fail the compiler
+- scalafmt orders and groups imports (`just fmt`); don't hand-order them. Unused imports fail the compiler
   (`-Wunused:all -Werror`).
 - Format with `just fmt`; CI runs `just check` (both scalafmt via the Bazel rules_scala toolchain).
 - Every source file carries the Apache-2.0 + SPDX header (checked by `//tools/license:spdx_header_check`,
