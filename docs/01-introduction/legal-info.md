@@ -76,9 +76,11 @@ Notable **CC BY 4.0** (Attribution 4.0 International) and **CC BY-SA 4.0** (Attr
     - **AI-Generated Content - Not Protected by Copyright**
         - Id: `http://rdfh.ch/licenses/ai-generated`
         - URI: [http://rdfh.ch/licenses/ai-generated](http://rdfh.ch/licenses/ai-generated)
-    - **Unknown License - Ask Copyright Holder for Permission**
+    - **Copyright Undetermined: Ask Before Reuse**
         - Id: `http://rdfh.ch/licenses/unknown`
         - URI: [http://rdfh.ch/licenses/unknown](http://rdfh.ch/licenses/unknown)
+        - Means the rights status was checked and could not be established.
+          It is distinct from the Placeholder License below.
     - **Public Domain - Not Protected by Copyright**
         - Id: `http://rdfh.ch/licenses/public-domain`
         - URI: [http://rdfh.ch/licenses/public-domain](http://rdfh.ch/licenses/public-domain)
