@@ -63,7 +63,7 @@ belongs here even when it touches another repo.
 - Run a single test target: `bazel test //modules/webapi:test` (filter with `--test_filter=*TestClassName*`)
 - Run one module's tests: `bazel test //modules/webapi:test`
 - Integration tests use `latest` Sipi image by default. To use exact git version locally, set `SIPI_USE_EXACT_VERSION=true` or build with `just docker-build-sipi-image`.
-- `just test-unit` - Run all pure-JVM unit tests (webapi, ingest, bagit, jwt, shacl-validator)
+- `just test-unit` - Run all pure-JVM unit tests (webapi, ingest, bagit, jwt, shacl-validator, sparql-builder)
 - `just test-it` - Run integration tests (requires Docker)
 - `just test-e2e` - Run end-to-end HTTP API tests (requires Docker)
 
