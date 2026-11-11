@@ -235,12 +235,8 @@ final class ValuesResponderV2(
       _ <- submittedInternalValueContent match {
              case textValueContent: TextValueContentV2 =>
                for {
-                 targets <- ZIO
-                              .foreach(textValueContent.standoffLinkTagTargetResourceIris)(iri =>
-                                ZIO.fromEither(ResourceIri.from(iri)),
-                              )
-                              .mapError(BadRequestException.apply)
-                 _ <- checkResourceIris(targets, requestingUser)
+                 targets <- StandoffLinkTargets.resourceIris(textValueContent.standoffLinkTagTargetResourceIris)
+                 _       <- checkResourceIris(targets, requestingUser)
                } yield ()
 
              case _ => ZIO.unit
@@ -427,20 +423,19 @@ final class ValuesResponderV2(
         value match {
           case textValueContent: TextValueContentV2 =>
             // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-            ZIO.foreach(textValueContent.standoffLinkTagTargetResourceIris.toVector) { iri =>
-              ZIO
-                .fromEither(ResourceIri.from(iri))
-                .mapError(BadRequestException.apply)
-                .flatMap(targetResourceIri =>
+            StandoffLinkTargets
+              .resourceIris(textValueContent.standoffLinkTagTargetResourceIris)
+              .flatMap(targets =>
+                ZIO.foreach(targets.toVector) { targetResourceIri =>
                   incrementLinkValue(
                     sourceResourceInfo = resourceInfo,
                     linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                     targetResourceIri = targetResourceIri,
                     valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
                     valuePermissions = standoffLinkValuePermissions,
-                  ),
-                )
-            }
+                  )
+                },
+              )
 
           case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
         }
@@ -671,12 +666,8 @@ final class ValuesResponderV2(
                // This is a text value. Check that the resources pointed to by any standoff link tags exist
                // and that the user has permission to see them.
                for {
-                 targets <- ZIO
-                              .foreach(textValueContent.standoffLinkTagTargetResourceIris)(iri =>
-                                ZIO.fromEither(ResourceIri.from(iri)),
-                              )
-                              .mapError(BadRequestException.apply)
-                 _ <- checkResourceIris(targets, requestingUser)
+                 targets <- StandoffLinkTargets.resourceIris(textValueContent.standoffLinkTagTargetResourceIris)
+                 _       <- checkResourceIris(targets, requestingUser)
                } yield ()
 
              case _: LinkValueContentV2 =>
@@ -892,14 +883,19 @@ final class ValuesResponderV2(
               ) =>
             // Identify the resource references that have been added or removed in the new version of
             // the value.
-            val addedResourceRefs =
-              newTextValue.standoffLinkTagTargetResourceIris -- currentTextValue.standoffLinkTagTargetResourceIris
-            val removedResourceRefs =
-              currentTextValue.standoffLinkTagTargetResourceIris -- newTextValue.standoffLinkTagTargetResourceIris
+            val changedResourceRefs: IO[AssertionException, (Set[IRI], Set[IRI])] = ZIO.fromEither(
+              for {
+                newRefs     <- newTextValue.standoffLinkTagTargetResourceIris
+                currentRefs <- StandoffLinkTargets.withValueIri(
+                                 currentValue.valueIri.value,
+                                 currentTextValue.standoffLinkTagTargetResourceIris,
+                               )
+              } yield (newRefs -- currentRefs, currentRefs -- newRefs),
+            )
 
             // Construct a SparqlTemplateLinkUpdate for each reference that was added.
             val standoffLinkUpdatesForAddedResourceRefsFuture: Task[Seq[SparqlTemplateLinkUpdate]] =
-              ZIO.foreach(addedResourceRefs.toVector) { iri =>
+              changedResourceRefs.map { case (added, _) => added.toVector }.flatMap(ZIO.foreach(_) { iri =>
                 for {
                   targetResourceIri <- ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply)
                   update            <- incrementLinkValue(
@@ -910,11 +906,11 @@ final class ValuesResponderV2(
                               valuePermissions = standoffLinkValuePermissions,
                             )
                 } yield update
-              }
+              })
 
             // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
             val standoffLinkUpdatesForRemovedResourceRefFuture: Task[Seq[SparqlTemplateLinkUpdate]] =
-              ZIO.foreach(removedResourceRefs.toVector) { iri =>
+              changedResourceRefs.map { case (_, removed) => removed.toVector }.flatMap(ZIO.foreach(_) { iri =>
                 for {
                   removedTargetResource <- ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply)
                   update                <- decrementLinkValue(
@@ -925,7 +921,7 @@ final class ValuesResponderV2(
                               valuePermissions = standoffLinkValuePermissions,
                             )
                 } yield update
-              }
+              })
 
             for {
               standoffLinkUpdatesForAddedResourceRefs <-
@@ -1113,14 +1109,23 @@ final class ValuesResponderV2(
         }
       """)
       historyHasLinks <- triplestoreService.query(Select(query)).map(_.results.bindings.nonEmpty)
-      result          <- ZIO
+      // The history is checked first: a value served from its stored XML with link history answers 400, not 500.
+      valueHasLinks <- (historyHasLinks, value) match {
+                         case (true, _)                  => ZIO.succeed(true)
+                         case (_, text: ReadTextValueV2) =>
+                           ZIO
+                             .fromEither(
+                               StandoffLinkTargets.withValueIri(
+                                 value.valueIri.value,
+                                 text.valueContent.standoffLinkTagTargetResourceIris,
+                               ),
+                             )
+                             .map(_.nonEmpty)
+                         case _ => ZIO.succeed(false)
+                       }
+      result <- ZIO
                   .fail(BadRequestException("Erasing standoff text values with links is not supported"))
-                  .when {
-                    (historyHasLinks, value) match
-                      case (hhL, _) if hhL            => true
-                      case (_, text: ReadTextValueV2) => text.valueContent.standoffLinkTagTargetResourceIris.nonEmpty
-                      case _                          => false
-                  }
+                  .when(valueHasLinks)
     } yield result
 
   /**
@@ -1414,18 +1419,21 @@ final class ValuesResponderV2(
     // links in standoff markup.
     val linkUpdatesTask: Task[Seq[SparqlTemplateLinkUpdate]] = currentValue.valueContent match {
       case textValue: TextValueContentV2 =>
-        ZIO.foreach(textValue.standoffLinkTagTargetResourceIris.toVector) { iri =>
-          for {
-            removedTargetResource <- ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply)
-            update                <- decrementLinkValue(
-                        sourceResourceInfo = resourceInfo,
-                        linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                        targetResourceIri = removedTargetResource,
-                        valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
-                        valuePermissions = standoffLinkValuePermissions,
-                      )
-          } yield update
-        }
+        StandoffLinkTargets
+          .resourceIris(
+            StandoffLinkTargets.withValueIri(currentValue.valueIri.value, textValue.standoffLinkTagTargetResourceIris),
+          )
+          .flatMap(removedTargets =>
+            ZIO.foreach(removedTargets.toVector) { removedTargetResource =>
+              decrementLinkValue(
+                sourceResourceInfo = resourceInfo,
+                linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                targetResourceIri = removedTargetResource,
+                valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
+                valuePermissions = standoffLinkValuePermissions,
+              )
+            },
+          )
 
       case _ => ZIO.succeed(Seq.empty)
     }

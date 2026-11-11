@@ -273,6 +273,7 @@ final case class Features(
   allowImportMigrationBagit: Boolean,
   allowPlaceholder: Boolean,
   allowProjectDataImport: Boolean,
+  serveStoredXml: Boolean,
 )
 
 object AppConfig {
@@ -400,6 +401,7 @@ object AppConfig {
          |* ALLOW_IMPORT_MIGRATION_BAGIT : ${c.features.allowImportMigrationBagit}
          |* ALLOW_PLACEHOLDER: ${c.features.allowPlaceholder}
          |* ALLOW_PROJECT_DATA_IMPORT: ${c.features.allowProjectDataImport}
+         |* SERVE_STORED_XML: ${c.features.serveStoredXml}
          |""".stripMargin,
     )
 

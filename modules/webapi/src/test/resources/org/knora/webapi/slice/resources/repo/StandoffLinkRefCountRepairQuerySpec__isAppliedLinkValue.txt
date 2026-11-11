@@ -1,0 +1,2 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+ASK { GRAPH <http://www.knora.org/data/0001/anything> { <http://rdfh.ch/0001/source/values/new> a knora-base:LinkValue . } }

@@ -48,11 +48,14 @@ import org.knora.webapi.slice.ontology.domain.service.FairClassesLive
 import org.knora.webapi.slice.resources.ResourcesModule
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
+import org.knora.webapi.slice.resources.repo.service.StandoffLinkRefCountRepo
+import org.knora.webapi.slice.resources.repo.service.StandoffLinkRefCountRepoLive
 import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepo
 import org.knora.webapi.slice.resources.repo.service.ValueHasXmlBackfillRepoLive
 import org.knora.webapi.slice.resources.service.FairResourcesLive
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ReadResourcesServiceLive
+import org.knora.webapi.slice.resources.service.StandoffLinkRefCountService
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
 import org.knora.webapi.slice.resources.service.ValueHasXmlRenderer
 import org.knora.webapi.slice.resources.service.ValueHasXmlRendererLive
@@ -104,6 +107,8 @@ object LayersLive { self =>
     SearchResponderV2Module.Provided &
     SecurityModule.Provided &
     SipiService &
+    StandoffLinkRefCountRepo &
+    StandoffLinkRefCountService &
     StandoffMappingService &
     StandoffResponderV2 &
     StandoffTagUtilV2 &
@@ -172,6 +177,8 @@ object LayersLive { self =>
       SearchResponderV2Module.layer,
       SecurityModule.layer,
       sipiServiceLayer,
+      StandoffLinkRefCountRepoLive.layer,
+      StandoffLinkRefCountService.layer,
       StandoffMappingServiceLive.layer,
       StandoffResponderV2.layer,
       StandoffTagUtilV2Live.layer,

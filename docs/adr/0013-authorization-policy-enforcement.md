@@ -41,7 +41,7 @@ this class were fixed together in 2026-10, six of them ticketed:
   exempt system administrators (DEV-7722).
 
 `SystemUser` passes role checks in four independent places, so reading "as SystemUser" silently bypasses object
-permissions. Ten main-source files use it outside comments. No test checks authorization across endpoints: the e2e
+permissions. Eleven main-source files use it outside comments. No test checks authorization across endpoints: the e2e
 suite enumerates every server endpoint but asserts only that it has an HTTP method.
 
 The domain modularization reasoning decided that authorization is deliberately distributed: a pure
@@ -119,7 +119,7 @@ JWT **Scope**, and a grant is a proof of one authorization decision, not an **Ad
    including `isSystemAdminOrUser` and therefore `authorizeProjectAdminById`. It cannot arrive over HTTP, because
    authentication rejects every built-in user, so the risk is in-process code that reads or writes as
    `SystemUser`. The legitimate pattern is prefetch-then-check: load as `SystemUser`, then check the caller's
-   permission on what was loaded before anything reaches the response. The ten main-source files that use
+   permission on what was loaded before anything reaches the response. The eleven main-source files that use
    `SystemUser` outside comments are allow-listed, each with a reason. The lint stops new files, not existing uses or
    new uses inside a listed file; a file added to the list is a reviewed decision.
 

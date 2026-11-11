@@ -1,0 +1,59 @@
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?source ?target ?linkValue ?storedCount ?expectedCount ?directLink
+WHERE {
+  GRAPH <http://www.knora.org/data/0001/anything> {
+    # Candidate pairs: every pair with a current link value, a direct link or a link tag.
+    {
+      SELECT DISTINCT ?source ?target
+      WHERE {
+        {
+          ?source knora-base:hasStandoffLinkToValue ?lv .
+          ?lv knora-base:isDeleted false ;
+              rdf:object ?target .
+        } UNION {
+          ?source knora-base:hasStandoffLinkTo ?target .
+        } UNION {
+          ?source ?property ?tv .
+          FILTER(?property != knora-base:previousValue)
+          ?tv a knora-base:TextValue ;
+              knora-base:isDeleted false ;
+              knora-base:valueHasStandoff/knora-base:standoffTagHasLink ?target .
+        }
+      }
+    }
+
+    # The current link value of the pair, if any. Superseded versions are not attached to the source.
+    OPTIONAL {
+      ?source knora-base:hasStandoffLinkToValue ?linkValue .
+      ?linkValue knora-base:isDeleted false ;
+                 rdf:object ?target ;
+                 knora-base:valueHasRefCount ?storedCount .
+    }
+
+    # The expected count: current, not deleted text values of the source linking to the target, once each.
+    OPTIONAL {
+      SELECT ?source ?target (COUNT(DISTINCT ?tv) AS ?counted)
+      WHERE {
+        ?source ?property ?tv .
+        FILTER(?property != knora-base:previousValue)
+        ?tv a knora-base:TextValue ;
+            knora-base:isDeleted false ;
+            knora-base:valueHasStandoff/knora-base:standoffTagHasLink ?target .
+      }
+      GROUP BY ?source ?target
+    }
+    BIND(COALESCE(?counted, 0) AS ?expectedCount)
+    BIND(EXISTS { ?source knora-base:hasStandoffLinkTo ?target } AS ?directLink)
+
+    FILTER(
+      # Rule 1: a current link value has a stored count other than the expected count.
+      (BOUND(?linkValue) && ?storedCount != ?expectedCount)
+      # Rule 2: the direct link is present exactly when the expected count is above zero.
+      || ?directLink != (?expectedCount > 0)
+      # Rule 3: the expected count is above zero but no current link value exists.
+      || (?expectedCount > 0 && !BOUND(?linkValue))
+    )
+  }
+}

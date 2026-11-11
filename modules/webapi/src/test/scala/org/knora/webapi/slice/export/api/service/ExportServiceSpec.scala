@@ -30,6 +30,7 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.GoldenTest
 import org.knora.webapi.Rendering
+import org.knora.webapi.StandoffSelection
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.SmartIri
@@ -640,7 +641,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
             targetSchema: ApiV2Schema,
             requestingUser: User,
             withDeleted: Boolean = true,
-            queryStandoff: Boolean = false,
+            standoff: StandoffSelection = StandoffSelection.NoStandoff,
             skipRetrievalChecks: Boolean = false,
             standoffTagFilter: Option[SmartIri] = None,
           ): Task[ReadResourcesSequenceV2] =
@@ -653,7 +654,7 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
             targetSchema: ApiV2Schema,
             requestingUser: User,
             withDeleted: Boolean = true,
-            queryStandoff: Boolean = false,
+            standoff: StandoffSelection = StandoffSelection.NoStandoff,
             skipRetrievalChecks: Boolean = false,
             standoffTagFilter: Option[SmartIri] = None,
           ): Task[ReadResourcesSequenceV2] = null

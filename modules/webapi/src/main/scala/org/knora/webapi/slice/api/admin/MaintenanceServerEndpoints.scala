@@ -16,7 +16,9 @@ final class MaintenanceServerEndpoints(
   restService: MaintenanceRestService,
 ) {
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
-    endpoints.postMaintenance.serverLogic(_ => restService.executeMaintenanceAction.tupled),
+    endpoints.postMaintenance.serverLogic(user =>
+      (action, params) => restService.executeMaintenanceAction(user)(action, params),
+    ),
     endpoints.postReplaceUserIri.serverLogic(restService.replaceUserIri),
     endpoints.postReplaceUserIriInProject.serverLogic(restService.replaceUserIriInProject),
   )

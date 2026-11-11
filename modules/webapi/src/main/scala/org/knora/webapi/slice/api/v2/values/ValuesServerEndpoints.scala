@@ -12,6 +12,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.api.v2.StoredXmlServing
 import org.knora.webapi.slice.api.v2.ValueUuid
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -38,7 +39,7 @@ object ValuesServerEndpoints {
 
   type Provided = ValuesServerEndpoints
 
-  val layer: URLayer[Dependencies, Provided] = ValuesEndpoints.layer >+>
+  val layer: URLayer[Dependencies & StoredXmlServing, Provided] = ValuesEndpoints.layer >+>
     ValuesRestService.layer >+>
     ZLayer.derive[ValuesServerEndpoints]
 }

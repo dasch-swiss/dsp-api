@@ -718,6 +718,10 @@ final class SearchResponderV2Live(
     requestingUser: User,
   ): Task[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
+    // The same selection drives the main query and the construction of the response.
+    val standoffSelection: StandoffSelection =
+      StandoffSelection.from(targetSchema = schemaAndOptions.schema, schemaOptions = schemaAndOptions.rendering)
+
     for {
       searchSparql <- SearchFulltextQuery.build(
                         searchTerms = LuceneQueryString(searchValue),
@@ -776,8 +780,7 @@ final class SearchResponderV2Live(
           val mainQuery = FullTextMainQueryGenerator.createMainQuery(
             resourceIris = resourceIris.toSet,
             valueObjectIris = allValueObjectIris,
-            targetSchema = schemaAndOptions.schema,
-            schemaOptions = schemaAndOptions.rendering,
+            standoffSelection = standoffSelection,
           )
 
           for {
@@ -791,16 +794,9 @@ final class SearchResponderV2Live(
           ZIO.attempt(MainResourcesAndValueRdfData(resources = Map.empty))
         }
 
-      // Find out whether to query standoff along with text values. This boolean value will be passed to
-      // ConstructResponseUtilV2.makeTextValueContentV2.
-      queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
-                                 targetSchema = schemaAndOptions.schema,
-                                 schemaOptions = schemaAndOptions.rendering,
-                               )
-
       // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
-        if (queryStandoff) {
+        if (standoffSelection.loadsStandoff) {
           constructResponseUtilV2.mappingsFromQueryResults(mainResourcesAndValueRdfData.resources)
         } else {
           ZIO.succeed(Map.empty[StandoffMappingIri, MappingAndXSLTransformation])
@@ -812,7 +808,7 @@ final class SearchResponderV2Live(
           orderByResourceIri = resourceIris,
           pageSizeBeforeFiltering = resourceIris.size,
           mappings = mappingsAsMap,
-          queryStandoff = queryStandoff,
+          standoffSelection = standoffSelection,
           calculateMayHaveMoreResults = true,
           versionDate = None,
           targetSchema = schemaAndOptions.schema,
@@ -913,6 +909,9 @@ final class SearchResponderV2Live(
     user: User,
     limitToProject: Option[ProjectIri] = None,
   ): Task[ReadResourcesSequenceV2] = {
+    // The same selection drives the main query and the construction of the response.
+    val standoffSelection: StandoffSelection =
+      StandoffSelection.from(targetSchema = schemaAndOptions.schema, schemaOptions = schemaAndOptions.rendering)
 
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
@@ -1054,8 +1053,7 @@ final class SearchResponderV2Live(
             mainResourceIris = mainResourceIris.map(iri => IriRef(iri.toSmartIri)).toSet,
             dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
             valueObjectIris = allValueObjectIris,
-            targetSchema = schemaAndOptions.schema,
-            schemaOptions = schemaAndOptions.rendering,
+            standoffSelection = standoffSelection,
           )
 
           for {
@@ -1096,16 +1094,9 @@ final class SearchResponderV2Live(
           ZIO.attempt(MainResourcesAndValueRdfData(resources = Map.empty))
         }
 
-      // Find out whether to query standoff along with text values. This boolean value will be passed to
-      // ConstructResponseUtilV2.makeTextValueContentV2.
-      queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
-                                 targetSchema = schemaAndOptions.schema,
-                                 schemaOptions = schemaAndOptions.rendering,
-                               )
-
       // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap <-
-        if (queryStandoff) {
+        if (standoffSelection.loadsStandoff) {
           constructResponseUtilV2.mappingsFromQueryResults(mainQueryResults.resources)
         } else {
           ZIO.succeed(Map.empty[StandoffMappingIri, MappingAndXSLTransformation])
@@ -1117,7 +1108,7 @@ final class SearchResponderV2Live(
           orderByResourceIri = mainResourceIris,
           pageSizeBeforeFiltering = pageSizeBeforeFiltering,
           mappings = mappingsAsMap,
-          queryStandoff = queryStandoff,
+          standoffSelection = standoffSelection,
           calculateMayHaveMoreResults = true,
           versionDate = None,
           targetSchema = schemaAndOptions.schema,
@@ -1238,12 +1229,11 @@ final class SearchResponderV2Live(
       sparqlSelectResponse      <- triplestore.query(prequery)
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.getColOrThrow("resource")
 
-      // Find out whether to query standoff along with text values. This boolean value will be passed to
-      // ConstructResponseUtilV2.makeTextValueContentV2.
-      queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(
-                                 targetSchema = ApiV2Complex,
-                                 schemaOptions = schemaAndOptions.rendering,
-                               )
+      // Find out whether to query standoff along with text values.
+      standoffSelection: StandoffSelection = StandoffSelection.from(
+                                               targetSchema = ApiV2Complex,
+                                               schemaOptions = schemaAndOptions.rendering,
+                                             )
 
       // Are there any matching resources?
       apiResponse <-
@@ -1251,7 +1241,7 @@ final class SearchResponderV2Live(
           // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
           // at most one page of standoff per text value.
           val resourceRequestSparql =
-            SearchResultResourcesQuery.build(mainResourceIris, queryStandoff)
+            SearchResultResourcesQuery.build(mainResourceIris, standoffSelection)
 
           for {
             resourceRequestResponse <- triplestore.query(resourceRequestSparql).flatMap(_.asExtended)
@@ -1264,7 +1254,7 @@ final class SearchResponderV2Live(
 
             // If we're querying standoff, get XML-to standoff mappings.
             mappings <-
-              if (queryStandoff) {
+              if (standoffSelection.loadsStandoff) {
                 constructResponseUtilV2.mappingsFromQueryResults(mainResourcesAndValueRdfData.resources)
               } else {
                 ZIO.succeed(Map.empty[StandoffMappingIri, MappingAndXSLTransformation])
@@ -1276,7 +1266,7 @@ final class SearchResponderV2Live(
                                        orderByResourceIri = mainResourceIris,
                                        pageSizeBeforeFiltering = mainResourceIris.size,
                                        mappings = mappings,
-                                       queryStandoff = queryStandoff,
+                                       standoffSelection = standoffSelection,
                                        versionDate = None,
                                        calculateMayHaveMoreResults = true,
                                        targetSchema = schemaAndOptions.schema,
@@ -1446,7 +1436,7 @@ final class SearchResponderV2Live(
                        mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
                        orderByResourceIri = mainResourceIris.toSeq.sorted,
                        pageSizeBeforeFiltering = mainResourceIris.size,
-                       queryStandoff = false,
+                       standoffSelection = StandoffSelection.NoStandoff,
                        versionDate = None,
                        calculateMayHaveMoreResults = true,
                        targetSchema = targetSchema,

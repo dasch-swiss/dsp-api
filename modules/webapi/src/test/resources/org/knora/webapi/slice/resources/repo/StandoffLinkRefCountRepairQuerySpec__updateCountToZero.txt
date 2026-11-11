@@ -1,0 +1,43 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+DELETE {
+  GRAPH <http://www.knora.org/data/0001/anything> {
+    <http://rdfh.ch/0001/source> <http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue> ?currentLinkValue .
+    ?currentLinkValue knora-base:valueHasUUID ?currentLinkUUID .
+    <http://rdfh.ch/0001/source> <http://www.knora.org/ontology/knora-base#hasStandoffLinkTo> <http://rdfh.ch/0001/target> .
+  }
+}
+INSERT {
+  GRAPH <http://www.knora.org/data/0001/anything> {
+    <http://rdfh.ch/0001/source/values/new> a knora-base:LinkValue ;
+      rdf:subject <http://rdfh.ch/0001/source> ;
+      rdf:predicate <http://www.knora.org/ontology/knora-base#hasStandoffLinkTo> ;
+      rdf:object <http://rdfh.ch/0001/target> ;
+      knora-base:valueHasString "http://rdfh.ch/0001/target" ;
+      knora-base:valueHasRefCount 0 ;
+      knora-base:valueCreationDate "2026-01-02T03:04:05Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+      knora-base:deleteDate "2026-01-02T03:04:05Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+      knora-base:deletedBy <http://www.knora.org/ontology/knora-admin#SystemUser> ;
+      knora-base:previousValue ?currentLinkValue ;
+      knora-base:valueHasUUID ?currentLinkUUID ;
+      knora-base:isDeleted true ;
+      knora-base:attachedToUser <http://www.knora.org/ontology/knora-admin#SystemUser> ;
+      knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:ProjectMember" .
+    <http://rdfh.ch/0001/source> <http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue> <http://rdfh.ch/0001/source/values/new> .
+  }
+}
+WHERE {
+  GRAPH <http://www.knora.org/data/0001/anything> {
+    <http://rdfh.ch/0001/source> a ?sourceClass ;
+      knora-base:isDeleted false .
+    <http://rdfh.ch/0001/source> <http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue> ?currentLinkValue .
+    ?currentLinkValue a knora-base:LinkValue ;
+      rdf:object <http://rdfh.ch/0001/target> ;
+      knora-base:valueHasRefCount 2 ;
+      knora-base:isDeleted false ;
+      knora-base:valueHasUUID ?currentLinkUUID .
+  }
+  ?sourceClass rdfs:subClassOf* knora-base:Resource .
+}

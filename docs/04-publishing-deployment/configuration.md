@@ -78,6 +78,7 @@ via its environment variable or in `application.conf` under
 | app.features.allow-import-migration-bagit             | ALLOW_IMPORT_MIGRATION_BAGIT             | true          |
 | app.features.allow-placeholder                        | ALLOW_PLACEHOLDER                        | true          |
 | app.features.allow-project-data-import                | ALLOW_PROJECT_DATA_IMPORT                | false         |
+| app.features.serve-stored-xml                         | SERVE_STORED_XML                         | false         |
 
 ### `allow-erase-projects`
 
@@ -144,3 +145,24 @@ See [Project Data Import](../03-endpoints/api-v3/project-data-import.md)
 for the endpoint reference.
 
 When the flag is disabled, the data-graph import endpoints return `404 Not Found`.
+
+### `serve-stored-xml`
+
+Controls whether client reads of formatted text values return the stored XML.
+When the flag is enabled, the API returns the stored `knora-base:valueHasXml`
+instead of rebuilding the XML from standoff. A value without the stored XML
+falls back to the rebuild. The served XML is isomorphic to the rebuilt XML:
+both are equal after canonicalization.
+
+The flag affects the client reads of resources (single, batch, by project and
+class), values and searches (Gravsearch, full-text, incoming links, incoming
+regions, still image representations), in the complex schema, when the value is
+returned with XML markup. It does not affect reads with `markup=standoff` or
+reads in the simple schema. It never affects internal reads or writes.
+
+Before you enable the flag, run the `valueHasXml` backfill on all projects
+and repair the standoff link reference counts. See the
+[rollout order](../03-endpoints/api-admin/maintenance.md#rollout-order).
+
+Disable the flag to restore the rebuild at once. Data written while it was
+enabled needs no repair.

@@ -8,6 +8,7 @@ package org.knora.webapi
 import zio.json.JsonCodec
 
 import org.knora.webapi.JsonLdRendering.Flat
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 
 /**
@@ -107,6 +108,13 @@ object MarkupRendering {
 }
 
 /**
+ * Indicates that text values should be served from their stored XML. Internal only: it is never parsed from a request.
+ */
+case object ServeStoredXml extends Rendering {
+  override val name: String = "serveStoredXml"
+}
+
+/**
  * A trait representing options that affect the format of JSON-LD responses.
  */
 sealed trait JsonLdRendering extends Rendering
@@ -138,6 +146,44 @@ object JsonLdRendering {
 }
 
 /**
+ * Which standoff of text values a resource query loads.
+ */
+enum StandoffSelection {
+
+  /** No standoff is loaded. */
+  case NoStandoff
+
+  /** All standoff of text values is loaded. */
+  case AllStandoff
+
+  /** Only the standoff of text values that have no stored XML is loaded. */
+  case OnlyWithoutStoredXml
+
+  def loadsStandoff: Boolean = this != NoStandoff
+}
+
+object StandoffSelection {
+
+  /**
+   * Derives the standoff selection of a request. A standoff tag filter takes precedence over serving stored XML,
+   * because the filtered standoff is needed even for text values that have stored XML.
+   *
+   * @param targetSchema      the target API schema.
+   * @param schemaOptions     the schema options submitted with the request.
+   * @param standoffTagFilter restricts the standoff to one standoff tag class.
+   */
+  def from(
+    targetSchema: ApiV2Schema,
+    schemaOptions: Set[Rendering],
+    standoffTagFilter: Option[SmartIri] = None,
+  ): StandoffSelection =
+    if (!SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)) NoStandoff
+    else if (standoffTagFilter.isDefined) AllStandoff
+    else if (SchemaOptions.serveStoredXml(targetSchema, schemaOptions)) OnlyWithoutStoredXml
+    else AllStandoff
+}
+
+/**
  * Utility functions for working with schema options.
  */
 object SchemaOptions {
@@ -156,6 +202,18 @@ object SchemaOptions {
    */
   def queryStandoffWithTextValues(targetSchema: ApiV2Schema, schemaOptions: Set[Rendering]): Boolean =
     targetSchema == ApiV2Complex && !schemaOptions.contains(MarkupRendering.Standoff)
+
+  /**
+   * Determines whether text values should be served from their stored XML.
+   * The option is added only by `StoredXmlServing`, never by internal readers,
+   * because internal write paths need the standoff.
+   *
+   * @param targetSchema  the target API schema.
+   * @param schemaOptions the schema options submitted with the request.
+   * @return `true` if stored XML should be served.
+   */
+  def serveStoredXml(targetSchema: ApiV2Schema, schemaOptions: Set[Rendering]): Boolean =
+    queryStandoffWithTextValues(targetSchema, schemaOptions) && schemaOptions.contains(ServeStoredXml)
 
   /**
    * Determines whether markup should be rendered as XML.

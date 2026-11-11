@@ -29,10 +29,13 @@ Since the number of standoff tags that can be attached to a text value is unlimi
 in pages of a limited size, to avoid requesting huge SPARQL query results from the triplestore.
 
 When `ResourcesResponderV2` or `SearchResponderV2` need to return a text value with all its markup,
-they first query the text value with at most one page of standoff. If the text value has more than one page of
-standoff, `ConstructResponseUtilV2.makeTextValueContentV2` then sends a `GetRemainingStandoffFromTextValueRequestV2`
-message to `StandoffResponderV2`, which queries the rest of the standoff in the text value, one page at a time.
-The resulting standoff is concatenated together and returned.
+the standoff query returns the text value together with its standoff nodes.
+`ConstructResponseUtilV2.makeTextValueContentV2` builds the standoff tags from that query result and derives
+the text value type and mapping with `TextValueShape`.
+
+In serve mode (`StandoffSelection.OnlyWithoutStoredXml`), the query skips the standoff of values that have
+`knora-base:valueHasXml`. `makeTextValueContentV2` serves the stored XML as `storedXml` and reads no standoff.
+Values without the literal fall back to the XML rebuilt from their standoff.
 
 To optimise query performance:
 

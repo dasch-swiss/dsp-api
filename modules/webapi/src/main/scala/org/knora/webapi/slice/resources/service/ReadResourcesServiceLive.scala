@@ -44,7 +44,7 @@ trait ReadResourcesService {
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
-    queryStandoff: Boolean = false,
+    standoff: StandoffSelection = StandoffSelection.NoStandoff,
     skipRetrievalChecks: Boolean = false,
     standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2]
@@ -57,7 +57,7 @@ trait ReadResourcesService {
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
-    queryStandoff: Boolean = false,
+    standoff: StandoffSelection = StandoffSelection.NoStandoff,
     skipRetrievalChecks: Boolean = false,
     standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2]
@@ -130,7 +130,7 @@ final case class ReadResourcesServiceLive(
     requestingUser: User,
     versionDate: Option[VersionDate] = None,
     withDeleted: Boolean = true,
-    queryStandoff: Boolean = false,
+    standoff: StandoffSelection = StandoffSelection.NoStandoff,
     failOnMissingValueUuid: Boolean = false,
     markDeletions: Boolean = false,
     showDeletedValues: Boolean = false,
@@ -153,16 +153,16 @@ final case class ReadResourcesServiceLive(
                   maybePropertyIri = propertyIri,
                   maybeValueUuid = valueUuid,
                   maybeVersionDate = versionDate.map(_.value),
-                  queryStandoff = queryStandoff,
+                  standoff = standoff,
                   standoffTagFilter = standoffTagFilter,
                 )
-                .copy(timeout = if (queryStandoff) SparqlTimeout.Maintenance else SparqlTimeout.Standard),
+                .copy(timeout = if (standoff.loadsStandoff) SparqlTimeout.Maintenance else SparqlTimeout.Standard),
             )
             .flatMap(_.asExtended)
             .flatMap(constructResponseUtilV2.splitMainResourcesAndValueRdfData(_, requestingUser))
 
         mappings <-
-          ZIO.when(queryStandoff) {
+          ZIO.when(standoff.loadsStandoff) {
             constructResponseUtilV2.mappingsFromQueryResults(resourcesWithValues.resources)
           }
 
@@ -172,7 +172,7 @@ final case class ReadResourcesServiceLive(
             orderByResourceIri = resourceIriStrings,
             pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
             mappings = mappings.getOrElse(Map.empty),
-            queryStandoff = queryStandoff,
+            standoffSelection = standoff,
             versionDate = versionDate.map(_.value),
             calculateMayHaveMoreResults = false,
             targetSchema = targetSchema,
@@ -213,7 +213,7 @@ final case class ReadResourcesServiceLive(
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
-    queryStandoff: Boolean = false,
+    standoff: StandoffSelection = StandoffSelection.NoStandoff,
     skipRetrievalChecks: Boolean = false,
     standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2] =
@@ -227,7 +227,7 @@ final case class ReadResourcesServiceLive(
           targetSchema,
           requestingUser,
           withDeleted = withDeleted,
-          queryStandoff = queryStandoff,
+          standoff = standoff,
           // Same deleted-value collapsing as `readResourcesSequence` above — see the comment there (DEV-7008).
           markDeletions = true,
           showDeletedValues = false,
@@ -420,7 +420,7 @@ final case class ReadResourcesServiceLive(
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
-    queryStandoff: Boolean = false,
+    standoff: StandoffSelection = StandoffSelection.NoStandoff,
     skipRetrievalChecks: Boolean = false,
     standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2] =
@@ -432,7 +432,7 @@ final case class ReadResourcesServiceLive(
       targetSchema,
       requestingUser,
       withDeleted = withDeleted,
-      queryStandoff = queryStandoff,
+      standoff = standoff,
       // The construct query has no value-level `isDeleted false` filter in the non-version branch, so deleted
       // values come back from the triplestore. Collapse them the way `/v2/resources` does, otherwise a deleted
       // value is indistinguishable from a live one downstream and gets exported as if it were current
@@ -456,7 +456,7 @@ final case class ReadResourcesServiceLive(
       targetSchema = targetSchema,
       requestingUser = requestingUser,
       // Passed down to ConstructResponseUtilV2.makeTextValueContentV2.
-      queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
+      standoff = StandoffSelection.from(targetSchema, schemaOptions),
       failOnMissingValueUuid = true,
     )
 
@@ -479,7 +479,7 @@ final case class ReadResourcesServiceLive(
       withDeleted = withDeleted,
       targetSchema = targetSchema,
       requestingUser = requestingUser,
-      queryStandoff = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions),
+      standoff = StandoffSelection.from(targetSchema, schemaOptions),
       failOnMissingValueUuid = true,
       markDeletions = true,
       showDeletedValues = showDeletedValues,

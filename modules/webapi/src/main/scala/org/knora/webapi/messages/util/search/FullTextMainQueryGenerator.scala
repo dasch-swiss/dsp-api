@@ -61,15 +61,13 @@ object FullTextMainQueryGenerator {
    *
    * @param resourceIris    the IRIs of the resources to be queried.
    * @param valueObjectIris the IRIs of the value objects to be queried.
-   * @param targetSchema    the target API schema.
-   * @param schemaOptions   the schema options submitted with the request.
+   * @param standoffSelection which standoff to query for text values; must be the selection used to construct the response.
    * @return a [[ConstructQuery]].
    */
   def createMainQuery(
     resourceIris: Set[IRI],
     valueObjectIris: Set[IRI],
-    targetSchema: ApiV2Schema,
-    schemaOptions: Set[Rendering],
+    standoffSelection: StandoffSelection,
   ): ConstructQuery = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -144,18 +142,11 @@ object FullTextMainQueryGenerator {
         StatementPattern(subj = resourceValueObject, pred = resourceValueObjectProp, obj = resourceValueObjectObj),
       )
 
-      // Check whether the response should include a page of standoff.
-      val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
-
       // WHERE patterns for querying the first page of standoff in each text value
-      val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
+      val wherePatternsForStandoff: Seq[QueryPattern] = if (standoffSelection.loadsStandoff) {
         Seq(
           ValuesPattern(resourceValueObject, valueObjectIris.map(iri => IriRef(iri.toSmartIri))),
-          StatementPattern(
-            subj = resourceValueObject,
-            pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
-            obj = standoffNodeVar,
-          ),
+        ) ++ StandoffLink.patterns(standoffSelection, resourceValueObject, standoffNodeVar) ++ Seq(
           StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
           StatementPattern(
             subj = standoffNodeVar,
@@ -175,7 +166,7 @@ object FullTextMainQueryGenerator {
       }
 
       // return standoff
-      val constructPatternsForStandoff: Seq[StatementPattern] = if (queryStandoff) {
+      val constructPatternsForStandoff: Seq[StatementPattern] = if (standoffSelection.loadsStandoff) {
         Seq(
           StatementPattern(
             subj = resourceValueObject,

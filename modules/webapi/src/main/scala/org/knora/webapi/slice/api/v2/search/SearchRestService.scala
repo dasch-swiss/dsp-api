@@ -14,6 +14,7 @@ import dsp.errors.BadRequestException
 import org.knora.webapi.responders.v2.SearchResponderV2
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
+import org.knora.webapi.slice.api.v2.StoredXmlServing
 import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.InputIri
 import org.knora.webapi.slice.api.v2.search.SearchEndpointsInputs.Offset
 import org.knora.webapi.slice.common.ResourceIri
@@ -28,6 +29,7 @@ final class SearchRestService(
   searchResponderV2: SearchResponderV2,
   renderer: KnoraResponseRenderer,
   iriConverter: IriConverter,
+  storedXmlServing: StoredXmlServing,
 ) {
 
   def searchResourcesByLabelV2(user: User)(
@@ -63,13 +65,15 @@ final class SearchRestService(
     query: String,
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
-  ): Task[(RenderedResponse, MediaType)] =
+  ): Task[(RenderedResponse, MediaType)] = {
+    val readOptions = storedXmlServing(opts)
     for {
       searchResult <- searchResponderV2
-                        .gravsearchV2(query, opts.schemaRendering, user, limitToProject)
+                        .gravsearchV2(query, readOptions.schemaRendering, user, limitToProject)
                         .catchSome(translateGravsearchTimeout)
       response <- renderer.render(searchResult, opts)
     } yield response
+  }
 
   def gravsearchCount(user: User)(
     query: String,
@@ -93,37 +97,41 @@ final class SearchRestService(
     offset: Offset,
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
-  ): Task[(RenderedResponse, MediaType)] =
+  ): Task[(RenderedResponse, MediaType)] = {
+    val readOptions = storedXmlServing(opts)
     for {
       resIri       <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
       searchResult <-
         searchResponderV2.searchIncomingLinksV2(
           resIri,
           offset.value,
-          opts.schemaRendering,
+          readOptions.schemaRendering,
           user,
           limitToProject,
         )
       response <- renderer.render(searchResult, opts)
     } yield response
+  }
 
   def getSearchStillImageRepresentations(user: User)(
     resourceIri: InputIri,
     offset: Offset,
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
-  ): Task[(RenderedResponse, MediaType)] =
+  ): Task[(RenderedResponse, MediaType)] = {
+    val readOptions = storedXmlServing(opts)
     for {
       resIri <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
       result <- searchResponderV2.searchStillImageRepresentationsV2(
                   resIri,
                   offset.value,
-                  opts.schemaRendering,
+                  readOptions.schemaRendering,
                   user,
                   limitToProject,
                 )
       response <- renderer.render(result, opts)
     } yield response
+  }
 
   def getSearchStillImageRepresentationsCount(user: User)(
     resourceIri: InputIri,
@@ -145,18 +153,20 @@ final class SearchRestService(
     offset: Offset,
     opts: FormatOptions,
     limitToProject: Option[ProjectIri],
-  ): Task[(RenderedResponse, MediaType)] =
+  ): Task[(RenderedResponse, MediaType)] = {
+    val readOptions = storedXmlServing(opts)
     for {
       resIri       <- ZIO.fromEither(ResourceIri.from(resourceIri.value)).mapError(BadRequestException(_))
       searchResult <- searchResponderV2.searchIncomingRegionsV2(
                         resIri,
                         offset.value,
-                        opts.schemaRendering,
+                        readOptions.schemaRendering,
                         user,
                         limitToProject,
                       )
       response <- renderer.render(searchResult, opts)
     } yield response
+  }
 
   def fullTextSearch(user: User)(
     query: RenderedResponse,
@@ -166,24 +176,27 @@ final class SearchRestService(
     resourceClass: Option[InputIri],
     standoffClass: Option[InputIri],
     returnFiles: Boolean,
-  ): Task[(RenderedResponse, MediaType)] = for {
-    resourceClass <- ZIO
-                       .foreach(resourceClass.map(_.value))(iri =>
-                         iriConverter.asResourceClassIri(iri).mapError(BadRequestException(_)),
-                       )
-    standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
-    searchResult  <- searchResponderV2.fulltextSearchV2(
-                      query,
-                      offset.value,
-                      project,
-                      resourceClass,
-                      standoffClass,
-                      returnFiles,
-                      opts.schemaRendering,
-                      user,
-                    )
-    response <- renderer.render(searchResult, opts)
-  } yield response
+  ): Task[(RenderedResponse, MediaType)] = {
+    val readOptions = storedXmlServing(opts)
+    for {
+      resourceClass <- ZIO
+                         .foreach(resourceClass.map(_.value))(iri =>
+                           iriConverter.asResourceClassIri(iri).mapError(BadRequestException(_)),
+                         )
+      standoffClass <- ZIO.foreach(standoffClass.map(_.value))(iriConverter.asSmartIri)
+      searchResult  <- searchResponderV2.fulltextSearchV2(
+                        query,
+                        offset.value,
+                        project,
+                        resourceClass,
+                        standoffClass,
+                        returnFiles,
+                        readOptions.schemaRendering,
+                        user,
+                      )
+      response <- renderer.render(searchResult, opts)
+    } yield response
+  }
 
   def fullTextSearchCount(@unused ignored: User)(
     query: RenderedResponse,
