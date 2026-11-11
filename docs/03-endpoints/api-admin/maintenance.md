@@ -1,7 +1,7 @@
 # Maintenance Endpoint
 
 Every maintenance endpoint requires a `SystemAdmin`. This page describes the endpoints that start background
-maintenance jobs.
+maintenance jobs, and the rollout order of the `serve-stored-xml` flag.
 
 ## Backfill `valueHasXml`
 
@@ -78,3 +78,57 @@ The summary line sums the counts of all projects. `projectsFailed` is the number
 The stored XML is the output of `StandoffTagUtilV2.convertStandoffTagV2ToXML`. A change to that output does not
 update stored values. After such a change, remove the stored `valueHasXml` of the affected values and run the
 backfill again.
+
+## Check standoff link reference counts
+
+`POST /admin/maintenance/check-standoff-link-ref-counts` compares the stored `knora-base:valueHasRefCount` of every
+standoff link value with the number of current text values that link to the target. The check runs on every project of the
+server, in the background, on the API instance that receives the request. It only logs. It never writes. The request has
+no body.
+
+```bash
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  https://api.example.org/admin/maintenance/check-standoff-link-ref-counts
+```
+
+| Situation | Status |
+| --- | --- |
+| The check started | `202` |
+| Not a `SystemAdmin` | `403` |
+| A check already runs on this API instance | `409` |
+
+The response does not wait for the run. There is no status endpoint: the result goes to the log.
+
+### Log lines of the check
+
+Every line of a project carries the annotation `shortcode`.
+
+| Level | Line |
+| --- | --- |
+| `INFO` | `standoff link reference count check requested: user=<user IRI>`, written by the request, without annotation |
+| `INFO` | `standoff link reference count check finished: mismatches=0` |
+| `WARN` | `standoff link reference count check finished: mismatches=3`, followed by one mismatch line per row |
+| `WARN` | `standoff link reference count mismatch: source=<resource IRI> target=<resource IRI> stored=<count or none> expected=<count> directLink=<true or false>` |
+| `ERROR` | `standoff link reference count check failed with <error class>`, when a triplestore call fails |
+| `INFO` | `standoff link reference count check of all projects finished: projects=70 projectsFailed=0 mismatches=0` |
+| `WARN` | The same summary line when `mismatches > 0` |
+| `ERROR` | The same summary line when `projectsFailed > 0` |
+
+A project whose check fails does not stop the next project.
+
+### Logs hold no text content
+
+The check logs resource IRIs, counts and error classes. It never logs text, XML or error messages,
+because these can repeat user text.
+
+## Rollout order
+
+The [`serve-stored-xml`](../../04-publishing-deployment/configuration.md#serve-stored-xml) flag needs the backfill and the
+check above. Do the steps in this order:
+
+1. Finish the `valueHasXml` backfill on all projects. No project may log `failed > 0`.
+2. Run the check on stage and on prod. Expect `mismatches=0`. A mismatch blocks the rollout: analyse it before you
+   continue.
+3. Turn on the flag on stage.
+   Compare a sample of 20 resources with formatted text, with the flag off and on, after canonicalization.
+4. Turn the flag on for prod.

@@ -28,6 +28,7 @@ import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.ProjectService
+import org.knora.webapi.slice.api.v2.StoredXmlServing
 import org.knora.webapi.slice.api.v2.ValueUuid
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
@@ -48,6 +49,7 @@ final class ValuesRestService(
   knoraProjectService: KnoraProjectService,
   resourceUtilV2: ResourceUtilV2,
   valueRepo: ValueRepo,
+  storedXmlServing: StoredXmlServing,
 )(implicit private val stringFormatter: StringFormatter) {
 
   def getValue(user: User)(
@@ -55,7 +57,8 @@ final class ValuesRestService(
     valueUuid: ValueUuid,
     versionDate: Option[VersionDate],
     formatOptions: FormatOptions,
-  ): Task[(RenderedResponse, MediaType)] =
+  ): Task[(RenderedResponse, MediaType)] = {
+    val readOptions = storedXmlServing(formatOptions)
     for {
       resIri   <- parseResourceIri(resourceIri)
       response <- render(
@@ -66,13 +69,14 @@ final class ValuesRestService(
                       versionDate,
                       withDeleted = true,
                       showDeletedValues = false,
-                      formatOptions.schema,
-                      formatOptions.rendering,
+                      readOptions.schema,
+                      readOptions.rendering,
                       user,
                     ),
                     formatOptions,
                   )
     } yield response
+  }
 
   def createValue(user: User)(jsonLd: String): Task[(RenderedResponse, MediaType)] =
     for {
@@ -103,6 +107,7 @@ final class ValuesRestService(
       validated                             <- validateReorderRequest(request)
       (propertySmartIri, requestedValueIris) = validated
 
+      // An internal read: deliberately not served through StoredXmlServing.
       // Fetch as system user so we see ALL values for canonical verification.
       // This is safe: only value IRIs are compared (verifyCanonicalValues), no content is leaked to the caller.
       resourcesSeq <- readResources.getResources(

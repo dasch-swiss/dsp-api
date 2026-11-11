@@ -7,7 +7,7 @@ package org.knora.webapi.slice.resources.service
 
 import zio.*
 
-import org.knora.webapi.messages.util.standoff.StandoffStringUtil
+import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
@@ -68,16 +68,24 @@ final case class ValueContentValidator(
   }
 
   private def ensureNoCrossProjectLink(tvc: TextValueContentV2, inProject: Shortcode): IO[String, Unit] =
-    ZIO.foreachDiscard(StandoffStringUtil.getResourceIrisFromStandoffLinkTags(tvc.standoff))(resourceIri =>
-      extractShortcode(resourceIri).option.flatMap {
-        case Some(refShortcode) =>
-          ZIO
-            .fail(s"Cannot create a standoff IRI link between resources cross projects $inProject and $refShortcode")
-            .unless(inProject == refShortcode)
-            .unit
-        case None => ZIO.unit
-      },
-    )
+    ZIO
+      .fromEither(tvc.standoffLinkTagIriAttributes)
+      .mapError(_.message)
+      .map(_.filter(_.standoffPropertyIri.toInternalIri.value == KB.StandoffTagHasLink).map(_.value))
+      .flatMap(
+        ZIO.foreachDiscard(_)(resourceIri =>
+          extractShortcode(resourceIri).option.flatMap {
+            case Some(refShortcode) =>
+              ZIO
+                .fail(
+                  s"Cannot create a standoff IRI link between resources cross projects $inProject and $refShortcode",
+                )
+                .unless(inProject == refShortcode)
+                .unit
+            case None => ZIO.unit
+          },
+        ),
+      )
 
   private def ensureValidLegalInfo(vc: ValueContentV2, inProject: Shortcode): IO[String, Unit] = vc match
     case fvc: FileValueContentV2 => legalInfoService.validateLegalInfo(fvc.fileValue, inProject).unit

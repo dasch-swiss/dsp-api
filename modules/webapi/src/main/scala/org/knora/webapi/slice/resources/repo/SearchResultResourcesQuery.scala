@@ -7,6 +7,8 @@ package org.knora.webapi.slice.resources.repo
 
 import org.knora.sparqlbuilder.*
 import org.knora.webapi.IRI
+import org.knora.webapi.StandoffLink
+import org.knora.webapi.StandoffSelection
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
 /**
@@ -20,9 +22,9 @@ object SearchResultResourcesQuery {
 
   /**
    * @param resourceIris  the resources to load; must not be empty.
-   * @param queryStandoff when true, the standoff markup of text values is loaded as well.
+   * @param standoff      which standoff markup of text values is loaded as well.
    */
-  def build(resourceIris: Seq[IRI], queryStandoff: Boolean): Construct =
+  def build(resourceIris: Seq[IRI], standoff: StandoffSelection): Construct =
     Construct(
       sparql"""|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -48,7 +50,9 @@ object SearchResultResourcesQuery {
                |    knora-base:hasPermissions ?currentValuePermissions .
                |  ${sparql"""|?valueObject knora-base:valueHasStandoff ?standoffNode .
                              |?standoffNode ?standoffProperty ?standoffValue ;
-                             |  knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .""".when(queryStandoff)}
+                             |  knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .""".when(
+          standoff.loadsStandoff,
+        )}
                |  ?resource knora-base:hasLinkTo ?referredResource ;
                |    ?resourceLinkProperty ?referredResource .
                |  ?referredResource a knora-base:Resource ;
@@ -75,14 +79,14 @@ object SearchResultResourcesQuery {
           // The UNION nesting is load-bearing: with standoff the standoff branch joins the value branch in
           // their own UNION, and that whole UNION is in turn one branch of the link UNION, as the previous
           // builder emitted it.
-          if (queryStandoff)
+          if (standoff.loadsStandoff)
             sparql"""|{
                    |  {
                    |    ?valueObject a ?valueObjectType ;
                    |      ?valueObjectProperty ?valueObjectValue .
                    |    FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
                    |  } UNION {
-                   |    ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                   |    ${StandoffLink.fragment(standoff, Variable("valueObject"), Variable("standoffNode"))}
                    |    ?standoffNode ?standoffProperty ?standoffValue ;
                    |      knora-base:standoffTagHasStartIndex ?startIndex .
                    |    OPTIONAL {

@@ -12,6 +12,7 @@ import org.knora.webapi.config.GraphRoute
 import org.knora.webapi.config.Resources
 import org.knora.webapi.responders.v2.ResourcesResponderV2
 import org.knora.webapi.responders.v2.SearchResponderV2
+import org.knora.webapi.slice.api.v2.StoredXmlServing
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.BaseEndpoints
@@ -50,7 +51,7 @@ object ResourcesServerEndpoints {
 
   type Provided = ResourcesServerEndpoints
 
-  val layer: URLayer[Dependencies, Provided] = ResourcesEndpoints.layer >+>
+  val layer: URLayer[Dependencies & StoredXmlServing, Provided] = ResourcesEndpoints.layer >+>
     ResourcesRestService.layer >>>
     ZLayer.derive[ResourcesServerEndpoints]
 }

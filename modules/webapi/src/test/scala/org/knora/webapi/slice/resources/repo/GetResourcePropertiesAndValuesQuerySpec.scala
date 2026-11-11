@@ -13,6 +13,7 @@ import java.time.Instant
 import java.util.UUID
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.StandoffSelection
 import org.knora.webapi.messages.StringFormatter
 
 @RunWith(classOf[DspZTestJUnitRunner])
@@ -36,7 +37,7 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
     resourceIris: Seq[String] = Seq(resourceIri1),
     preview: Boolean = false,
     withDeleted: Boolean = false,
-    queryStandoff: Boolean = false,
+    standoff: StandoffSelection = StandoffSelection.NoStandoff,
     maybePropertyIri: Option[org.knora.webapi.messages.SmartIri] = None,
     maybeValueUuid: Option[UUID] = None,
     maybeVersionDate: Option[Instant] = None,
@@ -46,7 +47,7 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
         resourceIris = resourceIris,
         preview = preview,
         withDeleted = withDeleted,
-        queryStandoff = queryStandoff,
+        standoff = standoff,
         maybePropertyIri = maybePropertyIri,
         maybeValueUuid = maybeValueUuid,
         maybeVersionDate = maybeVersionDate,
@@ -666,6 +667,271 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
 
   // @formatter:on
 
+  // @formatter:off
+  private val expectedStandoffOnlyWithoutStoredXml =
+    """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+       |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+       |
+       |CONSTRUCT {
+       |  ?resource a knora-base:Resource ;
+       |    knora-base:isMainResource true ;
+       |    knora-base:attachedToProject ?resourceProject ;
+       |    rdfs:label ?label ;
+       |    rdf:type ?resourceType ;
+       |    knora-base:attachedToUser ?resourceCreator ;
+       |    knora-base:hasPermissions ?resourcePermissions ;
+       |    knora-base:creationDate ?creationDate ;
+       |    knora-base:lastModificationDate ?lastModificationDate ;
+       |    knora-base:hasResourceAuthorship ?resourceAuthorship .
+       |  ?resource knora-base:isDeleted false .
+       |  ?resource knora-base:hasValue ?valueObject ;
+       |    ?resourceValueProperty ?valueObject .
+       |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
+       |    knora-base:valueHasUUID ?currentValueUUID ;
+       |    knora-base:hasPermissions ?currentValuePermissions .
+       |  ?valueObject knora-base:valueHasStandoff ?standoffNode .
+       |  ?standoffNode ?standoffProperty ?standoffValue ;
+       |    knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .
+       |  ?resource knora-base:hasLinkTo ?referredResource ;
+       |    ?resourceLinkProperty ?referredResource .
+       |  ?referredResource a knora-base:Resource ;
+       |    ?referredResourcePred ?referredResourceObj .
+       |} WHERE {
+       |  VALUES ?resource { <http://rdfh.ch/0001/resource1> }
+       |  {
+       |    ?resource rdf:type ?resourceType .
+       |    ?resourceType rdfs:subClassOf* knora-base:Resource .
+       |  }
+       |  ?resource knora-base:attachedToProject ?resourceProject ;
+       |    knora-base:attachedToUser ?resourceCreator ;
+       |    knora-base:hasPermissions ?resourcePermissions ;
+       |    knora-base:creationDate ?creationDate ;
+       |    rdfs:label ?label .
+       |  ?resource knora-base:isDeleted false .
+       |  OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate . }
+       |  OPTIONAL { ?resource knora-base:hasResourceAuthorship ?resourceAuthorship . }
+       |  OPTIONAL {
+       |    ?resource ?resourceValueProperty ?valueObject .
+       |    ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+       |    ?valueObject knora-base:hasPermissions ?currentValuePermissions .
+       |    {
+       |      {
+       |        ?valueObject a ?valueObjectType ;
+       |          ?valueObjectProperty ?valueObjectValue .
+       |        FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+       |      } UNION {
+       |        {
+       |          ?valueObject knora-base:valueHasStandoff ?standoffNode .
+       |          FILTER NOT EXISTS { ?valueObject knora-base:valueHasXml [] }
+       |        }
+       |        ?standoffNode ?standoffProperty ?standoffValue ;
+       |          knora-base:standoffTagHasStartIndex ?startIndex .
+       |        OPTIONAL {
+       |          ?standoffNode knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+       |          ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+       |        }
+       |        FILTER(?startIndex >= 0)
+       |      }
+       |    } UNION {
+       |      ?valueObject a knora-base:LinkValue ;
+       |        rdf:predicate ?resourceLinkProperty ;
+       |        rdf:object ?referredResource .
+       |      ?referredResource ?referredResourcePred ?referredResourceObj ;
+       |        knora-base:isDeleted false .
+       |    }
+       |  }
+       |}""".stripMargin
+
+  private val expectedVersionedStandoff =
+    """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+       |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+       |
+       |CONSTRUCT {
+       |  ?resource a knora-base:Resource ;
+       |    knora-base:isMainResource true ;
+       |    knora-base:attachedToProject ?resourceProject ;
+       |    rdfs:label ?label ;
+       |    rdf:type ?resourceType ;
+       |    knora-base:attachedToUser ?resourceCreator ;
+       |    knora-base:hasPermissions ?resourcePermissions ;
+       |    knora-base:creationDate ?creationDate ;
+       |    knora-base:lastModificationDate ?lastModificationDate ;
+       |    knora-base:hasResourceAuthorship ?resourceAuthorship .
+       |  ?resource knora-base:isDeleted false .
+       |  ?resource knora-base:hasValue ?valueObject ;
+       |    ?resourceValueProperty ?valueObject .
+       |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
+       |    knora-base:valueHasUUID ?currentValueUUID ;
+       |    knora-base:hasPermissions ?currentValuePermissions .
+       |  ?valueObject knora-base:valueHasStandoff ?standoffNode .
+       |  ?standoffNode ?standoffProperty ?standoffValue ;
+       |    knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .
+       |  ?resource knora-base:hasLinkTo ?referredResource ;
+       |    ?resourceLinkProperty ?referredResource .
+       |  ?referredResource a knora-base:Resource ;
+       |    ?referredResourcePred ?referredResourceObj .
+       |} WHERE {
+       |  VALUES ?resource { <http://rdfh.ch/0001/resource1> }
+       |  {
+       |    ?resource rdf:type ?resourceType .
+       |    ?resourceType rdfs:subClassOf* knora-base:Resource .
+       |  }
+       |  ?resource knora-base:attachedToProject ?resourceProject ;
+       |    knora-base:attachedToUser ?resourceCreator ;
+       |    knora-base:hasPermissions ?resourcePermissions ;
+       |    knora-base:creationDate ?creationDate ;
+       |    rdfs:label ?label .
+       |  ?resource knora-base:isDeleted false .
+       |  {
+       |    ?resource knora-base:creationDate ?creationDate .
+       |    FILTER(?creationDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>)
+       |  }
+       |  OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate . }
+       |  OPTIONAL { ?resource knora-base:hasResourceAuthorship ?resourceAuthorship . }
+       |  OPTIONAL {
+       |    ?resource ?resourceValueProperty ?currentValue .
+       |    ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+       |    FILTER NOT EXISTS {
+       |      ?currentValue knora-base:deleteDate ?currentValueDeleteDate .
+       |      FILTER(?currentValueDeleteDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>)
+       |    }
+       |    ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+       |    {
+       |      ?currentValue knora-base:previousValue* ?valueObject .
+       |      ?valueObject knora-base:valueCreationDate ?valueObjectCreationDate .
+       |      FILTER(?valueObjectCreationDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>)
+       |    }
+       |    FILTER NOT EXISTS {
+       |      ?currentValue knora-base:previousValue* ?otherValueObject .
+       |      ?otherValueObject knora-base:valueCreationDate ?otherValueObjectCreationDate .
+       |      FILTER(?otherValueObjectCreationDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> && ?otherValueObjectCreationDate > ?valueObjectCreationDate)
+       |    }
+       |    ?currentValue knora-base:hasPermissions ?currentValuePermissions .
+       |    {
+       |      {
+       |        ?valueObject a ?valueObjectType ;
+       |          ?valueObjectProperty ?valueObjectValue .
+       |        FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+       |      } UNION {
+       |        ?valueObject knora-base:valueHasStandoff ?standoffNode .
+       |        ?standoffNode ?standoffProperty ?standoffValue ;
+       |          knora-base:standoffTagHasStartIndex ?startIndex .
+       |        OPTIONAL {
+       |          ?standoffNode knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+       |          ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+       |        }
+       |        FILTER(?startIndex >= 0)
+       |      }
+       |    } UNION {
+       |      ?valueObject a knora-base:LinkValue ;
+       |        rdf:predicate ?resourceLinkProperty ;
+       |        rdf:object ?referredResource .
+       |      ?referredResource ?referredResourcePred ?referredResourceObj ;
+       |        knora-base:isDeleted false .
+       |    }
+       |  }
+       |}""".stripMargin
+
+  private val expectedVersionedStandoffOnlyWithoutStoredXml =
+    """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+       |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+       |
+       |CONSTRUCT {
+       |  ?resource a knora-base:Resource ;
+       |    knora-base:isMainResource true ;
+       |    knora-base:attachedToProject ?resourceProject ;
+       |    rdfs:label ?label ;
+       |    rdf:type ?resourceType ;
+       |    knora-base:attachedToUser ?resourceCreator ;
+       |    knora-base:hasPermissions ?resourcePermissions ;
+       |    knora-base:creationDate ?creationDate ;
+       |    knora-base:lastModificationDate ?lastModificationDate ;
+       |    knora-base:hasResourceAuthorship ?resourceAuthorship .
+       |  ?resource knora-base:isDeleted false .
+       |  ?resource knora-base:hasValue ?valueObject ;
+       |    ?resourceValueProperty ?valueObject .
+       |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
+       |    knora-base:valueHasUUID ?currentValueUUID ;
+       |    knora-base:hasPermissions ?currentValuePermissions .
+       |  ?valueObject knora-base:valueHasStandoff ?standoffNode .
+       |  ?standoffNode ?standoffProperty ?standoffValue ;
+       |    knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .
+       |  ?resource knora-base:hasLinkTo ?referredResource ;
+       |    ?resourceLinkProperty ?referredResource .
+       |  ?referredResource a knora-base:Resource ;
+       |    ?referredResourcePred ?referredResourceObj .
+       |} WHERE {
+       |  VALUES ?resource { <http://rdfh.ch/0001/resource1> }
+       |  {
+       |    ?resource rdf:type ?resourceType .
+       |    ?resourceType rdfs:subClassOf* knora-base:Resource .
+       |  }
+       |  ?resource knora-base:attachedToProject ?resourceProject ;
+       |    knora-base:attachedToUser ?resourceCreator ;
+       |    knora-base:hasPermissions ?resourcePermissions ;
+       |    knora-base:creationDate ?creationDate ;
+       |    rdfs:label ?label .
+       |  ?resource knora-base:isDeleted false .
+       |  {
+       |    ?resource knora-base:creationDate ?creationDate .
+       |    FILTER(?creationDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>)
+       |  }
+       |  OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate . }
+       |  OPTIONAL { ?resource knora-base:hasResourceAuthorship ?resourceAuthorship . }
+       |  OPTIONAL {
+       |    ?resource ?resourceValueProperty ?currentValue .
+       |    ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+       |    FILTER NOT EXISTS {
+       |      ?currentValue knora-base:deleteDate ?currentValueDeleteDate .
+       |      FILTER(?currentValueDeleteDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>)
+       |    }
+       |    ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+       |    {
+       |      ?currentValue knora-base:previousValue* ?valueObject .
+       |      ?valueObject knora-base:valueCreationDate ?valueObjectCreationDate .
+       |      FILTER(?valueObjectCreationDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime>)
+       |    }
+       |    FILTER NOT EXISTS {
+       |      ?currentValue knora-base:previousValue* ?otherValueObject .
+       |      ?otherValueObject knora-base:valueCreationDate ?otherValueObjectCreationDate .
+       |      FILTER(?otherValueObjectCreationDate <= "2019-08-30T10:36:54.024Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> && ?otherValueObjectCreationDate > ?valueObjectCreationDate)
+       |    }
+       |    ?currentValue knora-base:hasPermissions ?currentValuePermissions .
+       |    {
+       |      {
+       |        ?valueObject a ?valueObjectType ;
+       |          ?valueObjectProperty ?valueObjectValue .
+       |        FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+       |      } UNION {
+       |        {
+       |          ?valueObject knora-base:valueHasStandoff ?standoffNode .
+       |          FILTER NOT EXISTS { ?valueObject knora-base:valueHasXml [] }
+       |        }
+       |        ?standoffNode ?standoffProperty ?standoffValue ;
+       |          knora-base:standoffTagHasStartIndex ?startIndex .
+       |        OPTIONAL {
+       |          ?standoffNode knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+       |          ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+       |        }
+       |        FILTER(?startIndex >= 0)
+       |      }
+       |    } UNION {
+       |      ?valueObject a knora-base:LinkValue ;
+       |        rdf:predicate ?resourceLinkProperty ;
+       |        rdf:object ?referredResource .
+       |      ?referredResource ?referredResourcePred ?referredResourceObj ;
+       |        knora-base:isDeleted false .
+       |    }
+       |  }
+       |}""".stripMargin
+  // @formatter:on
+
   override val spec: Spec[Any, Nothing] = suite("GetResourcePropertiesAndValuesQuery")(
     test("basic - default params") {
       val actual = render()
@@ -683,8 +949,8 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
       val actual = render(maybeVersionDate = Some(versionDate))
       assertTrue(canonical(actual) == canonical(expectedVersionDate))
     },
-    test("standoff - queryStandoff=true") {
-      val actual = render(queryStandoff = true)
+    test("standoff - standoff=AllStandoff") {
+      val actual = render(standoff = StandoffSelection.AllStandoff)
       assertTrue(canonical(actual) == canonical(expectedStandoff))
     },
     test("propertyIri - maybePropertyIri=Some(propertyIri)") {
@@ -714,11 +980,28 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
           resourceIris = Seq(resourceIri1),
           preview = false,
           withDeleted = false,
-          queryStandoff = true,
+          standoff = StandoffSelection.AllStandoff,
           standoffTagFilter = Some(footnoteTagIri),
         )
         .sparql
       assertTrue(canonical(actual) == canonical(expectedStandoffTagFilter))
+    },
+    test("standoffTagFilter - OnlyWithoutStoredXml renders like AllStandoff") {
+      val footnoteTagIri                                  = sf.toSmartIri("http://www.knora.org/ontology/standoff#StandoffFootnoteTag")
+      def renderWith(standoff: StandoffSelection): String =
+        GetResourcePropertiesAndValuesQuery
+          .build(
+            resourceIris = Seq(resourceIri1),
+            preview = false,
+            withDeleted = false,
+            standoff = standoff,
+            standoffTagFilter = Some(footnoteTagIri),
+          )
+          .sparql
+      assertTrue(
+        renderWith(StandoffSelection.OnlyWithoutStoredXml) == renderWith(StandoffSelection.AllStandoff),
+        !renderWith(StandoffSelection.OnlyWithoutStoredXml).contains("valueHasXml"),
+      )
     },
     test("standoffTagFilter - type constraint in SPARQL, no targetHasOriginalXMLID (U-2)") {
       val footnoteTagIri = sf.toSmartIri("http://www.knora.org/ontology/standoff#StandoffFootnoteTag")
@@ -727,7 +1010,7 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
           resourceIris = Seq(resourceIri1),
           preview = false,
           withDeleted = false,
-          queryStandoff = true,
+          standoff = StandoffSelection.AllStandoff,
           standoffTagFilter = Some(footnoteTagIri),
         )
         .sparql
@@ -737,11 +1020,35 @@ class GetResourcePropertiesAndValuesQuerySpec extends ZIOSpecDefault {
       )
     },
     test("no standoffTagFilter - full standoff loads without type constraint (U-3)") {
-      val actual = render(queryStandoff = true)
+      val actual = render(standoff = StandoffSelection.AllStandoff)
       assertTrue(
         actual.contains("targetHasOriginalXMLID"),
         !actual.contains("StandoffFootnoteTag"),
       )
+    },
+    test("current values - NoStandoff") {
+      assertTrue(canonical(render(standoff = StandoffSelection.NoStandoff)) == canonical(expectedBasic))
+    },
+    test("current values - AllStandoff") {
+      assertTrue(canonical(render(standoff = StandoffSelection.AllStandoff)) == canonical(expectedStandoff))
+    },
+    test("current values - OnlyWithoutStoredXml") {
+      assertTrue(
+        canonical(render(standoff = StandoffSelection.OnlyWithoutStoredXml)) ==
+          canonical(expectedStandoffOnlyWithoutStoredXml),
+      )
+    },
+    test("versioned values - NoStandoff") {
+      val actual = render(standoff = StandoffSelection.NoStandoff, maybeVersionDate = Some(versionDate))
+      assertTrue(canonical(actual) == canonical(expectedVersionDate))
+    },
+    test("versioned values - AllStandoff") {
+      val actual = render(standoff = StandoffSelection.AllStandoff, maybeVersionDate = Some(versionDate))
+      assertTrue(canonical(actual) == canonical(expectedVersionedStandoff))
+    },
+    test("versioned values - OnlyWithoutStoredXml") {
+      val actual = render(standoff = StandoffSelection.OnlyWithoutStoredXml, maybeVersionDate = Some(versionDate))
+      assertTrue(canonical(actual) == canonical(expectedVersionedStandoffOnlyWithoutStoredXml))
     },
   )
 }

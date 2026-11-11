@@ -12,13 +12,16 @@ import zio.test.*
 
 import java.nio.file.Paths
 
+import org.knora.sparqlbuilder.Iri
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.StandoffMappingIri
+import org.knora.webapi.slice.resources.repo.StandoffLinkRefCountQuery
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Ask
@@ -30,8 +33,9 @@ import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 
 /**
- * Helpers for E2E specs that write `anything:hasText` values of project 0001 as XML and compare the stored
- * `kb:valueHasXml` literal with the XML served by the API.
+ * Helpers for E2E specs that write text values as XML and compare the stored `kb:valueHasXml` literal with the XML
+ * served by the API. The default is `anything:hasText` of project 0001; project, user, graph and text property can be
+ * overridden.
  *
  * Which comparison a spec uses depends on who wrote the literal. Write-path specs (`/v2/values`, resource create) use
  * [[storedByteIdenticalToServed]]. The backfill uses [[storedCanonicallyEqualsServed]]: it re-renders standoff stored
@@ -77,7 +81,7 @@ object ValueHasXmlTestSupport {
     )
   }
 
-  private def iriOf(doc: JsonLDDocument): Task[String] =
+  def iriOf(doc: JsonLDDocument): Task[String] =
     ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)).mapError(new RuntimeException(_))
 
   /** `POST /v2/resources` of an `anything:Thing` of project 0001 with the given `anything:hasText` values; returns its IRI. */
@@ -105,36 +109,52 @@ object ValueHasXmlTestSupport {
     createThing(textValueJson(xml, mapping, None))
 
   /** `POST /v2/values`: adds the text value to the resource and returns the IRI of the new value. */
-  def createValue(resourceIri: String, value: Json.Obj): RIO[TestApiClient, String] = {
+  def createValue(
+    resourceIri: String,
+    value: Json.Obj,
+    property: String = "anything:hasText",
+  ): RIO[TestApiClient, String] = {
     val body = Json.Obj(
-      "@id"              -> Json.Str(resourceIri),
-      "@type"            -> Json.Str("anything:Thing"),
-      "anything:hasText" -> value,
-      "@context"         -> context,
+      "@id"      -> Json.Str(resourceIri),
+      "@type"    -> Json.Str("anything:Thing"),
+      property   -> value,
+      "@context" -> context,
     )
-    TestApiClient.postJsonLdDocument(uri"/v2/values", body.toString, anythingUser1).flatMap(_.assert200).flatMap(iriOf)
+    TestApiClient
+      .postJsonLdDocument(uri"/v2/values", body.toString, anythingUser1)
+      .flatMap(_.assert200)
+      .flatMap(iriOf)
   }
 
+  /** `PUT /v2/values`: updates the text value and returns the IRI of its new version. */
   def updateText(
     resourceIri: String,
     valueIri: String,
     xml: String,
     mapping: StandoffMappingIri,
-  ): RIO[TestApiClient, Unit] = {
+    property: String = "anything:hasText",
+  ): RIO[TestApiClient, String] = {
     val body = Json.Obj(
-      "@id"              -> Json.Str(resourceIri),
-      "@type"            -> Json.Str("anything:Thing"),
-      "anything:hasText" -> textValueJson(xml, mapping, Some(valueIri)),
-      "@context"         -> context,
+      "@id"      -> Json.Str(resourceIri),
+      "@type"    -> Json.Str("anything:Thing"),
+      property   -> textValueJson(xml, mapping, Some(valueIri)),
+      "@context" -> context,
     )
-    TestApiClient.putJsonLd(uri"/v2/values", body.toString, anythingUser1).flatMap(_.assert200).unit
+    TestApiClient
+      .putJsonLdDocument(uri"/v2/values", body.toString, anythingUser1)
+      .flatMap(_.assert200)
+      .flatMap(iriOf)
   }
 
-  def deleteText(resourceIri: String, valueIri: String): RIO[TestApiClient, Unit] = {
+  def deleteText(
+    resourceIri: String,
+    valueIri: String,
+    property: String = "anything:hasText",
+  ): RIO[TestApiClient, Unit] = {
     val body = Json.Obj(
-      "@id"              -> Json.Str(resourceIri),
-      "@type"            -> Json.Str("anything:Thing"),
-      "anything:hasText" -> Json.Obj(
+      "@id"    -> Json.Str(resourceIri),
+      "@type"  -> Json.Str("anything:Thing"),
+      property -> Json.Obj(
         "@id"                     -> Json.Str(valueIri),
         "@type"                   -> Json.Str("knora-api:TextValue"),
         "knora-api:deleteComment" -> Json.Str("deleted by an e2e spec"),
@@ -145,17 +165,20 @@ object ValueHasXmlTestSupport {
   }
 
   /**
-   * Creates the mapping `mappingName` in project 0001 from `mappingFile`, by default
-   * `test_data/test_route/texts/mappingForHTML.xml`. A mapping name can be created only once per project.
+   * Creates the mapping `mappingName` in `project` (default 0001) from `mappingFile`, by default
+   * `test_data/test_route/texts/mappingForHTML.xml`. `user` must be an administrator of `project`. A mapping name can
+   * be created only once per project.
    */
   def createCustomMapping(
     mappingName: String,
     mappingFile: java.nio.file.Path = Paths.get("test_data/test_route/texts/mappingForHTML.xml"),
+    project: String = projectIri,
+    user: User = anythingAdminUser,
   ): RIO[TestApiClient, StandoffMappingIri] = {
     val params =
       s"""{
          |  "knora-api:mappingHasName": "$mappingName",
-         |  "knora-api:attachedToProject": { "@id": "$projectIri" },
+         |  "knora-api:attachedToProject": { "@id": "$project" },
          |  "rdfs:label": "mapping $mappingName of an e2e spec",
          |  "@context": {
          |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
@@ -167,9 +190,9 @@ object ValueHasXmlTestSupport {
       multipartFile("xml", mappingFile).contentType("text/xml(UTF-8)"),
     )
     TestApiClient
-      .postMultiPart[Json](uri"/v2/mapping", body, anythingAdminUser)
+      .postMultiPart[Json](uri"/v2/mapping", body, user)
       .flatMap(_.assert200)
-      .as(StandoffMappingIri.unsafeFrom(s"$projectIri/mappings/$mappingName"))
+      .as(StandoffMappingIri.unsafeFrom(s"$project/mappings/$mappingName"))
   }
 
   private def ts[A](f: TriplestoreService => Task[A]): ZIO[TriplestoreService, Throwable, A] =
@@ -210,15 +233,22 @@ object ValueHasXmlTestSupport {
   def valueHasString(valueIri: String): RIO[TriplestoreService, Option[String]] =
     selectFirst(s"SELECT ?s WHERE { GRAPH <$dataGraph> { <$valueIri> <${kb}valueHasString> ?s } }", "s")
 
-  def storedXml(valueIri: String): RIO[TriplestoreService, Option[String]] =
-    selectFirst(s"SELECT ?xml WHERE { GRAPH <$dataGraph> { <$valueIri> <${kb}valueHasXml> ?xml } }", "xml")
+  def storedXml(valueIri: String): RIO[TriplestoreService, Option[String]] = storedXmlIn(valueIri, dataGraph)
+
+  /** The `kb:valueHasXml` literal of the value, read from the given data graph. */
+  def storedXmlIn(valueIri: String, graph: String): RIO[TriplestoreService, Option[String]] =
+    selectFirst(s"SELECT ?xml WHERE { GRAPH <$graph> { <$valueIri> <${kb}valueHasXml> ?xml } }", "xml")
 
   /** The `textValueAsXml` the API serves for the resource's text value, optionally at a historical version. */
-  def servedXml(resourceIri: String, version: Option[String]): RIO[TestApiClient, String] = {
+  def servedXml(
+    resourceIri: String,
+    version: Option[String],
+    textProperty: String = hasTextIri,
+  ): RIO[TestApiClient, String] = {
     val update = version.fold[RequestUpdate[JsonLDDocument]](identity)(addVersionQueryParam(_))
     for {
       doc   <- TestApiClient.getJsonLdDocument(uri"/v2/resources/$resourceIri", rootUser, update).flatMap(_.assert200)
-      value <- ZIO.fromEither(doc.body.getRequiredObject(hasTextIri)).mapError(new RuntimeException(_))
+      value <- ZIO.fromEither(doc.body.getRequiredObject(textProperty)).mapError(new RuntimeException(_))
       xml   <- ZIO.fromEither(value.getRequiredString(KA.TextValueAsXml)).mapError(new RuntimeException(_))
     } yield xml
   }
@@ -234,10 +264,12 @@ object ValueHasXmlTestSupport {
     valueIri: String,
     mapping: StandoffMappingIri,
     version: Option[String] = None,
+    graph: String = dataGraph,
+    textProperty: String = hasTextIri,
   ): RIO[TriplestoreService & TestApiClient & StandoffMappingService, TestResult] =
     for {
-      stored      <- storedXml(valueIri).someOrFail(new RuntimeException(s"$valueIri has no valueHasXml"))
-      served      <- servedXml(resourceIri, version)
+      stored      <- storedXmlIn(valueIri, graph).someOrFail(new RuntimeException(s"$valueIri has no valueHasXml"))
+      served      <- servedXml(resourceIri, version, textProperty)
       storedCanon <- canonical(stored, mapping)
       servedCanon <- canonical(served, mapping)
     } yield assertTrue(stored.nonEmpty, storedCanon == servedCanon)
@@ -252,4 +284,29 @@ object ValueHasXmlTestSupport {
       stored <- storedXml(valueIri).someOrFail(new RuntimeException(s"$valueIri has no valueHasXml"))
       served <- servedXml(resourceIri, version)
     } yield assertTrue(stored.nonEmpty, stored == served)
+
+  /** The stored `kb:valueHasRefCount` of the current link value of the source's standoff links, if there is one. */
+  def storedCount(source: String): RIO[TriplestoreService, Option[String]] =
+    selectFirst(
+      s"""PREFIX kb: <$kb>
+         |SELECT ?count WHERE { GRAPH <$dataGraph> { <$source> kb:hasStandoffLinkToValue ?lv . ?lv kb:isDeleted false ; kb:valueHasRefCount ?count } }""".stripMargin,
+      "count",
+    )
+
+  /** Overwrites the `kb:valueHasRefCount` of the source's current standoff link values. */
+  def setStoredCount(source: String, count: Int): RIO[TriplestoreService, Unit] =
+    update(
+      s"""PREFIX kb: <$kb>
+         |DELETE { GRAPH <$dataGraph> { ?lv kb:valueHasRefCount ?old } }
+         |INSERT { GRAPH <$dataGraph> { ?lv kb:valueHasRefCount $count } }
+         |WHERE { GRAPH <$dataGraph> { <$source> kb:hasStandoffLinkToValue ?lv . ?lv kb:isDeleted false ; kb:valueHasRefCount ?old } }""".stripMargin,
+    )
+
+  /** The standoff link reference counts of the resource's links agree with its text values' link tags, in the given data graph. */
+  def refCountsConsistent(resourceIri: String, graph: String = dataGraph): RIO[TriplestoreService, TestResult] =
+    for {
+      graphIri <- ZIO.fromEither(Iri.from(graph)).mapError(new RuntimeException(_))
+      result   <- ts(_.query(StandoffLinkRefCountQuery.selectMismatches(graphIri)))
+      rows      = result.map(_.rowMap).filter(_.get("source").contains(resourceIri)).map(_.toString)
+    } yield assert(rows)(Assertion.isEmpty)
 }

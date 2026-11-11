@@ -15,6 +15,7 @@ import java.time.Instant
 import scala.jdk.CollectionConverters.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.StandoffSelection
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.store.triplestore.api.TestTripleStore
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
@@ -118,7 +119,7 @@ class StandoffInternalReferenceQuerySpec extends ZIOSpecDefault {
       test("current values: each referring tag carries only its own target's XML id") {
         assertOwnTargetsOnly(
           GetResourcePropertiesAndValuesQuery
-            .build(Seq(resource1), preview = false, withDeleted = false, queryStandoff = true),
+            .build(Seq(resource1), preview = false, withDeleted = false, standoff = StandoffSelection.AllStandoff),
         )
       },
       test("versioned values: each referring tag carries only its own target's XML id") {
@@ -127,13 +128,13 @@ class StandoffInternalReferenceQuerySpec extends ZIOSpecDefault {
             Seq(resource1),
             preview = false,
             withDeleted = false,
-            queryStandoff = true,
+            standoff = StandoffSelection.AllStandoff,
             maybeVersionDate = Some(Instant.parse("2030-01-01T00:00:00Z")),
           ),
         )
       },
       test("search results: each referring tag carries only its own target's XML id") {
-        assertOwnTargetsOnly(SearchResultResourcesQuery.build(Seq(resource1), queryStandoff = true))
+        assertOwnTargetsOnly(SearchResultResourcesQuery.build(Seq(resource1), standoff = StandoffSelection.AllStandoff))
       },
     ).provide(StringFormatter.test, TriplestoreServiceInMemory.emptyDatasetRefLayer, TriplestoreServiceInMemory.layer)
 }

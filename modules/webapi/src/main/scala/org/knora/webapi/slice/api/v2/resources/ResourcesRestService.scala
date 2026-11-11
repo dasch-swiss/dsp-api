@@ -15,6 +15,7 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.api.v2.GraphDirection
 import org.knora.webapi.slice.api.v2.IriDto
+import org.knora.webapi.slice.api.v2.StoredXmlServing
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.ResourceIri
@@ -34,6 +35,7 @@ final case class ResourcesRestService(
   private val requestParser: ApiComplexV2JsonLdRequestParser,
   private val renderer: KnoraResponseRenderer,
   private val readResources: ReadResourcesService,
+  private val storedXmlServing: StoredXmlServing,
 ) {
   def getResourcesIiifManifest(user: User)(
     resourceIri: IriDto,
@@ -85,8 +87,16 @@ final case class ResourcesRestService(
     order <- ZIO
                .foreach(orderByProperty.map(_.value))(iriConverter.asPropertyIri)
                .mapBoth(BadRequestException.apply, _.map(_.smartIri.toInternalSchema))
-    rendering = format.schemaRendering
-    result   <- searchService.searchResourcesByProjectAndClassV2(projectIri, resourceClass, order, page, rendering, user)
+    readOptions = storedXmlServing(format)
+    result     <-
+      searchService.searchResourcesByProjectAndClassV2(
+        projectIri,
+        resourceClass,
+        order,
+        page,
+        readOptions.schemaRendering,
+        user,
+      )
     response <- renderer.render(result, format)
   } yield response
 
@@ -133,7 +143,8 @@ final case class ResourcesRestService(
     versionDate: Option[VersionDate],
     formatOptions: FormatOptions,
     user: User,
-  ): Task[(RenderedResponse, MediaType)] =
+  ): Task[(RenderedResponse, MediaType)] = {
+    val readOptions = storedXmlServing(formatOptions)
     readResources
       .getResourcesWithDeletedResource(
         resourceIris,
@@ -142,11 +153,12 @@ final case class ResourcesRestService(
         versionDate,
         withDeleted = true,
         showDeletedValues = false,
-        formatOptions.schema,
-        formatOptions.rendering,
+        readOptions.schema,
+        readOptions.rendering,
         user,
       )
       .flatMap(renderer.render(_, formatOptions))
+  }
 
   def getResourcesGraph(user: User)(
     resourceIri: IriDto,
