@@ -15,18 +15,18 @@ import zio.nio.file.Path
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 
-import org.knora.webapi.config.DspIngestConfig
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.infrastructure.JwtService
 import org.knora.webapi.testservices.TestDspIngestClient.*
 
 final case class TestDspIngestClient(
-  config: DspIngestConfig,
+  config: KnoraApi,
   jwtService: JwtService,
   backend: StreamBackend[Task, ZioStreams],
 ) {
 
-  private val ingestUrl = uri"${config.baseUrl}"
+  private val ingestUrl = uri"${config.externalKnoraApiBaseUrl}".addPath("ingest")
 
   def uploadFile(file: java.nio.file.Path, shortcode: Shortcode = Shortcode.unsafeFrom("0001")): Task[UploadedFile] =
     uploadFile(Path.fromJava(file), shortcode)

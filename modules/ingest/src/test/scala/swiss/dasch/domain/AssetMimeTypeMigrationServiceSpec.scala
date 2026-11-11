@@ -9,7 +9,6 @@ import org.junit.runner.RunWith
 import swiss.dasch.domain.AssetInfoFileTestHelper.*
 import swiss.dasch.domain.AugmentedPath.AssetFolder
 import swiss.dasch.test.SpecConfigurations
-import swiss.dasch.util.TestUtils
 import zio.*
 import zio.test.*
 
@@ -161,10 +160,9 @@ class AssetMimeTypeMigrationServiceSpec extends ZIOSpecDefault {
       AssetMimeTypeMigrationService.layer,
       FileChecksumServiceLive.layer,
       MimeTypeGuesser.layer,
-      ProjectRepositoryLive.layer,
       ProjectService.layer,
+      SpecConfigurations.ingestExecutorLayer,
       SpecConfigurations.storageConfigLayer,
       StorageServiceLive.layer,
-      TestUtils.testDbLayerWithEmptyDb,
     )
 }

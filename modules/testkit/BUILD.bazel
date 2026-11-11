@@ -23,6 +23,7 @@ scala_macro_library(
     srcs = glob(["src/main/scala/**/*.scala"]),
     visibility = ["//visibility:public"],
     deps = [
+        "//modules/ingest",
         "//modules/webapi:webapi",
         "@maven//:dev_zio_zio_3",
         "@maven//:dev_zio_zio_test_3",
