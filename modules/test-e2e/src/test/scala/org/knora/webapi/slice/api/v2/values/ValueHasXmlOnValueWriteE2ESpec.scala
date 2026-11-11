@@ -114,14 +114,16 @@ class ValueHasXmlOnValueWriteE2ESpec extends E2EZSpec {
     """<p>She said "hi" and 'bye' \ back\\slash &amp; 🦉 owl, 🦉🦉 flock</p><p>C:\dir\\file "q" 'a' &amp;amp;</p>""",
   )
 
-  private def standoffTagCount(valueIri: String): RIO[TriplestoreService, Option[Int]] =
-    selectFirst(
-      s"SELECT (COUNT(?n) AS ?count) WHERE { GRAPH <$dataGraph> { <$valueIri> <${kb}valueHasStandoff> ?n } }",
-      "count",
-    ).map(_.flatMap(_.toIntOption))
+  /**
+   * The rendered XML of the PRD's largest example is about 60 KB. This document renders to more, with about 600 tags:
+   * the size of the stored literal, not the tag count, is what a write must accept.
+   */
+  private val largeXmlMinLength = 60000
 
-  private def largeXml(offset: Int) =
-    xmlDoc((1 to 3000).map(i => s"<p>line ${i + offset}: <em>${i * 7 + offset}</em></p>").mkString)
+  private def largeXml(offset: Int) = {
+    val filler = "lorem ipsum dolor sit amet, " * 10
+    xmlDoc((1 to 300).map(i => s"<p>line ${i + offset}: $filler<em>${i * 7 + offset}</em></p>").mkString)
+  }
 
   override val e2eSpec: Spec[env, Any] = suite("valueHasXml written by POST and PUT /v2/values")(
     test("REQ-1.2 REQ-2.1 create stores valueHasXml byte-identical to the served textValueAsXml") {
@@ -216,21 +218,21 @@ class ValueHasXmlOnValueWriteE2ESpec extends E2EZSpec {
         stored.exists(_.contains("&quot;q&quot; &apos;a&apos;")),
       )
     },
-    test("a document of 6000 standoff tags is created and edited with valueHasXml identical to the served XML") {
+    test("a large document is created and edited with valueHasXml identical to the served XML") {
       for {
         (resource, v1) <- resourceWithCreatedValue(largeXml(0))
         created        <- storedByteIdenticalToServed(resource, v1)
         _              <- updateText(resource, v1, largeXml(100000), standard)
         v2             <- currentValueOf(resource)
         edited         <- storedByteIdenticalToServed(resource, v2)
-        tagsV1         <- standoffTagCount(v1)
-        tagsV2         <- standoffTagCount(v2)
+        storedV1       <- storedXml(v1)
+        storedV2       <- storedXml(v2)
       } yield created && edited && assertTrue(
         v1 != v2,
-        tagsV1.exists(_ >= 6000),
-        tagsV2.exists(_ >= 6000),
+        storedV1.exists(_.length > largeXmlMinLength),
+        storedV2.exists(_.length > largeXmlMinLength),
       )
-    } @@ TestAspect.timeout(10.minutes),
+    },
     test("REQ-2.5 an unformatted text value has no valueHasXml while a formatted sibling has one") {
       for {
         resource    <- createThing()

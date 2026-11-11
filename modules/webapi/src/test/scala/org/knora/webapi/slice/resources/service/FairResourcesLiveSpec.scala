@@ -18,6 +18,7 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.Rendering
+import org.knora.webapi.StandoffSelection
 import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -191,7 +192,7 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
       targetSchema: ApiV2Schema,
       requestingUser: User,
       withDeleted: Boolean,
-      queryStandoff: Boolean,
+      standoff: StandoffSelection,
       skipRetrievalChecks: Boolean,
       standoffTagFilter: Option[SmartIri],
     ): Task[ReadResourcesSequenceV2] =
@@ -205,7 +206,7 @@ class FairResourcesLiveSpec extends ZIOSpecDefault {
       targetSchema: ApiV2Schema,
       requestingUser: User,
       withDeleted: Boolean,
-      queryStandoff: Boolean,
+      standoff: StandoffSelection,
       skipRetrievalChecks: Boolean,
       standoffTagFilter: Option[SmartIri],
     ): Task[ReadResourcesSequenceV2] = ZIO.die(new UnsupportedOperationException)

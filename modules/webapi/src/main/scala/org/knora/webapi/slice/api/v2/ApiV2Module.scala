@@ -45,7 +45,8 @@ object ApiV2Module {
 
   type Provided = ApiV2ServerEndpoints
 
-  val layer = AuthenticationServerEndpoints.layer >+>
+  val layer = StoredXmlServing.layer >+>
+    AuthenticationServerEndpoints.layer >+>
     ListsV2ServerEndpoints.layer >+>
     OntologyApiModule.layer >+>
     ResourceInfoServerEndpoints.layer >+>

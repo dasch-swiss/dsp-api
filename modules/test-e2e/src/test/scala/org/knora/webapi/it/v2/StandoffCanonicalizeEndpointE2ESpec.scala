@@ -18,6 +18,7 @@ import java.nio.file.Paths
 import dsp.valueobjects.Iri
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.*
+import org.knora.webapi.e2ez.ValueHasXmlTestSupport
 import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex as KA
 import org.knora.webapi.messages.OntologyConstants.KnoraBase as KB
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -26,6 +27,7 @@ import org.knora.webapi.messages.util.rdf.JsonLDKeywords
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.common.ResourceIri
+import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.TestApiClient
 import org.knora.webapi.util.FileUtil
@@ -36,7 +38,8 @@ import org.knora.webapi.util.FileUtil
  * Beyond wiring (200, `application/xml`, 400 on bad input) these assert the two properties the endpoint
  * exists to provide for client-side change detection of rich text:
  *   - idempotency: `canonicalize(canonicalize(x)) == canonicalize(x)`, and
- *   - equivalence with a stored value: `canonicalize(x) == textValueAsXml` after `x` is stored.
+ *   - equivalence with a stored value: `canonicalize(x) == textValueAsXml` after `x` is stored, and
+ *     `canonicalize(x) == kb:valueHasXml` byte for byte.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class StandoffCanonicalizeEndpointE2ESpec extends E2EZSpec {
@@ -95,6 +98,20 @@ class StandoffCanonicalizeEndpointE2ESpec extends E2EZSpec {
       xml   <- ZIO.fromEither(value.getRequiredString(KA.TextValueAsXml)).mapError(new Exception(_))
     } yield xml
 
+  private def sparqlLiteral(value: String): String =
+    value.flatMap {
+      case '\\' => "\\\\"
+      case '"'  => "\\\""
+      case '\n' => "\\n"
+      case '\r' => "\\r"
+      case c    => c.toString
+    }.mkString("\"", "", "\"")
+
+  private def replaceStoredXml(valueIri: String, xml: String): String =
+    s"""DELETE { GRAPH <${ValueHasXmlTestSupport.dataGraph}> { <$valueIri> <${KB.ValueHasXml}> ?old } }
+       |INSERT { GRAPH <${ValueHasXmlTestSupport.dataGraph}> { <$valueIri> <${KB.ValueHasXml}> ${sparqlLiteral(xml)} } }
+       |WHERE { GRAPH <${ValueHasXmlTestSupport.dataGraph}> { <$valueIri> <${KB.ValueHasXml}> ?old } }""".stripMargin
+
   override val e2eSpec: Spec[env, Any] = suite("POST /v2/standoff/canonicalize (experimental)")(
     test("normalises standard-mapping XML and is idempotent") {
       for {
@@ -136,6 +153,42 @@ class StandoffCanonicalizeEndpointE2ESpec extends E2EZSpec {
         canonical == storedXml,
         storedXml.contains("line1\n    indented\nline3"),
       )
+    },
+    test("its output equals the stored valueHasXml of a written value byte for byte") {
+      // The submitted attribute order differs from the order the renderer emits.
+      val submitted = ValueHasXmlTestSupport.xmlDoc(
+        """<p><a class="salsah-link" href="http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ">link</a></p>""",
+      )
+      for {
+        canonical   <- canonicalize(submitted)
+        resourceIri <- ValueHasXmlTestSupport.createResourceWithText(submitted, StandoffMappingIri.StandardMapping)
+        valueIri    <- ValueHasXmlTestSupport.currentValueOf(resourceIri)
+        stored      <- ValueHasXmlTestSupport.storedXml(valueIri).someOrFail(new Exception(s"$valueIri has no valueHasXml"))
+      } yield assertTrue(submitted != canonical, canonical == stored)
+    },
+    test("a served value's textValueAsXml equals the canonicalize output byte for byte") {
+      val submitted = ValueHasXmlTestSupport.xmlDoc(
+        """<p><a class="salsah-link" href="http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ">link</a></p>""",
+      )
+      for {
+        canonical   <- canonicalize(submitted)
+        resourceIri <- ValueHasXmlTestSupport.createResourceWithText(submitted, StandoffMappingIri.StandardMapping)
+        valueIri    <- ValueHasXmlTestSupport.currentValueOf(resourceIri)
+        stored      <- ValueHasXmlTestSupport.storedXml(valueIri).someOrFail(new Exception(s"$valueIri has no valueHasXml"))
+        served      <- ValueHasXmlTestSupport.servedXml(resourceIri, None)
+      } yield assertTrue(submitted != canonical, canonical == stored, served == canonical)
+    },
+    test("a client read serves the stored valueHasXml literal instead of rebuilding it") {
+      // A comment is valid XML the renderer never produces, so only a read that serves the literal returns it.
+      val submitted = ValueHasXmlTestSupport.xmlDoc("""<p>a <strong>stored</strong> literal</p>""")
+      for {
+        resourceIri <- ValueHasXmlTestSupport.createResourceWithText(submitted, StandoffMappingIri.StandardMapping)
+        valueIri    <- ValueHasXmlTestSupport.currentValueOf(resourceIri)
+        stored      <- ValueHasXmlTestSupport.storedXml(valueIri).someOrFail(new Exception(s"$valueIri has no valueHasXml"))
+        marked       = stored.replace("<text documentType=\"html\">", "<text documentType=\"html\"><!-- marker -->")
+        _           <- ValueHasXmlTestSupport.update(replaceStoredXml(valueIri, marked))
+        served      <- ValueHasXmlTestSupport.servedXml(resourceIri, None)
+      } yield assertTrue(marked != stored, served == marked)
     },
     test("rejects malformed XML with 400") {
       for {

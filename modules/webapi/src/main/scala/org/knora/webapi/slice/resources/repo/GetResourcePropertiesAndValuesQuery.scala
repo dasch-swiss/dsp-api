@@ -11,6 +11,8 @@ import java.util.UUID
 import dsp.valueobjects.UuidUtil
 import org.knora.sparqlbuilder.*
 import org.knora.webapi.IRI
+import org.knora.webapi.StandoffLink
+import org.knora.webapi.StandoffSelection
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Construct
 
@@ -27,7 +29,9 @@ object GetResourcePropertiesAndValuesQuery {
    * @param resourceIris      the resources to load; must not be empty.
    * @param preview           when true, only the resource metadata is loaded, no values.
    * @param withDeleted       when true, deleted resources and values are included.
-   * @param queryStandoff     when true, the standoff markup of text values is loaded.
+   * @param standoff          which standoff markup of text values is loaded. A `standoffTagFilter` takes
+   *                          precedence: with [[StandoffSelection.OnlyWithoutStoredXml]] and a tag filter, the
+   *                          filtered standoff of all values is loaded.
    * @param maybePropertyIri  restricts the values to one property.
    * @param maybeValueUuid    restricts the values to the one with this UUID.
    * @param maybeVersionDate  loads the value versions that were current at this point in time.
@@ -37,7 +41,7 @@ object GetResourcePropertiesAndValuesQuery {
     resourceIris: Seq[IRI],
     preview: Boolean,
     withDeleted: Boolean,
-    queryStandoff: Boolean,
+    standoff: StandoffSelection,
     maybePropertyIri: Option[SmartIri] = None,
     maybeValueUuid: Option[UUID] = None,
     maybeVersionDate: Option[Instant] = None,
@@ -49,7 +53,7 @@ object GetResourcePropertiesAndValuesQuery {
           resourceIris,
           preview,
           withDeleted,
-          queryStandoff,
+          standoff,
           maybePropertyIri,
           maybeValueUuid,
           standoffTagFilter,
@@ -59,7 +63,7 @@ object GetResourcePropertiesAndValuesQuery {
           resourceIris,
           preview,
           withDeleted,
-          queryStandoff,
+          standoff,
           maybePropertyIri,
           maybeValueUuid,
           versionDate,
@@ -77,7 +81,7 @@ object GetResourcePropertiesAndValuesQuery {
     resourceIris: Seq[IRI],
     preview: Boolean,
     withDeleted: Boolean,
-    queryStandoff: Boolean,
+    standoff: StandoffSelection,
     maybePropertyIri: Option[SmartIri],
     maybeValueUuid: Option[UUID],
     standoffTagFilter: Option[SmartIri],
@@ -111,7 +115,7 @@ object GetResourcePropertiesAndValuesQuery {
                |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
                |    knora-base:valueHasUUID ?currentValueUUID ;
                |    knora-base:hasPermissions ?currentValuePermissions .
-               |  ${(queryStandoff, standoffTagFilter) match {
+               |  ${(standoff.loadsStandoff, standoffTagFilter) match {
           case (false, _)   => Fragment.empty
           case (true, None) =>
             sparql"""|?valueObject knora-base:valueHasStandoff ?standoffNode .
@@ -160,7 +164,7 @@ object GetResourcePropertiesAndValuesQuery {
             .map(uuid => Literal.string(UuidUtil.base64Encode(uuid)))
             .whenSome(valueUuid => sparql"?valueObject knora-base:valueHasUUID $valueUuid .")}
                    |  ?valueObject knora-base:hasPermissions ?currentValuePermissions .
-                   |  ${(queryStandoff, standoffTagFilter) match {
+                   |  ${(standoff.loadsStandoff, standoffTagFilter) match {
             case (false, _) =>
               sparql"""|{
                      |  ?valueObject a ?valueObjectType ;
@@ -180,7 +184,7 @@ object GetResourcePropertiesAndValuesQuery {
                      |      ?valueObjectProperty ?valueObjectValue .
                      |    FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
                      |  } UNION {
-                     |    ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |    ${StandoffLink.fragment(standoff, Variable("valueObject"), Variable("standoffNode"))}
                      |    ?standoffNode ?standoffProperty ?standoffValue ;
                      |      knora-base:standoffTagHasStartIndex ?startIndex .
                      |    OPTIONAL {
@@ -235,7 +239,7 @@ object GetResourcePropertiesAndValuesQuery {
     resourceIris: Seq[IRI],
     preview: Boolean,
     withDeleted: Boolean,
-    queryStandoff: Boolean,
+    standoff: StandoffSelection,
     maybePropertyIri: Option[SmartIri],
     maybeValueUuid: Option[UUID],
     versionDate: Instant,
@@ -272,7 +276,7 @@ object GetResourcePropertiesAndValuesQuery {
                |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
                |    knora-base:valueHasUUID ?currentValueUUID ;
                |    knora-base:hasPermissions ?currentValuePermissions .
-               |  ${(queryStandoff, standoffTagFilter) match {
+               |  ${(standoff.loadsStandoff, standoffTagFilter) match {
           case (false, _)   => Fragment.empty
           case (true, None) =>
             sparql"""|?valueObject knora-base:valueHasStandoff ?standoffNode .
@@ -342,7 +346,7 @@ object GetResourcePropertiesAndValuesQuery {
                    |    FILTER(?otherValueObjectCreationDate <= $versionDateLiteral && ?otherValueObjectCreationDate > ?valueObjectCreationDate)
                    |  }
                    |  ?currentValue knora-base:hasPermissions ?currentValuePermissions .
-                   |  ${(queryStandoff, standoffTagFilter) match {
+                   |  ${(standoff.loadsStandoff, standoffTagFilter) match {
             case (false, _) =>
               sparql"""|{
                      |  ?valueObject a ?valueObjectType ;
@@ -362,7 +366,7 @@ object GetResourcePropertiesAndValuesQuery {
                      |      ?valueObjectProperty ?valueObjectValue .
                      |    FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
                      |  } UNION {
-                     |    ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                     |    ${StandoffLink.fragment(standoff, Variable("valueObject"), Variable("standoffNode"))}
                      |    ?standoffNode ?standoffProperty ?standoffValue ;
                      |      knora-base:standoffTagHasStartIndex ?startIndex .
                      |    OPTIONAL {

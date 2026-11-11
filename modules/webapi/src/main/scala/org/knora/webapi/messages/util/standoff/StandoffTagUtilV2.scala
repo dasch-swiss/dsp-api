@@ -1304,6 +1304,10 @@ object StandoffTagUtilV2 {
   /**
    * Converts a text value with standoff to an XML String.
    *
+   * The output is stored as `knora-base:valueHasXml` and served to clients. The backfill skips values that already
+   * carry the literal and has no forced re-render mode, so an output change needs such a mode first.
+   * `StandoffRendererGoldenSpec` fails on any output change.
+   *
    * @param utf8str              the string representation of the text value (`valueHasString`).
    * @param standoff             the standoff representing the markup.
    * @param mappingXMLtoStandoff the mapping used to convert standoff to XML markup.

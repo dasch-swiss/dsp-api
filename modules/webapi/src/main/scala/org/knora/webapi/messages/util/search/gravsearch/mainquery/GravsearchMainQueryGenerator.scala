@@ -225,16 +225,14 @@ object GravsearchMainQueryGenerator {
    * @param mainResourceIris      IRIs of main resources to be queried.
    * @param dependentResourceIris IRIs of dependent resources to be queried.
    * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
-   * @param targetSchema          the target API schema.
-   * @param schemaOptions         the schema options submitted with the request.
+   * @param standoffSelection     which standoff to query for text values; must be the selection used to construct the response.
    * @return the main [[ConstructQuery]] query to be executed.
    */
   def createMainQuery(
     mainResourceIris: Set[IriRef],
     dependentResourceIris: Set[IriRef],
     valueObjectIris: Set[IRI],
-    targetSchema: ApiV2Schema,
-    schemaOptions: Set[Rendering],
+    standoffSelection: StandoffSelection,
   ): ConstructQuery = {
     import GravsearchConstants.*
 
@@ -364,18 +362,11 @@ object GravsearchMainQueryGenerator {
         ),
       )
 
-      // Check whether the response should include standoff.
-      val queryStandoff: Boolean = SchemaOptions.queryStandoffWithTextValues(targetSchema, schemaOptions)
-
       // WHERE patterns for querying the first page of standoff in each text value
-      val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
+      val wherePatternsForStandoff: Seq[QueryPattern] = if (standoffSelection.loadsStandoff) {
         Seq(
           mainAndDependentResourcesValueObjectsValuePattern,
-          StatementPattern(
-            subj = mainAndDependentResourceValueObject,
-            pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
-            obj = standoffNodeVar,
-          ),
+        ) ++ StandoffLink.patterns(standoffSelection, mainAndDependentResourceValueObject, standoffNodeVar) ++ Seq(
           StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
           StatementPattern(
             subj = standoffNodeVar,
@@ -409,7 +400,7 @@ object GravsearchMainQueryGenerator {
       }
 
       // return standoff assertions
-      val constructPatternsForStandoff: Seq[StatementPattern] = if (queryStandoff) {
+      val constructPatternsForStandoff: Seq[StatementPattern] = if (standoffSelection.loadsStandoff) {
         Seq(
           StatementPattern(
             subj = mainAndDependentResourceValueObject,

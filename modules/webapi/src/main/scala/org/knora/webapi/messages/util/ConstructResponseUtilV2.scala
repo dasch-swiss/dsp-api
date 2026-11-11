@@ -40,7 +40,6 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.IiifImageRequestUrl
 import org.knora.webapi.slice.standoff.service.StandoffMappingService
 import org.knora.webapi.store.iiif.errors.SipiException
@@ -104,6 +103,8 @@ final class ConstructResponseUtilV2(
    * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
    * @param valueCommentOption        the value's comment, if any.
    * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+   * @param standoffSelection         the standoff selection of the request; stored XML is only read for
+   *                                  [[StandoffSelection.OnlyWithoutStoredXml]].
    * @param requestingUser            the user making the request.
    * @return a [[TextValueContentV2]].
    */
@@ -112,63 +113,49 @@ final class ConstructResponseUtilV2(
     valueObjectValueHasString: Option[String],
     valueCommentOption: Option[String],
     mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
+    standoffSelection: StandoffSelection,
     requestingUser: User,
   ): Task[TextValueContentV2] = {
     // Any knora-base:TextValue may have a language
     val valueLanguageOption: Option[String] =
       valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri)
 
-    if (valueObject.standoff.nonEmpty) {
-      for {
-        mappingIri <- ZIO.foreach(valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri)) {
-                        iri =>
-                          ZIO
-                            .fromEither(StandoffMappingIri.from(iri))
-                            .mapBoth(_ => InconsistentRepositoryDataException(s"Invalid mapping IRI $iri"), identity)
-                      }
-        mappingAndXsltTransformation = mappingIri.flatMap(mappings.get)
-        standoff                    <- standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
+    val storedXml: Option[String] =
+      if (standoffSelection == StandoffSelection.OnlyWithoutStoredXml)
+        valueObject.maybeStringObject(OntologyConstants.KnoraBase.ValueHasXml.toSmartIri)
+      else None
+
+    for {
+      shape <- ZIO.fromEither(
+                 TextValueShape.derive(
+                   valueIri = valueObject.valueIri.value,
+                   hasStoredXml = storedXml.isDefined,
+                   hasStandoff = valueObject.standoff.nonEmpty,
+                   mappingIri = valueObject.maybeIriObject(OntologyConstants.KnoraBase.ValueHasMapping.toSmartIri),
+                   storedTextValueType =
+                     valueObject.maybeIriObject(OntologyConstants.KnoraBase.HasTextValueType.toSmartIri),
+                 ),
+               )
+      mappingAndXsltTransformation = shape.mappingIri.flatMap(mappings.get)
+      // The standoff of a value with stored XML is not read, so any standoff link without node data is ignored.
+      standoff <- if (storedXml.isDefined || valueObject.standoff.isEmpty) ZIO.succeed(Seq.empty)
+                  else
+                    standoffTagUtilV2.createStandoffTagsV2FromConstructResults(
                       standoffAssertions = valueObject.standoff,
                       requestingUser = requestingUser,
                     )
-        textTypeInferred = mappingIri.map(_.value) match
-                             case None                                              => TextValueType.UnformattedText
-                             case Some(OntologyConstants.KnoraBase.StandardMapping) => TextValueType.FormattedText
-                             case Some(iri)                                         => TextValueType.CustomFormattedText(InternalIri(iri))
-        textType = valueObject
-                     .maybeIriObject(OntologyConstants.KnoraBase.HasTextValueType.toSmartIri)
-                     .flatMap {
-                       case OntologyConstants.KnoraBase.UnformattedText     => Some(TextValueType.UnformattedText)
-                       case OntologyConstants.KnoraBase.FormattedText       => Some(TextValueType.FormattedText)
-                       case OntologyConstants.KnoraBase.CustomFormattedText =>
-                         mappingIri.map(iri => TextValueType.CustomFormattedText(InternalIri(iri.value)))
-                       case OntologyConstants.KnoraBase.UndefinedTextType => None
-                       case _                                             => None
-                     }
-                     .getOrElse(textTypeInferred)
-      } yield TextValueContentV2(
-        ontologySchema = InternalSchema,
-        maybeValueHasString = valueObjectValueHasString,
-        textValueType = textType,
-        valueHasLanguage = valueLanguageOption,
-        standoff = standoff,
-        mappingIri = mappingIri,
-        mapping = mappingAndXsltTransformation.map(_.mapping),
-        xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
-        comment = valueCommentOption,
-      )
-    } else {
-      // The query returned no standoff markup.
-      ZIO.succeed(
-        TextValueContentV2(
-          ontologySchema = InternalSchema,
-          maybeValueHasString = valueObjectValueHasString,
-          textValueType = TextValueType.UnformattedText,
-          valueHasLanguage = valueLanguageOption,
-          comment = valueCommentOption,
-        ),
-      )
-    }
+    } yield TextValueContentV2(
+      ontologySchema = InternalSchema,
+      maybeValueHasString = valueObjectValueHasString,
+      textValueType = shape.textValueType,
+      valueHasLanguage = valueLanguageOption,
+      standoff = standoff,
+      mappingIri = shape.mappingIri,
+      mapping = mappingAndXsltTransformation.map(_.mapping),
+      xslt = mappingAndXsltTransformation.flatMap(_.XSLTransformation),
+      comment = valueCommentOption,
+      storedXml = storedXml,
+    )
   }
 
   /**
@@ -287,7 +274,7 @@ final class ConstructResponseUtilV2(
    * @param valueObject               the given [[ValueRdfData]].
    * @param valueCommentOption        the value's comment, if any.
    * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
-   * @param queryStandoff             if `true`, make separate queries to get the standoff for text values.
+   * @param standoffSelection which standoff to read for text values.
    * @param versionDate               if defined, represents the requested time in the the resources' version history.
    * @param targetSchema              the schema of the response.
    * @param requestingUser            the user making the request.
@@ -297,7 +284,7 @@ final class ConstructResponseUtilV2(
     valueObject: ValueRdfData,
     valueCommentOption: Option[IRI],
     mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
-    queryStandoff: Boolean,
+    standoffSelection: StandoffSelection,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
     requestingUser: User,
@@ -325,7 +312,7 @@ final class ConstructResponseUtilV2(
                       resourceIri = referredResIri,
                       resourceWithValueRdfData = nestedResourceAssertions,
                       mappings = mappings,
-                      queryStandoff = queryStandoff,
+                      standoffSelection = standoffSelection,
                       versionDate = versionDate,
                       requestingUser = requestingUser,
                       targetSchema = targetSchema,
@@ -531,7 +518,7 @@ final class ConstructResponseUtilV2(
   private def createValueContentV2FromValueRdfData(
     valueObject: ValueRdfData,
     mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
-    queryStandoff: Boolean,
+    standoffSelection: StandoffSelection,
     versionDate: Option[Instant] = None,
     targetSchema: ApiV2Schema,
     requestingUser: User,
@@ -543,7 +530,14 @@ final class ConstructResponseUtilV2(
 
     valueObject.valueObjectClass.toString match {
       case OntologyConstants.KnoraBase.TextValue =>
-        makeTextValueContentV2(valueObject, valueObjectValueHasString, valueCommentOption, mappings, requestingUser)
+        makeTextValueContentV2(
+          valueObject,
+          valueObjectValueHasString,
+          valueCommentOption,
+          mappings,
+          standoffSelection,
+          requestingUser,
+        )
       case OntologyConstants.KnoraBase.DateValue => ZIO.succeed(makeDateValueContentV2(valueObject, valueCommentOption))
       case OntologyConstants.KnoraBase.IntValue  =>
         ZIO.succeed(makeIntegerValueContentV2(valueObject, valueCommentOption))
@@ -569,7 +563,7 @@ final class ConstructResponseUtilV2(
           valueObject,
           valueCommentOption,
           mappings,
-          queryStandoff,
+          standoffSelection,
           versionDate,
           targetSchema,
           requestingUser,
@@ -588,7 +582,7 @@ final class ConstructResponseUtilV2(
    * @param resourceIri              the IRI of the resource.
    * @param resourceWithValueRdfData the Rdf data belonging to the resource.
    * @param mappings                 the mappings needed for standoff conversions and XSL transformations.
-   * @param queryStandoff            if `true`, make separate queries to get the standoff for text values.
+   * @param standoffSelection which standoff to read for text values.
    * @param versionDate              if defined, represents the requested time in the the resources' version history.
    * @param targetSchema             the schema of the response.
    * @param requestingUser           the user making the request.
@@ -598,7 +592,7 @@ final class ConstructResponseUtilV2(
     resourceIri: ResourceIri,
     resourceWithValueRdfData: ResourceWithValueRdfData,
     mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
-    queryStandoff: Boolean,
+    standoffSelection: StandoffSelection,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
     requestingUser: User,
@@ -652,7 +646,7 @@ final class ConstructResponseUtilV2(
                             buildReadValueV2(
                               valObj,
                               mappings,
-                              queryStandoff,
+                              standoffSelection,
                               targetSchema,
                               requestingUser,
                             )
@@ -706,7 +700,7 @@ final class ConstructResponseUtilV2(
   private def buildReadValueV2(
     valObj: ValueRdfData,
     mappings: Map[StandoffMappingIri, MappingAndXSLTransformation],
-    queryStandoff: Boolean,
+    standoffSelection: StandoffSelection,
     targetSchema: ApiV2Schema,
     requestingUser: User,
   ): Task[ReadValueV2] =
@@ -714,7 +708,7 @@ final class ConstructResponseUtilV2(
       valueContent <- createValueContentV2FromValueRdfData(
                         valueObject = valObj,
                         mappings = mappings,
-                        queryStandoff = queryStandoff,
+                        standoffSelection = standoffSelection,
                         targetSchema = targetSchema,
                         requestingUser = requestingUser,
                       )
@@ -785,7 +779,7 @@ final class ConstructResponseUtilV2(
    *                                     for permissions, but after filtering for duplicates.
    * @param pageSizeBeforeFiltering      the number of resources returned before filtering for permissions and duplicates.
    * @param mappings                     the mappings to convert standoff to XML, if any.
-   * @param queryStandoff                if `true`, make separate queries to get the standoff for text values.
+   * @param standoffSelection which standoff to read for text values.
    * @param calculateMayHaveMoreResults  if `true`, calculate whether there may be more results for the query.
    * @param versionDate                  if defined, represents the requested time in the the resources' version history.
    * @param targetSchema                 the schema of response.
@@ -798,7 +792,7 @@ final class ConstructResponseUtilV2(
     pageSizeBeforeFiltering: Int,
     mappings: Map[StandoffMappingIri, MappingAndXSLTransformation] =
       Map.empty[StandoffMappingIri, MappingAndXSLTransformation],
-    queryStandoff: Boolean,
+    standoffSelection: StandoffSelection,
     calculateMayHaveMoreResults: Boolean,
     versionDate: Option[Instant],
     targetSchema: ApiV2Schema,
@@ -815,7 +809,7 @@ final class ConstructResponseUtilV2(
         resourceIri = resourceIri,
         resourceWithValueRdfData = data,
         mappings = mappings,
-        queryStandoff = queryStandoff,
+        standoffSelection = standoffSelection,
         versionDate = versionDate,
         targetSchema = targetSchema,
         requestingUser = requestingUser,

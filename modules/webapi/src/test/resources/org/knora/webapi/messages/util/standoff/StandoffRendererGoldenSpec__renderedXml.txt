@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<text><p>First <strong>bold</strong> <em>italic</em> <a href="http://rdfh.ch/0001/linkTarget" class="salsah-link">link</a> &amp; &lt;less&gt; &quot;quoted&quot; end.</p>
+<p class="second">Second <span data-description="a &quot;quote&quot; &amp; &lt;tag&gt;" class="event">event</span> <a href="#target-1" class="internal">see</a> <span data-attr4="v4" data-attr2="v2" class="five" data-attr3="v3" data-attr5="v5" data-attr1="v1">five</span> <span class="anchor" id="target-1">target</span>.</p></text>

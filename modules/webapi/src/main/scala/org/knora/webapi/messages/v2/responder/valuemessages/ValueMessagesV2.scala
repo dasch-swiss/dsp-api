@@ -956,6 +956,11 @@ object TextValueType {
  * @param mappingIri          the IRI of the [[MappingXMLtoStandoff]] used by default with the text value, if any.
  * @param mapping             the [[MappingXMLtoStandoff]] used by default with the text value, if any.
  * @param comment             a comment on this [[TextValueContentV2]], if any.
+ * @param storedXml           the XML stored with the text value, if any. Set only by `ConstructResponseUtilV2` in serve
+ *                            mode (`StandoffSelection.OnlyWithoutStoredXml`) when the value has `knora-base:valueHasXml`.
+ *                            A served value has this field set and an empty `standoff`; it must not reach a write path.
+ *                            Internal reads, including the history comparison of value versions, never set it.
+ *                            It takes precedence over XML rebuilt from `standoff`.
  */
 case class TextValueContentV2(
   ontologySchema: OntologySchema,
@@ -967,6 +972,7 @@ case class TextValueContentV2(
   mapping: Option[MappingXMLtoStandoff] = None,
   xslt: Option[String] = None,
   comment: Option[String] = None,
+  storedXml: Option[String] = None,
 ) extends ValueContentV2 { self =>
 
   override def valueType: SmartIri = {
@@ -975,25 +981,44 @@ case class TextValueContentV2(
   }
 
   /**
-   * Returns the IRIs of any resources that are target of standoff link tags in this text value.
+   * True for a value served from its stored XML: `storedXml` is set and `standoff` is empty (see the class Scaladoc).
    */
-  lazy val standoffLinkTagTargetResourceIris: Set[IRI] =
-    standoffLinkTagIriAttributes.map(_.value)
+  def isServedFromStore: Boolean = storedXml.isDefined && standoff.isEmpty
+
+  /**
+   * Returns the IRIs of any resources that are target of standoff link tags in this text value.
+   * Fails for a value served from the store, like [[standoffLinkTagIriAttributes]].
+   */
+  def standoffLinkTagTargetResourceIris: Either[AssertionException, Set[IRI]] =
+    standoffLinkTagIriAttributes.map(_.map(_.value))
 
   /**
    * Returns the IRI attributes representing the target IRIs of any standoff links in this text value.
+   * Fails for a value served from the store, whose standoff was not loaded. The failure is typed, not a defect, so
+   * that each caller must handle the served state instead of computing empty link targets.
    */
-  lazy val standoffLinkTagIriAttributes: Set[StandoffTagIriAttributeV2] =
-    standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) { case (acc, standoffTag: StandoffTagV2) =>
-      if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
-        val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
-          case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute
-        }.toSet
+  def standoffLinkTagIriAttributes: Either[AssertionException, Set[StandoffTagIriAttributeV2]] =
+    if (isServedFromStore) {
+      val mapping = mappingIri.map(m => s"with mapping <${m.value}>").getOrElse("without a mapping")
+      Left(
+        AssertionException(
+          s"Text value $mapping was read with the serve-stored-XML option, which only StoredXmlServing adds to a client read, so its standoff was not loaded and its standoff links cannot be computed; read it without that option to write it",
+        ),
+      )
+    } else {
+      Right(
+        standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) { case (acc, standoffTag: StandoffTagV2) =>
+          if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+            val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
+              case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute
+            }.toSet
 
-        acc ++ iriAttributes
-      } else {
-        acc
-      }
+            acc ++ iriAttributes
+          } else {
+            acc
+          }
+        },
+      )
     }
 
   override def valueHasString: String =
@@ -1035,6 +1060,23 @@ case class TextValueContentV2(
 
   override def toOntologySchema(targetSchema: OntologySchema): TextValueContentV2 = copy(ontologySchema = targetSchema)
 
+  private def missingMapping: BadRequestException =
+    BadRequestException("Cannot render standoff as XML without a mapping")
+
+  /**
+   * The XML returned as `textValueAsXml` and used as the XSLT input: the stored XML if present, otherwise the XML
+   * rebuilt from the standoff via the mapping.
+   */
+  private def xmlToRender: String =
+    storedXml.getOrElse {
+      val definedMapping = mapping.getOrElse(throw missingMapping)
+      StandoffTagUtilV2.convertStandoffTagV2ToXML(
+        utf8str = valueHasString,
+        standoff = standoff,
+        mappingXMLtoStandoff = definedMapping,
+      )
+    }
+
   override def toJsonLDValue(
     targetSchema: ApiV2Schema,
     projectADM: Project,
@@ -1056,10 +1098,11 @@ case class TextValueContentV2(
         }
 
       case ApiV2Complex =>
-        val renderStandoffAsXml: Boolean = standoff.nonEmpty && SchemaOptions.renderMarkupAsXml(
-          targetSchema = targetSchema,
-          schemaOptions = schemaOptions,
-        )
+        val renderStandoffAsXml: Boolean =
+          (standoff.nonEmpty || storedXml.isDefined) && SchemaOptions.renderMarkupAsXml(
+            targetSchema = targetSchema,
+            schemaOptions = schemaOptions,
+          )
 
         // Read path: maps to external knora-api IRIs, not the internal knora-base IRIs of the write paths
         // (TextValueType.hasTextValueTypeIri). It is the only path that reaches UndefinedTextType, so it maps that
@@ -1072,29 +1115,21 @@ case class TextValueContentV2(
 
         // Should we render standoff as XML?
         val objectMap: Map[IRI, JsonLDValue] = if (renderStandoffAsXml) {
-          val definedMappingIri =
-            mappingIri.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
-          val definedMapping =
-            mapping.getOrElse(throw BadRequestException(s"Cannot render standoff as XML without a mapping"))
-
-          val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(
-            utf8str = valueHasString,
-            standoff = standoff,
-            mappingXMLtoStandoff = definedMapping,
-          )
+          val definedMappingIri = mappingIri.getOrElse(throw missingMapping)
+          val renderedXml       = xmlToRender
 
           // check if there is an XSL transformation
           xslt match {
             case Some(definedXslt) =>
               val xmlTransformed: String = XMLUtil.applyXSLTransformation(
-                xml = xmlFromStandoff,
+                xml = renderedXml,
                 xslt = definedXslt,
               )
 
               // the xml was converted to HTML
               Map(
                 TextValueAsHtml     -> JsonLDString(xmlTransformed),
-                TextValueAsXml      -> JsonLDString(xmlFromStandoff),
+                TextValueAsXml      -> JsonLDString(renderedXml),
                 TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(
                   definedMappingIri,
                 ),
@@ -1102,7 +1137,7 @@ case class TextValueContentV2(
 
             case None =>
               Map(
-                TextValueAsXml      -> JsonLDString(xmlFromStandoff),
+                TextValueAsXml      -> JsonLDString(renderedXml),
                 TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(
                   definedMappingIri,
                 ),
@@ -1133,7 +1168,10 @@ case class TextValueContentV2(
    * @return a list of [[CreateStandoffTagV2InTriplestore]] each representing a [[StandoffTagV2]] object
    *         along with is standoff tag class and IRI that is going to identify it in the triplestore.
    */
-  def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV2InTriplestore] =
+  def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV2InTriplestore] = {
+    // A served value has no standoff, so it would silently insert none. The function is pure and returns no Either,
+    // so it throws the AssertionException of the accessors.
+    standoffLinkTagIriAttributes.left.foreach(failure => throw failure)
     if (standoff.nonEmpty) {
       // create an IRI for each standoff tag
       // internal references to XML ids are not resolved yet
@@ -1195,6 +1233,7 @@ case class TextValueContentV2(
     } else {
       Seq.empty[CreateStandoffTagV2InTriplestore]
     }
+  }
 
   override def unescape: ValueContentV2 = {
     // Unescape the text in standoff string attributes.
