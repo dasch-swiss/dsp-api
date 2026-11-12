@@ -981,6 +981,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueHasMapping> <$Mapping> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasMaxStandoffStartIndex> "0"^^<$XsdInteger> <$DataGraph> .
                |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}FormattedText> <$DataGraph> .
+               |<$Value1> <${KnoraBase}valueHasXml> "<text>text</text>"^^<$XsdString> <$DataGraph> .
                |""".stripMargin
           ZIO.scoped {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isRight))
@@ -1414,6 +1415,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
              |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
              |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}FormattedText> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueHasXml> "<text>text</text>"^^<$XsdString> <$DataGraph> .
              |<$Value1> <${KnoraBase}valueHasMapping> <http://rdfh.ch/standoff/mappings/StandardMapping> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
@@ -1430,6 +1432,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
              |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
              |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}FormattedText> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueHasXml> "<text>text</text>"^^<$XsdString> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
           validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
@@ -1445,6 +1448,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |<$Value1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
              |<$Value1> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
              |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}CustomFormattedText> <$DataGraph> .
+             |<$Value1> <${KnoraBase}valueHasXml> "<text>text</text>"^^<$XsdString> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
           validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
