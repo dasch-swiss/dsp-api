@@ -200,7 +200,7 @@ object License {
     License(
       UNKNOWN,
       URI.create(UNKNOWN.value),
-      "Unknown License - Ask Copyright Holder for Permission",
+      "Copyright Undetermined: Ask Before Reuse",
       IsDaschRecommended.Yes,
     ),
     License(
