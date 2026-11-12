@@ -1,0 +1,3843 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../assets/icons/logo_bw.svg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.17">
+    
+    
+      
+        <title>Commit and PR Conventions - DSP-API</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bcfcd587.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/css/theme.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#commit-and-pr-conventions" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="DSP-API" class="md-header__button md-logo" aria-label="DSP-API" data-md-component="logo">
+      
+  <img src="../../assets/icons/logo_bw.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            DSP-API
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Commit and PR Conventions
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="DSP-API" class="md-nav__button md-logo" aria-label="DSP-API" data-md-component="logo">
+      
+  <img src="../../assets/icons/logo_bw.svg" alt="logo">
+
+    </a>
+    DSP-API
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            Introduction
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-introduction/what-is-dsp/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    What is DSP?
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-introduction/file-formats/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    File Formats in DSP-API
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-introduction/standoff-rdf/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Standoff/RDF Text Markup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-introduction/legal-info/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Legal Information for Assets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../01-introduction/example-project/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    An Example Project
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    DSP Ontologies
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            DSP Ontologies
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-dsp-ontologies/introduction/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-dsp-ontologies/project-data-models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project Data Models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-dsp-ontologies/knora-base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    The Knora Base Ontology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-dsp-ontologies/salsah-gui/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    The SALSAH GUI Ontology
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    DSP-API Endpoints
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            DSP-API Endpoints
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/openapi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    OpenAPI Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    DSP-API V2
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            DSP-API V2
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/introduction/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/authentication/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentication
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/reading-and-searching-resources/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Reading and Searching Resources
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/reading-user-permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Reading the User's Permissions on Resources and Values
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/getting-lists/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting Lists
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/query-language/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gravsearch - Virtual Graph Search
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/editing-resources/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating and Editing Resources
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/editing-values/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating and Editing Values
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/ontology-information/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Querying, Creating, and Updating Ontologies
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_2_10" id="__nav_3_2_10_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Textual Data in DSP-API
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_3_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            Textual Data in DSP-API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/text/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/text/standard-standoff/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Standard Standoff Markup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/text/custom-standoff/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Custom Standoff Mapping
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/text/tei-xml/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TEI XML
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/permalinks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permalinks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v2/knora-iris/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IRIs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Admin API
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            Admin API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/introduction/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/users/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Users Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/projects/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Projects Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/groups/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Groups Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/lists/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Lists Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permissions Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/files/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Files Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/stores/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Stores Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/sparql-passthrough/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SPARQL Passthrough
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-admin/maintenance/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Maintenance Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API V3
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            API V3
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v3/project-migration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project Migration Export/Import
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-v3/project-data-import/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project Data Import
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_5" id="__nav_3_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Util API
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_5">
+            <span class="md-nav__icon md-icon"></span>
+            Util API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/api-util/version/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Version
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Instrumentation API
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            Instrumentation API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/instrumentation/introduction/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/instrumentation/health/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Health Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../03-endpoints/instrumentation/metrics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Metrics Endpoint
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Publishing and Deployment
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Publishing and Deployment
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04-publishing-deployment/publishing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Publishing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../04-publishing-deployment/configuration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Observability
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Observability
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../observability/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../observability/using-grafana/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Grafana
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../observability/gravsearch-trace-runbook/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gravsearch Trace Runbook
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../observability/traceql-recipes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TraceQL Recipes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../observability/instrumentation-recipe/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Instrumentation Recipe
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Decisions (ADR)
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Decisions (ADR)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0001-record-architecture-decisions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0001 Record Architectural Decisions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0002-change-cache-service-manager-from-akka-actor-to-zlayer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0002 Change Cache Service Manager from Akka-Actor to ZLayer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0003-change-iiif-service-manager-and-sipi-implementation-to-zlayer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0003 Change IIIF Service Manager and Sipi implementation to zlayer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0004-change-triplestore-service-manager-and-fuseki-implementation-to-zlayer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0004 Change Triplestore Service Manager and Fuseki implementation to ZLayer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0005-change-respondermanager-to-a-simple-case-class/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0005 Change ResponderManager to a simple case class
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0006-use-zio-http/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0006 Gradually Replace Akka-HTTP with ZIO-HTTP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0007-zio-fication-of-responders/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0007 ZIO-fication of Responders
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0008-replace-akka-with-pekko/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0008 Replace Akka with Pekko
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0009-api-v3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0009 API `v3` for client-optimized endpoints
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0010-api-v3-basics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0010 API `v3` basics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0011-cross-context-access-ports-and-adapters/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0011 Cross-context access through consumer-defined ports
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0012-graph-scoped-lucene-text-lookups/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0012 Graph-scoped Lucene text lookups
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0013-authorization-policy-enforcement/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    0013 Authorization policy enforcement
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    DSP Internals
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            DSP Internals
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_1" id="__nav_7_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Design
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_1">
+            <span class="md-nav__icon md-icon"></span>
+            Design
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_1_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_1_1" id="__nav_7_1_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    DSP-API Design Principles
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_1_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_1_1">
+            <span class="md-nav__icon md-icon"></span>
+            DSP-API Design Principles
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/principles/design-overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Design Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/principles/store-module/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Store Module
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/principles/triplestore-updates/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Triplestore Updates
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/principles/consistency-checking/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Consistency Checking
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/principles/authentication/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Authentication
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/principles/rdf-api/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    RDF Processing API
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_1_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_1_2" id="__nav_7_1_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    DSP-API V2 Design
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            DSP-API V2 Design
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    API v2 Design Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/ontology-schemas/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Ontology Schemas
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/smart-iris/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Smart IRIs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/content-wrappers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Content Wrappers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/json-ld/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    JSON-LD Parsing and Formatting
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/ontology-management/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Ontology Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/sipi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DSP-API and Sipi
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/gravsearch/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Gravsearch Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/standoff/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Standoff Markup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/ark/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Archival Resource Key (ARK)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-v2/query-design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SPARQL Query Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/api-admin/administration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Admin API Design
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_1_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_1_4" id="__nav_7_1_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    DSP Domain
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_1_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_1_4">
+            <span class="md-nav__icon md-icon"></span>
+            DSP Domain
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/domain/domain-entities-and-relations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Domain Entities and Relations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/domain/system-instances/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    System Instances
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/design/domain/class-and-property-hierarchies/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Class and Property Hierarchies
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Development
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/development/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/development/building-and-running/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Build and Running
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/development/vscode-config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Setup Visual Studio Code for development of DSP-API
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/development/testing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Testing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/development/docker-cheat-sheet/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Docker Cheat Sheet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/development/docker-compose/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Starting the DSP-Stack inside Docker Container
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/development/updating-repositories/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Updating Repositories
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../05-internals/development/third-party/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Third-Party Dependencies
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    SIPI
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            SIPI
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06-sipi/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../06-sipi/sipi-and-dsp-api/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Interaction between Sipi and DSP-API
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Lucene
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Lucene
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../07-lucene/lucene-query-parser-syntax/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Lucene Query Parser Syntax
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../08-faq/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Frequently Asked Questions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Release Notes
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            Release Notes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../09-release-notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Changelog
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../10-migration-guides/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Migration Guides and Deprecations
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#git-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      Git workflow
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commit-message-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      Commit message schema
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Commit message schema">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#subject" class="md-nav__link">
+    <span class="md-ellipsis">
+      Subject
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-body-is-written-for-an-agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      The body is written for an agent
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-fix-means" class="md-nav__link">
+    <span class="md-ellipsis">
+      What fix: means
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scopes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scopes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enforcement
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#commit-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Commit organization
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Commit organization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#principle" class="md-nav__link">
+    <span class="md-ellipsis">
+      Principle
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#one-pr-several-commits-or-a-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      One PR, several commits, or a stack
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plans-fold-into-the-implementation-commit" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plans fold into the implementation commit
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#history-lives-in-git-documents-hold-the-current-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      History lives in git, documents hold the current state
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#where-context-lives" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where context lives
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stacked-prs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Stacked PRs
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pull-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pull requests
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pull requests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pr-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      PR description
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-goes-where" class="md-nav__link">
+    <span class="md-ellipsis">
+      What goes where
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#before-a-merge" class="md-nav__link">
+    <span class="md-ellipsis">
+      Before a merge
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="commit-and-pr-conventions">Commit and PR Conventions</h1>
+<p>The single source for how git is handled in dsp-api: the merge workflow, commit messages, commit organization
+and pull requests. <code>CLAUDE.md</code>, <code>CONVENTIONS.md</code>, <code>REVIEW.md</code> and the PR template point here and do not repeat it.</p>
+<h2 id="git-workflow">Git workflow</h2>
+<p>dsp-api merges pull requests by <strong>rebase</strong>. Every commit on a PR's branch lands on <code>main</code> verbatim, so the branch
+history <em>is</em> the <code>main</code> history, and there is no squash-on-merge safety net: whatever is left on the branch ships.</p>
+<p>The goal is a <strong>meaningful history on <code>main</code></strong>. Every commit on <code>main</code> is a deliberate, self-contained,
+Conventional Commit that an agent or a developer can read through <code>git log</code> and <code>git blame</code>. Working commits
+("WIP", "fix typo", "address review") do not belong on <code>main</code>.</p>
+<ul>
+<li><strong>Curate before merging (mandatory).</strong> Before a PR is merged, rewrite the branch (<code>git rebase -i</code>) so its commits
+  read well on <code>main</code>: squash trial-and-error and fixups into the commit they belong to, reword messages, reorder
+  as needed. Working commits while you build are fine; they make rollback easy. Push the rewritten branch with
+  <code>git push --force-with-lease</code>.</li>
+<li><strong>One commit per PR by default</strong>, enforced in CI. See
+  <a href="#one-pr-several-commits-or-a-stack">One PR, several commits, or a stack</a>.</li>
+<li>
+<p><strong>Update a branch by rebasing, never by merging <code>main</code> into it:</strong></p>
+<p>git fetch origin &amp;&amp; git rebase origin/main &amp;&amp; git push --force-with-lease</p>
+</li>
+</ul>
+<p>In the GitHub UI, use the chevron next to <strong>Update branch</strong> and pick <strong>Update with rebase</strong>. The plain button
+  creates a merge commit, which the commit hygiene check rejects.
+- <strong>At most 100 commits per PR.</strong> GitHub's "Rebase and merge" is
+  <a href="https://docs.github.com/en/repositories/creating-and-managing-repositories/repository-limits">limited to 100 commits</a>;
+  above that it refuses with "This branch cannot be rebased due to conflicts" although nothing conflicts.
+- <strong>Every commit should build and pass its tests</strong>, so that <code>git bisect</code> can land on any commit of <code>main</code>. This is a
+  recommendation, not a check: CI tests only the head of a PR.</p>
+<h2 id="commit-message-schema">Commit message schema</h2>
+<p>Follow <a href="https://www.conventionalcommits.org/">Conventional Commits</a>. release-please reads the type of every commit
+on <code>main</code> to sort it into a <code>CHANGELOG.md</code> section and to decide the next version, so the correct type is required,
+not optional.</p>
+<pre><code>type(scope): subject (DEV-1234)
+
+body
+</code></pre>
+<p><strong>Every commit has a type and a scope</strong>; both are mandatory. There are nine types; their changelog sections are
+configured in <code>.github/release-please/config.json</code> (<code>changelog-sections</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Meaning</th>
+<th>Changelog section</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>feat</code></td>
+<td>New user-visible functionality</td>
+<td>Enhancements</td>
+</tr>
+<tr>
+<td><code>fix</code></td>
+<td>Bug fix (see <a href="#what-fix-means">What <code>fix:</code> means</a>)</td>
+<td>Bug Fixes</td>
+</tr>
+<tr>
+<td><code>perf</code></td>
+<td>Performance improvement</td>
+<td>Performance Improvements</td>
+</tr>
+<tr>
+<td><code>deprecated</code></td>
+<td>Deprecation of an API or feature</td>
+<td>Deprecated</td>
+</tr>
+<tr>
+<td><code>docs</code></td>
+<td>Documentation</td>
+<td>Documentation</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>Adding or refactoring tests</td>
+<td>Tests</td>
+</tr>
+<tr>
+<td><code>refactor</code></td>
+<td>Code restructuring, no behavior change</td>
+<td>Maintenances</td>
+</tr>
+<tr>
+<td><code>build</code></td>
+<td>Build system or dependencies</td>
+<td>Maintenances</td>
+</tr>
+<tr>
+<td><code>chore</code></td>
+<td>Miscellaneous maintenance, CI</td>
+<td>Maintenances</td>
+</tr>
+</tbody>
+</table>
+<p>Every type is a visible changelog section. A breaking change takes a <code>!</code> suffix (or a <code>BREAKING CHANGE:</code> footer)
+and bumps the major version; <code>feat</code> bumps the minor version, every other type the patch version:</p>
+<pre><code>feat(api)!: remove the deprecated v2 search route
+</code></pre>
+<p><code>ci</code>, <code>style</code> and <code>revert</code> are <strong>not</strong> types; the commit hygiene check rejects them:</p>
+<ul>
+<li><strong>CI and automation</strong> → <code>chore(ci): ...</code>. <code>ci</code> stays a valid <em>scope</em>.</li>
+<li><strong>Formatting-only changes</strong> → fold them into the commit they belong to. <code>just fmt</code> is a CI gate, so a standalone
+  formatting commit should be rare.</li>
+<li><strong>Reverts</strong> → <code>fix(&lt;scope&gt;): revert ...</code> when the reverted change shipped, otherwise <code>chore(&lt;scope&gt;): revert ...</code>.</li>
+</ul>
+<h3 id="subject">Subject</h3>
+<p>The subject is imperative and in lowercase prose (<code>fix(search): limit the Lucene hits</code>, not <code>Fixed ...</code> or
+<code>Limit ...</code>). When a Linear issue exists, its id ends the subject in parentheses:
+<code>feat(search): add the label filter (DEV-1234)</code>. Do not use "Knora" in a commit message; use "dsp-api".</p>
+<h3 id="the-body-is-written-for-an-agent">The body is written for an agent</h3>
+<p>The history's main reader is a coding agent: it reaches a commit through <code>git blame</code>, <code>git log -- &lt;path&gt;</code> and
+<code>git log -S</code>, and the message is where it learns why the code is as it is. The subject says what changed; the body
+carries what the diff cannot:</p>
+<ul>
+<li>the decisions taken and the alternatives rejected, with the reason;</li>
+<li>the invariants the code relies on and where they are enforced;</li>
+<li>the gotchas a later change would trip over;</li>
+<li>the stable sources behind them (an ADR, a <code>DEV-</code> id, a doc page).</li>
+</ul>
+<p>It describes the end state of the change, never the journey to it: no "first tried", no review-round history, no
+behavior that existed only on the branch. A long body is fine; an agent reads all of it.</p>
+<h3 id="what-fix-means">What <code>fix:</code> means</h3>
+<p>A <code>fix:</code> corrects behavior that exists on <code>main</code>: a bug a deployer could hit today, or that a released version
+shipped. It earns a "Bug Fixes" changelog line precisely because deployers need to know.</p>
+<p>A bug you introduced earlier in the <strong>same branch</strong> is not a <code>fix:</code>. Fold it into the commit that introduced it
+(<code>git commit --fixup=&lt;sha&gt;</code>, then <code>git rebase -i --autosquash</code>) so it never lands on <code>main</code> and never generates a
+changelog entry for a bug nobody ever saw. With the one-commit default this is the normal case: you are amending,
+not accumulating.</p>
+<p>Corollary: if you discover a genuine pre-existing <code>main</code> bug while doing unrelated work, give it its <strong>own</strong> <code>fix:</code>
+commit (and usually its own PR), don't bury it inside the <code>feat:</code> or <code>refactor:</code> you happened to be writing.</p>
+<h2 id="scopes">Scopes</h2>
+<p><strong>A scope is mandatory.</strong> Every commit is <code>type(scope): subject</code>, so every changelog line reads <code>concern: subject</code>.</p>
+<p>The scope names the <strong>concern the change serves</strong>: the component whose responsibility it belongs to, not the
+directory the edited files happen to sit in. The vocabulary is the component names of
+the root <code>ARCH-MAP.md</code>, with the <code>webapi-</code> prefix dropped, plus three cross-cutting scopes:</p>
+<ul>
+<li><strong>webapi components:</strong> <code>app</code>, <code>api</code>, <code>common</code>, <code>security</code>, <code>infrastructure</code>, <code>triplestore</code>, <code>sipi-client</code>,
+  <code>admin</code>, <code>ontology</code>, <code>resources</code>, <code>standoff</code>, <code>search</code>, <code>export</code>, <code>fair</code></li>
+<li><strong>Modules and areas:</strong> <code>ingest</code>, <code>sipi</code>, <code>fuseki</code>, <code>bagit</code>, <code>jwt</code>, <code>shacl-validator</code>, <code>sparql-builder</code>,
+  <code>testkit</code>, <code>test-it</code>, <code>test-e2e</code>, <code>build-toolchain</code>, <code>docs</code>, <code>observability</code></li>
+<li><strong>Cross-cutting:</strong> <code>ci</code> (workflows, CI scripts, the commit hygiene check, agent hooks), <code>deps</code> (dependency
+  bumps), <code>release</code> (release-please, versioning, publishing images)</li>
+</ul>
+<p>Rules:</p>
+<ul>
+<li>Lowercase, kebab-case.</li>
+<li>A commit that spans several components may list them comma-separated: <code>refactor(admin,security): ...</code>.</li>
+<li><strong>Concern over location.</strong> Documentation or a test <em>about</em> a component takes that component's scope
+  (<code>docs(search): ...</code>, <code>test(ontology): ...</code>); only repo-level docs take <code>docs</code>.</li>
+<li><strong>No catch-all.</strong> There is no <code>repo</code> or <code>all</code> scope. When no scope fits, the component is probably missing from
+  <code>ARCH-MAP.md</code>: add it there deliberately rather than inventing a scope.</li>
+</ul>
+<p>The check enforces only that a scope is <em>present</em>, not which one, so a new component needs no config change. The
+list above is the advisory vocabulary; keep to it.</p>
+<h2 id="enforcement">Enforcement</h2>
+<p>The <code>Commit hygiene</code> job of <code>.github/workflows/commit-hygiene.yml</code> runs on every non-draft PR, through the
+composite action <code>.github/actions/commit-lint</code>. On a draft it skips the history checks but still reports, and still
+runs <code>just test-scripts</code>, the tests of the check's own scripts. It checks:</p>
+<ul>
+<li><strong>Messages:</strong> <a href="https://github.com/KeisukeYamashita/commitlint-rs"><code>commitlint-rs</code></a> against
+  <code>.commitlintrc.yml</code>: one of the nine types, a scope, a non-empty subject. <code>fixup!</code> and
+  <code>squash!</code> commits do not parse as Conventional Commits, so they fail here too.</li>
+<li><strong>Count:</strong> at most one commit, unless the PR description has a ticked <code>- [x] allow-many-commits</code> box. An unticked
+  box does not count. The check reruns when the description is edited.</li>
+<li><strong>No merge commits on the branch.</strong> <code>allow-many-commits</code> does not lift this; it is about independent commits,
+  which a merge commit is not.</li>
+</ul>
+<p>The check counts the commits between the PR's base branch and its head, so in a stack each PR is checked on its
+own commits only. Run the same checks locally before pushing (<code>commitlint</code> is in the Nix dev shell):</p>
+<pre><code>just commit-lint            # checks origin/main..HEAD
+just commit-lint &lt;base-ref&gt; # checks &lt;base-ref&gt;..HEAD, e.g. the layer below in a stack
+</code></pre>
+<p>Locally the PR description is empty, so the one-commit cap applies strictly; set
+<code>PR_BODY='- [x] allow-many-commits'</code> to check a branch that keeps several commits.</p>
+<p>The <code>main</code> ruleset requires a linear history, so a merge commit cannot reach <code>main</code> itself. A second ruleset,
+"feature branches: linear history" (GitHub repository settings), refuses merge commits on every other branch.</p>
+<p>For agents, the Claude Code hook <code>.claude/hooks/pr-curation-reminder.sh</code> lists the branch's commits and repeats the
+curation rule before <code>gh pr create</code>, <code>gh pr merge</code> and <code>gh stack submit</code>. It is advisory and never blocks.</p>
+<h2 id="commit-organization">Commit organization</h2>
+<h3 id="principle">Principle</h3>
+<p>Start from the assumption that the whole PR is <strong>one commit</strong>. Group commits by user-visible impact, not by
+implementation journey, and ask: "would a developer deploying dsp-api care about this change?" If yes, it is a
+<code>feat:</code> or <code>fix:</code>, the changelog sections a deployer reads first. If no, it is one of the other types, which land in
+sections further down; squash those aggressively too, so each is a meaningful line on its own.</p>
+<h3 id="one-pr-several-commits-or-a-stack">One PR, several commits, or a stack</h3>
+<p>When the finished work does not fit one commit, take the first rule that matches:</p>
+<ol>
+<li><strong>The parts would need different Motivation sections</strong> (see the PR template) → <strong>separate PRs</strong>, each from
+   <code>main</code>.</li>
+<li><strong>The parts depend on each other but should be reviewed separately</strong> → a <strong>stack</strong> of PRs (see
+   <a href="#stacked-prs">Stacked PRs</a>).</li>
+<li><strong>Only then: one PR with several commits.</strong> Each commit is independent and self-contained and deserves its own
+   line in <code>main</code>'s history. Tick <code>allow-many-commits</code> and fill in the template's Review guide, one sub-section per
+   commit.</li>
+</ol>
+<p>A reviewer asking for a split turns case 3 into case 2. In a stack the one-commit limit applies per PR.</p>
+<h3 id="plans-fold-into-the-implementation-commit">Plans fold into the implementation commit</h3>
+<p>A plan, PRD or execution journal committed with a PR (under <code>docs/specs/</code>) is part of the commit that implements it,
+not a separate <code>docs: add the plan</code> commit.</p>
+<h3 id="history-lives-in-git-documents-hold-the-current-state">History lives in git, documents hold the current state</h3>
+<p>Documents in the repository (<code>docs/</code>, ADRs, <code>ARCH-MAP.md</code>, <code>CONTEXT.md</code>, <code>CLAUDE.md</code>, <code>CONVENTIONS.md</code>, code
+comments) state what the code is and does now, or, for an ADR, the target it is being moved to. They never narrate
+how they got there: no "previously X, now Y", no dated amendment, no status that goes stale once a PR merges. Write
+a document as though the PR that introduces it is already merged. What is still to come (a decided target, an open
+question, a deferred option) is current information and stays, marked as such and linked to its Linear issue.</p>
+<p>The history of a document is the git history of its file. When a commit changes what a document says, above all
+when it changes a decision in an ADR, the commit body states what the document said before and why it changed.
+<code>git log -p -- &lt;file&gt;</code> reads it back. A commit that only says "update ADR-0011" loses the one thing the rewritten
+document no longer carries.</p>
+<p><code>docs/specs/</code> is the exception: PRDs, plans and journals are point-in-time records of what was intended when they
+were written, and are not rewritten to follow the code.</p>
+<h3 id="where-context-lives">Where context lives</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Audience</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Commit subject</td>
+<td>Release notes readers</td>
+<td>What changed, as <code>type(scope): subject</code></td>
+</tr>
+<tr>
+<td>Commit body</td>
+<td>Agents and developers via blame and log</td>
+<td>The why: decisions, invariants, gotchas; what a doc said before</td>
+</tr>
+<tr>
+<td>PR description</td>
+<td>Reviewers, future developers</td>
+<td>Reviewer context, plus the journey in Challenges and Decisions</td>
+</tr>
+<tr>
+<td>Docs and ADRs</td>
+<td>Everyone</td>
+<td>The current state, or a target state with its Linear id</td>
+</tr>
+<tr>
+<td>Learnings</td>
+<td>Future engineers and agents</td>
+<td>Optional, on top: structured, searchable knowledge</td>
+</tr>
+<tr>
+<td>Code comments</td>
+<td>Code readers</td>
+<td>Invariants a reader must not break (<code>CONVENTIONS.md</code> § Comments)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="stacked-prs">Stacked PRs</h2>
+<p>Work that depends on a PR still in review goes on a stacked PR instead of waiting for the merge. Each layer is its
+own PR whose base is the layer below, so it shows only its own diff and follows every rule on this page. The stack
+is managed with the <a href="https://docs.github.com/en/pull-requests/reference/stacked-prs-cli-commands"><code>gh stack</code></a>
+extension (<code>gh extension install github/gh-stack</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stack on an open PR's branch</td>
+<td><code>gh stack init &lt;open-pr-branch&gt; &lt;new-branch&gt;</code></td>
+</tr>
+<tr>
+<td>Add a further layer</td>
+<td><code>gh stack add &lt;new-branch&gt;</code></td>
+</tr>
+<tr>
+<td>Push every layer and open or update its PR</td>
+<td><code>gh stack submit</code></td>
+</tr>
+<tr>
+<td>Rebase the layers above after a lower one changes</td>
+<td><code>gh stack rebase</code>, then <code>gh stack push</code></td>
+</tr>
+<tr>
+<td>After a lower layer merges</td>
+<td><code>gh stack sync</code> (fetches, rebases, pushes)</td>
+</tr>
+</tbody>
+</table>
+<p>Rebase merge gives the merged commits new SHAs. After a lower layer merges, restack the layers
+above (<code>gh stack sync</code>, or <code>gh stack rebase</code> and <code>gh stack push</code>); otherwise the next layer's commit hygiene check
+still counts the lower layer's old commits as its own. Curate each layer's commits before it merges, as for any PR.</p>
+<h2 id="pull-requests">Pull requests</h2>
+<h3 id="pr-description">PR description</h3>
+<p>The PR title does not land on <code>main</code> and is not checked; the commit subjects are what count.</p>
+<p><code>.github/pull_request_template.md</code> pre-fills the structure into every new PR; a PR opened from the CLI
+(<code>gh pr create --body-file</code>) supplies the same sections:</p>
+<ul>
+<li><strong>Motivation:</strong> why the work was needed, what problem it solves for users.</li>
+<li><strong>Summary:</strong> one to three bullet points of user-visible changes.</li>
+<li><strong>Key Changes:</strong> the changes, grouped by topic.</li>
+<li><strong>Challenges and Decisions:</strong> what was tried, what failed, and the decisions taken. The journey that the curated
+  history deliberately omits goes here, never into a commit. Record a hard-to-reverse decision as an ADR in
+  <code>docs/adr/</code>. Delete the section if there were none.</li>
+<li><strong>Gotchas:</strong> actionable, "do X instead of Y", not "this is hard".</li>
+<li><strong>Test Plan:</strong> how the change was verified.</li>
+<li><strong>Commit hygiene:</strong> the curation box, and the <code>allow-many-commits</code> box when the PR keeps several commits.</li>
+<li><strong>Review guide:</strong> only with <code>allow-many-commits</code> ticked; one sub-section per commit, in history order.</li>
+</ul>
+<p>Start the description with <code>Fixes DEV-1234</code>, or <code>Part of DEV-1234</code> when the PR advances an umbrella issue it does
+not close. Create PRs as drafts.</p>
+<h3 id="what-goes-where">What goes where</h3>
+<table>
+<thead>
+<tr>
+<th>Information</th>
+<th>Put it in...</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New feature / breaking change</td>
+<td>Commit message (<code>feat:</code> / <code>feat!:</code>)</td>
+</tr>
+<tr>
+<td>Bug fix</td>
+<td>Commit message (<code>fix:</code>)</td>
+</tr>
+<tr>
+<td>Why the code is as it is</td>
+<td>Commit body</td>
+</tr>
+<tr>
+<td>How a decision or document changed, and why</td>
+<td>Commit body (the document itself is rewritten in place)</td>
+</tr>
+<tr>
+<td>Why the work was needed</td>
+<td>PR Motivation section</td>
+</tr>
+<tr>
+<td>What was tried and failed</td>
+<td>PR Challenges and Decisions section</td>
+</tr>
+<tr>
+<td>Architecture decisions and their rationale</td>
+<td>PR Challenges and Decisions; a hard-to-reverse one as an ADR in <code>docs/adr/</code></td>
+</tr>
+<tr>
+<td>What a reviewer should look at, per commit</td>
+<td>PR Review guide section (several commits only)</td>
+</tr>
+<tr>
+<td>Things to watch out for</td>
+<td>PR Gotchas section</td>
+</tr>
+<tr>
+<td>Structured, searchable knowledge</td>
+<td>Optionally a learning, written by <code>/eng:workflows:compound</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="before-a-merge">Before a merge</h2>
+<p>A PR merges only when every line holds for its current head. Say in its Test Plan how each was met, or why it does
+not apply.</p>
+<ol>
+<li><strong>It stands on its own.</strong> Nothing in it waits on later work.</li>
+<li><strong>The history is curated</strong>, and <code>just commit-lint</code> (the <code>Commit hygiene</code> check) passes.</li>
+<li><strong>CI is green</strong> at the head being merged.</li>
+<li><strong>It has been reviewed</strong>, and every finding is either fixed or answered.</li>
+<li><strong>The description is filled in</strong> per the template, with a Review guide when it keeps several commits.</li>
+<li><strong>Nothing is left only in text.</strong> Every follow-up has a Linear issue.</li>
+</ol>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="November 10, 2026 11:19:40 UTC">November 10, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "search.suggest", "version"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.1e8ae164.min.js"></script>
+      
+    
+  </body>
+</html>
