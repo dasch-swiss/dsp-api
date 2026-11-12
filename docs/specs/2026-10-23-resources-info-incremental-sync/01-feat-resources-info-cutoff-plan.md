@@ -69,7 +69,7 @@ Wall time includes about 0.1 s of client overhead; each query ran 2–3 times.
 | Project-wide via `attachedToProject`, no cutoff | 42,040 | 4.3–5.4 s |
 | Project-wide via `GRAPH`, no cutoff | 42,040 | 5.2–6.0 s |
 
-- **Graph scoping buys nothing here.** `docs/development/dsp-api-sparql-queries.md` recommends
+- **Graph scoping buys nothing here.** `docs/development/sparql-queries.md` recommends
   `GRAPH <projectDataGraph>` for project-wide reads, but the cost is in the per-resource lookups, not in finding
   the project's resources. Keep `attachedToProject`, which also spares resolving the project's data graph.
 - **One row per resource.** Adding `?resource a ?resourceClass` kept the row count equal to the resource count
@@ -88,23 +88,23 @@ Wall time includes about 0.1 s of client overhead; each query ran 2–3 times.
 - **SPARQL: one `sparql"..."` template.** The current query uses `s"..."` interpolation, which the repo forbids.
   Replace it with a query object in `slice/resources/repo/` that holds a single template, with the optional parts
   as holes (`opt.whenSome(x => sparql"...")`). Follow the repo's one-template convention: no local `Fragment`
-  vals or defs, and `PREFIX` lines written out (`docs/development/dsp-api-sparql-queries.md`). Live models:
+  vals or defs, and `PREFIX` lines written out (`docs/development/sparql-queries.md`). Live models:
   `GetResourcesByClassInProjectPrequery.scala`, and `GetResourceValueVersionHistoryQuery.scala` for a `>=` date
   filter (`Literal.dateTime(instant)` renders a typed `xsd:dateTime`; no new hole type is needed).
 - **Query shape.**
     - The `WHERE` block starts with `${resourceClass.whenSome(c => sparql"VALUES ?resourceClass { $c }")}`.
       `VALUES` goes first, never mid-block: the most selective pattern leads ("Selective patterns first" in
-      `dsp-api-sparql-queries.md`), and a mid-block `VALUES` splits the pattern group (seen in Gravsearch).
+      `sparql-queries.md`), and a mid-block `VALUES` splits the pattern group (seen in Gravsearch).
     - Then `?resource a ?resourceClass ; knora-base:attachedToProject <p> ; knora-base:creationDate ?creationDate ;
       knora-base:isDeleted ?isDeleted`. `creationDate` has `subjectClassConstraint knora-base:Resource`, so
       without `VALUES` this selects resources only, with no class filter or inference.
     - Then the two `OPTIONAL`s, then the cutoff
       `FILTER(COALESCE(?lastModificationDate, ?creationDate) >= ${Literal.dateTime(cutoff)})` as the last element.
       A filter splits the pattern group where its variables are bound
-      (`docs/development/dsp-api-fuseki-query-execution.md`), so it must come after both dates.
+      (`docs/development/fuseki-query-execution.md`), so it must come after both dates.
     - Keep `SELECT DISTINCT`. Class matching stays exact (no subclasses).
 - **Row parsing.** Replace `ResourceIri.unsafeFrom` in the row mapping with `ResourceIri.from`, failing with
-  `InconsistentRepositoryDataException` (`docs/development/dsp-api-iri-handling.md`); same for the class IRI.
+  `InconsistentRepositoryDataException` (`docs/development/iri-handling.md`); same for the class IRI.
 - **Class IRI output.** The repo returns internal class IRIs. The rest service converts each *distinct* class
   once with `IriConverter.asExternalIri` (a project-wide call can return 42k rows over a handful of classes) and
   passes the external IRI into `ResourceInfoDto.from`. A conversion failure comes from stored data: map it to

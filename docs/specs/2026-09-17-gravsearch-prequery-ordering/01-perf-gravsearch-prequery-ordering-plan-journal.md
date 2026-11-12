@@ -49,7 +49,7 @@ status: complete
 | P1-C4 | complete | 71a03b1cf | `ValuesPattern.toSparql` renders its entries sorted; `getSelectColumns` returns the main resource variable then the GROUP_CONCAT columns sorted by output variable name; two golden files regenerated | none |
 | P1-C5 | complete | 2872253aa | `ConstructTransformerSpec` gains a nested suite with a populated `classToSubclassLookup`; transforming the same CONSTRUCT query twice renders identical SPARQL containing a `VALUES` block | none |
 | P2-C0 | complete | (rebase step, no own commit) | `GoldenTest.scala` rebase conflict resolved as a union of upstream's reworded watch-mode line and PR 1's `GOLDEN_REWRITE` / placeholder paragraphs; the remaining six commits replayed cleanly | none |
-| P2-C0b | complete | 51c02e173 | the 24-line `GoldenTest` block comment reduced to the invariants plus a pointer; the regeneration recipe (three rewrite routes, the Java-regex `--test_filter` caveat, the fail-by-design rerun, the module-scope caveat, the placeholder rule, the determinism note) moved to `docs/development/dsp-api-conventions.md` § "Golden snapshot tests"; `dsp-api-sparql-queries.md` § "Golden tests (preferred)" gained a pointer sentence | none |
+| P2-C0b | complete | 51c02e173 | the 24-line `GoldenTest` block comment reduced to the invariants plus a pointer; the regeneration recipe (three rewrite routes, the Java-regex `--test_filter` caveat, the fail-by-design rerun, the module-scope caveat, the placeholder rule, the determinism note) moved to `docs/development/code-conventions.md` § "Golden snapshot tests"; `sparql-queries.md` § "Golden tests (preferred)" gained a pointer sentence | none |
 | P2-C1 | complete | 60a451069 | `limitResultsToProject: Option[ProjectIri] = None` threaded through `GravsearchInferencePipelineTestSupport.transformQueryWithInference` into `transformSelectToSelect`, and through both specs' private one-argument wrappers (the count wrapper keeps `dropOrderBy = true`); every existing golden unchanged | none |
 | P2-C2 | complete | 931495f5b | `GravsearchInferencePipelineTestSupport.shapeSummary(SelectQuery): String`, an exhaustive match on the sealed `QueryPattern` trait rendering one line per top-level WHERE pattern (`STMT <kind> <pred> <kind>`, `VALUES (n)`, `BIND`, `FILTER`, `FNE`, `OPTIONAL`, `UNION`, `MINUS`, `GROUP`); predicate local name splits on the last `#` and falls back to the last `/`, with `*` appended for a property path | none |
 | P2-C3 | complete | 68b4f62a5 | `ARCH-MAP.md` § `webapi-search` boundary rules gains a sibling bullet naming both prequery E2E specs as pinning the rendered SPARQL after the inference pass, under the same `enforcement: review (REVIEW.md section SPARQL)` marker | none |
@@ -386,7 +386,7 @@ conversions are strictly *stronger* than before (the old assertions ignored outp
 | 2 | consistency | `CONVENTIONS.md` § Testing Conventions still documents only `rewrite = true` and points at the `modules/webapi` `GoldenTest` copy — the one that does *not* honour `GOLDEN_REWRITE`; `CLAUDE.md` requires this file to be updated with the convention | **REAL** | fixed in P2-R2a |
 | 3 | consistency | `gravsearch.md` § "Determinism for Snapshot Testing" explains only `createInferenceVariable` and is silent about the `TopologicalSortUtil` layer-order fix, though the `reorder*` goldens depend on it equally | **REAL** | fixed in P2-R2a |
 | 4 | simplicity | `createInferenceVariable`'s ~22-line Scaladoc carries a ~15-line "why" that is now duplicated verbatim in `gravsearch.md`; past the convention's 5-line-why / 12-line-block thresholds, and two copies can drift | **REAL** | fixed in P2-R2a (the load-bearing "do not substitute `escapeEntityForVariable`" warning is kept at the call site) |
-| 5 | dune | the shared-golden-suffix rule (two tests, one file; a rewrite-then-fail-on-rerun is a real divergence, not a stale golden) lives only in the plan, which is a reference sink nothing may link into — an agent hitting that failure would re-rewrite and paper over a real bug | **REAL** | fixed in P2-R2a (folded into `dsp-api-conventions.md` so it survives the plan being archived) |
+| 5 | dune | the shared-golden-suffix rule (two tests, one file; a rewrite-then-fail-on-rerun is a real divergence, not a stale golden) lives only in the plan, which is a reference sink nothing may link into — an agent hitting that failure would re-rewrite and paper over a real bug | **REAL** | fixed in P2-R2a (folded into `conventions.md` so it survives the plan being archived) |
 | 6 | dune | no written criterion for *when* a golden case warrants a `<suffix>Shape` companion | **REAL** (Suggestion severity, but same file, same fix) | fixed in P2-R2a |
 | 7 | pattern | the six `GravsearchInferencePipelineTestSupport.shapeSummary(...)` call sites violate the no-fully-qualified-names rule | **NOT REAL** — the support object lives in the *same package* as both specs, so this is ordinary object-member access, not a fully qualified class name; the rule targets inline `org.knora.webapi.…` paths | dropped |
 | 8 | pattern | decision D7's "the five reorder tests keep their names with '(golden)' wording updated" did not ship | **REAL but cosmetic** | recorded as a Nit, not fixed: the existing names describe the behaviour under test accurately and renaming them would churn five test names for no reader benefit. Noted here so PR 2's audit does not read it as an oversight |
@@ -481,14 +481,14 @@ nothing is left half-done.
 - **`GoldenTest` comment placement** (`eng:review:code-simplicity-reviewer`, Warning, verbatim claim):
   "the added 'Placeholder rule for NEW golden cases' paragraph documents a Bazel-runfiles-symlink quirk
   discovered while doing this work ... This is procedural how-to knowledge, not an invariant the code below
-  enforces ... belongs in a dev doc (e.g. `docs/development/dsp-api-conventions.md` or a golden-test doc)
+  enforces ... belongs in a dev doc (e.g. `docs/development/code-conventions.md` or a golden-test doc)
   with a one-line pointer left in the trait's Scaladoc." Not acted on: the plan's Phase 1 checklist item
   explicitly specifies this content in this file, and the "Decision record" is settled for this run. Worth
   raising with Balduin as a follow-up.
   **RESOLVED in round 2 (chunk P2-C0b, commit `51c02e173`).** The upstream commit `eefb07ebc` the rebase
   brought in adopts exactly the convention the reviewer was arguing from, which turns the finding from a
   reviewer's preference into a repo rule, so the plan's Phase 1 checklist is now the stale side and the move was
-  made. The recipe lives in `docs/development/dsp-api-conventions.md` § "Golden snapshot tests"; the trait keeps
+  made. The recipe lives in `docs/development/code-conventions.md` § "Golden snapshot tests"; the trait keeps
   the invariants plus a one-line pointer. The plan's Phase 1 wording should be corrected at ship time.
 - **Confirm the spike's premise against the optimised algebra** (`eng:review:performance-reviewer`, checkpoint
   3, Warning, verbatim claim): "the spike's data is in fact *compatible* with Fact 1 … but the write-up asserts
@@ -1246,7 +1246,7 @@ Findings: **4 Critical, 10 Warning**, several Nits. This was the most productive
 findings changed a conclusion, and two of those changed the tier table. The reviewer's Criticals were verified
 **directly against the engine facts doc and by new measurement** rather than through a
 `dev:coordinator:finding-verifier`, because in every case the cheaper and more conclusive check was to read
-`docs/development/dsp-api-fuseki-query-execution.md` or to re-run the query — which is what a verifier would
+`docs/development/fuseki-query-execution.md` or to re-run the query — which is what a verifier would
 have had to do anyway, without being able to run stage queries.
 
 | # | Finding | Verdict | Action |

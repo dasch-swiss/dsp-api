@@ -84,7 +84,7 @@ query and refuses with a 400 when the count exceeds the configured cap (`v2.full
 - [x] Docs: remove every "unscoped `matchFulltext` keeps the 10,000-hit cap" statement and describe the breadth
       guard for Gravsearch `matchFulltext` instead — `docs/03-endpoints/api-v2/query-language.md` (both
       `matchFulltext` passages; document the possible 400 for over-broad terms), `docs/05-internals/design/api-v2/gravsearch.md`
-      (Project Scoping), `docs/development/dsp-api-fuseki-query-execution.md` (Fact 9),
+      (Project Scoping), `docs/development/fuseki-query-execution.md` (Fact 9),
       the `LuceneQueryArgs` scaladoc in `SparqlQuery.scala`, the Search rule in `ARCH-MAP.md`, and the guard's own
       scaladoc in `FulltextBreadthGuard.scala` (it now guards Gravsearch too). Afterwards
       `grep -rn "DEV-7492" --include=*.md --include=*.scala . | grep -v docs/specs` returns nothing stale.

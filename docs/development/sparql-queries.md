@@ -885,7 +885,7 @@ written to the resources mirror of the spec's package
 To create or update goldens, set `rewrite = true` on a call or `override val rewriteAll =
 true` on the spec, run once, then turn it off again; review the resulting diff. For the
 `GOLDEN_REWRITE` environment variable, which modules honour it, and the placeholder rule
-for new golden files, see `conventions.md` § Golden snapshot tests.
+for new golden files, see `code-conventions.md` § Golden snapshot tests.
 
 ```scala
 object CreateLinkQuerySpec extends ZIOSpecDefault with GoldenTest {

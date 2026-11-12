@@ -211,7 +211,7 @@ second graph for project 0001, so a scoped search for 0001 does not see those re
 The `MatchFulltextE2ESpec` fixture is loaded only by that spec, so moving it into the 0001 data graph does not
 touch other specs' data.
 
-**Golden mechanics** (`docs/development/dsp-api-conventions.md`, "Golden snapshot tests"). A new golden needs an
+**Golden mechanics** (`docs/development/code-conventions.md`, "Golden snapshot tests"). A new golden needs an
 empty placeholder file under `src/test/resources/...` before the rewrite run. test-it goldens are rewritten with
 `--test_env=GOLDEN_REWRITE=1`; webapi's `GoldenTest` ignores that variable, so there `rewrite = true` on the call
 is the only route, removed again before commit. `SearchFulltextQuerySpec` is not a `GoldenTest` today (it compares
@@ -459,7 +459,7 @@ Each phase leaves the build green and lands as one reviewable commit group on
   Appendix A (keep the heading; the Method bullet links to its anchor)
 - [x] Measurements spec: apply the corrected sentences in Method, go/no-go and Caveats from Appendix A; the full
   dev tables stay on DEV-7377
-- [x] `docs/development/dsp-api-fuseki-query-execution.md` Fact 10: one sentence that dsp-api now emits the scoped
+- [x] `docs/development/fuseki-query-execution.md` Fact 10: one sentence that dsp-api now emits the scoped
   form for project-restricted lookups, Lucene statement only
 - [x] `docs/05-internals/design/api-v2/gravsearch.md`: the T1 row (l. 328) includes a `GraphPattern` and the
   `GroupPattern` → `SubSelectPattern` → `GraphPattern` nesting; the
@@ -616,9 +616,9 @@ cross-context read (precedent: `FairProjects` / `FairProjectsLive`).
   `modules/webapi/src/test/resources/org/knora/webapi/slice/search/repo/`
 - `modules/test-e2e/src/test/scala/org/knora/webapi/e2e/v2/MatchFulltextE2ESpec.scala` and
   `test_data/generated_test_data/e2e.v2.MatchFulltextE2ESpec/matchfulltext-data.ttl`
-- `docs/development/dsp-api-fuseki-query-execution.md` (Facts 1, 5, 9, 10); `modules/fuseki/README.md`
+- `docs/development/fuseki-query-execution.md` (Facts 1, 5, 9, 10); `modules/fuseki/README.md`
   ("Configuration changes"); `modules/fuseki/dsp-repo.ttl` (the `graphField` comment)
-- `docs/development/dsp-api-conventions.md` ("Golden snapshot tests")
+- `docs/development/code-conventions.md` ("Golden snapshot tests")
 - Learning: `dasch-specs/learnings/configuration-errors/union-default-graph-differs-across-environments.md` (the
   in-memory double and Fuseki both use the union default graph)
 
