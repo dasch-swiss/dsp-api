@@ -43,7 +43,13 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
     slot   <- ImportSlot.layer.build.map(_.get)
     state   = new DataTaskState(ref, noopPersistence)
     storage = new ProjectDataImportStorageService()
-  } yield Fixture(new ProjectDataImportService(state, storage, null, null, null, null, slot), state, storage, ref, slot)
+  } yield Fixture(
+    new ProjectDataImportService(state, storage, null, null, null, null, null, slot),
+    state,
+    storage,
+    ref,
+    slot,
+  )
 
   private def cleanup(fx: Fixture, id: DataTaskId): UIO[Unit] =
     fx.storage.dataImportJsonLdPath(id).flatMap(p => Files.deleteRecursive(p.parent.get)).ignore.unit
@@ -105,7 +111,7 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
           state   = new DataTaskState(ref, noopPersistence)
           storage = new ProjectDataImportStorageService()
           // null collaborators are only reachable from `doImport`; a call would die with an NPE
-          service = new ProjectDataImportService(state, storage, null, null, null, null, slot)
+          service = new ProjectDataImportService(state, storage, null, null, null, null, null, slot)
           task   <- service.importDataGraph(
                     TestDataFactory.someProject,
                     TestDataFactory.User.rootUser,
@@ -181,7 +187,7 @@ class ProjectDataImportServiceSpec extends ZIOSpecDefault {
                      }
           storage = new ProjectDataImportStorageService()
           service =
-            new ProjectDataImportService(new DataTaskState(ref, blocking), storage, null, null, null, null, slot)
+            new ProjectDataImportService(new DataTaskState(ref, blocking), storage, null, null, null, null, null, slot)
           fiber <- service.importDataGraph(project, root, root, bytes(3)).fork
           _     <- entered.await
           _     <- fiber.interruptFork

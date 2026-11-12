@@ -40,6 +40,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
   private val XsdBoolean        = "http://www.w3.org/2001/XMLSchema#boolean"
   private val XsdString         = "http://www.w3.org/2001/XMLSchema#string"
   private val XsdInteger        = "http://www.w3.org/2001/XMLSchema#integer"
+  private val XsdDecimal        = "http://www.w3.org/2001/XMLSchema#decimal"
   private val RdfSubject        = "http://www.w3.org/1999/02/22-rdf-syntax-ns#subject"
   private val RdfPredicate      = "http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate"
   private val RdfObject         = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object"
@@ -59,6 +60,61 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     s"""<http://rdfh.ch/users/test001> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
        |""".stripMargin
 
+  // Bulk (data) import fixtures shared by the suites below.
+  private val OnBehalfOf = "http://rdfh.ch/users/test001"
+  private val onBehalfOf = UserIri.unsafeFrom(OnBehalfOf)
+
+  private val bulkAdminNq =
+    s"""<$OnBehalfOf> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .
+       |""".stripMargin
+
+  private def bulkResourceNq(
+    node: String,
+    cls: String,
+    user: String = OnBehalfOf,
+    deleted: Boolean = false,
+  ): String =
+    s"""<$node> <$RdfType> <$cls> <$DataGraph> .
+       |<$node> <$RdfsLabel> "Resource" <$DataGraph> .
+       |<$node> <${KnoraBase}isDeleted> "$deleted"^^<$XsdBoolean> <$DataGraph> .
+       |<$node> <${KnoraBase}attachedToUser> <$user> <$DataGraph> .
+       |<$node> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+       |<$node> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+       |<$node> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+       |""".stripMargin
+
+  // The LinkValue reification node of the direct link `source predicate target`.
+  private def linkValueNq(
+    node: String,
+    source: String,
+    predicate: String,
+    target: String,
+    user: String = OnBehalfOf,
+  ): String =
+    s"""<$node> <$RdfType> <${KnoraBase}LinkValue> <$DataGraph> .
+       |<$node> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+       |<$node> <${KnoraBase}attachedToUser> <$user> <$DataGraph> .
+       |<$node> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+       |<$node> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+       |<$node> <${KnoraBase}valueHasString> "$target"^^<$XsdString> <$DataGraph> .
+       |<$node> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+       |<$node> <$RdfSubject> <$source> <$DataGraph> .
+       |<$node> <$RdfPredicate> <$predicate> <$DataGraph> .
+       |<$node> <$RdfObject> <$target> <$DataGraph> .
+       |<$node> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
+       |""".stripMargin
+
+  private def validateBulk(
+    ontologyNq: String,
+    shapes: String,
+    dataNq: String,
+    adminNq: String = bulkAdminNq,
+    extraDataNq: Option[String] = None,
+  ) =
+    ZIO.scoped(
+      validate(ontologyNq, dataNq, adminNq, mode = ImportMode.BulkData(onBehalfOf, shapes), extraDataNq = extraDataNq),
+    )
+
   private def writeNqFile(dir: Path, name: String, content: String): Task[Path] = {
     val file = dir / name
     Files.writeBytes(file, Chunk.fromArray(content.getBytes(StandardCharsets.UTF_8))).as(file)
@@ -71,9 +127,11 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     allowPlaceholder: Boolean = true,
     mode: ImportMode = ImportMode.Migration,
     permissionNq: Option[String] = None,
+    extraDataNq: Option[String] = None,
   ): ZIO[Scope, Throwable, Either[Throwable, Unit]] =
-    runValidator(ontologyNq, dataNq, adminNq, allowPlaceholder, permissionNq) { (validator, ontologyFiles, dataFiles) =>
-      validator.validate(ontologyFiles, dataFiles, testProjectIri, mode)
+    runValidator(ontologyNq, dataNq, adminNq, allowPlaceholder, permissionNq, extraDataNq) {
+      (validator, ontologyFiles, dataFiles) =>
+        validator.validate(ontologyFiles, dataFiles, testProjectIri, mode)
     }
 
   private def runValidator(
@@ -82,6 +140,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     adminNq: String,
     allowPlaceholder: Boolean,
     permissionNq: Option[String],
+    extraDataNq: Option[String],
   )(
     run: (
       ProjectMigrationImportValidator,
@@ -95,11 +154,12 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       dataFile     <- writeNqFile(dir, "data.nq", dataNq)
       adminFile    <- writeNqFile(dir, "admin.nq", adminNq)
       permFiles    <- ZIO.foreach(Chunk.fromIterable(permissionNq))(writeNqFile(dir, "permission.nq", _))
+      extraFiles   <- ZIO.foreach(Chunk.fromIterable(extraDataNq))(writeNqFile(dir, "extra.nq", _))
       result       <-
         run(
           new ProjectMigrationImportValidator(),
           NonEmptyChunk(ontologyFile),
-          NonEmptyChunk(adminFile, dataFile) ++ permFiles,
+          NonEmptyChunk(adminFile, dataFile) ++ permFiles ++ extraFiles,
         )
           .provideSomeLayer[Scope](TestAppConfig.layer("app.features.allow-placeholder" -> allowPlaceholder))
           .either
@@ -765,7 +825,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
             validate(
               ontologyWithClass,
               geolocationValueNq(validGeolocationTriple),
-              mode = ImportMode.BulkData(UserIri.unsafeFrom("http://rdfh.ch/users/test001")),
+              mode = ImportMode.BulkData(UserIri.unsafeFrom("http://rdfh.ch/users/test001"), ""),
             ).map(result => assertTrue(result.isRight))
           }
         },
@@ -926,6 +986,8 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
                |<$Value1> <${KnoraBase}valueHasString> "value string"^^<$XsdString> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
                |<$Value1> <${KnoraBase}valueHasListNode> <$ListNode> <$DataGraph> .
+               |<$ListNode> <$RdfType> <${KnoraBase}ListNode> <$DataGraph> .
+               |<$ListNode> <${KnoraBase}hasRootNode> <http://rdfh.ch/lists/9999/root> <$DataGraph> .
                |""".stripMargin
           ZIO.scoped {
             validate(ontologyWithClass, nq).map(result => assertTrue(result.isRight))
@@ -1311,10 +1373,633 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       )
     },
     bulkImportShapesSuite,
+    projectOntologyShapesSuite,
+    resourceClassShapeSuite,
+    listNodeShapesSuite,
     migrationShapesSuite,
     placeholderGateSuite,
     migrationAdminAndPermissionSuite,
   ) @@ TestAspect.timeout(30.seconds)
+
+  private val projectOntologyShapesSuite = {
+    // Bulk import validates the data against the shapes that ProjectOntologyShapes generates from the project
+    // ontology. The ontology N-Quads and the ReadOntologyV2 fixtures below describe the same classes and properties.
+    val Ns = s"$OntologyGraph#"
+
+    val Item         = Ns + "Item"
+    val SpecialItem  = Ns + "SpecialItem"
+    val Target       = Ns + "Target"
+    val SubTarget    = Ns + "SubTarget"
+    val Other        = Ns + "Other"
+    val HasRequired  = Ns + "hasRequired"
+    val HasOptional  = Ns + "hasOptional"
+    val HasSpecial   = Ns + "hasSpecial"
+    val HasNote      = Ns + "hasNote"
+    val HasLink      = Ns + "hasLink"
+    val HasLinkValue = Ns + "hasLinkValue"
+    val HasUnlisted  = Ns + "hasUnlisted"
+    val TextValue    = KnoraBase + "TextValue"
+    val IntValue     = KnoraBase + "IntValue"
+
+    val SubOnly         = Ns + "SubOnly"
+    val VerySpecialItem = Ns + "VerySpecialItem"
+    val HasVerySpecial  = Ns + "hasVerySpecial"
+    val ValueTypes      = Ns + "ValueTypes"
+    val SystemUser      = s"${KnoraAdmin}SystemUser"
+
+    // The value classes that a project property can have, each with a property on the class ValueTypes.
+    // Each id is the id of the matching resource in dsp-tools' value_type_violation.xml.
+    val valueTypes: List[(String, String)] = List(
+      "bool_wrong_value_type"        -> "Boolean",
+      "color_wrong_value_type"       -> "Color",
+      "date_wrong_value_type"        -> "Date",
+      "decimal_wrong_value_type"     -> "Decimal",
+      "geolocation_wrong_value_type" -> "Geolocation",
+      "geoname_wrong_value_type"     -> "Geoname",
+      "integer_wrong_value_type"     -> "Int",
+      "list_wrong_value_type"        -> "List",
+      "region_preview_wrong_type"    -> "RegionPreview",
+      "time_wrong_value_type"        -> "Time",
+      "uri_wrong_value_type"         -> "Uri",
+      "interval_wrong_value_type"    -> "Interval",
+    )
+    def valueTypeProp(name: String)  = Ns + "has" + name
+    def valueTypeClass(name: String) = KnoraBase + name + "Value"
+
+    // A project resource class for each subclass of knora-base:Representation, with the file value property
+    // that the class inherits from its representation class.
+    case class Representation(id: String, name: String) {
+      val cls: String      = Ns + name + "Rep"
+      val base: String     = KnoraBase + name + "Representation"
+      val fileProp: String = KnoraBase + s"has${name}FileValue"
+      val fileType: String = KnoraBase + s"${name}FileValue"
+    }
+    val StillImage      = Representation("still_image_missing", "StillImage")
+    val Audio           = Representation("audio_missing", "Audio")
+    val Video           = Representation("video_missing", "MovingImage")
+    val representations = List(
+      Representation("archive_missing", "Archive"),
+      Audio,
+      Representation("document_missing", "Document"),
+      Representation("text_missing", "Text"),
+      Video,
+      StillImage,
+    )
+
+    def classNq(cls: String, parent: String) =
+      s"""<$cls> <$RdfType> <$OwlClass> <$OntologyGraph> .
+         |<$cls> <$RdfsSubClassOf> <$parent> <$OntologyGraph> .
+         |<$cls> <$RdfsLabel> "${cls.stripPrefix(Ns)}"@en <$OntologyGraph> .
+         |""".stripMargin
+
+    def propertyNq(prop: String, parent: String, objectClass: String) =
+      s"""<$prop> <$RdfType> <http://www.w3.org/2002/07/owl#ObjectProperty> <$OntologyGraph> .
+         |<$prop> <$RdfsSubPropertyOf> <$parent> <$OntologyGraph> .
+         |<$prop> <$RdfsLabel> "${prop.stripPrefix(Ns)}"@en <$OntologyGraph> .
+         |<$prop> <${KnoraBase}objectClassConstraint> <$objectClass> <$OntologyGraph> .
+         |""".stripMargin
+
+    val ontologyNq = validOntologyNq +
+      classNq(Item, KnoraBase + "Resource") +
+      classNq(SpecialItem, Item) +
+      classNq(Target, KnoraBase + "Resource") +
+      classNq(SubTarget, Target) +
+      classNq(Other, KnoraBase + "Resource") +
+      propertyNq(HasRequired, KnoraBase + "hasValue", TextValue) +
+      propertyNq(HasOptional, KnoraBase + "hasValue", TextValue) +
+      propertyNq(HasSpecial, HasOptional, TextValue) +
+      propertyNq(HasNote, KnoraBase + "hasComment", TextValue) +
+      propertyNq(HasLink, KnoraBase + "hasLinkTo", Target) +
+      classNq(SubOnly, KnoraBase + "Resource") +
+      classNq(VerySpecialItem, SpecialItem) +
+      classNq(ValueTypes, KnoraBase + "Resource") +
+      propertyNq(HasVerySpecial, HasSpecial, TextValue) +
+      valueTypes
+        .map((_, name) => propertyNq(valueTypeProp(name), KnoraBase + "hasValue", valueTypeClass(name)))
+        .mkString +
+      representations.map(r => classNq(r.cls, r.base)).mkString
+
+    val projectShapes = {
+      import ProjectOntologyFixtures.*
+      import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
+      val itemCardinalities = Map(
+        HasRequired -> ExactlyOne,
+        HasOptional -> ZeroOrOne,
+        HasNote     -> Unbounded,
+        HasLink     -> ZeroOrOne,
+      )
+      val itemInherited = resourceInheritedCardinalities ++ Map(HasLinkValue -> ZeroOrOne)
+      ProjectOntologyShapes.generate(
+        List(
+          ontology(
+            KnoraBase,
+            Seq(resourceClass(KnoraBase + "Resource")),
+            Seq(property(KnoraBase + "hasComment", Some(TextValue))),
+          ),
+          ontology(
+            Ns,
+            Seq(
+              resourceClass(
+                Item,
+                direct = itemCardinalities,
+                inherited = itemInherited,
+                resourceProps = itemCardinalities.keySet,
+              ),
+              resourceClass(
+                SpecialItem,
+                direct = Map(HasSpecial -> Unbounded),
+                inherited = itemInherited ++ itemCardinalities - HasOptional,
+                resourceProps = itemCardinalities.keySet - HasOptional + HasSpecial,
+              ),
+              resourceClass(
+                VerySpecialItem,
+                direct = Map(HasVerySpecial -> Unbounded),
+                inherited = itemInherited ++ itemCardinalities - HasOptional,
+                resourceProps = itemCardinalities.keySet - HasOptional + HasVerySpecial,
+              ),
+              resourceClass(
+                SubOnly,
+                direct = Map(HasSpecial -> Unbounded),
+                inherited = resourceInheritedCardinalities,
+                resourceProps = Set(HasSpecial),
+              ),
+              resourceClass(
+                ValueTypes,
+                direct = valueTypes.map((_, name) => valueTypeProp(name) -> Unbounded).toMap,
+                inherited = resourceInheritedCardinalities,
+                resourceProps = valueTypes.map((_, name) => valueTypeProp(name)).toSet,
+              ),
+              resourceClass(Target, inherited = resourceInheritedCardinalities),
+              resourceClass(SubTarget, inherited = resourceInheritedCardinalities),
+              resourceClass(Other, inherited = resourceInheritedCardinalities),
+            ) ++ representations.map(r =>
+              resourceClass(r.cls, inherited = resourceInheritedCardinalities + (r.fileProp -> ExactlyOne)),
+            ),
+            Seq(
+              property(HasRequired, Some(TextValue)),
+              property(HasOptional, Some(TextValue)),
+              property(HasSpecial, Some(TextValue)),
+              property(HasVerySpecial, Some(TextValue)),
+              property(HasNote, Some(TextValue)),
+              property(HasLink, Some(Target)),
+            ) ++ valueTypes.map((_, name) => property(valueTypeProp(name), Some(valueTypeClass(name)))),
+          ),
+        ),
+      )
+    }
+
+    def resourceNq(node: String, cls: String) = bulkResourceNq(node, cls)
+
+    def literalNq(node: String, prop: String, lexical: String, datatype: String) =
+      s"""<$node> <$prop> "$lexical"^^<$datatype> <$DataGraph> .\n"""
+
+    // A value node of the given type, attached to `resource` through `prop`. `extra` holds the triples that the
+    // value class requires beyond the Value shape; Int and Text values carry theirs already.
+    def valueNq(
+      resource: String,
+      prop: String,
+      node: String,
+      valueType: String,
+      extra: String = "",
+      deleted: Boolean = false,
+    ) = {
+      val typeSpecific = valueType match {
+        case IntValue  => literalNq(node, KnoraBase + "valueHasInteger", "1", XsdInteger)
+        case TextValue => s"""<$node> <${KnoraBase}hasTextValueType> <${KnoraBase}UnformattedText> <$DataGraph> .\n"""
+        case _         => ""
+      }
+      s"""<$resource> <$prop> <$node> <$DataGraph> .
+         |<$node> <$RdfType> <$valueType> <$DataGraph> .
+         |<$node> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+         |<$node> <${KnoraBase}attachedToUser> <$OnBehalfOf> <$DataGraph> .
+         |<$node> <${KnoraBase}isDeleted> "$deleted"^^<$XsdBoolean> <$DataGraph> .
+         |<$node> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+         |<$node> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+         |<$node> <${KnoraBase}valueHasString> "text"^^<$XsdString> <$DataGraph> .
+         |""".stripMargin + typeSpecific + extra
+    }
+
+    // The direct link triple together with its LinkValue reification node.
+    def linkNq(source: String, target: String, node: String) =
+      s"""<$source> <$HasLink> <$target> <$DataGraph> .
+         |""".stripMargin + linkValueNq(node, source, HasLink, target)
+
+    val Item1         = "http://rdfh.ch/9999/item001"
+    val Target1       = "http://rdfh.ch/9999/target001"
+    def value(n: Int) = s"http://rdfh.ch/9999/item001/values/v$n"
+
+    val requiredText = resourceNq(Item1, Item) + valueNq(Item1, HasRequired, value(1), TextValue)
+
+    def validateWith(shapes: String, dataNq: String) =
+      validateBulk(ontologyNq, shapes, dataNq, adminNq = defaultAdminNq)
+
+    def accepted(name: String, dataNq: String) =
+      test(name)(validateWith(projectShapes, dataNq).map(result => assertTrue(result.isRight)))
+
+    // The data passes without the project shapes, so the project shapes are the only reason for the rejection.
+    def rejected(name: String, dataNq: String, messagePart: String*) =
+      test(name) {
+        for {
+          withShapes    <- validateWith(projectShapes, dataNq)
+          withoutShapes <- validateWith("", dataNq)
+        } yield assertTrue(
+          withoutShapes.isRight,
+          withShapes.left.exists(e => messagePart.forall(e.getMessage.contains)),
+        )
+      }
+
+    // The data fails the static shapes (data-shapes.ttl, bulk-import-shapes.ttl), with or without project shapes.
+    def rejectedByStaticShape(name: String, dataNq: String, messagePart: String*) =
+      test(name)(
+        validateWith(projectShapes, dataNq)
+          .map(result => assertTrue(result.left.exists(e => messagePart.forall(e.getMessage.contains)))),
+      )
+
+    val Rep1    = "http://rdfh.ch/9999/rep001"
+    val Region1 = "http://rdfh.ch/9999/region001"
+    val Segment = "http://rdfh.ch/9999/segment001"
+    val LinkObj = "http://rdfh.ch/9999/linkobj001"
+    val Missing = "http://rdfh.ch/9999/missing001"
+    val Values1 = "http://rdfh.ch/9999/values001"
+
+    // A representation of the given class with its file value.
+    def representationWithFileNq(r: Representation, node: String) =
+      representationNq(node, r.cls, r.fileProp, s"$node/file") + fileValueNq(s"$node/file", r.fileType)
+
+    // A Region of `target` with the value nodes and the link value that the Region shape requires.
+    def regionNq(region: String, target: String) = {
+      val color = s"$region/values/color"
+      val geom  = s"$region/values/geom"
+      val link  = s"$region/values/link"
+      bulkResourceNq(region, KnoraBase + "Region") +
+        valueNq(
+          region,
+          KnoraBase + "hasColor",
+          color,
+          KnoraBase + "ColorValue",
+          literalNq(color, KnoraBase + "valueHasColor", "#5d1f1e", XsdString),
+        ) +
+        valueNq(
+          region,
+          KnoraBase + "hasGeometry",
+          geom,
+          KnoraBase + "GeomValue",
+          literalNq(geom, KnoraBase + "valueHasGeometry", "{}", XsdString),
+        ) +
+        s"""<$region> <${KnoraBase}isRegionOf> <$target> <$DataGraph> .
+           |<$region> <${KnoraBase}isRegionOfValue> <$link> <$DataGraph> .
+           |""".stripMargin +
+        linkValueNq(link, region, KnoraBase + "isRegionOf", target)
+    }
+
+    // An AudioSegment or VideoSegment (`kind` is "Audio" or "Video") of `target`.
+    def segmentNq(segment: String, kind: String, target: String) = {
+      val link   = s"$segment/values/link"
+      val bounds = s"$segment/values/bounds"
+      bulkResourceNq(segment, s"${KnoraBase}${kind}Segment") +
+        s"""<$segment> <${KnoraBase}is${kind}SegmentOf> <$target> <$DataGraph> .
+           |<$segment> <${KnoraBase}is${kind}SegmentOfValue> <$link> <$DataGraph> .
+           |""".stripMargin +
+        linkValueNq(link, segment, s"${KnoraBase}is${kind}SegmentOf", target) +
+        valueNq(
+          segment,
+          KnoraBase + "hasSegmentBounds",
+          bounds,
+          KnoraBase + "IntervalValue",
+          literalNq(bounds, KnoraBase + "valueHasIntervalStart", "0.5", XsdDecimal) +
+            literalNq(bounds, KnoraBase + "valueHasIntervalEnd", "7", XsdDecimal),
+        )
+    }
+
+    // A ValueTypes resource whose region preview value points to `target`.
+    def regionPreviewNq(target: String) = {
+      val node = s"$Values1/preview"
+      resourceNq(Values1, ValueTypes) +
+        valueNq(
+          Values1,
+          valueTypeProp("RegionPreview"),
+          node,
+          valueTypeClass("RegionPreview"),
+          s"""<$node> <${KnoraBase}isRegionPreviewOf> <$target> <$DataGraph> .\n""",
+        )
+    }
+
+    def linkObjNq(target: String) = {
+      val link = s"$LinkObj/values/link"
+      bulkResourceNq(LinkObj, KnoraBase + "LinkObj") +
+        s"""<$LinkObj> <${KnoraBase}hasLinkTo> <$target> <$DataGraph> .
+           |<$LinkObj> <${KnoraBase}hasLinkToValue> <$link> <$DataGraph> .
+           |""".stripMargin +
+        linkValueNq(link, LinkObj, KnoraBase + "hasLinkTo", target)
+    }
+
+    def standoffLinkNq(target: String) = {
+      val node = value(2)
+      s"""<$Item1> <${KnoraBase}hasStandoffLinkTo> <$target> <$DataGraph> .
+         |<$Item1> <${KnoraBase}hasStandoffLinkToValue> <$node> <$DataGraph> .
+         |""".stripMargin +
+        linkValueNq(node, Item1, KnoraBase + "hasStandoffLinkTo", target, user = SystemUser)
+    }
+
+    val closed = "ClosedConstraintComponent"
+
+    val resourceDeletionMetadata = List(
+      "lastModificationDate" -> literalNq(
+        Item1,
+        KnoraBase + "lastModificationDate",
+        "2024-02-01T00:00:00Z",
+        XsdDateTime,
+      ),
+      "deleteDate"    -> literalNq(Item1, KnoraBase + "deleteDate", "2024-03-01T00:00:00Z", XsdDateTime),
+      "deletedBy"     -> s"""<$Item1> <${KnoraBase}deletedBy> <$OnBehalfOf> <$DataGraph> .\n""",
+      "deleteComment" -> literalNq(Item1, KnoraBase + "deleteComment", "obsolete", XsdString),
+    )
+
+    val valueDeletionMetadata = List(
+      "lastModificationDate" -> literalNq(
+        value(1),
+        KnoraBase + "lastModificationDate",
+        "2024-02-01T00:00:00Z",
+        XsdDateTime,
+      ),
+      "deleteDate"    -> literalNq(value(1), KnoraBase + "deleteDate", "2024-03-01T00:00:00Z", XsdDateTime),
+      "deletedBy"     -> s"""<${value(1)}> <${KnoraBase}deletedBy> <$OnBehalfOf> <$DataGraph> .\n""",
+      "deleteComment" -> literalNq(value(1), KnoraBase + "deleteComment", "obsolete", XsdString),
+    )
+
+    suite("ProjectOntologyShapes (bulk data)")(
+      accepted("accepts a valid resource", requiredText),
+      rejected("rejects a missing required property", resourceNq(Item1, Item), HasRequired),
+      rejected(
+        "rejects more values than the maximum cardinality",
+        requiredText + valueNq(Item1, HasOptional, value(2), TextValue) +
+          valueNq(Item1, HasOptional, value(3), TextValue),
+        HasOptional,
+      ),
+      rejected(
+        "rejects a value of the wrong type",
+        resourceNq(Item1, Item) + valueNq(Item1, HasRequired, value(1), IntValue),
+        HasRequired,
+        "knora-base:TextValue",
+      ),
+      rejected(
+        "rejects a wrong value type on a sub-property of knora-base:hasComment",
+        requiredText + valueNq(Item1, HasNote, value(2), IntValue),
+        HasNote,
+        "knora-base:TextValue",
+      ),
+      rejected(
+        "rejects a link to an instance of the wrong class",
+        requiredText + resourceNq(Target1, Other) + linkNq(Item1, Target1, value(2)),
+        HasLink,
+        Target,
+      ),
+      accepted(
+        "accepts a link to an instance of a subclass of the target class",
+        requiredText + resourceNq(Target1, SubTarget) + linkNq(Item1, Target1, value(2)),
+      ),
+      rejected(
+        "rejects a value on a property without a cardinality on the class",
+        requiredText + valueNq(Item1, HasUnlisted, value(2), TextValue),
+        HasUnlisted,
+        "ClosedConstraintComponent",
+      ),
+      test("accepts system metadata, a standoff link and a link value") {
+        val standoffNode = value(3)
+        val standoffData =
+          s"""<$Item1> <${KnoraBase}hasStandoffLinkTo> <$Target1> <$DataGraph> .
+             |<$Item1> <${KnoraBase}hasStandoffLinkToValue> <$standoffNode> <$DataGraph> .
+             |<$Item1> <$HasLinkValue> <${value(2)}> <$DataGraph> .
+             |""".stripMargin +
+            linkValueNq(
+              standoffNode,
+              Item1,
+              KnoraBase + "hasStandoffLinkTo",
+              Target1,
+              user = s"${KnoraAdmin}SystemUser",
+            )
+        val admin = bulkAdminNq + s"""<${KnoraAdmin}SystemUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .\n"""
+        val data  = requiredText + resourceNq(Target1, Target) + linkNq(Item1, Target1, value(2)) + standoffData
+        validateBulk(ontologyNq, projectShapes, data, admin).map(result => assertTrue(result.isRight))
+      },
+      accepted(
+        "accepts a value on a property that the subclass inherits",
+        resourceNq(Item1, SpecialItem) + valueNq(Item1, HasRequired, value(1), TextValue) +
+          valueNq(Item1, HasNote, value(2), TextValue),
+      ),
+      accepted(
+        "accepts an instance of a subclass that overrides an inherited cardinality on a sub-property",
+        resourceNq(Item1, SpecialItem) + valueNq(Item1, HasRequired, value(1), TextValue) +
+          valueNq(Item1, HasSpecial, value(2), TextValue) + valueNq(Item1, HasSpecial, value(3), TextValue),
+      ),
+      suite("super-properties (closed shape)")(
+        rejected(
+          "rejects is_super_prop_no_card / ResourceUnrelated: a super-property where only its sub-property has a cardinality",
+          resourceNq(Item1, SubOnly) + valueNq(Item1, HasOptional, value(1), TextValue),
+          HasOptional,
+          closed,
+        ),
+        accepted(
+          "accepts the sub-property where only the sub-property has a cardinality",
+          resourceNq(Item1, SubOnly) + valueNq(Item1, HasSpecial, value(1), TextValue),
+        ),
+        rejected(
+          "rejects ResourceSubCls1: the super-property that the subclass overrides with a sub-property",
+          resourceNq(Item1, SpecialItem) + valueNq(Item1, HasRequired, value(1), TextValue) +
+            valueNq(Item1, HasOptional, value(2), TextValue),
+          HasOptional,
+          closed,
+        ),
+        accepted(
+          "accepts the sub-property of the subclass that overrides an inherited cardinality",
+          resourceNq(Item1, VerySpecialItem) + valueNq(Item1, HasRequired, value(1), TextValue) +
+            valueNq(Item1, HasVerySpecial, value(2), TextValue),
+        ),
+        rejected(
+          "rejects ResourceSubCls2: the sub-property that the subclass overrides with a further sub-property",
+          resourceNq(Item1, VerySpecialItem) + valueNq(Item1, HasRequired, value(1), TextValue) +
+            valueNq(Item1, HasSpecial, value(2), TextValue),
+          HasSpecial,
+          closed,
+        ),
+        rejected(
+          "rejects ResourceSubCls2: the super-property of the overridden sub-property",
+          resourceNq(Item1, VerySpecialItem) + valueNq(Item1, HasRequired, value(1), TextValue) +
+            valueNq(Item1, HasOptional, value(2), TextValue),
+          HasOptional,
+          closed,
+        ),
+      ),
+      suite("file values")(
+        rejected(
+          "rejects resource_without_representation_has_file: a file value on a class that is not a representation",
+          requiredText + s"""<$Item1> <${StillImage.fileProp}> <$Rep1/file> <$DataGraph> .\n""" +
+            fileValueNq(s"$Rep1/file", StillImage.fileType),
+          "hasStillImageFileValue",
+          closed,
+        ),
+      ),
+      suite("representations")(
+        representations.flatMap { r =>
+          List(
+            accepted(s"accepts a ${r.name} representation with its file value", representationWithFileNq(r, Rep1)),
+            rejectedByStaticShape(
+              s"rejects ${r.id}: a ${r.name} representation without its file value",
+              resourceNq(Rep1, r.cls),
+              s"${r.name}Representation instance must have one knora-base:has${r.name}FileValue",
+              Rep1,
+            ),
+          )
+        }*,
+      ),
+      suite("regions and segments")(
+        accepted(
+          "accepts a region of a representation",
+          regionNq(Region1, Rep1) + representationWithFileNq(StillImage, Rep1),
+        ),
+        rejectedByStaticShape(
+          "rejects region_isRegionOf_resource_does_not_exist",
+          regionNq(Region1, Missing),
+          "Instance of Region must have one knora-base:isRegionOf of type knora-base:Representation",
+          Region1,
+        ),
+        rejectedByStaticShape(
+          "rejects region_isRegionOf_not_a_representation: a region of a resource that is not a representation",
+          regionNq(Region1, Item1) + requiredText,
+          "Instance of Region must have one knora-base:isRegionOf of type knora-base:Representation",
+          Region1,
+        ),
+        accepted(
+          "accepts an audio segment of an audio representation",
+          segmentNq(Segment, "Audio", Rep1) + representationWithFileNq(Audio, Rep1),
+        ),
+        accepted(
+          "accepts a video segment of a moving image representation",
+          segmentNq(Segment, "Video", Rep1) + representationWithFileNq(Video, Rep1),
+        ),
+        rejectedByStaticShape(
+          "rejects audio_segment_target_non_existent",
+          segmentNq(Segment, "Audio", Missing),
+          "Instance of AudioSegment requires one knora-base:isAudioSegmentOf to a knora-base:AudioRepresentation",
+          Segment,
+        ),
+        rejectedByStaticShape(
+          "rejects video_segment_target_non_existent",
+          segmentNq(Segment, "Video", Missing),
+          "Instance of VideoSegment requires one knora-base:isVideoSegmentOf to a knora-base:MovingImageRepresentation",
+          Segment,
+        ),
+        rejectedByStaticShape(
+          "rejects audio_segment_target_is_video",
+          segmentNq(Segment, "Audio", Rep1) + representationWithFileNq(Video, Rep1),
+          "Instance of AudioSegment requires one knora-base:isAudioSegmentOf to a knora-base:AudioRepresentation",
+          Segment,
+        ),
+        rejectedByStaticShape(
+          "rejects video_segment_target_is_audio",
+          segmentNq(Segment, "Video", Rep1) + representationWithFileNq(Audio, Rep1),
+          "Instance of VideoSegment requires one knora-base:isVideoSegmentOf to a knora-base:MovingImageRepresentation",
+          Segment,
+        ),
+        rejectedByStaticShape(
+          "rejects link_obj_target_non_existent",
+          linkObjNq(Missing),
+          "Instance of LinkObj requires at least one knora-base:hasLinkTo to a Resource that exists in this graph",
+          LinkObj,
+        ),
+      ),
+      suite("region previews")(
+        accepted(
+          "accepts a region preview of a region",
+          regionPreviewNq(Region1) + regionNq(Region1, Rep1) + representationWithFileNq(StillImage, Rep1),
+        ),
+        rejectedByStaticShape(
+          "rejects region_preview_not_a_region",
+          regionPreviewNq(Item1) + requiredText,
+          "RegionPreviewValue instance must have one knora-base:isRegionPreviewOf of type knora-base:Region",
+          s"$Values1/preview",
+        ),
+        rejectedByStaticShape(
+          "rejects region_preview_region_does_not_exist",
+          regionPreviewNq(Missing),
+          "RegionPreviewValue instance must have one knora-base:isRegionPreviewOf of type knora-base:Region",
+          s"$Values1/preview",
+        ),
+      ),
+      suite("links")(
+        test("rejects richtext_standoff_link_nonexistent: a standoff link to a resource that does not exist") {
+          val admin = bulkAdminNq + s"""<$SystemUser> <$RdfType> <${KnoraAdmin}User> <$AdminGraph> .\n"""
+          validateBulk(ontologyNq, projectShapes, requiredText + standoffLinkNq(Missing), admin).map(result =>
+            assertTrue(
+              result.left.exists(
+                _.getMessage.contains(
+                  "The target of knora-base:hasStandoffLinkTo must be a resource that is present in the data graph",
+                ),
+              ),
+            ),
+          )
+        },
+        rejectedByStaticShape(
+          "rejects link_target_of_another_project: a link to an IRI of another project that is not in the payload",
+          requiredText + linkNq(Item1, "http://rdfh.ch/4123/DiAmYQzQSzC7cdTo6OJMYA", value(2)),
+          HasLink,
+          "LinkValue instance must have rdf:object of type knora-base:Resource",
+        ),
+        rejected(
+          "rejects link_wrong_value_type: a text value where a link target is expected",
+          requiredText + valueNq(Item1, HasLink, value(2), TextValue),
+          HasLink,
+          Target,
+        ),
+      ),
+      suite("value types")(
+        valueTypes.map { (id, name) =>
+          rejected(
+            s"rejects $id: a wrong value class for a ${name}Value property",
+            resourceNq(Values1, ValueTypes) + valueNq(Values1, valueTypeProp(name), s"$Values1/v1", TextValue),
+            valueTypeProp(name),
+            s"knora-base:${name}Value",
+          )
+        }*,
+      ),
+      suite("deletion metadata (bulk only)")(
+        rejectedByStaticShape(
+          "rejects a resource marked as deleted",
+          bulkResourceNq(Item1, Item, deleted = true) + valueNq(Item1, HasRequired, value(1), TextValue),
+          "Resource instance may not be marked as knora-base:isDeleted true",
+          Item1,
+        ),
+        rejectedByStaticShape(
+          "rejects a value marked as deleted",
+          resourceNq(Item1, Item) + valueNq(Item1, HasRequired, value(1), TextValue, deleted = true),
+          "Value instance may not be marked as knora-base:isDeleted true",
+          value(1),
+        ),
+      ),
+      suite("deletion metadata, resource (bulk only)")(
+        resourceDeletionMetadata.map { (predicate, triples) =>
+          rejectedByStaticShape(
+            s"rejects a resource with knora-base:$predicate",
+            requiredText + triples,
+            "NotConstraintComponent",
+            "Resource-Shape",
+            Item1,
+          )
+        }*,
+      ),
+      suite("deletion metadata, value (bulk only)")(
+        valueDeletionMetadata.map { (predicate, triples) =>
+          rejectedByStaticShape(
+            s"rejects a value with knora-base:$predicate",
+            requiredText + triples,
+            "NotConstraintComponent",
+            "Value-Shape",
+            value(1),
+          )
+        }*,
+      ),
+    )
+  }
 
   private val bulkImportShapesSuite = {
     // Bulk (data) import validation: bulk-import-shapes.ttl loads next to data-shapes.ttl and
@@ -1326,10 +2011,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
          |<${OntologyGraph}#TestThing> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
          |""".stripMargin
 
-    val OnBehalfOf = "http://rdfh.ch/users/test001"
-    val OtherUser  = "http://rdfh.ch/users/test002"
-    val onBehalfOf = UserIri.unsafeFrom(OnBehalfOf)
-
+    val OtherUser = "http://rdfh.ch/users/test002"
     // Both users are declared as knora-admin:User so both pass AttachedToUserExistsShape.
     // The bulk shape is then the only constraint that can reject OtherUser.
     val adminBothUsers =
@@ -1340,15 +2022,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
     val Resource1 = "http://rdfh.ch/9999/thing001"
     val Value1    = "http://rdfh.ch/9999/thing001/values/val001"
 
-    def resourceNq(user: String) =
-      s"""<$Resource1> <$RdfType> <${OntologyGraph}#TestThing> <$DataGraph> .
-         |<$Resource1> <$RdfsLabel> "Thing 1" <$DataGraph> .
-         |<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
-         |<$Resource1> <${KnoraBase}attachedToUser> <$user> <$DataGraph> .
-         |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
-         |<$Resource1> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
-         |<$Resource1> <${KnoraBase}creationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
-         |""".stripMargin
+    def resourceNq(user: String) = bulkResourceNq(Resource1, s"${OntologyGraph}#TestThing", user)
 
     def valueNq(user: String) =
       s"""<$Value1> <$RdfType> <${KnoraBase}TextValue> <$DataGraph> .
@@ -1365,21 +2039,21 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
       test("accepts resource and value attached to the on-behalf-of user") {
         val nq = resourceNq(OnBehalfOf) + valueNq(OnBehalfOf)
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf, ""))
             .map(result => assertTrue(result.isRight))
         }
       },
       test("rejects resource attached to a different user") {
         val nq = resourceNq(OtherUser) + valueNq(OnBehalfOf)
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf, ""))
             .map(result => assertTrue(result.isLeft))
         }
       },
       test("rejects value attached to a different user") {
         val nq = resourceNq(OnBehalfOf) + valueNq(OtherUser)
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf, ""))
             .map(result => assertTrue(result.isLeft))
         }
       },
@@ -1401,7 +2075,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |<$Value1> <${KnoraBase}valueHasMapping> <http://rdfh.ch/standoff/mappings/StandardMapping> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf, ""))
             .map(result => assertTrue(result.isLeft))
         }
       },
@@ -1417,7 +2091,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |<$Value1> <${KnoraBase}valueHasMapping> <http://rdfh.ch/standoff/mappings/StandardMapping> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf, ""))
             .map(result => assertTrue(result.isRight))
         }
       },
@@ -1432,7 +2106,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}FormattedText> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf, ""))
             .map(result => assertTrue(result.isLeft))
         }
       },
@@ -1447,7 +2121,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |<$Value1> <${KnoraBase}hasTextValueType> <${KnoraBase}CustomFormattedText> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf))
+          validate(ontologyWithClass, nq, adminBothUsers, mode = ImportMode.BulkData(onBehalfOf, ""))
             .map(result => assertTrue(result.isLeft))
         }
       },
@@ -1470,7 +2144,7 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |<$LinkVal> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminWithSystemUser, mode = ImportMode.BulkData(onBehalfOf))
+          validate(ontologyWithClass, nq, adminWithSystemUser, mode = ImportMode.BulkData(onBehalfOf, ""))
             .map(result => assertTrue(result.isRight))
         }
       },
@@ -1493,9 +2167,286 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
              |<$LinkVal> <${KnoraBase}valueHasRefCount> "1"^^<$XsdInteger> <$DataGraph> .
              |""".stripMargin
         ZIO.scoped {
-          validate(ontologyWithClass, nq, adminWithSystemUser, mode = ImportMode.BulkData(onBehalfOf))
+          validate(ontologyWithClass, nq, adminWithSystemUser, mode = ImportMode.BulkData(onBehalfOf, ""))
             .map(result => assertTrue(result.isLeft))
         }
+      },
+      test("rejects a link to a resource that is not in the payload") {
+        val HasLink   = s"$OntologyGraph#hasLink"
+        val Resource2 = "http://rdfh.ch/9999/thing002"
+        val LinkVal   = "http://rdfh.ch/9999/thing001/values/link001"
+        val nq        = bulkResourceNq(Resource1, s"$OntologyGraph#TestThing") +
+          s"""<$Resource1> <$HasLink> <$Resource2> <$DataGraph> .
+             |""".stripMargin + linkValueNq(LinkVal, Resource1, HasLink, Resource2)
+        validateBulk(ontologyWithClass, "", nq).map(result =>
+          assertTrue(result.left.exists(_.getMessage.contains("rdf:object of type knora-base:Resource"))),
+        )
+      },
+    )
+  }
+
+  private val listNodeShapesSuite = {
+    // Bulk data import validation of list values. The list nodes arrive as an extra data file, as the download of the
+    // project's data graph does at import time.
+
+    val Thing    = s"$OntologyGraph#ListThing"
+    val HasList  = s"$OntologyGraph#hasList"
+    val ListType = s"${KnoraBase}ListValue"
+    val Root     = "http://rdfh.ch/lists/9999/root"
+    val Child    = "http://rdfh.ch/lists/9999/child"
+    val OtherRt  = "http://rdfh.ch/lists/9999/otherRoot"
+    val OtherCh  = "http://rdfh.ch/lists/9999/otherChild"
+    val Missing  = "http://rdfh.ch/lists/9999/missing"
+    val Thing1   = "http://rdfh.ch/9999/thing001"
+
+    val ontologyNq = validOntologyNq +
+      s"""<$Thing> <$RdfType> <$OwlClass> <$OntologyGraph> .
+         |<$Thing> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+         |<$Thing> <$RdfsLabel> "List Thing"@en <$OntologyGraph> .
+         |<$HasList> <$RdfType> <http://www.w3.org/2002/07/owl#ObjectProperty> <$OntologyGraph> .
+         |<$HasList> <$RdfsSubPropertyOf> <${KnoraBase}hasValue> <$OntologyGraph> .
+         |<$HasList> <$RdfsLabel> "hasList"@en <$OntologyGraph> .
+         |<$HasList> <${KnoraBase}objectClassConstraint> <$ListType> <$OntologyGraph> .
+         |""".stripMargin
+
+    val generatedShapes = {
+      import ProjectOntologyFixtures.*
+      import org.knora.webapi.slice.ontology.domain.model.Cardinality.*
+      ProjectOntologyShapes.generate(
+        List(
+          ontology(
+            OntologyGraph,
+            Seq(
+              resourceClass(
+                Thing,
+                direct = Map(HasList -> Unbounded),
+                inherited = resourceInheritedCardinalities,
+                resourceProps = Set(HasList),
+              ),
+            ),
+            Seq(property(HasList, Some(ListType), guiAttributes = Seq(s"hlist=<$Root>"))),
+          ),
+        ),
+      )
+    }
+
+    def rootNq(root: String) =
+      s"""<$root> <$RdfType> <${KnoraBase}ListNode> <$DataGraph> .
+         |<$root> <${KnoraBase}isRootNode> "true"^^<$XsdBoolean> <$DataGraph> .
+         |<$root> <$RdfsLabel> "List"@en <$DataGraph> .
+         |<$root> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+         |""".stripMargin
+
+    def childNq(child: String, root: String) =
+      s"""<$child> <$RdfType> <${KnoraBase}ListNode> <$DataGraph> .
+         |<$child> <${KnoraBase}hasRootNode> <$root> <$DataGraph> .
+         |<$child> <${KnoraBase}listNodePosition> "0"^^<$XsdInteger> <$DataGraph> .
+         |<$child> <$RdfsLabel> "Child"@en <$DataGraph> .
+         |""".stripMargin
+
+    val listNodesNq = rootNq(Root) + childNq(Child, Root) + rootNq(OtherRt) + childNq(OtherCh, OtherRt)
+
+    val thingNq = bulkResourceNq(Thing1, Thing)
+
+    def listValueNq(n: Int, node: String) = {
+      val v = s"$Thing1/values/v$n"
+      s"""<$Thing1> <$HasList> <$v> <$DataGraph> .
+         |<$v> <$RdfType> <$ListType> <$DataGraph> .
+         |<$v> <${KnoraBase}valueHasListNode> <$node> <$DataGraph> .
+         |<$v> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+         |<$v> <${KnoraBase}attachedToUser> <$OnBehalfOf> <$DataGraph> .
+         |<$v> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+         |<$v> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+         |<$v> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+         |<$v> <${KnoraBase}valueHasString> "node"^^<$XsdString> <$DataGraph> .
+         |""".stripMargin
+    }
+
+    def validateList(shapes: String, nodes: Option[String], dataNq: String) =
+      validateBulk(ontologyNq, shapes, dataNq, extraDataNq = nodes)
+
+    def accepted(name: String, nodes: String, dataNq: String) =
+      test(name)(validateList(generatedShapes, Some(nodes), dataNq).map(result => assertTrue(result.isRight)))
+
+    def rejected(name: String, nodes: String, dataNq: String, message: String) =
+      test(name)(
+        validateList(generatedShapes, Some(nodes), dataNq)
+          .map(result => assertTrue(result.left.exists(_.getMessage.contains(message)))),
+      )
+
+    // The data passes without the generated shapes, so the membership shape is the only reason for the rejection.
+    def rejectedByGeneratedShape(name: String, nodes: String, dataNq: String, message: String) =
+      test(name) {
+        for {
+          withShapes    <- validateList(generatedShapes, Some(nodes), dataNq)
+          withoutShapes <- validateList("", Some(nodes), dataNq)
+        } yield assertTrue(withoutShapes.isRight, withShapes.left.exists(_.getMessage.contains(message)))
+      }
+
+    val notExisting = "an existing knora-base:ListNode"
+    val notRoot     = "that is not a root node"
+    val notInList   = s"must point to a list node of the list <$Root>"
+
+    def migrationResult(nodes: String, dataNq: String) =
+      ZIO.scoped(validate(ontologyNq, dataNq, bulkAdminNq, extraDataNq = Some(nodes)))
+
+    def migrationRejected(name: String, nodes: String, dataNq: String, message: String) =
+      test(name)(
+        migrationResult(nodes, dataNq).map(result => assertTrue(result.left.exists(_.getMessage.contains(message)))),
+      )
+
+    suite("ListNodeShapes (migration data)")(
+      test("accepts a list value whose node exists and is not a root node")(
+        migrationResult(listNodesNq, thingNq + listValueNq(1, Child)).map(result => assertTrue(result.isRight)),
+      ),
+      migrationRejected(
+        "rejects a list value whose node does not exist",
+        listNodesNq,
+        thingNq + listValueNq(1, Missing),
+        notExisting,
+      ),
+      migrationRejected(
+        "rejects a list value that points to a root node",
+        listNodesNq,
+        thingNq + listValueNq(1, Root),
+        notRoot,
+      ),
+    ) +
+      suite("ListNodeShapes (bulk data)")(
+        accepted("accepts a list value whose node is in the right list", listNodesNq, thingNq + listValueNq(1, Child)),
+        rejected(
+          "rejects a list value whose node does not exist",
+          listNodesNq,
+          thingNq + listValueNq(1, Missing),
+          notExisting,
+        ),
+        rejected(
+          "rejects a list value that points to a root node",
+          listNodesNq,
+          thingNq + listValueNq(1, Root),
+          notRoot,
+        ),
+        rejectedByGeneratedShape(
+          "rejects a list value whose node belongs to another list",
+          listNodesNq,
+          thingNq + listValueNq(1, OtherCh),
+          notInList,
+        ),
+        rejectedByGeneratedShape(
+          "rejects a resource with one value in the right list and one in another list",
+          listNodesNq,
+          thingNq + listValueNq(1, Child) + listValueNq(2, OtherCh),
+          notInList,
+        ),
+      )
+  }
+
+  private val resourceClassShapeSuite = {
+    // The generated resource class shape allows exactly the project's resource classes and the built-in classes
+    // that a project may instantiate. Shared ontologies are not loaded, as in production.
+    val ShapeMessage = "must be a knora-base:ListNode, an owl:Ontology, or a resource of a class defined in the project"
+
+    val SharedClass  = "http://www.knora.org/ontology/shared/sharedtest#SharedThing"
+    val ProjectClass = s"$OntologyGraph#TestThing"
+    val Resource1    = "http://rdfh.ch/9999/thing001"
+    val Resource2    = "http://rdfh.ch/9999/thing002"
+    val LinkVal      = "http://rdfh.ch/9999/linkobj001/values/link001"
+
+    val projectOntologyNq = validOntologyNq +
+      s"""<$ProjectClass> <$RdfType> <$OwlClass> <$OntologyGraph> .
+         |<$ProjectClass> <$RdfsSubClassOf> <${KnoraBase}Resource> <$OntologyGraph> .
+         |<$ProjectClass> <$RdfsLabel> "Test Thing"@en <$OntologyGraph> .
+         |""".stripMargin
+
+    val generatedShapes = ProjectOntologyShapes.generate(
+      List(
+        ProjectOntologyFixtures.ontology(
+          OntologyGraph,
+          Seq(
+            ProjectOntologyFixtures
+              .resourceClass(ProjectClass, inherited = ProjectOntologyFixtures.resourceInheritedCardinalities),
+          ),
+          Seq.empty,
+        ),
+      ),
+    )
+
+    // The direct link triples of a LinkObj together with its LinkValue.
+    def linkNq(source: String, target: String, linkValue: String) =
+      s"""<$source> <${KnoraBase}hasLinkTo> <$target> <$DataGraph> .
+         |<$source> <${KnoraBase}hasLinkToValue> <$linkValue> <$DataGraph> .
+         |""".stripMargin + linkValueNq(linkValue, source, KnoraBase + "hasLinkTo", target)
+
+    def validateClasses(dataNq: String) = validateBulk(projectOntologyNq, generatedShapes, dataNq)
+
+    def accepted(name: String, dataNq: String) =
+      test(name)(validateClasses(dataNq).map(result => assertTrue(result.isRight)))
+
+    def rejected(name: String, dataNq: String) =
+      test(name)(
+        validateClasses(dataNq).map(result => assertTrue(result.left.exists(_.getMessage.contains(ShapeMessage)))),
+      )
+
+    val rootListNq =
+      s"""<http://rdfh.ch/lists/9999/root> <$RdfType> <${KnoraBase}ListNode> <$DataGraph> .
+         |<http://rdfh.ch/lists/9999/root> <${KnoraBase}isRootNode> "true"^^<$XsdBoolean> <$DataGraph> .
+         |<http://rdfh.ch/lists/9999/root> <$RdfsLabel> "List"@en <$DataGraph> .
+         |<http://rdfh.ch/lists/9999/root> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+         |<http://rdfh.ch/lists/9999/root> <${KnoraBase}hasSubListNode> <http://rdfh.ch/lists/9999/child> <$DataGraph> .
+         |<http://rdfh.ch/lists/9999/child> <$RdfType> <${KnoraBase}ListNode> <$DataGraph> .
+         |<http://rdfh.ch/lists/9999/child> <${KnoraBase}hasRootNode> <http://rdfh.ch/lists/9999/root> <$DataGraph> .
+         |<http://rdfh.ch/lists/9999/child> <${KnoraBase}listNodePosition> "0"^^<$XsdInteger> <$DataGraph> .
+         |<http://rdfh.ch/lists/9999/child> <$RdfsLabel> "Child"@en <$DataGraph> .
+         |""".stripMargin
+
+    // A node that has a resource IRI but claims a type that the resource class shape admits for other IRIs only.
+    val listNodeResourceNq =
+      s"""<$Resource1> <$RdfType> <${KnoraBase}ListNode> <$DataGraph> .
+         |<$Resource1> <${KnoraBase}isRootNode> "true"^^<$XsdBoolean> <$DataGraph> .
+         |<$Resource1> <$RdfsLabel> "List"@en <$DataGraph> .
+         |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+         |""".stripMargin
+
+    val ontologyResourceNq =
+      s"""<$Resource1> <$RdfType> <$OwlOntology> <$DataGraph> .
+         |<$Resource1> <$RdfsLabel> "Ontology" <$DataGraph> .
+         |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+         |""".stripMargin
+
+    suite("ResourceClassShape (bulk data)")(
+      accepted("accepts a resource of a project class", bulkResourceNq(Resource1, ProjectClass)),
+      test("accepts a valid resource of an allowed built-in class") {
+        val nq = bulkResourceNq(Resource1, KnoraBase + "LinkObj") + bulkResourceNq(Resource2, ProjectClass) +
+          linkNq(Resource1, Resource2, LinkVal)
+        validateClasses(nq).map(result => assertTrue(result.isRight))
+      },
+      rejected(
+        "rejects a resource of a built-in class that is not allowed",
+        bulkResourceNq(Resource1, KnoraBase + "Representation"),
+      ),
+      rejected("rejects a resource of a shared class", bulkResourceNq(Resource1, SharedClass)),
+      accepted("accepts a project with a list", bulkResourceNq(Resource1, ProjectClass) + rootListNq),
+      rejected("rejects a resource-IRI node typed as a list node", listNodeResourceNq),
+      rejected("rejects a resource-IRI node typed as an ontology", ontologyResourceNq),
+      rejected(
+        "rejects a node attached to the project that has no type",
+        s"""<$Resource1> <$RdfsLabel> "Untyped" <$DataGraph> .
+           |<$Resource1> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+           |""".stripMargin,
+      ),
+      test("accepts allowed built-in resources of a project without a custom ontology") {
+        val builtInOnlyShapes = ProjectOntologyShapes.generate(
+          List(
+            ProjectOntologyFixtures.ontology(
+              KnoraBase,
+              Seq(ProjectOntologyFixtures.resourceClass(KnoraBase + "Resource")),
+              Seq.empty,
+            ),
+          ),
+        )
+        val nq = bulkResourceNq(Resource1, KnoraBase + "LinkObj") + bulkResourceNq(Resource2, KnoraBase + "LinkObj") +
+          linkNq(Resource1, Resource2, LinkVal) + linkNq(Resource2, Resource1, s"${LinkVal}b")
+        validateBulk(validOntologyNq, builtInOnlyShapes, nq).map(result => assertTrue(result.isRight))
       },
     )
   }
@@ -1529,6 +2480,35 @@ class ProjectMigrationImportValidatorSpec extends ZIOSpecDefault {
          |""".stripMargin
 
     suite("MigrationShapes")(
+      test("loads no generated shapes: a value on a property without a cardinality passes") {
+        val Root  = "http://rdfh.ch/lists/9999/root"
+        val Child = "http://rdfh.ch/lists/9999/child"
+        val Value = s"$Resource1/values/v1"
+        val Prop  = s"${OntologyGraph}#hasUnlisted"
+        val nq    = mandatory +
+          s"""<$Resource1> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$Resource1> <$Prop> <$Value> <$DataGraph> .
+             |<$Value> <$RdfType> <${KnoraBase}ListValue> <$DataGraph> .
+             |<$Value> <${KnoraBase}valueHasListNode> <$Child> <$DataGraph> .
+             |<$Value> <${KnoraBase}valueCreationDate> "2024-01-01T00:00:00Z"^^<$XsdDateTime> <$DataGraph> .
+             |<$Value> <${KnoraBase}attachedToUser> <$User1> <$DataGraph> .
+             |<$Value> <${KnoraBase}isDeleted> "false"^^<$XsdBoolean> <$DataGraph> .
+             |<$Value> <${KnoraBase}hasPermissions> "CR knora-admin:ProjectAdmin"^^<$XsdString> <$DataGraph> .
+             |<$Value> <${KnoraBase}valueHasOrder> "0"^^<$XsdInteger> <$DataGraph> .
+             |<$Value> <${KnoraBase}valueHasString> "root"^^<$XsdString> <$DataGraph> .
+             |<$Root> <$RdfType> <${KnoraBase}ListNode> <$DataGraph> .
+             |<$Root> <${KnoraBase}isRootNode> "true"^^<$XsdBoolean> <$DataGraph> .
+             |<$Root> <$RdfsLabel> "List"@en <$DataGraph> .
+             |<$Root> <${KnoraBase}attachedToProject> <http://rdfh.ch/projects/9999> <$DataGraph> .
+             |<$Child> <$RdfType> <${KnoraBase}ListNode> <$DataGraph> .
+             |<$Child> <${KnoraBase}hasRootNode> <$Root> <$DataGraph> .
+             |<$Child> <${KnoraBase}listNodePosition> "0"^^<$XsdInteger> <$DataGraph> .
+             |<$Child> <$RdfsLabel> "Child"@en <$DataGraph> .
+             |""".stripMargin
+        ZIO.scoped {
+          validate(ontologyWithClass, nq, adminNq).map(result => assertTrue(result.isRight))
+        }
+      },
       test("accepts a deleted, modified resource with single-valued deletion predicates") {
         val nq = mandatory +
           s"""<$Resource1> <${KnoraBase}isDeleted> "true"^^<$XsdBoolean> <$DataGraph> .
