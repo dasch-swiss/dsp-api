@@ -13,11 +13,14 @@ a body of logic with its own shape, distinct from both the model and the instanc
 
 - Search is one provisional context. Its relationship with Resources is changing as filtering and
   faceted retrieval evolve, so its internal seams should not be hardened prematurely.
-- Query translation to SPARQL and result assembly belong to Resources & Values, behind the
+- Target: query translation to SPARQL and result assembly belong to Resources & Values, behind the
   `ResourceSearch` port that Search declares. That code encodes how a Resource and its Values are
   stored as triples, which is the provider's knowledge. See
   [ADR-0011](../../adr/0011-cross-context-access-ports-and-adapters.md), worked example 2.
-- Search therefore holds no low-level RDF execution of its own.
+- Today the port does not exist yet: the Gravsearch SPARQL transformers still live in Search
+  (`messages/util/search`) and `SearchResponderV2` calls `TriplestoreService` directly. Until the port
+  lands, a Gravsearch translation change goes there; once it lands, Search holds no low-level RDF
+  execution of its own.
 - Data Model implements the **Data Model projection** port that Search declares for type
   inspection.
 - Projects implements the **ProjectDataGraphs** port that Search declares for scoping full-text

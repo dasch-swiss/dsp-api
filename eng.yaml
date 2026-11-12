@@ -1,0 +1,42 @@
+version: 1
+
+defaults:
+  conventions: [CLAUDE.md, CONVENTIONS.md]
+  # No test_targeted: Bazel selects tests by target and --test_filter class name, not by file.
+  # No gate: CI runs `just check` and every test suite on each PR.
+  commands:
+    test: just test-unit
+    lint: just check
+
+overrides:
+  - when: "modules/**/*.scala"
+    reviewers: [eng:review:scala-zio-reviewer]
+
+  - when: "modules/webapi/src/main/**"
+    reviewers: [eng:review:dune-reviewer]
+
+  - when: "modules/webapi/src/main/scala/org/knora/webapi/slice/api/**"
+    reviewers: [eng:review:security-reviewer]
+
+  - when: "modules/webapi/src/main/scala/org/knora/webapi/slice/security/**"
+    reviewers: [eng:review:security-reviewer]
+
+  - when: "modules/ingest/**"
+    conventions: [modules/ingest/CLAUDE.md]
+
+  - when: "grafana-dashboards/**"
+    conventions: [grafana-dashboards/CLAUDE.md]
+    patterns: [eng:grafana-dashboards]
+    reviewers: [eng:review:observability-reviewer]
+
+  - when: ".github/workflows/**"
+    reviewers: [eng:review:devops-reviewer]
+
+  - when: "justfile"
+    reviewers: [eng:review:devops-reviewer]
+
+  - when: "docker-compose.yml"
+    reviewers: [eng:review:devops-reviewer]
+
+  - when: "*.nix"
+    reviewers: [eng:review:nix-reviewer]
