@@ -1,0 +1,20 @@
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+# A second list of the 9999 test project: a node that belongs to another list than testListProp's.
+
+<http://rdfh.ch/lists/9999/otherList000000000A>
+    a                            knora-base:ListNode ;
+    knora-base:isRootNode        true ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/Rt2eOA19Q16vMYb_cIkw2g> ;
+    knora-base:hasSubListNode    <http://rdfh.ch/lists/9999/otherListNode00001> ;
+    knora-base:listNodeName      "otherList" ;
+    rdfs:label                   "Other list"@en .
+
+<http://rdfh.ch/lists/9999/otherListNode00001>
+    a                           knora-base:ListNode ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/9999/otherList000000000A> ;
+    knora-base:listNodeName     "o1" ;
+    knora-base:listNodePosition 0 ;
+    rdfs:label                  "Other node 1"@en .

@@ -13,6 +13,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraGroupService
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserService
 import org.knora.webapi.slice.ontology.OntologyTransformer
+import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
@@ -24,6 +25,7 @@ object ExportModule {
     KnoraProjectService &
     KnoraUserService &
     OntologyCache &
+    OntologyRepo &
     OntologyTransformer &
     TriplestoreService
     // format: on

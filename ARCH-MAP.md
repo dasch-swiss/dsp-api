@@ -1108,7 +1108,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     `ProjectMigrationImportValidator`, `ProjectDataImportService`, `ProjectMigrationStorageService`,
     `ProjectDataImportStorageService`, `DataTaskState`, `DataTaskPersistence`,
     `FilesystemDataTaskPersistence`, `CurrentDataTask`, `DataTaskId`, `DataTaskStatus`, `AdminDataQuery`,
-    `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`, `ImportSlot`
+    `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`, `ImportSlot`, `ProjectOntologyShapes`
 - **Public interface**: `ExportModule.layer`, providing `ProjectMigrationExportService &
     ProjectMigrationImportService & ProjectDataImportService`; `ExportApiModule.layer`, providing
     `ExportService`; the value types `DataTaskId`, `DataTaskStatus`, `CurrentDataTask`; the task error types
@@ -1127,7 +1127,8 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     - Sufficiency gap: `ProjectMigrationExportService.scala`, `ProjectDataImportService.scala`, the two
         storage services and `docs/03-endpoints/api-v3/project-migration.md` do not fit but are needed for
         any change on the export or data-import paths.
-- **Depends on**: webapi-admin, webapi-ontology, webapi-triplestore, webapi-resources, webapi-standoff,
+- **Depends on**: webapi-admin, webapi-ontology (`OntologyRepo`, see the boundary rule on
+    `ProjectOntologyShapes`), webapi-triplestore, webapi-resources, webapi-standoff,
     webapi-common, webapi-infrastructure, webapi-app (`AppConfig`), webapi-api (inverted and cyclic), bagit,
     shacl-validator, ingest (in-process for `swiss.dasch.domain.AssetInfoService` and, through
     `DspIngestClient`, asset export and import), build-toolchain.
@@ -1150,6 +1151,10 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         `PayloadTooLargeSpec`, E2E: `ProjectDataImportE2ESpec`).
     - The bulk import validates against a plain Jena model, never an inference model: see shacl-validator
         (`memory_test`).
+    - Named exception to ADR-0011 decision 9: `ProjectOntologyShapes` reads the project and built-in ontologies
+        from webapi-ontology's `OntologyRepo` to generate the SHACL shapes of the bulk data import. The export
+        slice already reads the ontology cache, so no port exists (owner decision 2026-11-12) - enforcement:
+        review.
     - webapi-export must not import webapi-api - enforcement: docs-only. Currently violated by `ExportService`
         importing `slice.api.v3.export.{FileLink, LegalInfo, MetadataRecord}` and `Models.scala` importing
         `slice.api.admin.Codecs`, while webapi-api imports webapi-export back, forming a cycle.

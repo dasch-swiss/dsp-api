@@ -640,6 +640,18 @@ knora-base:ListValue-Shape
     sh:maxCount 1 ;
     sh:nodeKind sh:IRI ;
     sh:message "ListValue instance must have one knora-base:valueHasListNode as an IRI"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path knora-base:valueHasListNode ;
+    sh:class knora-base:ListNode ;
+    sh:message "ListValue instance must have a knora-base:valueHasListNode that is an existing knora-base:ListNode"
+  ] ;
+  sh:property [
+    a sh:PropertyShape ;
+    sh:path ( knora-base:valueHasListNode knora-base:isRootNode ) ;
+    sh:maxCount 0 ;
+    sh:message "ListValue instance must have a knora-base:valueHasListNode that is not a root node (knora-base:isRootNode)"
   ] .
 
 knora-base:TextValue-Shape

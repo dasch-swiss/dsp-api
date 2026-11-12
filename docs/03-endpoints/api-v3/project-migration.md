@@ -135,6 +135,7 @@ The data check has these consequences:
 - A bag is rejected if a resource or value is attached to the built-in SystemUser or AnonymousUser.
 - A bag is rejected if a resource or value is attached to a user that is not in the bag's `admin.nq`.
 - A previous value needs no `hasPermissions`.
+- A list value is rejected if its `valueHasListNode` is not an existing `knora-base:ListNode` or is a root node.
 
 Each NQuad file must also be valid N-Quads and contain exactly one named graph.
 
