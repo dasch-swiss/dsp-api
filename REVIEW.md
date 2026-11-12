@@ -85,7 +85,7 @@ Agent reference card for the **review phase**. Pair with `CONVENTIONS.md` (work 
 - [ ] `Option` collapsed with `opt.fold(default)(f)`, not `opt.map(f).getOrElse(default)` — see `CONVENTIONS.md` § Scala idioms
 - [ ] No fully-qualified class names in code bodies — import at the top of the file
 - [ ] `final class` preferred over plain `class` / `case class` for new services (non-public members surface as unused); `final case class private` for value objects
-- [ ] Naming follows `CONVENTIONS.md`: `*Service`, `*RestService`, `*Endpoints`, `*ServerEndpoints`, `*Spec`, `*Exception`
+- [ ] Naming follows `docs/development/code-conventions.md` § Naming Conventions: `*Service`, `*RestService`, `*Endpoints`, `*ServerEndpoints`, `*Spec`, `*Exception`
 
 ## Skip
 

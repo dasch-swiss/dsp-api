@@ -118,8 +118,10 @@ boundary questions, never import it here. Domain vocabulary: `CONTEXT.md` (index
 ### Module Structure
 
 - `modules/bagit/` implements BagIt packages per RFC 8493 (<https://www.rfc-editor.org/rfc/rfc8493>).
-- Each slice under `modules/webapi/src/main/scala/org/knora/webapi/slice/` contains `api/` (REST
-  endpoints and routes), `domain/` (business logic and domain models) and `repo/` (data access layer).
+- The slices under `modules/webapi/src/main/scala/org/knora/webapi/slice/` are not uniform. Most REST code lives
+  centrally in `slice/api/{admin,v2,v3,management}`; only some slices (e.g. `export`, `fair`) have their own `api/`.
+  Within a slice, `domain/` holds business logic and models and `repo/` data access; `ports/`, `service/` and
+  `infrastructure/` also occur. `ARCH-MAP.md` has the component map.
 
 ### Key Design Patterns
 
