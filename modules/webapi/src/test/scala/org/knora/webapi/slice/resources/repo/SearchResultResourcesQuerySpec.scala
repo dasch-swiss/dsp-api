@@ -10,6 +10,7 @@ import org.junit.runner.RunWith
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.StandoffSelection
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class SearchResultResourcesQuerySpec extends ZIOSpecDefault {
@@ -135,17 +136,102 @@ class SearchResultResourcesQuerySpec extends ZIOSpecDefault {
        |}""".stripMargin
   // @formatter:on
 
+  // @formatter:off
+  private val expectedWithStandoffOnlyWithoutStoredXml =
+    """|PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+       |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+       |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+       |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+       |
+       |CONSTRUCT {
+       |  ?resource a knora-base:Resource ;
+       |    knora-base:isMainResource true ;
+       |    knora-base:attachedToProject ?resourceProject ;
+       |    rdfs:label ?label ;
+       |    rdf:type ?resourceType ;
+       |    knora-base:attachedToUser ?resourceCreator ;
+       |    knora-base:hasPermissions ?resourcePermissions ;
+       |    knora-base:creationDate ?creationDate ;
+       |    knora-base:lastModificationDate ?lastModificationDate ;
+       |    knora-base:hasResourceAuthorship ?resourceAuthorship .
+       |  ?resource knora-base:isDeleted false .
+       |  ?resource knora-base:hasValue ?valueObject ;
+       |    ?resourceValueProperty ?valueObject .
+       |  ?valueObject ?valueObjectProperty ?valueObjectValue ;
+       |    knora-base:valueHasUUID ?currentValueUUID ;
+       |    knora-base:hasPermissions ?currentValuePermissions .
+       |  ?valueObject knora-base:valueHasStandoff ?standoffNode .
+       |  ?standoffNode ?standoffProperty ?standoffValue ;
+       |    knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .
+       |  ?resource knora-base:hasLinkTo ?referredResource ;
+       |    ?resourceLinkProperty ?referredResource .
+       |  ?referredResource a knora-base:Resource ;
+       |    ?referredResourcePred ?referredResourceObj .
+       |} WHERE {
+       |  VALUES ?resource { <http://rdfh.ch/0001/resource1> }
+       |  {
+       |    ?resource rdf:type ?resourceType .
+       |    ?resourceType rdfs:subClassOf* knora-base:Resource .
+       |  }
+       |  ?resource knora-base:attachedToProject ?resourceProject ;
+       |    knora-base:attachedToUser ?resourceCreator ;
+       |    knora-base:hasPermissions ?resourcePermissions ;
+       |    knora-base:creationDate ?creationDate ;
+       |    rdfs:label ?label .
+       |  ?resource knora-base:isDeleted false .
+       |  OPTIONAL { ?resource knora-base:lastModificationDate ?lastModificationDate . }
+       |  OPTIONAL { ?resource knora-base:hasResourceAuthorship ?resourceAuthorship . }
+       |  OPTIONAL {
+       |    ?resource ?resourceValueProperty ?valueObject .
+       |    ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+       |    ?valueObject knora-base:hasPermissions ?currentValuePermissions .
+       |    {
+       |      {
+       |        ?valueObject a ?valueObjectType ;
+       |          ?valueObjectProperty ?valueObjectValue .
+       |        FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+       |      } UNION {
+       |        {
+       |          ?valueObject knora-base:valueHasStandoff ?standoffNode .
+       |          FILTER NOT EXISTS { ?valueObject knora-base:valueHasXml [] }
+       |        }
+       |        ?standoffNode ?standoffProperty ?standoffValue ;
+       |          knora-base:standoffTagHasStartIndex ?startIndex .
+       |        OPTIONAL {
+       |          ?standoffNode knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+       |          ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+       |        }
+       |        FILTER(?startIndex >= 0)
+       |      }
+       |    } UNION {
+       |      ?valueObject a knora-base:LinkValue ;
+       |        rdf:predicate ?resourceLinkProperty ;
+       |        rdf:object ?referredResource .
+       |      ?referredResource ?referredResourcePred ?referredResourceObj ;
+       |        knora-base:isDeleted false .
+       |    }
+       |  }
+       |}""".stripMargin
+  // @formatter:on
+
   override val spec: Spec[Any, Nothing] = suite("SearchResultResourcesQuery")(
     test("without standoff - matches the legacy rendering") {
-      val actual = SearchResultResourcesQuery.build(Seq(resourceIri1), queryStandoff = false).sparql
+      val actual = SearchResultResourcesQuery.build(Seq(resourceIri1), standoff = StandoffSelection.NoStandoff).sparql
       assertTrue(canonical(actual) == canonical(expectedWithoutStandoff))
     },
     test("with standoff - matches the legacy rendering") {
-      val actual = SearchResultResourcesQuery.build(Seq(resourceIri1), queryStandoff = true).sparql
+      val actual = SearchResultResourcesQuery.build(Seq(resourceIri1), standoff = StandoffSelection.AllStandoff).sparql
       assertTrue(canonical(actual) == canonical(expectedWithStandoff))
     },
+    test("OnlyWithoutStoredXml - skips the standoff of values with stored XML") {
+      val actual =
+        SearchResultResourcesQuery.build(Seq(resourceIri1), standoff = StandoffSelection.OnlyWithoutStoredXml).sparql
+      assertTrue(canonical(actual) == canonical(expectedWithStandoffOnlyWithoutStoredXml))
+    },
     test("multiple resources - all IRIs end up in the VALUES clause") {
-      val actual = SearchResultResourcesQuery.build(Seq(resourceIri1, resourceIri2), queryStandoff = false).sparql
+      val actual = SearchResultResourcesQuery
+        .build(Seq(resourceIri1, resourceIri2), standoff = StandoffSelection.NoStandoff)
+        .sparql
       assertTrue(actual.contains(s"VALUES ?resource { <$resourceIri1> <$resourceIri2> }"))
     },
   )

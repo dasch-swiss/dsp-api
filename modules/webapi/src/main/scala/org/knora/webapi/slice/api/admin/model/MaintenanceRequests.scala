@@ -61,4 +61,14 @@ object MaintenanceRequests {
   object ProjectsWithBakfilesReport {
     implicit val codec: JsonCodec[ProjectsWithBakfilesReport] = DeriveJsonCodec.gen[ProjectsWithBakfilesReport]
   }
+
+  /** The body of `repair-standoff-link-ref-counts`; `dryRun` is true unless it is set to false. */
+  final case class RepairStandoffLinkRefCountsRequest(projectShortcode: Shortcode, dryRun: Option[Boolean]) {
+    def isDryRun: Boolean = dryRun.getOrElse(true)
+  }
+
+  object RepairStandoffLinkRefCountsRequest {
+    implicit val codec: JsonCodec[RepairStandoffLinkRefCountsRequest] =
+      DeriveJsonCodec.gen[RepairStandoffLinkRefCountsRequest]
+  }
 }

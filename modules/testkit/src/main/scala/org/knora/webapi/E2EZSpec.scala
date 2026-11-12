@@ -52,8 +52,12 @@ abstract class E2EZSpec extends ZIOSpec[E2EZSpec.Environment] {
    */
   protected def sipiServiceLayer: URLayer[Tracing & DspIngestClient, SipiService] = SipiServiceLive.layer
 
+  /** An extra logger the application under test logs to, e.g. to capture log lines for assertions. */
+  protected def additionalLoggerLayer: ULayer[Unit] = ZLayer.succeed(())
+
   override lazy val bootstrap: ULayer[E2EZSpec.Environment] =
     E2EZSpec.testLogger >>>
+      additionalLoggerLayer >>>
       TestContainerLayers.all >+>
       LayersLive.remainingLayer(otelLayer, sipiServiceLayer) >+>
       ApiModule.layer >+>

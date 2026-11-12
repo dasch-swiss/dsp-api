@@ -19,21 +19,28 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.api.admin.MaintenanceEndpoints.ReplaceUserIriRequest
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.ProjectsWithBakfilesReport
+import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.RepairStandoffLinkRefCountsRequest
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.backfillValueHasXmlAction
+import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.checkStandoffLinkRefCountsAction
 import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.fixTopLeftAction
+import org.knora.webapi.slice.api.admin.service.MaintenanceRestService.repairStandoffLinkRefCountsAction
+import org.knora.webapi.slice.resources.service.StandoffLinkRefCountService
 import org.knora.webapi.slice.resources.service.ValueHasXmlBackfillService
 
 final case class MaintenanceRestService(
   private val maintenanceService: MaintenanceService,
   private val projectService: KnoraProjectService,
   private val valueHasXmlBackfillService: ValueHasXmlBackfillService,
+  private val standoffLinkRefCountService: StandoffLinkRefCountService,
 ) {
 
-  def executeMaintenanceAction(action: String, jsonMaybe: Option[Json]): Task[Unit] =
+  def executeMaintenanceAction(user: User)(action: String, jsonMaybe: Option[Json]): Task[Unit] =
     action match {
-      case `fixTopLeftAction`          => executeTopLeftAction(jsonMaybe)
-      case `backfillValueHasXmlAction` => backfillValueHasXml
-      case _                           => ZIO.fail(BadRequestException(s"Unknown action $action"))
+      case `fixTopLeftAction`                  => executeTopLeftAction(jsonMaybe)
+      case `backfillValueHasXmlAction`         => backfillValueHasXml
+      case `checkStandoffLinkRefCountsAction`  => checkStandoffLinkRefCounts(user)
+      case `repairStandoffLinkRefCountsAction` => repairStandoffLinkRefCounts(user, jsonMaybe)
+      case _                                   => ZIO.fail(BadRequestException(s"Unknown action $action"))
     }
 
   private def getParamsAs[A](paramsMaybe: Option[Json], actionName: String)(implicit
@@ -82,13 +89,40 @@ final case class MaintenanceRestService(
 
   private def backfillValueHasXml: Task[Unit] =
     projectService.findAll().flatMap(valueHasXmlBackfillService.start)
+
+  private def checkStandoffLinkRefCounts(user: User): Task[Unit] =
+    for {
+      _        <- ZIO.logInfo(s"standoff link reference count check requested: user=${user.userIri.value}")
+      projects <- projectService.findAll()
+      _        <- standoffLinkRefCountService.startCheck(projects)
+    } yield ()
+
+  private def repairStandoffLinkRefCounts(user: User, paramsMaybe: Option[Json]): Task[Unit] =
+    for {
+      req     <- getParamsAs[RepairStandoffLinkRefCountsRequest](paramsMaybe, repairStandoffLinkRefCountsAction)
+      project <- projectService
+                   .findByShortcode(req.projectShortcode)
+                   .someOrFail(BadRequestException(s"Project not found: ${req.projectShortcode.value}"))
+      _ <- ZIO.logInfo(
+             s"standoff link reference count repair requested: user=${user.userIri.value} " +
+               s"shortcode=${req.projectShortcode.value} dryRun=${req.isDryRun}",
+           )
+      _ <- standoffLinkRefCountService.startRepair(project, req.isDryRun)
+    } yield ()
 }
 
 object MaintenanceRestService {
   val layer = ZLayer.derive[MaintenanceRestService]
 
-  val fixTopLeftAction          = "fix-top-left"
-  val backfillValueHasXmlAction = "backfill-value-has-xml"
+  val fixTopLeftAction                  = "fix-top-left"
+  val backfillValueHasXmlAction         = "backfill-value-has-xml"
+  val checkStandoffLinkRefCountsAction  = "check-standoff-link-ref-counts"
+  val repairStandoffLinkRefCountsAction = "repair-standoff-link-ref-counts"
 
-  val allActions: List[String] = List(fixTopLeftAction, backfillValueHasXmlAction)
+  val allActions: List[String] = List(
+    fixTopLeftAction,
+    backfillValueHasXmlAction,
+    checkStandoffLinkRefCountsAction,
+    repairStandoffLinkRefCountsAction,
+  )
 }

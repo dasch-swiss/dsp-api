@@ -22,6 +22,7 @@ import scala.collection.immutable.ListMap
 import scala.util.chaining.scalaUtilChainingOps
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.StandoffSelection
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.IriConversions.ConvertibleIri
 import org.knora.webapi.messages.OntologyConstants
@@ -254,7 +255,7 @@ final case class ExportService(
                                     targetSchema = ApiV2Complex,
                                     requestingUser = requestingUser,
                                     withDeleted = false,
-                                    queryStandoff = true,
+                                    standoff = StandoffSelection.from(ApiV2Complex, Set.empty, Some(footnoteTagIri)),
                                     skipRetrievalChecks = true,
                                     standoffTagFilter = Some(footnoteTagIri),
                                   )

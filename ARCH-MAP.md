@@ -104,7 +104,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Key entities**: `ApiModule`, `Endpoints`, `AdminApiModule`, `AdminApiServerEndpoints`, `ApiV2Module`,
     `ApiV2ServerEndpoints`, `ApiV3Module`, `ApiV3ServerEndpoints`, `ManagementServerEndpoints`,
     `OntologyApiModule`, `V3BaseEndpoint`, `V3ErrorInfo`, `V3ErrorCode`, `V3Authorizer`, `PageAndSize`,
-    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `ClosesOnUnreadBody`, `Codecs`, `FairApiModule` (webapi-fair)
+    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `ClosesOnUnreadBody`,
+    `Codecs`, `StoredXmlServing`, `FairApiModule` (webapi-fair)
 - **Public interface**: `ApiModule.layer`; `Endpoints.serverEndpoints`; the four `*RestService`s re-exported
     by `AdminApiModule.Provided` (`GroupRestService`, `PermissionRestService`, `ProjectRestService`,
     `UserRestService`, exposed for the integration tests); `SparqlPassthroughEndpoints.isPassthroughRoute` /
@@ -120,6 +121,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/BaseEndpoints.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v3/V3BaseEndpoint.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v3/projects/ClosesOnUnreadBody.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v2/StoredXmlServing.scala`
     - Sufficiency gap: the v2 and v3 aggregators (`ApiV2ServerEndpoints`, `ApiV3ServerEndpoints`,
         `ApiV2Module`, `ApiV3Module`) plus `docs/development/v3-iri-handling.md` are also required
         when the change touches v2 or v3 rather than admin.
@@ -142,6 +144,10 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `ApiV2ServerEndpoints`, `ApiV3ServerEndpoints`, `ManagementServerEndpoints`) and its layer added to
         the matching `*Module` - enforcement: structure for the layer (`Endpoints.layer` is `private[api]` and
         an unregistered `*ServerEndpoints` fails ZLayer construction), review for the aggregator list.
+    - Only `StoredXmlServing` adds the `ServeStoredXml` rendering option, and only the client REST read services
+        in `slice/api/v2` apply it, to the options they pass to a read; no internal reader (responder, service,
+        export) adds it - enforcement: review, with a runtime guard that fails a write receiving a served text
+        value.
     - Never add a variant to the shared `BaseEndpoints.errorOutputs`; declare route-specific variants with
         `errorOutVariantsPrepend`, precedent `V3BaseEndpoint` - enforcement: review (`CONVENTIONS.md` line 52).
     - Domain slices must not import `org.knora.webapi.slice.api.*`; DTOs, Tapir and zio-json codecs and
@@ -673,14 +679,17 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `OntologyName`, `RepresentationClass`, `FairClassesLive`, `ReadOntologyV2`, `ReadClassInfoV2`, `ReadPropertyInfoV2`,
     `ClassInfoContentV2`, `PropertyInfoContentV2`, `OwlCardinality`,
     `KnoraBaseToApiV2ComplexTransformationRules`, `KnoraBaseToApiV2SimpleTransformationRules`,
-    `ListGetResponseV2`, `NodeGetResponseV2`
+    `ListGetResponseV2`, `NodeGetResponseV2`, `ServeStoredXml`, `StandoffSelection`, `StandoffLink`
 - **Public interface**: `OntologyModule.layer` / `.Provided` (`CardinalityService & OntologyCache &
     OntologyCacheHelpers & OntologyRepo & OntologyTriplestoreHelpers & StandoffEntityInfoService &
     ValueRepo`), plus `OntologyResponderV2`, `OntologyTransformer`, `CardinalityHandler` and `IdSource` wired
     separately in `LayersLive`; the value types `Cardinality`, `OntologyName`, `RepresentationClass`,
     `OntologyMappingExternalIri`; the read models `ReadOntologyV2`, `ReadClassInfoV2`, `ReadPropertyInfoV2`,
     `EntityInfoGetResponseV2`, `StandoffEntityInfoGetResponseV2`, `CheckSubClassResponseV2`,
-    `ReadOntologyMetadataV2`.
+    `ReadOntologyMetadataV2`; the internal `ServeStoredXml` rendering option (webapi-api states who may add
+    it); `SchemaOptions.serveStoredXml`, read by `StandoffSelection.from`, which derives which standoff a
+    resource query loads; `StandoffLink`, the one owner of the `valueHasXml` read-side filter that the resource, search and
+    Gravsearch query builders place around their standoff link triple.
 - **Local-context kit**:
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/ontology/OntologyModule.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/ontology/repo/service/OntologyCache.scala`
@@ -767,10 +776,12 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
 - **Key entities**: `ResourcesRepo`, `ResourcesRepoLive`, `ValueRepo`, `ReadResourcesService`,
     `ReadResourcesServiceLive`, `MetadataService`, `ResourceInfoRepo`, `ResourceInfoRepoLive`,
     `ValueContentValidator`, `ResourcesResponderV2`, `ValuesResponderV2`, `CreateResourceV2Handler`,
-    `ResourceUtilV2`, `ReadResourceV2`, `ValueContentV2`, `ResourceReadyToCreate`,
+    `ResourceUtilV2`, `ReadResourceV2`, `ValueContentV2`, `TextValueShape`, `ResourceReadyToCreate`,
     `SparqlTemplateLinkUpdate`, `IiifImageRequestUrl`, `ValueHasXmlBackfillService`, `ValueHasXmlBackfillRepo`,
-    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`, `GetResourceInfoQuery`, `ResourceMetadataRules`,
-    `FairResourcesLive`
+    `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`, `StandoffLinkRefCountQuery`, `StandoffLinkRefCountRepairQuery`,
+    `StandoffLinkRefCountRepo`, `StandoffLinkRefCountRepoLive`, `StandoffLinkRefCountMismatch`, `StandoffLinkRefCountService`,
+    `StandoffLinkRefCountRepair`, `StandoffLinkRefCountRepairPlan`, `StandoffLinkRefCountSkipReason`,
+    `StandoffLinkRefCountRepairSummary`, `GetResourceInfoQuery`, `ResourceMetadataRules`, `FairResourcesLive`
 - **Public interface**: `ReadResourcesService` (10 external importers), `ResourcesRepo`, `ValueRepo`,
     `MetadataService`, `ResourceInfoRepo`, `ValueContentValidator`, `ResourcesResponderV2`,
     `ValuesResponderV2`, `ResourceUtilV2`, `CreateResourceV2Handler`, the `ReadResourceV2` /
@@ -826,7 +837,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `ResourceInfoRepoLive` and `ValueContentValidator`; `ResourcesRepoLive.layer`,
         `ReadResourcesServiceLive.layer`, `ResourceUtilV2.layer`, `ResourcesResponderV2.layer`,
         `ValuesResponderV2.layer`, `CreateResourceV2Handler.layer`, `ValueHasXmlBackfillRepoLive.layer`,
-        `ValueHasXmlBackfillService.layer` and `ValueHasXmlRendererLive.layer` are listed individually in
+        `ValueHasXmlBackfillService.layer`, `ValueHasXmlRendererLive.layer`,
+        `StandoffLinkRefCountRepoLive.layer` and `StandoffLinkRefCountService.layer` (which also needs `IriService` and `StringFormatter`) are listed individually in
         `core/LayersLive.scala`.
 - **Durable state**:
     - The project data named graph in Fuseki holding resource and value triples, multi-writer with no single
@@ -834,7 +846,8 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         `eraseValue`, `reorderValues`, `updateValuePermissions`), `ResourcesResponderV2` via
         `ChangeResourceMetadataQuery`, `ChangeResourceAuthorshipQuery`, `DeleteResourceQuery` and
         `EraseResourceQuery`, and `ValuesResponderV2` via `CreateLinkQuery`, `DeleteLinkQuery`,
-        `DeleteValueQuery`, `ChangeLinkTargetQuery` and `ChangeLinkMetadataQuery`. Outside:
+        `DeleteValueQuery`, `ChangeLinkTargetQuery` and `ChangeLinkMetadataQuery`, and
+        `StandoffLinkRefCountRepo.applyRepair` (webapi-resources, the standoff link reference count repair). Outside:
         `ListsResponder`, `StandoffResponderV2`, `ProjectDataImportService.uploadNQuads` (webapi-export),
         `TopLeftCorrectionAction` and `ReplaceUserIriInProjectAction` (webapi-admin) and the upgrade plugins
         under `store/triplestore/upgrade/plugins/**` (webapi-triplestore).
@@ -844,12 +857,40 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
         (`OntologyTransformer.convertRichtextValue`, webapi-ontology), which calls the same
         `StandoffTagUtilV2.convertStandoffTagV2ToXML` directly. Guards: `ValueHasXmlOnValueWriteE2ESpec`,
         `ValueHasXmlOnResourceCreateE2ESpec`, `MaintenanceBackfillValueHasXmlE2ESpec` and `BulkImportParityE2ESpec`
-        (test-e2e), over the helpers in `ValueHasXmlTestSupport`.
+        and `ValueHasXmlFiveAttributeTagE2ESpec` (test-e2e), over the helpers in `ValueHasXmlTestSupport`, and
+        `StandoffRendererGoldenSpec` (webapi unit), which pins the renderer output. Invariant: the output of
+        `convertStandoffTagV2ToXML` is persisted as `valueHasXml`, so an output change needs a re-render of the
+        stored literals.
+        Its read-side consumers are `StandoffLink`, whose `FILTER NOT EXISTS` skips the standoff of values that have
+        stored XML (`StandoffSelection.OnlyWithoutStoredXml`); `ConstructResponseUtilV2.makeTextValueContentV2`,
+        which fills `TextValueContentV2.storedXml` in serve mode; and `TextValueContentV2.toJsonLDValue`, where the
+        stored XML takes precedence over XML rebuilt from standoff.
+    - `knora-base:valueHasRefCount` of standoff link values has four writers: the value write path
+        (`InsertValueQueryBuilder`, `DeleteValueQuery`), the resource create path (`ResourcesRepoLive`), the
+        v3 bulk import (`OntologyTransformer`, webapi-ontology) and the repair `StandoffLinkRefCountRepairQuery`
+        (applied through `StandoffLinkRefCountRepo.applyRepair`). The repair plans each row with the pure
+        `StandoffLinkRefCountRepair.plan` and runs plan and apply under the `IriLocker` lock of the source resource,
+        the lock the value write path takes. It is guarded by the stored count it was planned against and by the
+        source being a live resource. The explicit-link queries (`CreateLinkQuery`, `DeleteLinkQuery`,
+        `ChangeLinkTargetQuery`, `ChangeLinkMetadataQuery`) write the count of ordinary link values only.
+        For text values, `TextValueContentV2.isServedFromStore` owns the link-target computation: the accessors
+        `standoffLinkTagIriAttributes` and `standoffLinkTagTargetResourceIris` fail for a served value.
+    - Invariant of the standoff link reference count: the count equals the number of current, not deleted text
+        values of the source with at least one standoff link tag to the target; the direct `hasStandoffLinkTo`
+        exists exactly when that number is above zero; a link value deleted at zero is consistent.
+    - Guards of the standoff link reference count: `StandoffLinkRefCountQuery` (the arbiter, a read-only check),
+        `StandoffLinkTargets` (`responders/v2`, lifts the served-value failure of the link-target accessors for the
+        write paths), `StandoffLinkRefCountService` (the actions `check-standoff-link-ref-counts` (`startCheck`/`check`) and
+        `repair-standoff-link-ref-counts` (`startRepair`/`repair`, body `projectShortcode` and `dryRun`, default
+        true, which writes nothing); both share one run guard),
+        `StandoffLinkRefCountQuerySemanticsSpec` and `StandoffLinkRefCountRepairSemanticsSpec` (test-it),
+        `MaintenanceCheckStandoffLinkRefCountsE2ESpec`, `MaintenanceRepairStandoffLinkRefCountsE2ESpec`,
+        `StandoffLinkRefCountScenariosE2ESpec` and `refCountsConsistent` in `ValueHasXmlTestSupport` (test-e2e).
     - The in-JVM per-IRI write lock `IriLocker.runWithIriLock`, owned by webapi-common, keyed on resource
-        IRIs here and on list, permission, ontology and mapping IRIs elsewhere. Single-JVM only, noted at
-        `ValuesResponderV2.scala:536`.
+        IRIs here and on list, permission, ontology and mapping IRIs elsewhere. Single-JVM only, noted in the
+        comment at the lock call in `ValuesResponderV2`.
     - Golden SPARQL dumps under `modules/webapi/src/test/resources/org/knora/webapi/slice/resources/repo/**`
-        (58 files), single writer: the query specs that regenerate them.
+        (65 files), single writer: the query specs that regenerate them.
     - Read permissions are enforced late and in two places, `PermissionUtilADM.getUserPermissionADM` inside
         `ResourceUtilV2` and `ConstructResponseUtilV2` in webapi-common, while write paths compare
         permissions in `CreateResourceV2Handler` and `ValuesResponderV2`. There is no single chokepoint.
@@ -1575,7 +1616,7 @@ Staleness: run `/dune:map check` to diff every component's globs against `last_v
     `TestAdminApiClient`, `TestClientsModule`, `InMemoryTracing`, `SpanAssertions`, `FileModels`,
     `OntologyModels`, `DspZTestJUnitRunner`, `DspZTestRunnerBase`
 - **Public interface**: `E2EZSpec` (the abstract base spec with a fixed `bootstrap`, `rdfDataObjects` and
-    `e2eSpec`); `GoldenTest` / `assertGolden` (an inline macro); `TestContainerLayers.all` / `.Environment`;
+    `e2eSpec`, and an `additionalLoggerLayer` hook for log capture); `GoldenTest` / `assertGolden` (an inline macro); `TestContainerLayers.all` / `.Environment`;
     `TestClientsModule.layer` / `.Provided`; the `testservices.Test*ApiClient` family; the
     `sharedtestdata.*` objects; `InMemoryTracing.layer` / `.finishedSpans`; `SpanAssertions.*`;
     `models.filemodels.FileModels`; and `org.knora.testrunner.DspZTestJUnitRunner`, the `@RunWith` target
@@ -2131,4 +2172,5 @@ failure.
 | A new trait plus `*Live` for a plain domain service | Doubles the surface with no test seam to justify it, and the split gets copied as the house style | `final class` with `ZLayer.derive` in the companion; trait plus `*Live` only for repos and explicit test seams | review |
 | Hand-editing a generated fixture such as `knoraApiOntologyWithValueObjects.jsonld` | The generator and the fixture diverge silently, and the next regeneration reverts the edit | Regenerate via `OntologyFormatsE2ESpec` and commit the result | review |
 | Asserting insertion order of repeated RDF literals in a test | Repeated datatype triples are unordered, so the test pins an accident of the store and fails on an unrelated change | Compare sorted lists or sets; if order matters in production it is `ORDER BY` in the query | review |
+| Adding `ServeStoredXml` to the schema options of an internal read (a responder, `ReadResourcesService`, `SearchResponderV2`, an export) | A served text value carries no standoff, so a write path that reads it computes empty link targets and corrupts the standoff link reference counts | Pass the options of an internal read unchanged; the client REST read services in `slice/api/v2` get the option from `StoredXmlServing` (webapi-api boundary rules). The link-target accessors of a served value (`TextValueContentV2.isServedFromStore`) fail with an `AssertionException`, and every write path that computes link targets lifts that failure before any update | review |
 | Instantiating Ehcache directly in a slice | A second cache lifecycle escapes `CacheManager.clearAll`, so a store reset leaves stale entries behind | `CacheManager.createCache` from webapi-infrastructure | docs-only |

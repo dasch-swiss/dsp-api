@@ -426,17 +426,20 @@ final class CreateResourceV2Handler(
                       valueHasCalendar = valueHasCalendar,
                     ),
                   )
-                case TextValueContentV2(_, _, _, valueHasLanguage, _, None, _, _, _) =>
-                  ZIO.succeed(UnformattedTextValueInfo(valueHasLanguage))
-                case tv @ TextValueContentV2(_, _, textType, valueHasLanguage, _, Some(mappingIri), _, _, _) =>
-                  val standoffTags = generateStandoffInfo(tv, newValueIri)
-                  CreateResourceV2Handler.generateFormattedTextValueInfo(
-                    tv,
-                    standoffTags,
-                    textType,
-                    valueHasLanguage,
-                    mappingIri,
-                  )
+                case tv: TextValueContentV2 =>
+                  tv.mappingIri match {
+                    case None =>
+                      ZIO.succeed(UnformattedTextValueInfo(tv.valueHasLanguage))
+                    case Some(mappingIri) =>
+                      val standoffTags = generateStandoffInfo(tv, newValueIri)
+                      CreateResourceV2Handler.generateFormattedTextValueInfo(
+                        tv,
+                        standoffTags,
+                        tv.textValueType,
+                        tv.valueHasLanguage,
+                        mappingIri,
+                      )
+                  }
                 case IntegerValueContentV2(_, valueHasInteger, _) =>
                   ZIO.succeed(IntegerValueInfo(valueHasInteger))
                 case DecimalValueContentV2(_, valueHasDecimal, _) =>
@@ -616,21 +619,22 @@ final class CreateResourceV2Handler(
     values: Iterable[CreateValueInNewResourceV2],
     requestingUser: User,
   ): Task[Unit] = {
-    val standoffLinkTargetsThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
-      case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
+    val standoffLinkTargetsThatShouldExist: Task[Set[IRI]] = ZIO.foldLeft(values)(Set.empty[IRI]) {
+      case (acc, valueToCreate: CreateValueInNewResourceV2) =>
         valueToCreate.valueContent match {
           case textValueContentV2: TextValueContentV2 =>
-            acc ++ textValueContentV2.standoffLinkTagIriAttributes.filter(_.targetExists).map(_.value)
-          case _ => acc
+            ZIO
+              .fromEither(textValueContentV2.standoffLinkTagIriAttributes)
+              .map(attributes => acc ++ attributes.filter(_.targetExists).map(_.value))
+          case _ => ZIO.succeed(acc)
         }
     }
 
     for {
-      targets <- ZIO
-                   .foreach(standoffLinkTargetsThatShouldExist.toSeq)(iri => ZIO.fromEither(ResourceIri.from(iri)))
-                   .mapError(BadRequestException.apply)
-      _ <- readResources.getResourcePreviewWithDeletedResource(
-             resourceIris = targets,
+      linkTargets <- standoffLinkTargetsThatShouldExist
+      targets     <- StandoffLinkTargets.toResourceIris(linkTargets)
+      _           <- readResources.getResourcePreviewWithDeletedResource(
+             resourceIris = targets.toSeq,
              targetSchema = ApiV2Complex,
              requestingUser = requestingUser,
            )
@@ -764,24 +768,30 @@ final class CreateResourceV2Handler(
   private def generateInsertSparqlForStandoffLinksInMultipleValues(
     resourceIri: ResourceIri,
     values: Iterable[GenerateSparqlForValueInNewResourceV2],
-  ): Task[Seq[StandoffLinkValueInfo]] = {
+  ): Task[Seq[StandoffLinkValueInfo]] =
     // To create LinkValues for the standoff links in the values to be created, we need to compute
     // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
     // that have standoff links to a particular target resource.
 
     // First, get the standoff link targets from all the text values to be created.
-    val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] =
-      values.foldLeft(Vector.empty[Set[IRI]]) {
-        case (standoffLinkTargetsAcc: Vector[Set[IRI]], createValueV2: GenerateSparqlForValueInNewResourceV2) =>
+    ZIO
+      .foldLeft(values)(Vector.empty[Set[IRI]]) {
+        case (standoffLinkTargetsAcc, createValueV2: GenerateSparqlForValueInNewResourceV2) =>
           createValueV2.valueContent match {
-            case textValueContentV2: TextValueContentV2
-                if textValueContentV2.standoffLinkTagTargetResourceIris.nonEmpty =>
-              standoffLinkTargetsAcc :+ textValueContentV2.standoffLinkTagTargetResourceIris
+            case textValueContentV2: TextValueContentV2 =>
+              ZIO
+                .fromEither(textValueContentV2.standoffLinkTagTargetResourceIris)
+                .map(targets => if (targets.nonEmpty) standoffLinkTargetsAcc :+ targets else standoffLinkTargetsAcc)
 
-            case _ => standoffLinkTargetsAcc
+            case _ => ZIO.succeed(standoffLinkTargetsAcc)
           }
       }
+      .flatMap(generateStandoffLinkValueInfos(resourceIri, _))
 
+  private def generateStandoffLinkValueInfos(
+    resourceIri: ResourceIri,
+    standoffLinkTargetsPerTextValue: Vector[Set[IRI]],
+  ): Task[Seq[StandoffLinkValueInfo]] =
     if (standoffLinkTargetsPerTextValue.nonEmpty) {
       // Combine those resource references into a single list, so if there are n text values with a link to
       // some IRI, the list will contain that IRI n times.
@@ -818,7 +828,6 @@ final class CreateResourceV2Handler(
     } else {
       ZIO.succeed(Seq.empty[StandoffLinkValueInfo])
     }
-  }
 
   /**
    * A convenience method for generating an unused random value IRI.

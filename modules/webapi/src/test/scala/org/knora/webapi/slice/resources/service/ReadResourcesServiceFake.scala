@@ -26,7 +26,7 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
-    queryStandoff: Boolean = false,
+    standoff: StandoffSelection = StandoffSelection.NoStandoff,
     skipRetrievalChecks: Boolean = false,
     standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2] =
@@ -40,7 +40,7 @@ final case class ReadResourcesServiceFake(readResources: Seq[ReadResourceV2]) ex
     targetSchema: ApiV2Schema,
     requestingUser: User,
     withDeleted: Boolean = true,
-    queryStandoff: Boolean = false,
+    standoff: StandoffSelection = StandoffSelection.NoStandoff,
     skipRetrievalChecks: Boolean = false,
     standoffTagFilter: Option[SmartIri] = None,
   ): Task[ReadResourcesSequenceV2] = null
