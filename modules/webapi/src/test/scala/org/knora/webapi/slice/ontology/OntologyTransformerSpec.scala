@@ -2127,6 +2127,104 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     },
   )
 
+  private def dateComponentsJsonLd(
+    calendar: String,
+    start: (Int, Option[Int], Option[Int], Option[String]),
+    end: (Int, Option[Int], Option[Int], Option[String]),
+  ): String = {
+    def fields(side: String, c: (Int, Option[Int], Option[Int], Option[String])): List[String] = {
+      val (year, month, day, era) = c
+      List(
+        Some(s""""${knoraApi}dateValueHas${side}Year": { "@type": "${xsd}integer", "@value": $year }"""),
+        month.map(m => s""""${knoraApi}dateValueHas${side}Month": { "@type": "${xsd}integer", "@value": $m }"""),
+        day.map(d => s""""${knoraApi}dateValueHas${side}Day": { "@type": "${xsd}integer", "@value": $d }"""),
+        era.map(e => s""""${knoraApi}dateValueHas${side}Era": { "@type": "${xsd}string", "@value": "$e" }"""),
+      ).flatten
+    }
+    val calendarField = s""""${knoraApi}dateValueHasCalendar": { "@type": "${xsd}string", "@value": "$calendar" }"""
+    resourceWithValueJsonLd(
+      s"${onto}testSubDate1",
+      s"${knoraApi}DateValue",
+      (calendarField :: fields("Start", start) ::: fields("End", end)).mkString(",\n"),
+    )
+  }
+
+  private type DateSide = (Int, Option[Int], Option[Int], Option[String])
+  private def ce(year: Int, month: Option[Int] = None, day: Option[Int] = None): DateSide =
+    (year, month, day, Some("CE"))
+
+  private val dateRangeStartAfterEnd: List[(String, String, DateSide, DateSide)] = List(
+    ("year-precision JULIAN", "JULIAN", ce(2000, Some(1), Some(1)), ce(1900, Some(1), Some(1))),
+    ("day-precision GREGORIAN", "GREGORIAN", ce(2000, Some(1), Some(1)), ce(1900, Some(1), Some(1))),
+    ("day-precision ISLAMIC", "ISLAMIC", (2000, Some(1), Some(1), None), (1900, Some(1), Some(1), None)),
+    ("month-precision, year wrong", "GREGORIAN", ce(2000, Some(1)), ce(1900, Some(1))),
+    ("month-precision, month wrong", "GREGORIAN", ce(2000, Some(5)), ce(2000, Some(1))),
+    ("day wrong, year and month equal", "GREGORIAN", ce(1800, Some(1), Some(20)), ce(1800, Some(1), Some(1))),
+    ("year-precision", "GREGORIAN", ce(2000), ce(1900)),
+    ("mixed precision", "GREGORIAN", ce(2000, Some(1), Some(1)), ce(1900)),
+    ("start CE, end BCE", "GREGORIAN", ce(2000), (1900, None, None, Some("BCE"))),
+  )
+
+  private val dateRangeNonexistent: List[(String, DateSide, DateSide)] = List(
+    ("end month does not exist", ce(1800, Some(1), Some(1)), ce(1900, Some(20), Some(1))),
+    ("end day does not exist", ce(1800, Some(1), Some(1)), ce(1900, Some(1), Some(50))),
+    ("single date month does not exist", ce(1800, Some(22)), ce(1800, Some(22))),
+  )
+
+  private val dateValueDataRejections = suite("Stage 2 — DateValue content rejection")(
+    suite("rejects a range whose start is after its end")(
+      dateRangeStartAfterEnd.map { case (name, calendar, start, end) =>
+        test(name) {
+          runTransformStage2Failure(dateComponentsJsonLd(calendar, start, end)).map { exit =>
+            val message = messageOf(exit)
+            assertTrue(
+              exit.isFailure,
+              message.contains("Failed to restructure RDF"),
+              message.contains("is after end date"),
+            )
+          }
+        }
+      }*,
+    ),
+    suite("rejects a date with a month or day that does not exist")(
+      dateRangeNonexistent.map { case (name, start, end) =>
+        test(name) {
+          runTransformStage2Failure(dateComponentsJsonLd("GREGORIAN", start, end)).map { exit =>
+            val message = messageOf(exit)
+            assertTrue(exit.isFailure, message.contains("Failed to restructure RDF"), message.contains("Invalid date"))
+          }
+        }
+      }*,
+    ),
+  )
+
+  private def geolocationJsonLd(literal: String): String =
+    resourceWithValueJsonLd(
+      s"${onto}testGeolocation",
+      s"${knoraApi}GeolocationValue",
+      s""""${knoraApi}geolocationValueAsGeolocation": { "@type": "${xsd}string", "@value": "$literal" }""",
+    )
+
+  private val lv95 = "<http://www.opengis.net/def/crs/EPSG/0/2056>"
+
+  private val geolocationDataRejections = suite("Stage 2 — GeolocationValue content rejection")(
+    test("rejects a CRS84 latitude above 90") {
+      runTransformStage2Failure(geolocationJsonLd("POINT(8.55 91)")).map(exit =>
+        assertTrue(messageOf(exit).contains("outside the valid range")),
+      )
+    },
+    test("rejects longitude and latitude given in CRS LV95") {
+      runTransformStage2Failure(geolocationJsonLd(s"$lv95 POINT(8.55 47.37)")).map(exit =>
+        assertTrue(messageOf(exit).contains("outside the valid range")),
+      )
+    },
+    test("rejects an LV03 easting and northing given in CRS LV95") {
+      runTransformStage2Failure(geolocationJsonLd(s"$lv95 POINT(600000 200000)")).map(exit =>
+        assertTrue(messageOf(exit).contains("outside the valid range")),
+      )
+    },
+  )
+
   private def fileValueJsonLd(valueClass: String, inner: String): String =
     resourceWithValueJsonLd(s"${onto}testFile", s"$knoraApi$valueClass", inner)
 
@@ -2449,6 +2547,8 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
     intervalStage2,
     scalarCanonicalization,
     dateValueRejections,
+    dateValueDataRejections,
+    geolocationDataRejections,
     fileValuesStage2,
   ).provide(
     OntologyTransformer.layer,

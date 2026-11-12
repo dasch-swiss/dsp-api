@@ -153,6 +153,19 @@ fails the task with a descriptive error message and leaves the triplestore untou
 The data import applies an extra bulk-import shape: every imported resource and value must be `attachedToUser` the
 `onBehalfOfUser`. This shape is specific to the data import and does not run for the project-migration import.
 
+The data import also validates against shapes generated from the project ontologies. It rejects:
+
+- a resource class that is not a class of the project ontologies or one of `Region`, `LinkObj`, `VideoSegment` and
+  `AudioSegment`
+- a resource with fewer values of a property than its minimum cardinality, or with more than its maximum cardinality
+- a resource with a property that has no cardinality on its class
+- a value of the wrong type for its property
+- a link to a resource of the wrong class
+- a list value whose node does not exist, is a root node, or is not in the list of the property
+
+Shared ontologies are not supported. Resources of shared classes, and of project classes that subclass shared classes,
+fail validation.
+
 The presence of at least one project ontology is checked synchronously at trigger time
 (`409 project_ontologies_missing`, see [Key Behaviors](#key-behaviors)). The task also re-checks it as a backstop
 before validation.

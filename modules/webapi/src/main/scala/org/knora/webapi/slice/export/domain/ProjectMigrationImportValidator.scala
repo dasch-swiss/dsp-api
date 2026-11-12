@@ -47,7 +47,9 @@ final class ProjectMigrationImportValidator() {
    *             `ImportMode.Migration` loads `shacl/migration-shapes.ttl`, which allows the modification and
    *             deletion predicates that already-modified graphs carry. `ImportMode.BulkData` loads
    *             `shacl/bulk-import-shapes.ttl`, which forbids those predicates and pins
-   *             `knora-base:attachedToUser` to the on-behalf-of user. The two shape files never load together.
+   *             `knora-base:attachedToUser` to the on-behalf-of user. It also loads the shapes generated from the
+   *             project ontology, which constrain the cardinalities and value types of the imported resources.
+   *             The migration and bulk import shape files never load together.
    */
   def validate(
     ontologyFiles: NonEmptyChunk[Path],
@@ -66,10 +68,15 @@ final class ProjectMigrationImportValidator() {
                            case ImportMode.Migration =>
                              readClasspathResource("shacl/migration-shapes.ttl")
                                .map(ttl => Chunk(RdfData.InMemoryTurtle(ttl, "")))
-                           case ImportMode.BulkData(userIri) =>
+                           case ImportMode.BulkData(userIri, projectOntologyShapes) =>
                              readClasspathResource("shacl/bulk-import-shapes.ttl")
                                .map(_.replace(UserIriPlaceholder, userIri.value))
-                               .map(ttl => Chunk(RdfData.InMemoryTurtle(ttl, "")))
+                               .map(ttl =>
+                                 Chunk(
+                                   RdfData.InMemoryTurtle(ttl, ""),
+                                   RdfData.InMemoryTurtle(projectOntologyShapes, ""),
+                                 ),
+                               )
                          }
       dataShapes = NonEmptyChunk(RdfData.InMemoryTurtle(dataShapesTtl, "")) ++ extraDataShapes
       _         <- ShaclValidator
@@ -158,10 +165,12 @@ object ProjectMigrationImportValidator {
 
   /**
    * Selects the extra data shapes layered on top of `shacl/data-shapes.ttl`.
+   *
+   * `BulkData` carries the Turtle of the shapes generated from the project ontology (see `ProjectOntologyShapes`).
    */
   enum ImportMode {
     case Migration
-    case BulkData(onBehalfOfUser: UserIri)
+    case BulkData(onBehalfOfUser: UserIri, projectOntologyShapes: String)
   }
 
   val layer: ULayer[ProjectMigrationImportValidator] = ZLayer.derive[ProjectMigrationImportValidator]
