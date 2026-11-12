@@ -687,6 +687,22 @@ knora-base:TextValue-Shape
       sh:minCount 1 ;
     ] ;
     sh:message "An UnformattedText TextValue instance must not carry knora-base:valueHasXml"
+  ] ;
+  sh:not [
+    a sh:NodeShape ;
+    sh:description "A FormattedText or CustomFormattedText value has standoff, so it must have its canonical XML as knora-base:valueHasXml." ;
+    sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:hasTextValueType ;
+      sh:minCount 1 ;
+      sh:in ( knora-base:FormattedText knora-base:CustomFormattedText ) ;
+    ] ;
+    sh:property [
+      a sh:PropertyShape ;
+      sh:path knora-base:valueHasXml ;
+      sh:maxCount 0 ;
+    ] ;
+    sh:message "A FormattedText or CustomFormattedText TextValue instance must carry knora-base:valueHasXml"
   ] .
 
 knora-base:TimeValue-Shape

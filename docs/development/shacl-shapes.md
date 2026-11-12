@@ -75,7 +75,10 @@ to express a single prohibition.
 
 Do not add `sh:minCount 1` for a predicate the write path does not yet always populate.
 Restrict invalid combinations only. Add the presence requirement once the write path
-guarantees the value and a backfill covers existing data.
+guarantees the value and a backfill covers existing data. For example, `TextValue-Shape`
+requires `knora-base:valueHasXml` on a `FormattedText` or `CustomFormattedText` value, because
+every write path stores it and the backfill adds it to existing values. It forbids the missing
+case with `sh:not`, so a value without `hasTextValueType` stays valid.
 
 ### Constraint granularity and messages
 

@@ -20,11 +20,10 @@ import org.knora.testrunner.DspZTestJUnitRunner
 final case class RealShaclFixtures(knoraBaseTtl: String, dataShapesTtl: String)
 
 /**
- * DEV-7325 regression: knora-base:valueHasXml must not trip up the production SHACL shapes.
- * data-shapes.ttl has no TextValue-specific sh:property shape for it and is not sh:closed, so a
- * TextValue instance that is otherwise valid must validate clean whether or not it carries the
- * predicate. Runs the same knora-base.ttl (v58) + shacl/data-shapes.ttl fixtures, through the same
- * in-JVM TopBraid/Jena engine, that ProjectMigrationImportValidator uses for project imports.
+ * The knora-base:valueHasXml rules of the production SHACL shapes: a FormattedText or
+ * CustomFormattedText value requires exactly one xsd:string valueHasXml, and an UnformattedText
+ * value must not have one. Runs the same knora-base.ttl + shacl/data-shapes.ttl fixtures, through the
+ * same in-JVM TopBraid/Jena engine, that ProjectMigrationImportValidator uses for project imports.
  */
 @RunWith(classOf[DspZTestJUnitRunner])
 class ValueHasXmlShaclRegressionSpec extends ZIOSpecDefault {
@@ -109,8 +108,11 @@ class ValueHasXmlShaclRegressionSpec extends ZIOSpecDefault {
       validate(textValueTtl(textValueTypeTriple(CustomFormattedText) + valueHasXmlTriple))
         .map(result => assert(result)(isRight))
     },
-    test("a FormattedText value without knora-base:valueHasXml validates clean") {
-      validate(textValueTtl(textValueTypeTriple(FormattedText))).map(result => assert(result)(isRight))
+    test("a FormattedText value without knora-base:valueHasXml fails (minCount)") {
+      validate(textValueTtl(textValueTypeTriple(FormattedText))).map(result => assert(result)(isLeft))
+    },
+    test("a CustomFormattedText value without knora-base:valueHasXml fails (minCount)") {
+      validate(textValueTtl(textValueTypeTriple(CustomFormattedText))).map(result => assert(result)(isLeft))
     },
     test("an UnformattedText value carrying knora-base:valueHasXml fails validation") {
       validate(textValueTtl(textValueTypeTriple(UnformattedText) + valueHasXmlTriple))
