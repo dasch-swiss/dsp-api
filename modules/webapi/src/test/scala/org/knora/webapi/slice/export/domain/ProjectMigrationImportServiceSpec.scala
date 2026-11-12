@@ -293,7 +293,7 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
     Ref.make[Option[CurrentDataTask]](None).map { ref =>
       val state = new DataTaskState(ref, noopPersistence)
       BulkService(
-        new ProjectDataImportService(state, new ProjectDataImportStorageService(), null, null, null, null, slot),
+        new ProjectDataImportService(state, new ProjectDataImportStorageService(), null, null, null, null, null, slot),
         ref,
       )
     }

@@ -10,6 +10,13 @@ network). These conventions keep the shapes readable, correctly placed, and test
 - `data-shapes.ttl` holds constraints that always apply. It loads in every validation mode.
 - `migration-shapes.ttl` and `bulk-import-shapes.ttl` layer mode-specific constraints on
   top. The two never load together. Each reopens a node shape by IRI and adds constraints.
+- The project-ontology shapes are generated at import time by `ProjectOntologyShapes` from the
+  ontology cache. They load only in bulk-import mode, together with the project data graph
+  (list nodes only). The generator owns every rule that depends on the project ontology: per
+  resource class the cardinalities (`sh:minCount`, `sh:maxCount`), `sh:class` of the property's
+  object class constraint, the closed check and the list-membership check. The rules that do
+  not depend on it live in the static files: `data-shapes.ttl` holds that a list node exists
+  as a `ListNode` and is not a root node, so migration and bulk import both check it.
 
 Placement is a decision, not a version step. When you add or change a knora-base value
 predicate, decide where its constraint belongs. Put it in `data-shapes.ttl` when it always
@@ -49,7 +56,8 @@ The plain model keeps the class semantics of SHACL Core:
 ### Declarative first
 
 Prefer `sh:property`, `sh:or`, and `sh:not`. Reserve `sh:sparql` for rules that declarative
-SHACL cannot express. `data-shapes.ttl` uses no SPARQL today.
+SHACL cannot express. The static `data-shapes.ttl` uses no SPARQL today. The generated
+project-ontology shapes use a SPARQL target (see [No `sh:closed`](#no-shclosed-on-data-shapesttl)).
 
 ### Forbid one case with `sh:not`
 
@@ -106,6 +114,11 @@ Where a shape needs SPARQL, for example in `ontology-shapes.ttl`:
 
 Do not use `sh:closed` on `data-shapes.ttl` shapes. Values carry shared and inferred
 predicates, which a closed shape would reject.
+
+This applies to the static file only. The generated project-ontology shapes are closed and
+use a SPARQL target on the exact class. `sh:targetClass` would also match subclass instances,
+and the closed check needs the cardinalities of that one class. `sh:ignoredProperties` lists
+`rdf:type` and all cardinality properties of the class.
 
 ## Testing shapes
 

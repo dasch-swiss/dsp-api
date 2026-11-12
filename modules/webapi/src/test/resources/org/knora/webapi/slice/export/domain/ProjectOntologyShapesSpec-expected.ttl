@@ -1,0 +1,85 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<http://www.knora.org/ontology/0001/anything#Thing_GeneratedShape>
+    a sh:NodeShape ;
+    sh:closed true ;
+    sh:ignoredProperties (
+        <http://www.knora.org/ontology/0001/anything#hasAtLeastOne>
+        <http://www.knora.org/ontology/0001/anything#hasExactlyOne>
+        <http://www.knora.org/ontology/0001/anything#hasInherited>
+        <http://www.knora.org/ontology/0001/anything#hasList>
+        <http://www.knora.org/ontology/0001/anything#hasOtherThing>
+        <http://www.knora.org/ontology/0001/anything#hasOtherThingValue>
+        <http://www.knora.org/ontology/0001/anything#hasPlainList>
+        <http://www.knora.org/ontology/0001/anything#hasSubProperty>
+        <http://www.knora.org/ontology/0001/anything#hasUnbounded>
+        <http://www.knora.org/ontology/0001/anything#hasUndefined>
+        <http://www.knora.org/ontology/0001/anything#hasZeroOrOne>
+        <http://www.knora.org/ontology/knora-base#hasComment>
+        rdf:type
+    ) ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:select "SELECT ?this WHERE { ?this a <http://www.knora.org/ontology/0001/anything#Thing> }"
+    ] ;
+    sh:property
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasExactlyOne> ;
+          sh:minCount 1 ; sh:maxCount 1 ;
+          sh:class <http://www.knora.org/ontology/knora-base#IntValue> ] ,
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasZeroOrOne> ;
+          sh:maxCount 1 ;
+          sh:class <http://www.knora.org/ontology/knora-base#TextValue> ] ,
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasAtLeastOne> ;
+          sh:minCount 1 ;
+          sh:class <http://www.knora.org/ontology/knora-base#TextValue> ] ,
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasUnbounded> ;
+          sh:class <http://www.knora.org/ontology/knora-base#TextValue> ] ,
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasInherited> ;
+          sh:maxCount 1 ;
+          sh:class <http://www.knora.org/ontology/knora-base#TextValue> ] ,
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasSubProperty> ;
+          sh:maxCount 1 ;
+          sh:class <http://www.knora.org/ontology/knora-base#TextValue> ] ,
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasOtherThing> ;
+          sh:maxCount 1 ;
+          sh:class <http://www.knora.org/ontology/0001/anything#Thing> ] ,
+        [ sh:path <http://www.knora.org/ontology/knora-base#hasComment> ;
+          sh:class <http://www.knora.org/ontology/knora-base#TextValue> ] ,
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasUndefined> ;
+          sh:minCount 1 ] ,
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasList> ;
+          sh:maxCount 1 ;
+          sh:class <http://www.knora.org/ontology/knora-base#ListValue> ] ,
+        [ sh:path (
+              <http://www.knora.org/ontology/0001/anything#hasList>
+              <http://www.knora.org/ontology/knora-base#valueHasListNode>
+              <http://www.knora.org/ontology/knora-base#hasRootNode> ) ;
+          sh:in ( <http://rdfh.ch/lists/0001/treeList> ) ;
+          sh:description "Every list node of a value of this property belongs to the list that the property's hlist gui attribute names." ;
+          sh:message "Every value of <http://www.knora.org/ontology/0001/anything#hasList> must point to a list node of the list <http://rdfh.ch/lists/0001/treeList>" ] ,
+        [ sh:path <http://www.knora.org/ontology/0001/anything#hasPlainList> ;
+          sh:maxCount 1 ;
+          sh:class <http://www.knora.org/ontology/knora-base#ListValue> ] .
+
+<http://www.knora.org/ontology/knora-base#ImportResourceClass_GeneratedShape>
+    a sh:NodeShape ;
+    sh:targetSubjectsOf <http://www.knora.org/ontology/knora-base#attachedToProject> ;
+    sh:description "Every node attached to a project is a list node, an ontology, or a resource whose class is exactly a resource class of the project or a built-in class that a project may instantiate." ;
+    sh:or (
+        [ sh:class <http://www.knora.org/ontology/knora-base#ListNode> ;
+          sh:pattern "^http://rdfh\\.ch/lists/" ]
+        [ sh:class owl:Ontology ;
+          sh:pattern "^http://www\\.knora\\.org/ontology/" ]
+        [ sh:path rdf:type ;
+          sh:minCount 1 ;
+          sh:in (
+              <http://www.knora.org/ontology/0001/anything#Thing>
+              <http://www.knora.org/ontology/knora-base#Region>
+              <http://www.knora.org/ontology/knora-base#LinkObj>
+              <http://www.knora.org/ontology/knora-base#VideoSegment>
+              <http://www.knora.org/ontology/knora-base#AudioSegment> ) ]
+    ) ;
+    sh:message "A node with knora-base:attachedToProject must be a knora-base:ListNode, an owl:Ontology, or a resource of a class defined in the project ontologies or one of knora-base:Region, knora-base:LinkObj, knora-base:VideoSegment, knora-base:AudioSegment" .
