@@ -81,6 +81,20 @@ build --remote_max_connections=200
 # and gives local dev one shared location across workspaces.
 common --repository_cache=~/.cache/bazel-repo
 
+# ── Memory of the Bazel server and its persistent workers ──────────────────
+# Each worktree runs its own Bazel server with its own Scalac/ScalaFmt worker pool.
+# Ceiling on idle worker memory per server: whenever a new worker identity appears
+# (e.g. a changed TMPDIR, see the `bazel` wrapper in flake.nix), Bazel starts new
+# workers and would otherwise keep the old ones until the server exits. Bazel
+# evicts idle workers above the limit while a build runs; busy workers are never
+# stopped. Override in user.bazelrc if needed.
+build --experimental_total_worker_memory_limit_mb=HOST_RAM*0.25
+# Idle servers (e.g. of finished agent worktrees) exit after an hour instead of
+# three, and earlier when the machine runs low on memory. Startup options apply
+# when a server starts; run `bazel shutdown` once to pick up a change.
+startup --max_idle_secs=3600
+startup --shutdown_on_low_sys_mem
+
 # Local-machine-only flags (e.g. --disk_cache=...) belong in user.bazelrc; the file is gitignored.
 # This is NOT the CI flag channel — CI threads remote flags through `just` recipes (see above).
 try-import %workspace%/user.bazelrc
