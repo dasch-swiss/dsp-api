@@ -1,5 +1,33 @@
 # Changelog
 
+## [40.7.0](https://github.com/dasch-swiss/dsp-api/compare/v40.6.1...v40.7.0) (2026-11-12)
+
+
+### Maintenances
+
+* **ci:** End the squash-merge grace period ([5a8b56a](https://github.com/dasch-swiss/dsp-api/commit/5a8b56af4811d09d555210b8465f908d6ef57028))
+* **ci:** Switch to rebase merge with a short squash grace period ([38cf818](https://github.com/dasch-swiss/dsp-api/commit/38cf8186b48005ac6cbdeaf76d64d1a5aef9b445))
+* Declare the authorization policies that needed a decision (batch 3) ([#4429](https://github.com/dasch-swiss/dsp-api/issues/4429)) ([abea221](https://github.com/dasch-swiss/dsp-api/commit/abea2217158882e70f31540049921967dbad1620))
+* **deps:** Disable Renovate ([a8d8451](https://github.com/dasch-swiss/dsp-api/commit/a8d845185c90d7012ba597b69821774b3107265b))
+* **release:** Migrate release-please to v4 with config files ([73f0646](https://github.com/dasch-swiss/dsp-api/commit/73f0646734d954346a3b4ff7744ed52dc691c332))
+
+
+### Documentation
+
+* **docs:** Drop the dsp-api- prefix from the docs/development files ([7fcc375](https://github.com/dasch-swiss/dsp-api/commit/7fcc3754ea31585c4e2b647594fff624a62c6d47))
+
+
+### Enhancements
+
+* **export:** Make the bulk and migration import safe for the API heap (DEV-7440) ([#4428](https://github.com/dasch-swiss/dsp-api/issues/4428)) ([e20226e](https://github.com/dasch-swiss/dsp-api/commit/e20226e083b1ddfe931ae5d42f177c3918c10824))
+* **export:** Require valueHasXml on formatted text values in SHACL validation ([7581ad3](https://github.com/dasch-swiss/dsp-api/commit/7581ad3c6ea801491d305a7b70d659958d891899))
+
+
+### Bug Fixes
+
+* Accept knora-api:isMainResource in the Gravsearch WHERE clause and return 400 instead of 500 for invalid queries (DEV-7739) ([#4421](https://github.com/dasch-swiss/dsp-api/issues/4421)) ([d9962e5](https://github.com/dasch-swiss/dsp-api/commit/d9962e5e988cd5386fe570f06d0c49d0c69acbc4))
+* **search:** Harden the fulltext breadth guard for Gravsearch traffic (DEV-7623) ([5ab251f](https://github.com/dasch-swiss/dsp-api/commit/5ab251f4d3400d539a99b0270e36885b78b5a053))
+
 ## [40.6.1](https://github.com/dasch-swiss/dsp-api/compare/v40.6.0...v40.6.1) (2026-11-04)
 
 
