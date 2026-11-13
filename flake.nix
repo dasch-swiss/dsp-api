@@ -32,7 +32,12 @@
               # Bazelisk reads `.bazelversion` and drives the Bazel build. The wrapper
               # keeps the `bazel` command name working, matching sipi & dsp-repository.
               bazelisk
-              (writeShellScriptBin "bazel" ''exec ${bazelisk}/bin/bazelisk "$@"'')
+              # TMPDIR is fixed to /tmp because Bazel puts the client's TMPDIR into
+              # each persistent worker's identity. Every `nix develop` sets a new
+              # TMPDIR, so without this every `nix develop --command bazel ...` would
+              # start a fresh set of Scalac/ScalaFmt workers while the old ones stay
+              # alive until the Bazel server exits, piling up memory over a day.
+              (writeShellScriptBin "bazel" ''TMPDIR=/tmp exec ${bazelisk}/bin/bazelisk "$@"'')
 
               # JDK 25 for the Bazel-driven Scala build (rules_scala compiles
               # knora-api + dsp-ingest on it) — direnv's `use flake` replaces the
