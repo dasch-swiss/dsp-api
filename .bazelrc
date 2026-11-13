@@ -68,6 +68,7 @@ test --test_output=errors
 # no remote is configured (local dev never contacts the backend).
 #   --remote_download_toplevel: fetch outputs of explicitly built/run targets locally — needed so
 #     `bazel run //modules/*:load|push` has the image tarball bytes to hand to the Docker daemon.
+#     It governs disk-cache hits too; see --remote_download_regex below for outputs read by path.
 #   --remote_local_fallback: a backend outage degrades to a local build instead of failing CI.
 #   --remote_timeout: per-request budget sized for cold compiles on the worker.
 #   --remote_max_connections: raise the gRPC parallelism ceiling for bulk cache lookups.
@@ -80,6 +81,20 @@ build --remote_max_connections=200
 # Pinning a stable path lets CI persist it across runs via actions/cache (keyed on MODULE.bazel.lock)
 # and gives local dev one shared location across workspaces.
 common --repository_cache=~/.cache/bazel-repo
+
+# Disk cache of action results, shared by all checkouts and worktrees of the user (and other repos
+# that use the same path), so a new or long-idle worktree builds warm. Garbage-collected in the
+# background once a server has been idle for 5 min. CI disables it (the bazel-rbe action appends
+# `build --disk_cache=` to user.bazelrc): its runners are ephemeral and use the remote cache.
+build --disk_cache=~/.cache/bazel-disk
+build --experimental_disk_cache_gc_max_size=20G
+build --experimental_disk_cache_gc_max_age=30d
+# Cache hits (disk or remote) are not written to the output tree under --remote_download_toplevel
+# unless they are outputs of the requested target. rules_scala's `<target>.format-test` /
+# `.format` scripts read the `.fmt.output` files by path without them being runfiles, so force
+# their download or the diff fails with "No such file or directory". `[.]`, not `\.`: rc-file
+# parsing strips backslashes.
+build --remote_download_regex=.*[.]fmt[.]output$
 
 # ── Memory of the Bazel server and its persistent workers ──────────────────
 # Each worktree runs its own Bazel server with its own Scalac/ScalaFmt worker pool.
@@ -95,6 +110,7 @@ build --experimental_total_worker_memory_limit_mb=HOST_RAM*0.25
 startup --max_idle_secs=3600
 startup --shutdown_on_low_sys_mem
 
-# Local-machine-only flags (e.g. --disk_cache=...) belong in user.bazelrc; the file is gitignored.
-# This is NOT the CI flag channel — CI threads remote flags through `just` recipes (see above).
+# Local-machine-only flags (e.g. another --disk_cache path) belong in user.bazelrc; the file is gitignored.
+# CI threads its remote flags through `just` recipes (see above); it writes user.bazelrc only to turn
+# the disk cache off (bazel-rbe action), because that must reach every Bazel call in the job.
 try-import %workspace%/user.bazelrc

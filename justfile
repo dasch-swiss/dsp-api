@@ -84,9 +84,9 @@ test-ingest-integration *FLAGS='': require-bazel (docker-load-test-images FLAGS)
 check *FLAGS='': require-bazel
     #!/usr/bin/env bash
     set -euo pipefail
-    # scalafmt format-test runs LOCALLY (no {{FLAGS}}): `bazel run <t>.format-test` diffs the
-    # source against a generated `.fmt.output`, which under RBE build-without-the-bytes is never
-    # materialized locally → `diff: …/…fmt.output: No such file`. Formatting is cheap; run it local.
+    # scalafmt format-test runs LOCALLY (no {{FLAGS}}): formatting is cheap. `bazel run <t>.format-test`
+    # diffs the source against a generated `.fmt.output`; .bazelrc's --remote_download_regex makes
+    # sure that file is on disk even when it comes from a cache.
     for t in {{scalafmt_targets}}; do bazel run "$t.format-test"; done
     bazel test {{FLAGS}} //tools/license:spdx_header_check //tools/lint:no_relative_imports \
       //tools/lint:check_authz //tools/lint:check_authz_test //tools/lint:gravsearch_prequery_seam
