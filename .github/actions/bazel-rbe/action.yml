@@ -6,6 +6,7 @@ description: >
   rc file; the backend-agnostic tuning flags (--remote_download_toplevel, --remote_local_fallback,
   --repository_cache, …) are in .bazelrc. The flags enable the remote cache (AC+CAS) and the remote
   executor. Flags are empty when mTLS material is absent (fork PR → cold local build).
+  It also writes `user.bazelrc` to turn off the developer disk cache set in .bazelrc.
   dsp-api is single-arch (all runners are x86_64 = the worker arch), so there is no cross-compile /
   target-platform machinery. External archives are cached via --repository_cache + the actions/cache
   step, not a remote downloader.
@@ -41,6 +42,10 @@ runs:
         RBE_CLIENT_KEY: ${{ inputs.client-key }}
       run: |
         set -euo pipefail
+        # .bazelrc enables a local disk cache for developer machines. CI runners are ephemeral, so
+        # it would only fill the runner's disk; turn it off for every Bazel call in this job (including
+        # recipe steps that don't take the flags below). user.bazelrc is gitignored and imported at the end of .bazelrc.
+        echo 'build --disk_cache=' >> "$GITHUB_WORKSPACE/user.bazelrc"
         # Fork PRs / missing secrets → emit empty flags so the build runs cold (local, no remote).
         if [ -z "${RBE_RUNNER_ENDPOINT:-}" ] || [ -z "${RBE_CLIENT_KEY:-}" ]; then
           echo "bazel-rbe: endpoint/mTLS material absent (fork PR?) — cold local build." >&2
