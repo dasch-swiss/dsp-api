@@ -5,6 +5,12 @@ a trace cold and name the dominant stage and read the time decomposition without
 
 ## 1. Find a slow trace
 
+To see whether Gravsearch is slow at all, and for which query shapes, start from the
+**[Gravsearch Performance dashboard](https://dasch.grafana.net/d/dsp-gravsearch/gravsearch-performance)**:
+volume, error/interrupt share and duration percentiles by query shape, from span metrics. It counts
+only queries that got past parsing (see [§7](#7-absent-spans-five-normal-topologies)) and has no
+per-stage breakdown; that lives in the trace.
+
 Open **Grafana → Explore → `grafanacloud-dasch-traces`** (Tempo), TraceQL tab, and run the
 slow-query recipe:
 
