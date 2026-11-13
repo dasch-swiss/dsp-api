@@ -50,7 +50,9 @@ long after the agent has finished.
 3. Bazel servers of idle worktrees release their memory sooner; on a best-effort basis, earlier still when the machine
    runs low on memory.
 4. Nothing changes for people who build through direnv or a long-lived shell, through Metals, or in CI, beyond the
-   bounds above.
+   bounds above and the local disk cache of Goal 5. CI keeps building without a disk cache.
+5. A new or long-idle worktree builds from cached results, so the cold starts that Goal 3 causes do not mean
+   recompiling from scratch.
 
 ## Core Features
 
@@ -103,12 +105,49 @@ timeout does not restart a running server).
 The expected cost is a cold start: the first build after an idle shutdown starts a new server, repeats the analysis
 and starts new workers, so it is slower than a build in a warm server. This is intended, not a fault.
 
+### Shared disk cache for cold starts
+
+The idle timeout and the shutdown on low memory cause more cold server starts. After a cold start, a worktree reuses
+nothing it built before unless a disk cache holds the compiled actions. Without one, every new or long-idle worktree
+recompiles from scratch. So `.bazelrc` sets a disk cache shared by all checkouts and worktrees of a user, bounded by
+garbage collection, and makes the formatter's outputs survive a cache hit:
+
+```text
+build --disk_cache=~/.cache/bazel-disk
+build --experimental_disk_cache_gc_max_size=20G
+build --experimental_disk_cache_gc_max_age=30d
+build --remote_download_regex=.*[.]fmt[.]output$
+```
+
+- **Path:** the one vitrinli's CI and developers with a disk cache in `~/.bazelrc` already use; entries are content
+  addressed, so sharing it between repositories is safe. Bazel coordinates garbage collection between servers through
+  a lock file in the cache directory.
+- **Size:** 20 GB at most, entries unused for 30 days removed. One developer's cache, shared by dsp-api and other
+  repositories over several weeks, held 6.1 GB on 2026-11-13. Bazel collects garbage in the background once a server
+  has been idle for 5 minutes, which the one-hour idle timeout leaves room for. A developer who wants another path or
+  size sets it in `user.bazelrc` or `~/.bazelrc`.
+- **Formatter outputs:** `.bazelrc` sets `--remote_download_toplevel`, which applies to the disk cache as well as the
+  remote one: on a cache hit, Bazel writes only the outputs and runfiles of the requested target to disk.
+  rules_scala's `<target>.format-test` and `.format` scripts read the `.fmt.output` files by path, but those files are
+  neither, so after a cache hit they are missing and the check fails with `diff: ... No such file or directory`.
+  `--remote_download_regex` forces their download. The pattern uses `[.]` rather than `\.`, because Bazel strips
+  backslashes when it reads an rc file. Other scripts that read outputs by path would fail the same way after a cache
+  hit; none is known.
+- **CI:** runners are ephemeral and use the remote cache, so a disk cache would only fill their disk. The `bazel-rbe`
+  action, which every CI job that runs Bazel uses, appends `build --disk_cache=` to `user.bazelrc` (imported after the
+  settings above). Writing the file instead of adding a flag covers recipe steps that do not pass the CI flags on.
+
+A disk cache changes where Bazel finds action results, not what a build produces, so it does not change build or test
+results (Goal 4).
+
 ## Repository Impact
 
 | File | Change |
 | --- | --- |
 | `flake.nix` | the dev shell's `bazel` command runs bazelisk with `TMPDIR=/tmp` |
-| `.bazelrc` | worker memory limit, idle timeout, shutdown on low memory |
+| `.bazelrc` | worker memory limit, idle timeout, shutdown on low memory; shared disk cache |
+| `.github/actions/bazel-rbe/action.yml` | turns the disk cache off on CI |
+| `justfile`, `docs/development/rbe.md` | comments and docs for the disk cache |
 
 No other repository changes in this PRD; see Follow-up work.
 
@@ -180,10 +219,34 @@ results as they were, so that the fix costs nothing for setups that never had th
 - REQ-4.1 (Ubiquitous): `just check`, `just test-unit`, `just test-it` and `just test-e2e` shall pass with the changes
   on a developer machine. `just test-it` and `just test-e2e` are included because they are the Docker and
   testcontainers tests, which depend most on temporary paths and so are the most likely to notice a changed `TMPDIR`.
-- REQ-4.2 (Ubiquitous): CI shall pass on the pull request that makes the changes, without changes to CI workflows.
+- REQ-4.2 (Ubiquitous): CI shall pass on the pull request that makes the changes. No workflow file changes; the
+  `bazel-rbe` action changes only to turn the disk cache off (REQ-5.3).
 
 Metals is not verified separately: its BSP wrapper calls the same dev shell's `bazel` command, so REQ-4.1 covers what
 it runs.
+
+### US-5: Cold worktrees build from cache
+
+As a developer whose worktree's Bazel server has shut down, or who starts a new worktree, I want the build to reuse
+results from my other checkouts, so that the idle timeout does not cost me a full recompile.
+
+- REQ-5.1 (Ubiquitous): `.bazelrc` shall set a disk cache at `~/.cache/bazel-disk`, garbage-collected to 20 GB and
+  30 days.
+- REQ-5.2 (Event-driven): When a format check (`<target>.format-test`) runs after its `.fmt.output` files came from a
+  cache, the files shall be on disk and the check shall pass or fail on formatting alone.
+- REQ-5.3 (Ubiquitous): Every Bazel call in a CI job shall run without a disk cache.
+- REQ-5.4 (Ubiquitous): `.bazelrc` shall carry comments that name why the disk cache is off on CI and why
+  `.fmt.output` files are always downloaded.
+
+Verification, once during implementation:
+
+- REQ-5.1: with no `~/.bazelrc` (`bazel --nohome_rc`), a build of `//modules/bagit:bagit` after `bazel clean`
+  reports disk cache hits.
+- REQ-5.2: after `bazel clean` with a warm disk cache, `bazel run //modules/bagit:bagit.format-test` fails with a
+  missing `.fmt.output` without the `--remote_download_regex` setting and passes with it; `just check`, unchanged,
+  passes after `bazel clean`.
+- REQ-5.3: with `build --disk_cache=` in `user.bazelrc` and `--nohome_rc`, `--announce_rc` shows it applied last and
+  the build reports no disk cache hits; on the pull request, CI passes (REQ-4.2).
 
 ## Constraints
 
@@ -206,10 +269,12 @@ it runs.
 3. The US-3 verification shows an idle server exiting after its idle timeout, and the one-hour value in effect. The
    shutdown on low memory is configured but not verified (US-3).
 4. REQ-4.1 and REQ-4.2 hold.
+5. The US-5 verification shows disk cache hits from the repository's setting, the format check passing after a cache
+   hit, and no disk cache on CI.
 
 These are checked once, during implementation. No ongoing check is added: a CI check would need several local builds
 with changing temporary directories and is slow and fragile on CI runners, which compile mostly on the remote executor.
-The comments required by REQ-1.4 and REQ-2.2 are the guard against a regression.
+The comments required by REQ-1.4, REQ-2.2 and REQ-5.4 are the guard against a regression.
 
 ## Considered and rejected
 
@@ -225,38 +290,11 @@ The comments required by REQ-1.4 and REQ-2.2 are the guard against a regression.
   workers on every agent build, so agents keep building slowly and the limit is reached routinely instead of
   exceptionally.
 - **Settings in each developer's `~/.bazelrc` or the system rc.** Reaches only developers who set it up, and the
-  system rc is read before the repository's `.bazelrc`, which overrides it.
+  system rc is read before the repository's `.bazelrc`, which overrides it. The same holds for the disk cache: a
+  developer who has one in `~/.bazelrc` keeps it (read last), and everyone else now gets the repository's.
 - **One output base shared by all worktrees.** Bazel runs one server per output base; worktrees sharing it would wait
   for each other and overwrite each other's outputs.
 - **`--worker_quit_after_build`.** Stops all workers after every build, which gives up the purpose of persistent workers.
-
-## Open for discussion: shared disk cache
-
-The idle timeout and the shutdown on low memory cause more cold server starts. After a cold start, a worktree reuses
-nothing it built before unless a disk cache holds the compiled actions. Developers who set up a disk cache in their
-`~/.bazelrc` barely notice; developers without one recompile from scratch in every new or long-idle worktree.
-
-Option: `.bazelrc` sets a disk cache shared by all checkouts and worktrees, bounded by garbage collection:
-
-```text
-build --disk_cache=~/.cache/bazel-disk
-build --experimental_disk_cache_gc_max_size=40G
-build --experimental_disk_cache_gc_max_age=30d
-```
-
-For: a new or long-idle worktree builds warm for everyone, which offsets the cost of the shutdown settings; the
-vitrinli repository's CI already uses this path.
-
-Against:
-
-- Up to 40 GB of disk per developer that they did not choose.
-- It changes build behaviour, not only memory, which goes beyond Goal 4.
-- A known defect: locally, `just check` has had to run its scalafmt checks with the disk cache disabled, because the
-  cache served hits without the formatter's `.fmt.output` file (recorded during the 2026-10-23 search-by-label work).
-  Enabling the cache for everyone makes that defect everyone's, unless it is fixed first.
-- Not yet checked how it combines with CI's remote cache settings (Bazel supports using both together).
-
-Undecided.
 
 ## Follow-up work: other Bazel repositories
 
@@ -290,7 +328,6 @@ To be assessed per repository after this PRD is implemented.
 
 ## Open Questions
 
-1. The shared disk cache (see above).
-2. Whether the Bazel server started by the Metals BSP wrapper uses the same output base as command-line builds, or adds
+1. Whether the Bazel server started by the Metals BSP wrapper uses the same output base as command-line builds, or adds
    a second server per checkout. The fixed `TMPDIR` covers it either way; the answer affects only how much memory a
    checkout with Metals holds.

@@ -48,16 +48,21 @@ runtime. So they are **not** committed to `.bazelrc` and **no** `ci.bazelrc` is 
 `just` is the single CI/build entry point. The backend-agnostic tuning
 flags (`--remote_download_toplevel`, `--remote_local_fallback`, `--remote_timeout`,
 `--remote_max_connections`, `--repository_cache`) live in `.bazelrc` — they are safe no-ops when no
-remote is configured. External archives (http_archive, Maven) are cached via `--repository_cache`
-(`~/.cache/bazel-repo`) plus an `actions/cache` step keyed on `MODULE.bazel.lock`.
+remote is configured. `--remote_download_toplevel` also governs local disk-cache hits, so
+`--remote_download_regex` forces the scalafmt `.fmt.output` files down (see `.bazelrc`). External archives
+(http_archive, Maven) are cached via `--repository_cache` (`~/.cache/bazel-repo`) plus an `actions/cache` step
+keyed on `MODULE.bazel.lock`. The local disk cache (see below) is off on CI: the `bazel-rbe` action appends
+`build --disk_cache=` to `user.bazelrc`.
 
 Fork PRs (no secrets) get empty flags → a cold local build, unchanged from before.
 
 ## Local development
 
-RBE is **CI-only**. Developers never contact the backend; Bazel's own local incremental cache is the
-inner-loop. Machine-local flags (e.g. `--disk_cache=…`) go in a gitignored `user.bazelrc`
-(`try-import`ed by `.bazelrc`).
+RBE is **CI-only**. Developers never contact the backend. Locally, Bazel's incremental state plus
+a disk cache shared by all checkouts and worktrees (`~/.cache/bazel-disk`, set in `.bazelrc`,
+garbage-collected to 20 GB and 30 days) is the inner loop; CI turns the disk cache off. Machine-local
+flags (e.g. a different `--disk_cache` path or size) go in a gitignored `user.bazelrc`
+(`try-import`ed by `.bazelrc`); flags in `~/.bazelrc` are read after both and win over them.
 
 ## What runs remotely
 
