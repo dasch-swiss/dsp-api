@@ -239,7 +239,8 @@ object GravsearchQueryChecker {
       } yield query.copy(whereClause = query.whereClause.copy(patterns = otherPatterns))
   }
 
-  // A set of predicates that aren't allowed in Gravsearch.
+  // Predicates that aren't allowed in Gravsearch: knora-api complex-schema names with no stored triples to match,
+  // such as computed values like the IIIF URLs.
   val forbiddenPredicates: Set[IRI] = Set(
     OntologyConstants.KnoraApiV2Complex.AttachedToUser,
     OntologyConstants.KnoraApiV2Complex.HasPermissions,
@@ -270,5 +271,6 @@ object GravsearchQueryChecker {
     OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
     OntologyConstants.KnoraApiV2Complex.FileValueHasFilename,
     OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl,
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFImageService,
   )
 }

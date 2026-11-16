@@ -9,6 +9,8 @@ import org.junit.runner.RunWith
 import sttp.model.StatusCode
 import sttp.model.Uri.*
 import zio.*
+import zio.json.*
+import zio.json.ast.Json
 import zio.test.*
 
 import java.nio.file.Paths
@@ -28,6 +30,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingAdminUser
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingOntologyIri
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.anythingShortcode
 import org.knora.webapi.slice.admin.domain.model.LegalInfo
+import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
 import org.knora.webapi.testservices.TestApiClient
@@ -154,6 +157,21 @@ class KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
    * @param url              the file's URL.
    */
   case class SavedVideoFile(internalFilename: String, url: String)
+
+  // The first still image value, read back as a past version once its file has been changed.
+  private final case class FirstStillImageValue(iri: IRI, uuid: String, creationDate: String, imageService: String)
+  private var firstStillImageValue: Option[FirstStillImageValue] = None
+  private def firstValue: FirstStillImageValue                   =
+    firstStillImageValue.getOrElse(
+      throw AssertionException("This test could not be run because a previous test failed"),
+    )
+
+  private def imageServiceOf(value: JsonLDObject): String =
+    value.requireDatatypeValueInObject(
+      key = StillImageFileValueHasIIIFImageService,
+      expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
+      (s, _) => s,
+    )
 
   /**
    * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
@@ -338,9 +356,25 @@ class KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         savedValueObj = assertingUnique(savedValues.value).asOpt[JsonLDObject].get
         valueIri     <- savedValueObj.getRequiredIdValueAsKnoraDataIri
         _             = stillImageFileValueIri.set(valueIri.toString)
+        _             = firstStillImageValue = Some(
+              FirstStillImageValue(
+                iri = valueIri.toString,
+                uuid =
+                  savedValueObj.getRequiredString(ValueHasUUID).fold(msg => throw BadRequestException(msg), identity),
+                creationDate = savedValueObj.requireDatatypeValueInObject(
+                  key = ValueCreationDate,
+                  expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                  (s, _) => s,
+                ),
+                imageService = imageServiceOf(savedValueObj),
+              ),
+            )
 
-        savedImage = savedValueToSavedImage(savedValueObj)
+        savedImage   = savedValueToSavedImage(savedValueObj)
+        imageService = imageServiceOf(savedValueObj)
       } yield assertTrue(
+        imageService ==
+          s"http://0.0.0.0:1024/$anythingShortcode/${uploadedFile.internalFilename}",
         uploadedFile.originalFilename == marblesOriginalFilename,
         resourceType.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture",
         savedImage.internalFilename == uploadedFile.internalFilename,
@@ -405,6 +439,48 @@ class KnoraSipiIntegrationV2ITSpec extends E2EZSpec {
         savedImage.width == trp88Width,
         savedImage.height == trp88Height,
         savedImage.iiifUrl.nonEmpty,
+      )
+    },
+    test("the still image IIIF image service value equals the id in the Sipi info.json") {
+      for {
+        resource <- TestApiClient
+                      .getJsonLd(uri"/v2/resources/${stillImageResourceIri.get}")
+                      .flatMap(_.assert200)
+                      .mapAttempt(JsonLDUtil.parseJsonLD)
+        savedValue   = getValueFromResource(resource, HasStillImageFileValue.toSmartIri, stillImageFileValueIri.get)
+        imageService = imageServiceOf(savedValue)
+        infoJson    <- TestSipiApiClient
+                      .getFile(
+                        s"$imageService/info.json",
+                        Map("X-Forwarded-Host" -> "0.0.0.0:1024", "X-Forwarded-Proto" -> "http"),
+                      )
+                      .flatMap(_.assert200)
+                      .flatMap(bytes =>
+                        ZIO.fromEither(new String(bytes, "UTF-8").fromJson[Json.Obj]).mapError(new RuntimeException(_)),
+                      )
+        infoId = infoJson.get("id")
+      } yield assertTrue(infoId == Some(Json.Str(imageService)))
+    },
+    test("a past version of the still image value carries the image service of that version") {
+      for {
+        pastDoc <- TestApiClient
+                     .getJsonLdDocument(
+                       uri"/v2/values/${stillImageResourceIri.get}/${firstValue.uuid}",
+                       anythingAdminUser,
+                       addVersionQueryParam(firstValue.creationDate),
+                     )
+                     .flatMap(_.assert200)
+        pastValue = getValueFromResource(pastDoc, HasStillImageFileValue.toSmartIri, firstValue.iri)
+        current  <- TestApiClient
+                     .getJsonLdDocument(uri"/v2/resources/${stillImageResourceIri.get}", anythingAdminUser)
+                     .flatMap(_.assert200)
+        currentValue        = getValueFromResource(current, HasStillImageFileValue.toSmartIri, stillImageFileValueIri.get)
+        firstImageService   = firstValue.imageService
+        pastImageService    = imageServiceOf(pastValue)
+        currentImageService = imageServiceOf(currentValue)
+      } yield assertTrue(
+        pastImageService == firstImageService,
+        currentImageService != firstImageService,
       )
     },
     test("create a resource with a PDF file") {
