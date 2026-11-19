@@ -1530,6 +1530,7 @@ object AuthorizationMatrixE2ESpec {
       case Policy.ProjectMember(_)                      => Some(Set(AnythingMember, AnythingAdmin, Root))
       case Policy.Authenticated(_)                      => Some(Principal.values.toSet - Anonymous - Self)
       case Policy.SystemAdmin                           => Some(Set(Root))
+      case Policy.SystemAdminOrExportService            => Some(Set(Root))
       case Policy.SelfOrSystemAdmin(_)                  => Some(Set(Self, Root))
       case Policy.ProjectAdminOfAnyProject              => Some(Set(IncunabulaAdmin, AnythingAdmin, Root))
       case Policy.Public(_) | Policy.ObjectAccess(_, _) => None

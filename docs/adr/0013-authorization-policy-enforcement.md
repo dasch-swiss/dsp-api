@@ -85,6 +85,7 @@ JWT **Scope**, and a grant is a proof of one authorization decision, not an **Ad
     | `SelfOrSystemAdmin(userFrom)` | Active system administrators, and the active user named by `userFrom` (for example "path userIri"). |
     | `ProjectAdminOfAnyProject` | Active system administrators, and active project administrators of at least one project. The check against a specific project stays in the handler. |
     | `ProjectMember(projectFrom)` | Active system administrators, project administrators and members of the project named by `projectFrom`. |
+    | `SystemAdminOrExportService` | Active system administrators, and trusted export services, which are not users and only see the exports they created ([ADR-0014](0014-service-identity-for-exports.md)). |
     | `ObjectAccess(enforcedIn, admitsAnonymous)` | Decided per object where the owning domain loads it, and `enforcedIn` names that place. Anonymous callers are included when `admitsAnonymous` is true; a write sets it false, and the factory refuses anonymous callers in the security logic. |
 
     `ProjectAdmin` and `ProjectMember` keep the semantics of `isSystemOrProjectAdmin` and `isProjectMember`:

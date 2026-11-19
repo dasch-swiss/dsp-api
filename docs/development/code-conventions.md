@@ -195,6 +195,15 @@ The v3 API, which has its own error type and takes only a bearer JWT, uses the b
 `bearerSystemAdminPolicyEndpoint`, `bearerProjectAdminPolicyEndpoint` and `bearerObjectAccessPolicyEndpoint` through
 `V3BaseEndpoint` (`systemAdminPolicy`, `projectAdminPolicy`, `objectAccessPolicy`; `publicPolicy` for `Public`).
 
+`bearerSystemAdminOrServicePolicyEndpoint` declares `SystemAdminOrExportService` and hands the handler an
+`ExportCaller`: a SystemAdmin (`Admin(user)`) or a trusted export service (`Service(principal)`), which is not a user
+(ADR-0014, `docs/adr/0014-service-identity-for-exports.md`). It is used only through
+`V3BaseEndpoint.systemAdminOrExportServicePolicy`, whose routing function is the only caller of
+`ServiceTokenVerifier`, and only by the four project export endpoints. A handler on this policy must let a service
+act only on the exports it created: in `V3ProjectsRestService` it runs inside `exportCall`, which writes the
+service's audit line, and checks ownership with `mayAccess`, a by-id handler through `findExport`. Match on
+`ExportCaller` exhaustively, never with `case _`.
+
 - `withUserEndpoint` and `bearerSystemAdminEndpoint` declare no policy. Do not use them for new
   endpoints; `withUserEndpoint` remains only for the five count endpoints that wait on DEV-7718.
 - A `Public` or `Authenticated` reason says why the endpoint needs no stronger rule; it is reviewed.

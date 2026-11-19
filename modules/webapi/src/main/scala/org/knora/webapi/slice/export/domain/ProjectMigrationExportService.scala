@@ -25,7 +25,6 @@ import org.knora.webapi.slice.admin.AdminConstants.adminDataNamedGraph
 import org.knora.webapi.slice.admin.AdminConstants.permissionsDataNamedGraph
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
-import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.admin.domain.service.DspIngestClient
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -52,11 +51,11 @@ final class ProjectMigrationExportService(
 
   def createExport(
     project: KnoraProject,
-    createdBy: User,
+    createdBy: TaskCreator,
     skipAssets: Boolean = false,
   ): IO[ExportExistsError, CurrentDataTask] = for {
     curExp <- currentExp.makeNew(project.id, createdBy).mapError { case StatesExistError(t) => ExportExistsError(t) }
-    _      <- ZIO.logInfo(s"$curExp: Created export task for project '${project.id}' by user '${createdBy.id}'")
+    _      <- ZIO.logInfo(s"$curExp: Created export task for project '${project.id}' by '${createdBy.value}'")
     _      <- doExport(project, curExp, skipAssets).forkDaemon
   } yield curExp
 
@@ -223,6 +222,7 @@ final class ProjectMigrationExportService(
   /**
    * Delete the export task with the given id if it exists and is not in progress.
    * An export can only be deleted if it is in a completed or failed state. If the export is in progress, an error is returned.
+   * Checks no ownership: a caller acting for an export service must go through `V3ProjectsRestService.findExport`.
    *
    * @param exportId the id of the export task to delete
    * @return An IO that fails with None if the export task is not found.
@@ -240,11 +240,13 @@ final class ProjectMigrationExportService(
     _   <- ZIO.logInfo(s"$exportId: Cleaned export dir $dir")
   } yield ()
 
+  /** Checks no ownership: a caller acting for an export service must go through `V3ProjectsRestService.findExport`. */
   def getExportStatus(exportId: DataTaskId): IO[Option[Nothing], CurrentDataTask] = currentExp.find(exportId)
 
   /**
    * Download the export file for the given export task id if it exists and is completed.
    * An export can only be downloaded if it is in a completed state.
+   * Checks no ownership: a caller acting for an export service must go through `V3ProjectsRestService.findExport`.
    * @param exportId the id of the export task to download
    * @return An IO that fails with None if the export task is not found.
    *         An IO that fails with ExportInProgressError if the export task is found but is still in progress.

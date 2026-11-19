@@ -7,6 +7,7 @@ package org.knora.webapi.slice.api.v3
 
 import sttp.tapir.*
 import zio.*
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
@@ -32,6 +33,7 @@ import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.security.Authenticator
+import org.knora.webapi.slice.security.ServiceTokenVerifier
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object ApiV3Module {
@@ -49,7 +51,9 @@ object ApiV3Module {
     ProjectMigrationExportService &
     ProjectMigrationImportService &
     ResourcesRepo &
+    ServiceTokenVerifier &
     StringFormatter &
+    Tracing &
     TriplestoreService &
     UserService
     // format: on

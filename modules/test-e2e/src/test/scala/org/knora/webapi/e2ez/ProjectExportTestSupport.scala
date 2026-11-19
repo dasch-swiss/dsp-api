@@ -62,8 +62,22 @@ object ProjectExportTestSupport {
 
   /** One status check: succeeds when completed, dies when failed, fails while still in progress. */
   def pollUntilCompleted(projectIri: String, id: DataTaskId): RIO[TestApiClient, DataTaskStatusResponse] =
-    TestApiClient
-      .getJson[DataTaskStatusResponse](uri"/v3/projects/$projectIri/exports/${id.value}", rootUser)
+    checkCompleted(TestApiClient.getJson[DataTaskStatusResponse](statusUri(projectIri, id), rootUser))
+
+  /** As [[pollUntilCompleted]], with the request adjusted by `f`, e.g. to send a service token. */
+  def pollUntilCompleted(
+    projectIri: String,
+    id: DataTaskId,
+    f: Request[Either[String, DataTaskStatusResponse]] => Request[Either[String, DataTaskStatusResponse]],
+  ): RIO[TestApiClient, DataTaskStatusResponse] =
+    checkCompleted(TestApiClient.getJson[DataTaskStatusResponse](statusUri(projectIri, id), f))
+
+  private def statusUri(projectIri: String, id: DataTaskId) = uri"/v3/projects/$projectIri/exports/${id.value}"
+
+  private def checkCompleted(
+    request: RIO[TestApiClient, Response[Either[String, DataTaskStatusResponse]]],
+  ): RIO[TestApiClient, DataTaskStatusResponse] =
+    request
       .flatMap(r => ZIO.fromEither(r.body).mapError(failure))
       .flatMap { status =>
         status.status match {
@@ -73,8 +87,30 @@ object ProjectExportTestSupport {
         }
       }
 
+  private val pollSchedule = Schedule.spaced(500.millis) && Schedule.recurs(120)
+
   def awaitCompleted(projectIri: String, id: DataTaskId): RIO[TestApiClient, DataTaskStatusResponse] =
-    pollUntilCompleted(projectIri, id).retry(Schedule.spaced(500.millis) && Schedule.recurs(120))
+    pollUntilCompleted(projectIri, id).retry(pollSchedule)
+
+  def awaitCompleted(
+    projectIri: String,
+    id: DataTaskId,
+    f: Request[Either[String, DataTaskStatusResponse]] => Request[Either[String, DataTaskStatusResponse]],
+  ): RIO[TestApiClient, DataTaskStatusResponse] =
+    pollUntilCompleted(projectIri, id, f).retry(pollSchedule)
+
+  /**
+   * Waits while the export `id` is in progress, then deletes it as root; an export that is gone or ended is deleted
+   * at once. Ignores every failure: it is a cleanup that must not mask the test's own result.
+   */
+  def awaitAndDeleteExport(projectIri: String, id: DataTaskId): URIO[TestApiClient, Unit] =
+    TestApiClient
+      .getJson[DataTaskStatusResponse](statusUri(projectIri, id), rootUser)
+      .flatMap(r =>
+        ZIO.fail(failure("Export still in progress")).when(r.body.exists(_.status == DataTaskStatus.InProgress)),
+      )
+      .retry(pollSchedule)
+      .ignore *> deleteExport(projectIri, id)
 
   /** Downloads the export zip of `id`, requested through the path of `projectIri`. */
   def downloadExport(projectIri: String, id: DataTaskId): RIO[AppConfig & ScopeResolver & JwtService, Array[Byte]] =

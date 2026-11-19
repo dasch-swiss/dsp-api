@@ -21,9 +21,127 @@ For request/response schemas, error codes, and interactive testing, see the
 
 ## Authentication and Authorization
 
-All endpoints require a valid **Bearer JWT token** and **SystemAdmin** permissions.
+All endpoints require a valid **Bearer JWT token** and **SystemAdmin** permissions, with one exception: the four
+export endpoints also accept a token of a trusted export service, which only sees the exports it created (see
+[Service identity](#service-identity)).
 
 Requests from non-SystemAdmin users (e.g. project admins) are rejected with `403 Forbidden`.
+
+| Endpoint | SystemAdmin | Trusted export service |
+| --- | --- | --- |
+| Trigger an export | yes | yes |
+| Export status, download, delete | every export | only exports it created; any other export answers `404 export_not_found` |
+| Imports (trigger, status, delete) | yes | no (`401`) |
+
+## Service identity
+
+A service identity lets a machine client, such as dsp-repository's sync, export projects without a user account.
+The service holds an Ed25519 private key and signs its own short-lived tokens; the server trusts only the public
+keys configured in
+[`KNORA_WEBAPI_SERVICE_IDENTITY_TRUSTED_KEYS`](../../04-publishing-deployment/configuration.md#service-identity),
+and trusts none by default. A service identity is not a user: its token is accepted by the four export endpoints
+only and gets `401` on every other endpoint, imports included. There is no per-project restriction: a trusted
+service may export any project.
+
+### Token contract
+
+The token is a JWT signed with Ed25519 (RFC 8037), sent as `Authorization: Bearer <token>`. Every part is unpadded
+base64url.
+
+- **Header:** `alg` exactly `EdDSA` and `kid` naming one of the server's trusted keys. A `crit` parameter is
+  rejected; `jku`, `jwk`, `x5u` and `x5c` are ignored.
+- **`iss` and `sub`:** both the service name configured for that key.
+- **`aud`:** this server's external base URL, a string or an array containing it. Both sides are compared after
+  normalisation: scheme and host in lower case, the scheme's default port (443 for `https`, 80 for `http`) and a
+  trailing slash dropped. `https://api.dasch.swiss` therefore matches a server configured with port 443, while a
+  path, query or user part never matches.
+- **`iat`, `exp`, `jti`:** all three required, `jti` non-blank. `exp - iat` must be at most 15 minutes. The server
+  allows 30 seconds of clock skew: the token is rejected once `now >= exp + 30 s` or while `iat > now + 30 s`.
+  Set `exp` five minutes after `iat` and mint a fresh token, with a fresh `jti`, per run. `nbf` is not checked.
+
+A rejected token always gets the same `401` with the message `Invalid token.`; the reason is only logged on the
+server (see [Auditing and logs](#auditing-and-logs)). `jti` is logged, not checked for reuse, so a token can be
+replayed until it expires: keep it as secret as the key.
+
+Minting a token with OpenSSL 3 (LibreSSL lacks Ed25519):
+
+```bash
+b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+NOW=$(date +%s)
+HEADER=$(printf '{"alg":"EdDSA","typ":"JWT","kid":"dsp-repository-2026-11"}' | b64url)
+PAYLOAD=$(printf '{"iss":"dsp-repository","sub":"dsp-repository","aud":"https://api.dasch.swiss","iat":%d,"exp":%d,"jti":"%s"}' \
+  "$NOW" "$((NOW + 300))" "$(uuidgen)" | b64url)
+printf '%s.%s' "$HEADER" "$PAYLOAD" > signing-input
+SIG=$(openssl pkeyutl -sign -rawin -inkey dsp-repository-2026-11.pem -in signing-input | b64url)
+TOKEN="$HEADER.$PAYLOAD.$SIG"
+
+curl -s --request POST \
+  --url 'https://api.dasch.swiss/v3/projects/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001/exports' \
+  --header "Authorization: Bearer $TOKEN"
+```
+
+An export a service created reports `createdBy` as `urn:dsp:service:<name>` in its status; a SystemAdmin's
+export reports the user's IRI.
+
+### Conflicts and recovery
+
+The export slot is server-wide, so a service shares it with SystemAdmins and other services.
+
+- **`409 export_exists`** on trigger: the slot holds an export, the service's own or anyone else's, and the error
+  details carry its `id` and project. Check that export's status:
+    - If the status answers, the export is the service's own. This is how a service recovers after a crash: poll
+      that export until it is `completed` or `failed`, delete it, and trigger again.
+    - If the status answers `404 export_not_found`, the export is someone else's. Give up for this run and retry on
+      the next one; do not loop.
+- **`409 export_in_progress`** on delete or download of an own export that is still running: poll the status until
+  it is `completed` or `failed`, then delete. Downloading a failed export answers `409 export_failed`.
+- **`404 export_not_found`** on status, download or delete: there is no such export, or it is not the service's.
+  The two cases are answered identically.
+
+### Auditing and logs
+
+Every export call by a service writes exactly one INFO line when the call ends, whether it succeeded or failed:
+
+```text
+Export service call: action=<action> outcome=<outcome> service=<name> kid=<kid> project_iri=<iri> requested_project_iri=<iri> export_id=<id> jti="<jti>"
+```
+
+- `action` is `export.create`, `export.status`, `export.download` or `export.delete`.
+- `outcome` is `ok`, `not_owner`, `not_found`, `conflict` or `error`. `not_owner` and `not_found` give the client
+  the same `404`; only the log tells them apart. A download is `ok` once its response stream has started, even if
+  the transfer is cut off later.
+- `project_iri` is the export's project when the export was found, otherwise the requested one;
+  `requested_project_iri` is always the IRI from the path. `export_id` is the export's id, or the requested one;
+  it is `-` only on a trigger that created no export.
+- `jti` comes last, quoted, cut to 256 characters, with control, line-separator and format characters replaced by
+  spaces.
+
+A request whose path does not decode (a malformed project IRI or export id) is rejected before this logging and
+writes no line. SystemAdmin calls are logged as before.
+
+The same calls set these attributes on the request's trace span: `dsp.service.name`, `dsp.service.kid`,
+`dsp.service.action`, and `dsp.project.shortcode` when the project is known (the resolved project on trigger, the
+project of the service's own export otherwise; never on a refused lookup). IRIs, export ids and `jti` are never span attributes.
+
+Every rejected service token writes one WARN line, never the token itself:
+
+```text
+Service token rejected: reason=<category> kid=<kid or ->
+```
+
+The `kid` is shown only when it names a configured key. Only a token whose header parses and whose `alg` is exactly
+`EdDSA` is treated as a service token; any other token is handled as a user's token and gets `401` without this
+line. The categories:
+
+| Reason | Cause |
+| --- | --- |
+| `disabled` | No key is configured on this server. |
+| `unknown_kid` | The `kid` is missing or names no configured key. |
+| `bad_signature` | The token is not a valid EdDSA JWS: a malformed part, a `crit` header, bad encoding, an unreadable payload or a signature that does not verify. |
+| `bad_claims` | `iss` or `sub` is not the key's name; `iat`, `exp` or `jti` is missing; `exp` is before `iat`; or `iat` is more than 30 seconds ahead. |
+| `bad_audience` | `aud` does not name this server. |
+| `lifetime_too_long` | `exp - iat` exceeds 15 minutes. |
+| `expired` | `exp` passed more than 30 seconds ago. |
 
 ## Feature Flag (Import Only)
 

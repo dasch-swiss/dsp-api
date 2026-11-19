@@ -161,6 +161,22 @@ final case class TestApiClient(
     sendRequest(request, Some(user))
   }
 
+  /** POST without a request body, with the request adjusted by `f`, e.g. to send a bearer token that is not a user's. */
+  def postJson[A: JsonDecoder](
+    relativeUri: Uri,
+    f: Request[Either[String, A]] => Request[Either[String, A]],
+  ): Task[Response[Either[String, A]]] =
+    sendRequest(
+      f(basicRequest.post(relativeUri).response(asJsonAlways[A].mapLeft((e: DeserializationException) => e.body))),
+    )
+
+  /** GET of a binary body such as a zip download, with the request adjusted by `f`. */
+  def getBytes(
+    relativeUri: Uri,
+    f: Request[Either[String, Array[Byte]]] => Request[Either[String, Array[Byte]]],
+  ): Task[Response[Either[String, Array[Byte]]]] =
+    sendRequest(f(basicRequest.get(relativeUri).response(asByteArray)))
+
   def postJsonReceiveString[B: JsonEncoder](
     relativeUri: Uri,
     body: B,
@@ -498,6 +514,20 @@ object TestApiClient {
     user: User,
   ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
     ZIO.serviceWithZIO[TestApiClient](_.postJson(relativeUri, user))
+
+  /** POST without a request body, with the request adjusted by `f`, e.g. to send a bearer token that is not a user's. */
+  def postJson[A: JsonDecoder](
+    relativeUri: Uri,
+    f: Request[Either[String, A]] => Request[Either[String, A]],
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, A]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.postJson(relativeUri, f))
+
+  /** GET of a binary body such as a zip download, with the request adjusted by `f`. */
+  def getBytes(
+    relativeUri: Uri,
+    f: Request[Either[String, Array[Byte]]] => Request[Either[String, Array[Byte]]],
+  ): ZIO[TestApiClient, Throwable, Response[Either[String, Array[Byte]]]] =
+    ZIO.serviceWithZIO[TestApiClient](_.getBytes(relativeUri, f))
 
   def postJsonLd(
     relativeUri: Uri,

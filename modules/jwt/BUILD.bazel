@@ -1,6 +1,6 @@
 load("//tools/scalafmt:defs.bzl", "scala_junit_test", "scala_library")
 
-# Minimal HS256 JWT library. Pure leaf module.
+# Minimal JWT library: HS256 encode/decode and Ed25519 (EdDSA) verification. Pure leaf module.
 scala_library(
     name = "jwt",
     srcs = glob(["src/main/scala/**/*.scala"]),
@@ -15,6 +15,21 @@ scala_library(
     ],
 )
 
+# Test-only Ed25519 signer, shared by the jwt, webapi and e2e tests. Main code never signs.
+scala_library(
+    name = "testkit",
+    testonly = True,
+    srcs = glob(["src/testkit/scala/**/*.scala"]),
+    format = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":jwt",
+        "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_json_3",
+        "@maven//:dev_zio_zio_streams_3",
+    ],
+)
+
 scala_junit_test(
     name = "test",
     srcs = glob(["src/test/scala/**/*.scala"]),
@@ -23,8 +38,11 @@ scala_junit_test(
     suffixes = ["Spec", "IT", "Test"],
     deps = [
         ":jwt",
+        ":testkit",
         "//modules/test-runner",
         "@maven//:dev_zio_zio_3",
+        "@maven//:dev_zio_zio_json_3",
+        "@maven//:dev_zio_zio_streams_3",
         "@maven//:dev_zio_zio_test_3",
     ],
 )
