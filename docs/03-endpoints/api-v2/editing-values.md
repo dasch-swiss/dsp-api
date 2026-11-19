@@ -154,6 +154,9 @@ resources is `anything:hasOtherThing`, we can create a link like this:
 
 As with ordinary values, permissions on links can be specified by adding `knora-api:hasPermissions`.
 
+If the resource already links to the target through the same link property, the request is rejected with
+`400 Bad Request`.
+
 The response is a JSON-LD document containing:
 
 - `@id`: the IRI of the value that was created.
@@ -522,6 +525,8 @@ any other content, like this:
 ```
 
 To update a link, the user must have **modify permission** on the containing resource as well as on the value.
+Changing a link's target to a resource that the containing resource already links to through the same property is
+rejected with `400 Bad Request`.
 
 To update a value and give it a custom timestamp, add `knora-api:valueCreationDate` (an
 [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)).
