@@ -2309,6 +2309,41 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         savedCreationDate == customCreationDate,
       )
     },
+    test("not create a link that already exists (DEV-7755)") {
+      val jsonLd =
+        s"""{
+           |  "@id" : "${AThing.iri}",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasOtherThingValue" : {
+           |    "@type" : "knora-api:LinkValue",
+           |    "knora-api:linkValueHasTargetIri" : {
+           |      "@id" : "${TestDing.iri}"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+      for {
+        errorMessage <- TestApiClient.postJsonLd(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400)
+      } yield assertTrue(
+        errorMessage.contains(s"already has a link to <${TestDing.iri}>"),
+        errorMessage.contains("anything/v2#hasOtherThingValue"),
+      )
+    },
+    test("not change a link's target to a resource that is already linked (DEV-7755)") {
+      // AThing already links to this resource through the link created with a custom IRI.
+      val alreadyLinkedTargetIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
+      val jsonLd                      = updateLinkValueRequest(
+        resourceIri = AThing.iri,
+        valueIri = linkValueIri.get,
+        targetResourceIri = alreadyLinkedTargetIri,
+      )
+      for {
+        errorMessage <- TestApiClient.putJsonLd(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400)
+      } yield assertTrue(errorMessage.contains(s"already has a link to <$alreadyLinkedTargetIri>"))
+    },
     test("update an integer value") {
       val resourceIri: IRI      = AThing.iri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
