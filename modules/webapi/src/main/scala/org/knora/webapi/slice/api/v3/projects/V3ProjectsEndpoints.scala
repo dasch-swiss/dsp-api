@@ -20,6 +20,7 @@ import org.knora.webapi.slice.`export`.domain.CurrentDataTask
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
 import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
+import org.knora.webapi.slice.`export`.domain.TaskCreator
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
 import org.knora.webapi.slice.api.v3.*
@@ -31,7 +32,7 @@ final case class DataTaskStatusResponse(
   id: DataTaskId,
   projectIri: ProjectIri,
   status: DataTaskStatus,
-  createdBy: UserIri,
+  createdBy: TaskCreator,
   createdAt: Instant,
   errorMessage: Option[String] = None,
   // The project user imported data is attributed to. Set for data-graph imports; absent for exports/migration imports.
@@ -73,7 +74,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
 
   // trigger an export
   val postProjectIriExports = self.base
-    .systemAdminPolicy(
+    .systemAdminOrExportServicePolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.project_not_found),
         conflictVariant(V3ErrorCode.export_exists),
@@ -92,12 +93,12 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       "Initiates an export of the project. " +
         "The export will be performed asynchronously, and the response will contain an export ID that can be used to check the status of the export. " +
         "An export can only be triggered when no other export exists." +
-        s" ${Policy.SystemAdmin.requirement}",
+        s" ${Policy.SystemAdminOrExportService.requirement}",
     )
 
   // get the status of an export
   val getProjectIriExportsExportId = self.base
-    .systemAdminPolicy(oneOf(notFoundVariant(V3ErrorCode.export_not_found)))
+    .systemAdminOrExportServicePolicy(oneOf(notFoundVariant(V3ErrorCode.export_not_found)))
     .get
     .in(exportsBase / exportIdPathVar)
     .out(statusCode(StatusCode.Ok))
@@ -106,12 +107,12 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       "Checks the status of an export. " +
         "The response will indicate whether the export is still in progress, has completed successfully, or has failed. " +
         "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists." +
-        s" ${Policy.SystemAdmin.requirement}",
+        s" ${Policy.SystemAdminOrExportService.requirement}",
     )
 
   // delete an export
   val deleteProjectIriExportsExportId = self.base
-    .systemAdminPolicy(
+    .systemAdminOrExportServicePolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.export_not_found),
         conflictVariant(V3ErrorCode.export_in_progress),
@@ -124,12 +125,12 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       "Deletes an export irrevocably. " +
         "Only exports in state failed or completed can be deleted. " +
         "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists." +
-        s" ${Policy.SystemAdmin.requirement}",
+        s" ${Policy.SystemAdminOrExportService.requirement}",
     )
 
   // download an export
   val getProjectIriExportsExportIdDownload = self.base
-    .systemAdminPolicy(
+    .systemAdminOrExportServicePolicy(
       oneOf(
         notFoundVariant(V3ErrorCode.export_not_found),
         conflictVariant(V3ErrorCode.export_in_progress, V3ErrorCode.export_failed),
@@ -145,7 +146,7 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
         "An export can only be downloaded when it has completed successfully. " +
         "If it is still in progress or has failed, the response will be 409 Conflict. " +
         "The `projectIri` in the path is not validated: the export is resolved by its id alone and need not belong to a project that still exists." +
-        s" ${Policy.SystemAdmin.requirement}",
+        s" ${Policy.SystemAdminOrExportService.requirement}",
     )
 
   // import an export

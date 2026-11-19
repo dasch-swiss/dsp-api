@@ -41,6 +41,8 @@ scala_junit_test(
         "exclusive",
     ],
     deps = [
+        "//modules/jwt",
+        "//modules/jwt:testkit",
         "//modules/test-runner",
         "//modules/testkit",
         "//modules/webapi",

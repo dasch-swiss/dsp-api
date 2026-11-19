@@ -9,6 +9,8 @@ import zio.URLayer
 import zio.ZLayer
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.KnoraApi
+import org.knora.webapi.config.ServiceIdentityConfig
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.PasswordService
 import org.knora.webapi.slice.admin.domain.service.UserService
@@ -21,13 +23,15 @@ object SecurityModule { self =>
       AppConfig &
       InvalidTokenCache &
       JwtService &
+      KnoraApi &
       KnoraProjectService &
       PasswordService &
+      ServiceIdentityConfig &
       UserService
       // format: on
 
-  type Provided = ScopeResolver & Authenticator
+  type Provided = ScopeResolver & Authenticator & ServiceTokenVerifier
 
   val layer: URLayer[self.Dependencies, self.Provided] =
-    ScopeResolver.layer >+> AuthenticatorLive.layer
+    ScopeResolver.layer >+> AuthenticatorLive.layer >+> TrustedServiceKeys.layer >+> ServiceTokenVerifier.layer
 }

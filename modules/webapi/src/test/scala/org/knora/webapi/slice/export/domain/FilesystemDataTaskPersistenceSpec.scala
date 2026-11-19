@@ -15,12 +15,14 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.TestDataFactory
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.common.domain.ServiceName
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class FilesystemDataTaskPersistenceSpec extends ZIOSpecDefault {
 
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
   private val user       = TestDataFactory.User.rootUser
+  private val creator    = TaskCreator.ByUser(user.userIri)
 
   private def withTempDir(test: Path => ZIO[Any, Throwable, TestResult]): ZIO[Any, Throwable, TestResult] =
     Files.createTempDirectory(Some("fs-persistence-test-"), Seq.empty).flatMap { tmpDir =>
@@ -34,7 +36,7 @@ class FilesystemDataTaskPersistenceSpec extends ZIOSpecDefault {
     for {
       id  <- DataTaskId.makeNew
       now <- Clock.instant
-    } yield CurrentDataTask.restore(id, projectIri, status, user.userIri, now)
+    } yield CurrentDataTask.restore(id, projectIri, status, creator, now)
 
   def spec: Spec[Any, Any] = suite("FilesystemDataTaskPersistence")(
     suite("onChanged")(
@@ -208,16 +210,84 @@ class FilesystemDataTaskPersistenceSpec extends ZIOSpecDefault {
             id  <- DataTaskId.makeNew
             now <- Clock.instant
             task =
-              CurrentDataTask.restore(id, projectIri, DataTaskStatus.Completed, user.userIri, now, None, Some(subject))
+              CurrentDataTask.restore(id, projectIri, DataTaskStatus.Completed, creator, now, None, Some(subject))
             _        <- persistence.onChanged(task)
             restored <- persistence.restore()
           } yield assertTrue(
             restored.isDefined,
             restored.get.onBehalfOf.contains(subject),
-            restored.get.createdBy == user.userIri,
+            restored.get.createdBy == creator,
           )
         }
       },
     ),
+    suite("createdBy field")(
+      test("restores a task file whose createdBy is a bare user IRI") {
+        withTempDir { tmpDir =>
+          for {
+            id       <- DataTaskId.makeNew
+            _        <- writeTaskFile(tmpDir, id, s""""createdBy":"${user.userIri.value}"""")
+            restored <- makePersistence(tmpDir).restore()
+          } yield assertTrue(
+            restored.map(_.id).contains(id),
+            restored.map(_.createdBy).contains(creator),
+            restored.exists(_.onBehalfOf.isEmpty),
+          )
+        }
+      },
+      test("restores a task file whose createdBy is a bare user IRI, with onBehalfOf") {
+        withTempDir { tmpDir =>
+          val subject = UserIri.unsafeFrom("http://rdfh.ch/users/incunabulaMemberUser")
+          for {
+            id <- DataTaskId.makeNew
+            _  <- writeTaskFile(
+                   tmpDir,
+                   id,
+                   s""""createdBy":"${user.userIri.value}","onBehalfOf":"${subject.value}"""",
+                 )
+            restored <- makePersistence(tmpDir).restore()
+          } yield assertTrue(
+            restored.map(_.createdBy).contains(creator),
+            restored.flatMap(_.onBehalfOf).contains(subject),
+          )
+        }
+      },
+      test("persists and restores a service creator") {
+        withTempDir { tmpDir =>
+          val persistence = makePersistence(tmpDir)
+          val service     = TaskCreator.ByService(ServiceName.unsafeFrom("dsp-repository"))
+          for {
+            id       <- DataTaskId.makeNew
+            now      <- Clock.instant
+            _        <- persistence.onChanged(CurrentDataTask.restore(id, projectIri, DataTaskStatus.Completed, service, now))
+            bytes    <- Files.readAllBytes(tmpDir / id.value / "task.json")
+            restored <- persistence.restore()
+          } yield assertTrue(
+            new String(bytes.toArray, "UTF-8").contains(""""createdBy":"urn:dsp:service:dsp-repository""""),
+            restored.map(_.createdBy).contains(service),
+          )
+        }
+      },
+      test("treats a task file whose createdBy is a service with an invalid name as corrupt") {
+        withTempDir { tmpDir =>
+          for {
+            id       <- DataTaskId.makeNew
+            _        <- writeTaskFile(tmpDir, id, """"createdBy":"urn:dsp:service:Not_Valid"""")
+            restored <- makePersistence(tmpDir).restore()
+          } yield assertTrue(restored.isEmpty)
+        }
+      },
+    ),
   )
+
+  /** Writes a completed task's `task.json` by hand, with `createdBy` (and any further fields) given as raw JSON. */
+  private def writeTaskFile(baseDir: Path, id: DataTaskId, createdByFields: String): Task[Unit] =
+    for {
+      now <- Clock.instant
+      json =
+        s"""{"id":"${id.value}","projectIri":"${projectIri.value}","status":"completed",$createdByFields,"createdAt":"$now"}"""
+      dir = baseDir / id.value
+      _  <- Files.createDirectories(dir)
+      _  <- Files.writeBytes(dir / "task.json", Chunk.fromArray(json.getBytes("UTF-8")))
+    } yield ()
 }

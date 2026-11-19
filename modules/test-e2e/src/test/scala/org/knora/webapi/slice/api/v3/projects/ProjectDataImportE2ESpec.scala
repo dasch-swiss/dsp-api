@@ -22,6 +22,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.DataTaskStatus
+import org.knora.webapi.slice.`export`.domain.TaskCreator
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.DataImportLimit.overLimitBytes
 import org.knora.webapi.slice.api.RawHeadOnlyPost
@@ -190,7 +191,7 @@ class ProjectDataImportE2ESpec extends E2EZSpec {
         triggerResponse.code == StatusCode.Accepted,
         // The status response records the subject (on-behalf-of user) alongside the actor (createdBy = the admin).
         importStatus.onBehalfOf.contains(incunabulaMemberUser.userIri),
-        importStatus.createdBy == rootUser.userIri,
+        importStatus.createdBy == TaskCreator.ByUser(rootUser.userIri),
         pollResult.status == DataTaskStatus.Completed,
         resourceResponse.code == StatusCode.Ok,
         resourceResponse.body.exists(b => b.contains(valueIri.toString) && b.contains(titleText)),

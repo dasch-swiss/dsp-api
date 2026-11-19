@@ -74,7 +74,7 @@ final class ProjectMigrationImportService(
     slot
       .run(
         state
-          .startWith(state.makeNew(projectIri, createdBy))(saveZipStream(_, stream))
+          .startWith(state.makeNew(projectIri, TaskCreator.ByUser(createdBy.userIri)))(saveZipStream(_, stream))
           .mapError { case StatesExistError(t) => ImportExistsError(t) },
       ) { case (importTask, _) =>
         doImport(importTask.id, projectIri)
