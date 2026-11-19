@@ -491,6 +491,7 @@ final class ValuesResponderV2(
     valueHasOrder: Option[Int],
   ) =
     for {
+      _                        <- ensureNoLinkTo(resourceInfo, linkPropertyIri, linkValueContent.referredResourceIri)
       newValueUUID             <- ValuesResponderV2.makeNewValueUUID(maybeValueIri, maybeValueUUID)
       sparqlTemplateLinkUpdate <-
         incrementLinkValue(
@@ -993,7 +994,9 @@ final class ValuesResponderV2(
     // Are we changing the link target?
     if (currentLinkValue.valueContent.referredResourceIri != newLinkValue.referredResourceIri) {
       for {
-        // Yes. Delete the existing link and decrement its LinkValue's reference count.
+        // Yes. The resource must not already link to the new target.
+        _ <- ensureNoLinkTo(resourceInfo, linkPropertyIri, newLinkValue.referredResourceIri)
+        // Delete the existing link and decrement its LinkValue's reference count.
         sparqlTemplateLinkUpdateForCurrentLink <-
           decrementLinkValue(
             sourceResourceInfo = resourceInfo,
@@ -1774,6 +1777,25 @@ final class ValuesResponderV2(
       }
     }
   }
+
+  /**
+   * Fails with a [[DuplicateValueException]] if the resource already links to the target via the link property.
+   * A resource can link to a given target only once per link property: the link is a single triple, described by
+   * a single `LinkValue`.
+   */
+  private def ensureNoLinkTo(
+    sourceResourceInfo: ReadResourceV2,
+    linkPropertyIri: SmartIri,
+    targetResourceIri: ResourceIri,
+  ): IO[DuplicateValueException, Unit] =
+    ZIO
+      .fail(
+        DuplicateValueException(
+          s"Resource <${sourceResourceInfo.resourceIri.value}> already has a link to <${targetResourceIri.value}> via property <${linkPropertyIri.fromLinkPropToLinkValueProp.toOntologySchema(ApiV2Complex)}>",
+        ),
+      )
+      .when(findLinkValue(sourceResourceInfo, linkPropertyIri, targetResourceIri).isDefined)
+      .unit
 
   /**
    * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to create a `LinkValue` or to
