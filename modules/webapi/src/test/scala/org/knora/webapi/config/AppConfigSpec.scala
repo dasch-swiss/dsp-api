@@ -28,6 +28,7 @@ class AppConfigSpec extends ZIOSpecDefault {
         appConfig       <- ZIO.service[AppConfig]
         jwtConfig       <- ZIO.service[JwtConfig]
         dspIngestConfig <- ZIO.service[DspIngestConfig]
+        serviceIdentity <- ZIO.service[ServiceIdentityConfig]
       } yield {
         assertTrue(
           appConfig.sipi.timeout == Duration.ofSeconds(120),
@@ -55,6 +56,8 @@ class AppConfigSpec extends ZIOSpecDefault {
           appConfig.fair.dpeOaiBaseUrl == "https://repository.dasch.swiss/dpe/oai",
           appConfig.fair.dpeOaiShortcodes == "",
           dspIngestConfig.audience == "http://localhost:3340",
+          // the service identity is off unless a deployment configures trusted keys
+          serviceIdentity.trustedKeys == "[]",
           // ingest reads its own ingest.conf; no key is shared with webapi's configuration
           !ConfigFactory.load().hasPath("ingest"),
           jwtConfig.expiration == java.time.Duration.ofDays(30),

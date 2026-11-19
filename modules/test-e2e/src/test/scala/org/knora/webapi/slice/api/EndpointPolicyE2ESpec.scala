@@ -60,7 +60,8 @@ class EndpointPolicyE2ESpec extends E2EZSpec {
       } yield assertTrue(missing.isEmpty) ??
         s"""These endpoints declare no Policy. Build them with a policy-declaring factory in BaseEndpoints
            |(publicPolicyEndpoint, authenticatedPolicyEndpoint, systemAdminPolicyEndpoint,
-           |projectAdminPolicyEndpoint, objectAccessPolicyEndpoint, authenticatedObjectAccessPolicyEndpoint); never add them to $baselineResource:
+           |projectAdminPolicyEndpoint, objectAccessPolicyEndpoint, authenticatedObjectAccessPolicyEndpoint,
+           |bearerSystemAdminOrServicePolicyEndpoint); never add them to $baselineResource:
            |${sortedLines(missing)}""".stripMargin
     },
     test("the baseline names only existing endpoints without a policy") {

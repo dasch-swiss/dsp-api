@@ -41,7 +41,7 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
 
   private val testProject = TestDataFactory.someProject
-  private val testUser    = TestDataFactory.User.rootUser
+  private val testCreator = TaskCreator.ByUser(TestDataFactory.User.rootUser.userIri)
 
   private case class TestEnv(
     service: ProjectMigrationExportService,
@@ -233,7 +233,7 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
     test("export with skipAssets=false calls ingest exportProject") {
       for {
         env    <- makeTestEnv
-        task   <- env.service.createExport(testProject, testUser, skipAssets = false)
+        task   <- env.service.createExport(testProject, testCreator, skipAssets = false)
         result <- pollUntilDone(env.service, task.id)
         called <- env.exportProjectCalled.get
         _      <- env.service.deleteExport(task.id).catchAllCause(_ => ZIO.unit)
@@ -245,7 +245,7 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
     test("export with skipAssets=true does not call ingest exportProject") {
       for {
         env    <- makeTestEnv
-        task   <- env.service.createExport(testProject, testUser, skipAssets = true)
+        task   <- env.service.createExport(testProject, testCreator, skipAssets = true)
         result <- pollUntilDone(env.service, task.id)
         called <- env.exportProjectCalled.get
         _      <- env.service.deleteExport(task.id).catchAllCause(_ => ZIO.unit)
@@ -257,7 +257,7 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
     test("export with skipAssets=true produces BagIt without assets directory") {
       for {
         env     <- makeTestEnv
-        task    <- env.service.createExport(testProject, testUser, skipAssets = true)
+        task    <- env.service.createExport(testProject, testCreator, skipAssets = true)
         result  <- pollUntilDone(env.service, task.id)
         zipFile <- env.storage.exportBagItZipPath(task.id)
         // Read the BagIt zip and check its payload
@@ -280,7 +280,7 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
     test("export with skipAssets=false produces BagIt with assets directory") {
       for {
         env       <- makeTestEnv
-        task      <- env.service.createExport(testProject, testUser, skipAssets = false)
+        task      <- env.service.createExport(testProject, testCreator, skipAssets = false)
         result    <- pollUntilDone(env.service, task.id)
         zipFile   <- env.storage.exportBagItZipPath(task.id)
         bagResult <- ZIO.scoped {
@@ -318,7 +318,7 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
       for {
         env                     <- makeTestEnv
         _                       <- env.constructRdfRef.set(constructResult)
-        task                    <- env.service.createExport(testProject, testUser, skipAssets = false)
+        task                    <- env.service.createExport(testProject, testCreator, skipAssets = false)
         result                  <- pollUntilDone(env.service, task.id)
         zipFile                 <- env.storage.exportBagItZipPath(task.id)
         sizes                   <- zipEntrySizes(zipFile)
@@ -356,7 +356,7 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
           env    <- makeTestEnv
           _      <- env.selectResultRef.set(selectResult)
           _      <- env.constructRdfRef.set(constructResult)
-          task   <- env.service.createExport(testProject, testUser, skipAssets = true)
+          task   <- env.service.createExport(testProject, testCreator, skipAssets = true)
           result <- pollUntilDone(env.service, task.id)
           query  <- env.capturedConstructQueryRef.get
           _      <- env.service.deleteExport(task.id).catchAllCause(_ => ZIO.unit)
@@ -372,7 +372,7 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
         for {
           env    <- makeTestEnv
           _      <- env.constructRdfRef.set("") // empty Turtle
-          task   <- env.service.createExport(testProject, testUser, skipAssets = true)
+          task   <- env.service.createExport(testProject, testCreator, skipAssets = true)
           result <- pollUntilDone(env.service, task.id)
           query  <- env.capturedConstructQueryRef.get
           _      <- env.service.deleteExport(task.id).catchAllCause(_ => ZIO.unit)
@@ -401,7 +401,7 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
         for {
           env            <- makeTestEnv
           _              <- env.constructRdfRef.set(constructResult)
-          task           <- env.service.createExport(testProject, testUser, skipAssets = true)
+          task           <- env.service.createExport(testProject, testCreator, skipAssets = true)
           result         <- pollUntilDone(env.service, task.id)
           zipFile        <- env.storage.exportBagItZipPath(task.id)
           adminNqContent <- readBagFile(zipFile, "data/rdf/admin.nq")
@@ -429,7 +429,7 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
         for {
           env            <- makeTestEnv
           _              <- env.constructRdfRef.set(constructResult)
-          task           <- env.service.createExport(testProject, testUser, skipAssets = true)
+          task           <- env.service.createExport(testProject, testCreator, skipAssets = true)
           result         <- pollUntilDone(env.service, task.id)
           zipFile        <- env.storage.exportBagItZipPath(task.id)
           adminNqContent <- readBagFile(zipFile, "data/rdf/admin.nq")

@@ -64,10 +64,10 @@ final case class CurrentDataTask private (
   id: DataTaskId,
   projectIri: ProjectIri,
   status: DataTaskStatus,
-  createdBy: UserIri,
+  createdBy: TaskCreator,
   createdAt: Instant,
   errorMessage: Option[String] = None,
-  // The project user imported data is attributed to. Distinct from `createdBy` (the triggering admin, for audit).
+  // The project user imported data is attributed to. Distinct from `createdBy` (who triggered the task, for audit).
   // Only set for data-graph imports; `None` for exports and migration imports.
   onBehalfOf: Option[UserIri],
 ) { self =>
@@ -89,7 +89,7 @@ final case class CurrentDataTask private (
 object CurrentDataTask {
   def makeNew(
     projectIri: ProjectIri,
-    createdBy: UserIri,
+    createdBy: TaskCreator,
     onBehalfOf: Option[UserIri] = None,
   ): UIO[CurrentDataTask] =
     for {
@@ -101,7 +101,7 @@ object CurrentDataTask {
     id: DataTaskId,
     projectIri: ProjectIri,
     status: DataTaskStatus,
-    createdBy: UserIri,
+    createdBy: TaskCreator,
     createdAt: Instant,
     errorMessage: Option[String] = None,
     onBehalfOf: Option[UserIri] = None,

@@ -13,9 +13,9 @@ final class V3ProjectsServerEndpoints(endpoints: V3ProjectsEndpoints, restServic
 
   val serverEndpoints: List[EndpointT] = List(
     endpoints.postProjectIriExports.serverLogic(restService.triggerProjectExportCreate),
-    endpoints.getProjectIriExportsExportId.serverLogic(_ => restService.getProjectExportStatus),
-    endpoints.deleteProjectIriExportsExportId.serverLogic(_ => restService.deleteProjectExport),
-    endpoints.getProjectIriExportsExportIdDownload.serverLogic(_ => restService.downloadProjectExport),
+    endpoints.getProjectIriExportsExportId.serverLogic(restService.getProjectExportStatus),
+    endpoints.deleteProjectIriExportsExportId.serverLogic(restService.deleteProjectExport),
+    endpoints.getProjectIriExportsExportIdDownload.serverLogic(restService.downloadProjectExport),
     endpoints.postProjectIriImports.serverLogic(restService.triggerProjectImportCreate),
     endpoints.getProjectIriImportsImportId.serverLogic(_ => restService.getProjectImportStatus),
     endpoints.deleteProjectIriImportsImportId.serverLogic(_ => restService.deleteProjectImport),

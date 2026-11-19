@@ -6,11 +6,26 @@
 package org.knora.webapi.slice.security
 
 import org.junit.runner.RunWith
+import sttp.capabilities.zio.ZioStreams
+import sttp.tapir.server.ziohttp.ZioHttpInterpreter
+import sttp.tapir.ztapir.*
 import zio.*
+import zio.http.Body
+import zio.http.Header
+import zio.http.Request
+import zio.http.Response
+import zio.http.Status
+import zio.http.URL
 import zio.test.*
 
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+
+import org.knora.jwt.Ed25519TestSigner
+import org.knora.jwt.JwtClaim
 import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.slice.admin.domain.model.Email
@@ -39,6 +54,12 @@ import org.knora.webapi.slice.admin.repo.service.AdministrativePermissionRepoLiv
 import org.knora.webapi.slice.admin.repo.service.KnoraGroupRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraProjectRepoLive
 import org.knora.webapi.slice.admin.repo.service.KnoraUserRepoLive
+import org.knora.webapi.slice.api.v3.EndpointHelper
+import org.knora.webapi.slice.api.v3.V3BaseEndpoint
+import org.knora.webapi.slice.api.v3.V3ErrorCode
+import org.knora.webapi.slice.api.v3.projects.V3ProjectsEndpoints
+import org.knora.webapi.slice.common.api.AuthorizationRestService
+import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.domain.LanguageCode
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.infrastructure.CacheManager
@@ -77,6 +98,112 @@ class AuthenticatorLiveSpec extends ZIOSpecDefault {
              )
       user <- userRepo(_.save(user))
     } yield user
+
+  private object endpointHelper extends EndpointHelper
+
+  private val serviceKeys = Ed25519TestSigner.generateKeyPair()
+  private val trustedKeys = TrustedServiceKeys
+    .parse(s"""[{"name":"svc-a","kid":"a-1","publicKey":"${Ed25519TestSigner.spkiBase64(serviceKeys.getPublic)}"}]""")
+    .fold(e => throw new IllegalStateException(e), identity)
+  private val knoraApi = KnoraApi("0.0.0.0", 3333, "https", "api.example.org", 443, 3333)
+
+  /** The claims of a current service token, valid for the service verifier unless `subject` names someone else. */
+  private def serviceClaim(subject: String = "svc-a"): UIO[JwtClaim] =
+    Clock.instant.map(now =>
+      JwtClaim(
+        issuer = Some("svc-a"),
+        subject = Some(subject),
+        audience = Some(Set("https://api.example.org")),
+        issuedAt = Some(now.getEpochSecond),
+        expiration = Some(now.getEpochSecond + 300),
+        jwtId = Some("jti-1"),
+      ),
+    )
+
+  private def serviceToken(subject: String = "svc-a"): UIO[String] =
+    serviceClaim(subject).map(Ed25519TestSigner.sign(_, "a-1", serviceKeys.getPrivate))
+
+  private def v3Base(auth: Authenticator): V3BaseEndpoint =
+    V3BaseEndpoint(auth, new AuthorizationRestService(null, null), ServiceTokenVerifier(trustedKeys, knoraApi))
+
+  private def exportPolicyProbe(auth: Authenticator): ZServerEndpoint[Any, ZioStreams] =
+    v3Base(auth)
+      .systemAdminOrExportServicePolicy(oneOf(endpointHelper.notFoundVariant(V3ErrorCode.project_not_found)))
+      .get
+      .in("probe")
+      .serverLogic[Any](_ => _ => ZIO.unit)
+
+  private def bearer(request: Request, token: String): Request =
+    request.addHeader(Header.Custom("Authorization", s"Bearer $token"))
+
+  private def run(endpoint: ZServerEndpoint[Any, ZioStreams], request: Request): UIO[Response] =
+    ZIO.scoped(ZioHttpInterpreter().toHttp(List(endpoint)).runZIO(request))
+
+  /**
+   * The status for a service token, and for an active non-admin user's token on the same request; the second shows
+   * that the request reaches the real authentication.
+   */
+  private def serviceAndUserStatus(endpoint: ZServerEndpoint[Any, ZioStreams], request: Request) =
+    for {
+      service <- serviceToken().flatMap(token => run(endpoint, bearer(request, token)))
+      user    <- createUser(UserStatus.Active)
+      userJwt <- jwtService(_.createJwt(user.id, AuthScope.empty))
+      asUser  <- run(endpoint, bearer(request, userJwt.jwtString))
+    } yield (service.status, asUser.status)
+
+  // The user endpoints never consult the service verifier; this one would admit the token if they did.
+  private val serviceTokenSuite = suite("a valid service token is refused by the user authentication")(
+    test("the HS256 decoder rejects it, also when its sub names an existing user") {
+      for {
+        user  <- createUser(UserStatus.Active)
+        token <- serviceToken(subject = user.id.value)
+        exit  <- authenticator(_.authenticate(token)).exit
+      } yield assertTrue(exit == Exit.fail(AuthenticatorError.BadCredentials))
+    },
+    test("a SystemAdmin v3 endpoint (the imports POST) answers 401, and 403 to a non-admin user's token") {
+      for {
+        auth    <- ZIO.service[Authenticator]
+        endpoint = new V3ProjectsEndpoints(v3Base(auth)).postProjectIriImports
+                     .serverLogic[Any](_ => _ => ZIO.dieMessage("must not be reached"))
+        project   = URLEncoder.encode("http://rdfh.ch/projects/0001", StandardCharsets.UTF_8)
+        request   = Request.post(URL.decode(s"/v3/projects/$project/imports").toOption.get, Body.empty)
+        statuses <- serviceAndUserStatus(endpoint, request)
+      } yield assertTrue(statuses == (Status.Unauthorized, Status.Forbidden))
+    },
+    test("a bearer SystemAdmin endpoint of BaseEndpoints answers 401, and 403 to a non-admin user's token") {
+      for {
+        auth    <- ZIO.service[Authenticator]
+        endpoint = BaseEndpoints(auth, new AuthorizationRestService(null, null))
+                     .bearerSystemAdminEndpoint(_ => ZIO.unit)
+                     .get
+                     .in("probe")
+                     .serverLogic[Any](_ => _ => ZIO.dieMessage("must not be reached"))
+        statuses <- serviceAndUserStatus(endpoint, Request.get(URL.decode("/probe").toOption.get))
+      } yield assertTrue(statuses == (Status.Unauthorized, Status.Forbidden))
+    },
+    test("the export policy admits the same token as the service, and still answers 403 to a non-admin user") {
+      for {
+        auth     <- ZIO.service[Authenticator]
+        statuses <- serviceAndUserStatus(exportPolicyProbe(auth), Request.get(URL.decode("/probe").toOption.get))
+      } yield assertTrue(statuses == (Status.Ok, Status.Forbidden))
+    },
+    test("the export policy answers 401 to a service-signed token whose alg is not exactly EdDSA, or a malformed one") {
+      for {
+        auth   <- ZIO.service[Authenticator]
+        claim  <- serviceClaim()
+        headers = List(
+                    Ed25519TestSigner.headerJson(alg = "HS256", kid = Some("a-1")),
+                    Ed25519TestSigner.headerJson(alg = "eddsa", kid = Some("a-1")),
+                    """{"typ":"JWT","kid":"a-1"}""",
+                  )
+        variants = headers.map(Ed25519TestSigner.signRaw(_, claim.toJson, serviceKeys.getPrivate)) :+
+                     "not-a-header.e30.c2ln"
+        responses <- ZIO.foreach(variants)(t =>
+                       run(exportPolicyProbe(auth), bearer(Request.get(URL.decode("/probe").toOption.get), t)),
+                     )
+      } yield assertTrue(responses.map(_.status) == List.fill(variants.size)(Status.Unauthorized))
+    },
+  )
 
   val spec = suite("AuthenticatorLiveSpec")(
     test("given the user does not exist authentication should fail") {
@@ -154,6 +281,7 @@ class AuthenticatorLiveSpec extends ZIOSpecDefault {
         exit1 == Exit.fail(AuthenticatorError.UserNotActive),
       )
     },
+    serviceTokenSuite,
   ).provide(
     AdministrativePermissionRepoLive.layer,
     AdministrativePermissionService.layer,

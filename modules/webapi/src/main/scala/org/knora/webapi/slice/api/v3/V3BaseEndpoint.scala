@@ -17,6 +17,7 @@ import sttp.tapir.ztapir.*
 import zio.*
 import zio.json.JsonEncoder
 
+import org.knora.jwt.EdDsaJwt
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.common.api.AuthorizationRestService
@@ -25,10 +26,13 @@ import org.knora.webapi.slice.common.api.ProjectCandidate
 import org.knora.webapi.slice.common.api.RequiresMethod
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError.*
+import org.knora.webapi.slice.security.ExportCaller
+import org.knora.webapi.slice.security.ServiceTokenVerifier
 
 final case class V3BaseEndpoint(
   private val authenticator: Authenticator,
   private val authorization: AuthorizationRestService,
+  private val serviceTokenVerifier: ServiceTokenVerifier,
 ) {
 
   private val policies = BaseEndpoints(authenticator, authorization)
@@ -81,6 +85,25 @@ final case class V3BaseEndpoint(
     errorOut: ErrorOut,
   ): RequiresMethod[ZPartialServerEndpoint[Any, String, User, Unit, V3ErrorInfo, Unit, Any]] =
     policies.bearerSystemAdminPolicyEndpoint(withAuthErrors(errorOut), handleBearerJwt, forbidden)
+
+  /**
+   * Declares SystemAdminOrExportService in the security logic. A token whose header names `alg` `EdDSA` is a service
+   * token and goes to the service verifier only, never to the user authenticator, which would read its `sub` as a
+   * user IRI; any other token must be a SystemAdmin's. Every rejected service token gets the same 401, whatever the
+   * reason.
+   */
+  def systemAdminOrExportServicePolicy(
+    errorOut: ErrorOut,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, ExportCaller, Unit, V3ErrorInfo, Unit, Any]] =
+    policies.bearerSystemAdminOrServicePolicyEndpoint(withAuthErrors(errorOut), authenticateExportCaller)
+
+  private def authenticateExportCaller(jwt: String): IO[V3ErrorInfo, ExportCaller] =
+    if (EdDsaJwt.peekHeader(jwt).toOption.flatMap(_.alg).contains(EdDsaJwt.Algorithm))
+      serviceTokenVerifier.verify(jwt).mapBoth(_ => Unauthorized("Invalid token."), ExportCaller.Service(_))
+    else
+      handleBearerJwt(jwt).flatMap(user =>
+        authorization.ensureSystemAdmin(user).mapBoth(forbidden, _ => ExportCaller.Admin(user)),
+      )
 
   /** Declares [[Policy.Public]]; needs no credentials. */
   def publicPolicy(errorOut: ErrorOut, reason: String): RequiresMethod[PublicEndpoint[Unit, V3ErrorInfo, Unit, Any]] =

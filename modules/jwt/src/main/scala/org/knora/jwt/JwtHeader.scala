@@ -10,10 +10,16 @@ import zio.json.ast.Json
 
 /**
  * Represents the header of a JWT token.
+ *
+ * @param kid  the "kid" (key id) header parameter
+ * @param crit whether the "crit" header parameter is present; no extension is understood, so a verifier that sees
+ *             it must reject the token (RFC 7515 section 4.1.11)
  */
 final case class JwtHeader(
   typ: Option[String] = None,
   alg: Option[String] = None,
+  kid: Option[String] = None,
+  crit: Boolean = false,
 )
 
 object JwtHeader {
@@ -27,6 +33,8 @@ object JwtHeader {
       JwtHeader(
         typ = fields.get("typ").flatMap(_.asString),
         alg = fields.get("alg").flatMap(_.asString),
+        kid = fields.get("kid").flatMap(_.asString),
+        crit = fields.contains("crit"),
       )
     }
 }

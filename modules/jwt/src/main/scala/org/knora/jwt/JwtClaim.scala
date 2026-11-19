@@ -8,6 +8,8 @@ package org.knora.jwt
 import zio.json.*
 import zio.json.ast.Json
 
+import scala.util.Try
+
 /**
  * Represents the payload (claims) of a JWT token.
  *
@@ -63,9 +65,11 @@ object JwtClaim {
    */
   def fromJsonString(json: String): Either[String, JwtClaim] =
     json.fromJson[Json.Obj].map { obj =>
-      val fields                                = obj.fields.toMap
-      def str(key: String): Option[String]      = fields.get(key).flatMap(_.asString)
-      def num(key: String): Option[Long]        = fields.get(key).flatMap(_.asNumber).map(_.value.longValue)
+      val fields                           = obj.fields.toMap
+      def str(key: String): Option[String] = fields.get(key).flatMap(_.asString)
+      // longValueExact, not longValue: a fraction or an out-of-range number is absent rather than silently wrapped.
+      def num(key: String): Option[Long] =
+        fields.get(key).flatMap(_.asNumber).flatMap(n => Try(n.value.longValueExact).toOption)
       def aud(key: String): Option[Set[String]] = fields.get(key).flatMap { v =>
         v.asString.map(Set(_)).orElse(v.asArray.map(_.flatMap(_.asString).toSet))
       }

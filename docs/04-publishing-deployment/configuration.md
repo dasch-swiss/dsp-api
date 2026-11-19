@@ -49,11 +49,67 @@ A number of core settings is additionally configurable through system environmen
 | app.triplestore.fuseki.repository-name                    | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME        | dsp-repo                                          |
 | app.triplestore.fuseki.username                           | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME               | admin                                             |
 | app.triplestore.fuseki.password                           | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PASSWORD               | test                                              |
+| app.service-identity.trusted-keys                         | KNORA_WEBAPI_SERVICE_IDENTITY_TRUSTED_KEYS             | `[]` (a JSON array, see below)                    |
 
 `app.dsp-ingest.audience` is the audience the API writes into every token it issues and the audience ingest requires;
 it is an identifier, not an address the API calls.
 It is the only `app.dsp-ingest` setting; `KNORA_WEBAPI_DSP_INGEST_BASE_URL`, `KNORA_WEBAPI_DSP_INGEST_EXTERNAL_BASE_URL`
 and `KNORA_WEBAPI_DSP_INGEST_ASSET_DIR` are no longer read.
+
+## Service identity
+
+A trusted export service, such as dsp-repository's sync, calls the project export endpoints with a token it signs
+itself (see [Project Migration](../03-endpoints/api-v3/project-migration.md#service-identity) for the token
+contract). The server holds only the service's public keys, in `app.service-identity.trusted-keys`
+(`KNORA_WEBAPI_SERVICE_IDENTITY_TRUSTED_KEYS`). The setting is read at startup; a change needs a restart.
+
+**Format.** A JSON array with one object per key:
+
+```json
+[{"name": "dsp-repository", "kid": "dsp-repository-2026-11", "publicKey": "MCowBQYDK2VwAyEA..."}]
+```
+
+- `name` is the service's identity: lower-case letters, digits and hyphens. The token's `iss` and `sub` must equal
+  it, and the exports the service creates belong to it. Several keys may share a name.
+- `kid` identifies the key; the token names it in its header. Each `kid` must be unique.
+- `publicKey` is the base64 of the Ed25519 public key's X.509 SubjectPublicKeyInfo, with or without the
+  `-----BEGIN PUBLIC KEY-----` armour and line breaks.
+
+The default `[]`, an empty value and a blank value all mean no key is trusted: the service identity is off, and
+every service token gets `401`. A malformed array, an unparsable or non-Ed25519 key, a blank `kid`, an invalid
+name or a duplicate `kid` stops the server at startup with a message naming the entry and field, never the key. At
+startup the server logs one INFO line with the number of trusted keys and their names and `kid`s, for example
+`Service identity: 1 trusted key(s): dsp-repository (kid dsp-repository-2026-11)`.
+
+**Generating a key.** The service generates its key pair and keeps the private key; only the public key goes into
+this setting. With OpenSSL 3 (LibreSSL lacks Ed25519):
+
+```bash
+openssl genpkey -algorithm ed25519 -out dsp-repository-2026-11.pem      # private key: stays with the service
+openssl pkey -in dsp-repository-2026-11.pem -pubout -outform DER | base64  # the publicKey value
+```
+
+**Rotating a key.** Add the new key with the same `name` and a new `kid`, and restart. Switch the service to the new
+key. Wait at least 16 minutes (a token lives at most 15 minutes, plus 30 seconds of clock skew), then remove the
+old `kid` and restart. Exports belong
+to the name, not the key, so the service keeps access to an export created under the old key.
+
+**Turning it off.** Remove the service's entries, or set the variable to `[]`, and restart. A key stops working on a
+server only once that server has restarted without it; restarting is the only way to revoke a key, so on a server
+with several instances the key stays valid until every instance has restarted.
+
+**A leaked private key** exports any project in full, password hashes included, on every server that trusts it:
+
+1. Remove the key from every server that trusts it and restart each one.
+2. Review the `Export service call:` log lines of the service's name since the leak.
+3. Delete any exports the name still holds: exports belong to the name, so the service's new key would see them.
+
+Whoever can change this setting can grant export of every project, so changes to it need the same control as a
+SystemAdmin credential. Never add the key that the E2E tests trust (`e2e-export-service`): its private half is in
+the repository.
+
+**Logs.** The audit and rejection log lines are described under
+[Project Migration](../03-endpoints/api-v3/project-migration.md#auditing-and-logs).
 
 ## Ingest
 

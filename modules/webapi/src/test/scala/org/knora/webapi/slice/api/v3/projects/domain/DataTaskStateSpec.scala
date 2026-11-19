@@ -19,38 +19,39 @@ import org.knora.webapi.slice.`export`.domain.StateCompletedError
 import org.knora.webapi.slice.`export`.domain.StateFailedError
 import org.knora.webapi.slice.`export`.domain.StateInProgressError
 import org.knora.webapi.slice.`export`.domain.StatesExistError
+import org.knora.webapi.slice.`export`.domain.TaskCreator
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class DataTaskStateSpec extends ZIOSpecDefault {
 
   private val projectIri = ProjectIri.unsafeFrom("http://rdfh.ch/projects/0001")
-  private val user       = TestDataFactory.User.rootUser
+  private val creator    = TaskCreator.ByUser(TestDataFactory.User.rootUser.userIri)
 
   def spec: Spec[Any, Any] = suite("DataTaskState")(
     suite("makeNew")(
       test("should create a new task when no task exists") {
         for {
           state <- ZIO.service[DataTaskState]
-          task  <- state.makeNew(projectIri, user)
+          task  <- state.makeNew(projectIri, creator)
         } yield assertTrue(
           task.projectIri == projectIri,
-          task.createdBy == user.userIri,
+          task.createdBy == creator,
           task.status == DataTaskStatus.InProgress,
         )
       },
       test("should fail with StatesExistError when a task already exists") {
         for {
           state    <- ZIO.service[DataTaskState]
-          existing <- state.makeNew(projectIri, user)
-          result   <- state.makeNew(projectIri, user).either
+          existing <- state.makeNew(projectIri, creator)
+          result   <- state.makeNew(projectIri, creator).either
         } yield assertTrue(result == Left(StatesExistError(existing)))
       },
       test("should preserve existing task when makeNew fails") {
         for {
           state    <- ZIO.service[DataTaskState]
-          existing <- state.makeNew(projectIri, user)
-          _        <- state.makeNew(projectIri, user).either
+          existing <- state.makeNew(projectIri, creator)
+          _        <- state.makeNew(projectIri, creator).either
           found    <- state.find(existing.id)
         } yield assertTrue(found == existing)
       },
@@ -59,7 +60,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should return the task when it exists and id matches") {
         for {
           state <- ZIO.service[DataTaskState]
-          task  <- state.makeNew(projectIri, user)
+          task  <- state.makeNew(projectIri, creator)
           found <- state.find(task.id)
         } yield assertTrue(found == task)
       },
@@ -73,7 +74,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should fail with None when id does not match") {
         for {
           state       <- ZIO.service[DataTaskState]
-          _           <- state.makeNew(projectIri, user)
+          _           <- state.makeNew(projectIri, creator)
           otherTaskId <- DataTaskId.makeNew
           result      <- state.find(otherTaskId).either
         } yield assertTrue(result == Left(None))
@@ -83,7 +84,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should mark task as completed") {
         for {
           state     <- ZIO.service[DataTaskState]
-          task      <- state.makeNew(projectIri, user)
+          task      <- state.makeNew(projectIri, creator)
           completed <- state.complete(task.id)
           saved     <- state.find(task.id).orElseFail(Exception("should not happen"))
         } yield assertTrue(
@@ -95,7 +96,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should be idempotent when task is already completed") {
         for {
           state      <- ZIO.service[DataTaskState]
-          task       <- state.makeNew(projectIri, user)
+          task       <- state.makeNew(projectIri, creator)
           completed1 <- state.complete(task.id)
           completed2 <- state.complete(task.id)
         } yield assertTrue(completed1 == completed2)
@@ -103,7 +104,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should fail with StateFailedError when task is already failed") {
         for {
           state  <- ZIO.service[DataTaskState]
-          task   <- state.makeNew(projectIri, user)
+          task   <- state.makeNew(projectIri, creator)
           failed <- state.fail(task.id, "test failure")
           result <- state.complete(task.id).either
         } yield assertTrue(result == Left(Some(StateFailedError(failed))))
@@ -120,7 +121,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should mark task as failed") {
         for {
           state  <- ZIO.service[DataTaskState]
-          task   <- state.makeNew(projectIri, user)
+          task   <- state.makeNew(projectIri, creator)
           failed <- state.fail(task.id, "test failure")
           saved  <- state.find(task.id).orElseFail(Exception("should not happen"))
         } yield assertTrue(
@@ -132,7 +133,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should be idempotent when task is already failed") {
         for {
           state   <- ZIO.service[DataTaskState]
-          task    <- state.makeNew(projectIri, user)
+          task    <- state.makeNew(projectIri, creator)
           failed1 <- state.fail(task.id, "test failure")
           failed2 <- state.fail(task.id, "test failure")
         } yield assertTrue(failed1 == failed2)
@@ -140,7 +141,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should fail with StateCompletedError when task is already completed") {
         for {
           state     <- ZIO.service[DataTaskState]
-          task      <- state.makeNew(projectIri, user)
+          task      <- state.makeNew(projectIri, creator)
           completed <- state.complete(task.id)
           result    <- state.fail(task.id, "test failure").either
         } yield assertTrue(result == Left(Some(StateCompletedError(completed))))
@@ -157,7 +158,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should delete a completed task") {
         for {
           state <- ZIO.service[DataTaskState]
-          task  <- state.makeNew(projectIri, user)
+          task  <- state.makeNew(projectIri, creator)
           _     <- state.complete(task.id)
           _     <- state.deleteIfNotInProgress(task.id)
           find  <- state.find(task.id).either
@@ -166,7 +167,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should delete a failed task") {
         for {
           state <- ZIO.service[DataTaskState]
-          task  <- state.makeNew(projectIri, user)
+          task  <- state.makeNew(projectIri, creator)
           _     <- state.fail(task.id, "test failure")
           _     <- state.deleteIfNotInProgress(task.id)
           find  <- state.find(task.id).either
@@ -175,14 +176,14 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should fail with StateInProgressError when task is in progress") {
         for {
           state  <- ZIO.service[DataTaskState]
-          task   <- state.makeNew(projectIri, user)
+          task   <- state.makeNew(projectIri, creator)
           result <- state.deleteIfNotInProgress(task.id).either
         } yield assertTrue(result == Left(Some(StateInProgressError(task))))
       },
       test("should not delete when task is in progress") {
         for {
           state <- ZIO.service[DataTaskState]
-          task  <- state.makeNew(projectIri, user)
+          task  <- state.makeNew(projectIri, creator)
           _     <- state.deleteIfNotInProgress(task.id).either
           found <- state.find(task.id)
         } yield assertTrue(found == task)
@@ -199,7 +200,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("only one of two concurrent makeNew calls should succeed") {
         for {
           state    <- ZIO.service[DataTaskState]
-          results  <- ZIO.collectAllPar(Chunk.fill(2)(state.makeNew(projectIri, user).either))
+          results  <- ZIO.collectAllPar(Chunk.fill(2)(state.makeNew(projectIri, creator).either))
           successes = results.collect { case Right(task) => task }
           failures  = results.collect { case Left(_: StatesExistError) => () }
         } yield assertTrue(successes.size == 1, failures.size == 1)
@@ -209,7 +210,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should update the task when found and function returns Right") {
         for {
           state   <- ZIO.service[DataTaskState]
-          task    <- state.makeNew(projectIri, user)
+          task    <- state.makeNew(projectIri, creator)
           updated <- state.atomicFindAndUpdate(task.id, t => t.complete().map(Some(_)))
           saved   <- state.find(task.id).unsome
         } yield assertTrue(updated.get.isCompleted, updated == saved)
@@ -217,7 +218,7 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should clear the state when function returns Right(None)") {
         for {
           state  <- ZIO.service[DataTaskState]
-          task   <- state.makeNew(projectIri, user)
+          task   <- state.makeNew(projectIri, creator)
           result <- state.atomicFindAndUpdate[Nothing](task.id, _ => Right(None))
           find   <- state.find(task.id).either
         } yield assertTrue(
@@ -228,14 +229,14 @@ class DataTaskStateSpec extends ZIOSpecDefault {
       test("should fail with Some(error) when function returns Left") {
         for {
           state  <- ZIO.service[DataTaskState]
-          task   <- state.makeNew(projectIri, user)
+          task   <- state.makeNew(projectIri, creator)
           result <- state.atomicFindAndUpdate[String](task.id, _ => Left("some error")).either
         } yield assertTrue(result == Left(Some("some error")))
       },
       test("should not modify state when function returns Left") {
         for {
           state <- ZIO.service[DataTaskState]
-          task  <- state.makeNew(projectIri, user)
+          task  <- state.makeNew(projectIri, creator)
           _     <- state.atomicFindAndUpdate[String](task.id, _ => Left("error")).either
           found <- state.find(task.id)
         } yield assertTrue(found == task)

@@ -147,6 +147,14 @@ class BaseEndpointsSpec extends ZIOSpecDefault {
         val policy = policyOf(base.authenticatedPolicyEndpoint("reason"))
         assertTrue(policy.contains(Policy.Authenticated("reason")))
       },
+      test("SystemAdminOrExportService") {
+        val factory = base.bearerSystemAdminOrServicePolicyEndpoint(
+          endpoint.errorOut(stringBody),
+          _ => ZIO.fail("not called"),
+        )
+        val policy = factory.get.in("probe").serverLogic[Any](_ => _ => ZIO.unit).endpoint.attribute(Policy.key)
+        assertTrue(policy.contains(Policy.SystemAdminOrExportService))
+      },
       test("SystemAdmin") {
         val policy = policyOf(base.systemAdminPolicyEndpoint)
         assertTrue(policy.contains(Policy.SystemAdmin))
