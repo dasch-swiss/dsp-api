@@ -22,7 +22,7 @@ final case class PersistedDataTask(
   id: DataTaskId,
   projectIri: ProjectIri,
   status: DataTaskStatus,
-  createdBy: UserIri,
+  createdBy: TaskCreator,
   createdAt: Instant,
   errorMessage: Option[String] = None,
   // Optional so a task file written before this field still deserializes (decodes to `None`).

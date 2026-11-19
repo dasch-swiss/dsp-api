@@ -37,6 +37,7 @@ final case class AppConfig(
   `export`: ExportConfig,
   filePermissionCache: FilePermissionCacheConfig,
   fair: FairConfig,
+  serviceIdentity: ServiceIdentityConfig,
 ) {
   val tmpDataDirPath: zio.nio.file.Path = zio.nio.file.Path(this.tmpDatadir)
 }
@@ -76,6 +77,14 @@ final case class FilePermissionCacheConfig(
   ttl: Duration,
   capacity: Int,
 )
+
+/**
+ * The public keys of the export services this server trusts.
+ *
+ * `trustedKeys` is a JSON array of `{name, kid, publicKey}` objects, kept as one string so a single environment
+ * variable can carry it; it is parsed and validated at startup. The built-in value `[]` trusts no key.
+ */
+final case class ServiceIdentityConfig(trustedKeys: String)
 
 final case class JwtConfig(secret: String, expiration: Duration, issuer: Option[String]) {
   def issuerAsString(): String = issuer.getOrElse(
@@ -275,7 +284,7 @@ final case class Features(
 
 object AppConfig {
   type AppConfigurations = AppConfig & DspIngestConfig & InstrumentationServerConfig & KnoraApi & Sipi & Triplestore &
-    GraphRoute & Resources & JwtConfig & FairConfig
+    GraphRoute & Resources & JwtConfig & FairConfig & ServiceIdentityConfig
 
   val config: Config[AppConfig] = deriveConfig[AppConfig]
     .mapKey(toKebabCase)
@@ -412,5 +421,6 @@ object AppConfig {
       appConfigLayer.project(_.jwt) ++
       appConfigLayer.project(_.v2.graphRoute) ++
       appConfigLayer.project(_.v2.resources) ++
-      appConfigLayer.project(_.fair)
+      appConfigLayer.project(_.fair) ++
+      appConfigLayer.project(_.serviceIdentity)
 }

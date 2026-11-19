@@ -65,7 +65,7 @@ final class ProjectDataImportService(
     slot
       .run(
         state
-          .startWith(state.makeNew(project.id, createdBy, Some(onBehalfOf.userIri)))(
+          .startWith(state.makeNew(project.id, TaskCreator.ByUser(createdBy.userIri), Some(onBehalfOf.userIri)))(
             saveJsonLdStream(_, stream, limit),
           )
           .mapError { case StatesExistError(t) => ImportExistsError(t) },

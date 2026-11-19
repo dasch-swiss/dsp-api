@@ -16,7 +16,12 @@ import zio.http.Status
 import zio.http.URL
 import zio.test.*
 
+import java.time.Instant
+
+import org.knora.jwt.Ed25519TestSigner
+import org.knora.jwt.JwtClaim
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.User
@@ -26,7 +31,12 @@ import org.knora.webapi.slice.api.admin.service.SparqlPassthroughTestEnv
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.Policy
 import org.knora.webapi.slice.common.api.RequiresMethod
+import org.knora.webapi.slice.common.domain.ServiceName
 import org.knora.webapi.slice.security.AuthenticatorError
+import org.knora.webapi.slice.security.ExportCaller
+import org.knora.webapi.slice.security.ServicePrincipal
+import org.knora.webapi.slice.security.ServiceTokenVerifier
+import org.knora.webapi.slice.security.TrustedServiceKeys
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class V3BaseEndpointSpec extends ZIOSpecDefault {
@@ -42,19 +52,63 @@ class V3BaseEndpointSpec extends ZIOSpecDefault {
     permissions = PermissionsDataADM(Map(SystemProject.id.value -> List(KnoraGroupRepo.builtIn.SystemAdmin.id.value))),
   )
 
+  private val serviceKeys = Ed25519TestSigner.generateKeyPair()
+  private val otherKeys   = Ed25519TestSigner.generateKeyPair()
+  private val trustedKeys = TrustedServiceKeys
+    .parse(s"""[{"name":"svc-a","kid":"a-1","publicKey":"${Ed25519TestSigner.spkiBase64(serviceKeys.getPublic)}"}]""")
+    .fold(e => throw new IllegalStateException(e), identity)
+  private val knoraApi = KnoraApi("0.0.0.0", 3333, "https", "api.example.org", 443, 3333)
+  private val now      = 1_800_000_000L
+
+  private val serviceClaim = JwtClaim(
+    issuer = Some("svc-a"),
+    subject = Some("svc-a"),
+    audience = Some(Set("https://api.example.org")),
+    issuedAt = Some(now),
+    expiration = Some(now + 300),
+    jwtId = Some("jti-1"),
+  )
+  private val serviceToken                = Ed25519TestSigner.sign(serviceClaim, "a-1", serviceKeys.getPrivate)
+  private val serviceCaller: ExportCaller =
+    ExportCaller.Service(ServicePrincipal(ServiceName.unsafeFrom("svc-a"), "a-1", "jti-1"))
+
+  private def serviceTokenWith(alg: String, kid: String) =
+    Ed25519TestSigner.signRaw(
+      Ed25519TestSigner.headerJson(alg = alg, kid = Some(kid)),
+      serviceClaim.toJson,
+      serviceKeys.getPrivate,
+    )
+
+  private val forgedServiceToken  = Ed25519TestSigner.sign(serviceClaim, "a-1", otherKeys.getPrivate)
+  private val unknownKidToken     = serviceTokenWith("EdDSA", "c-1")
+  private val hs256WithServiceKid = serviceTokenWith("HS256", "a-1")
+  private val lowerCaseAlgToken   = serviceTokenWith("eddsa", "a-1")
+  private val noAlgToken          = Ed25519TestSigner.signRaw(
+    """{"typ":"JWT","kid":"a-1"}""",
+    serviceClaim.toJson,
+    serviceKeys.getPrivate,
+  )
+
   private val usersByToken = Map(
     "normal"         -> activeUser,
     "admin"          -> systemAdmin,
     "inactive-admin" -> systemAdmin.copy(status = false),
     "anonymous"      -> AnonymousUser,
-  )
+  ) ++
+    // The stub knows every service-shaped token as the system admin: a 401 then shows the token never reached the
+    // user path, and an admission as the admin shows it did.
+    List(serviceToken, forgedServiceToken, unknownKidToken, hs256WithServiceKid, lowerCaseAlgToken, noAlgToken)
+      .map(_ -> systemAdmin)
 
   private val authenticator = SparqlPassthroughTestEnv.authenticatorAnswering(token =>
     ZIO.fromOption(usersByToken.get(token)).orElseFail(AuthenticatorError.BadCredentials),
   )
 
   // The checks these factories use read only the user, never a service.
-  private val base = V3BaseEndpoint(authenticator, new AuthorizationRestService(null, null))
+  private val authorization   = new AuthorizationRestService(null, null)
+  private val base            = V3BaseEndpoint(authenticator, authorization, ServiceTokenVerifier(trustedKeys, knoraApi))
+  private val baseWithoutKeys =
+    V3BaseEndpoint(authenticator, authorization, ServiceTokenVerifier(TrustedServiceKeys.empty, knoraApi))
 
   private val errorOut: EndpointOutput.OneOf[V3ErrorInfo, V3ErrorInfo] = oneOf(
     helper.notFoundVariant(V3ErrorCode.project_not_found),
@@ -90,6 +144,13 @@ class V3BaseEndpointSpec extends ZIOSpecDefault {
   ) =
     call(factory, token).map((actual, principal) => assertTrue(actual == status, principal.isEmpty))
 
+  /** As [[call]], at the time the service tokens were issued. */
+  private def callAtIssue[S, P](
+    factory: RequiresMethod[ZPartialServerEndpoint[Any, S, P, Unit, V3ErrorInfo, Unit, Any]],
+    token: String,
+  ): Task[(Status, Option[P])] =
+    TestClock.setTime(Instant.ofEpochSecond(now)) *> call(factory, Some(token))
+
   private def admitted[S, P](
     factory: RequiresMethod[ZPartialServerEndpoint[Any, S, P, Unit, V3ErrorInfo, Unit, Any]],
     token: Option[String],
@@ -119,6 +180,11 @@ class V3BaseEndpointSpec extends ZIOSpecDefault {
             .contains(Policy.ObjectAccess("the domain", admitsAnonymous = true)),
         )
       },
+      test("SystemAdminOrExportService") {
+        assertTrue(
+          policyOf(base.systemAdminOrExportServicePolicy(errorOut)).contains(Policy.SystemAdminOrExportService),
+        )
+      },
       test("ProjectAdmin") {
         assertTrue(
           policyOf(base.projectAdminPolicy(errorOut, "path projectIri"))
@@ -145,6 +211,48 @@ class V3BaseEndpointSpec extends ZIOSpecDefault {
       test("lets a system admin through") {
         call(base.systemAdminPolicy(errorOut), Some("admin"))
           .map((status, principal) => assertTrue(status == Status.Ok, principal.contains(systemAdmin)))
+      },
+    ),
+    suite("systemAdminOrExportServicePolicy")(
+      test("admits a valid service token as the service") {
+        callAtIssue(base.systemAdminOrExportServicePolicy(errorOut), serviceToken)
+          .map((status, caller) => assertTrue(status == Status.Ok, caller.contains(serviceCaller)))
+      },
+      test("refuses a valid-looking service token with 401 when no keys are configured") {
+        callAtIssue(baseWithoutKeys.systemAdminOrExportServicePolicy(errorOut), serviceToken)
+          .map((status, caller) => assertTrue(status == Status.Unauthorized, caller.isEmpty))
+      },
+      test("refuses a service token signed by another key with 401") {
+        callAtIssue(base.systemAdminOrExportServicePolicy(errorOut), forgedServiceToken)
+          .map((status, caller) => assertTrue(status == Status.Unauthorized, caller.isEmpty))
+      },
+      test("refuses a service token with an unknown kid with 401") {
+        callAtIssue(base.systemAdminOrExportServicePolicy(errorOut), unknownKidToken)
+          .map((status, caller) => assertTrue(status == Status.Unauthorized, caller.isEmpty))
+      },
+      test("refuses a token whose header is malformed with 401") {
+        refused(base.systemAdminOrExportServicePolicy(errorOut), Some("not-a-header.e30.c2ln"), Status.Unauthorized)
+      },
+      // On the user path the real authenticator refuses these with 401 (pinned in AuthenticatorLiveSpec).
+      test("sends a token whose alg is not exactly EdDSA down the user path") {
+        ZIO
+          .foreach(List(hs256WithServiceKid, lowerCaseAlgToken, noAlgToken))(token =>
+            callAtIssue(base.systemAdminOrExportServicePolicy(errorOut), token),
+          )
+          .map(results => assertTrue(results.forall(_ == (Status.Ok, Some(ExportCaller.Admin(systemAdmin))))))
+      },
+      test("refuses a caller without credentials with 401") {
+        refused(base.systemAdminOrExportServicePolicy(errorOut), None, Status.Unauthorized)
+      },
+      test("refuses a non-admin with 403") {
+        refused(base.systemAdminOrExportServicePolicy(errorOut), Some("normal"), Status.Forbidden)
+      },
+      test("refuses an inactive system admin with 403") {
+        refused(base.systemAdminOrExportServicePolicy(errorOut), Some("inactive-admin"), Status.Forbidden)
+      },
+      test("admits a system admin as the user") {
+        call(base.systemAdminOrExportServicePolicy(errorOut), Some("admin"))
+          .map((status, caller) => assertTrue(status == Status.Ok, caller.contains(ExportCaller.Admin(systemAdmin))))
       },
     ),
     suite("projectAdminPolicy")(

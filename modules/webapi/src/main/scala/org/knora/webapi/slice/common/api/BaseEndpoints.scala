@@ -23,6 +23,7 @@ import dsp.errors.*
 import org.knora.webapi.messages.util.KnoraSystemInstances.Users.AnonymousUser
 import org.knora.webapi.slice.admin.domain.model.*
 import org.knora.webapi.slice.security.Authenticator
+import org.knora.webapi.slice.security.ExportCaller
 
 final case class BaseEndpoints(authenticator: Authenticator, authorization: AuthorizationRestService) {
 
@@ -259,6 +260,23 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       Policy.ProjectAdmin(projectFrom),
       authenticate,
       user => authorization.ensureUserIsNotAnonymous(user).as(new ProjectCandidate(user)).mapError(forbidden),
+    )
+
+  /**
+   * Declares [[Policy.SystemAdminOrExportService]] for a bearer token. `authenticate` admits a SystemAdmin or a trusted
+   * export service in the security logic; the handler gets the [[ExportCaller]] and must restrict a service to the
+   * exports it created.
+   */
+  def bearerSystemAdminOrServicePolicyEndpoint[E](
+    base: PublicEndpoint[Unit, E, Unit, Any],
+    authenticate: String => IO[E, ExportCaller],
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, ExportCaller, Unit, E, Unit, Any]] =
+    RequiresMethod(
+      base
+        .securityIn(auth.bearer[String](WWWAuthenticateChallenge.bearer))
+        .attribute(Policy.key, Policy.SystemAdminOrExportService)
+        .zServerSecurityLogic(authenticate),
+      _.method(_),
     )
 
   /** Declares [[Policy.ObjectAccess]] for a read: no bearer means the anonymous user; the owning domain checks. */

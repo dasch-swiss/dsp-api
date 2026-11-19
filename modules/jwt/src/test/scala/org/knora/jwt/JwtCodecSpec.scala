@@ -10,6 +10,7 @@ import zio.Scope
 import zio.test.*
 
 import java.nio.charset.StandardCharsets
+import java.time.Instant
 
 import org.knora.testrunner.DspZTestJUnitRunner
 
@@ -334,6 +335,27 @@ class JwtCodecSpec extends ZIOSpecDefault {
           parsed.toOption.get.jwtId.contains("jti"),
           parsed.toOption.get.content.contains("\"scope\":\"read\""),
         )
+      },
+    ),
+    suite("numeric claims")(
+      test("an exp or iat that is fractional or out of the long range is absent, never wrapped") {
+        val parsed = JwtClaim.fromJsonString("""{"exp":18446744073709551916,"iat":1.5,"jti":"j"}""")
+        val huge   = JwtClaim.fromJsonString("""{"exp":1e999999999}""")
+        assertTrue(
+          parsed.exists(c => c.expiration.isEmpty && c.issuedAt.isEmpty && c.jwtId.contains("j")),
+          huge.exists(_.expiration.isEmpty),
+        )
+      },
+      test("an integral exp is parsed exactly") {
+        assertTrue(JwtClaim.fromJsonString("""{"exp":253402300799}""").exists(_.expiration.contains(253402300799L)))
+      },
+    ),
+    suite("EdDSA tokens")(
+      test("decodeAll rejects an EdDSA-signed token") {
+        val keyPair = Ed25519TestSigner.generateKeyPair()
+        val claim   = JwtClaim(subject = Some("svc"), expiration = Some(Instant.now.getEpochSecond + 300))
+        val token   = Ed25519TestSigner.sign(claim, "svc-kid", keyPair.getPrivate)
+        assertTrue(JwtCodec.decodeAll(token, secret).isFailure)
       },
     ),
   )

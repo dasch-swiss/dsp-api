@@ -10,6 +10,7 @@ import zio.*
 import zio.test.*
 
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.config.KnoraApi
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.UserIri
@@ -19,6 +20,8 @@ import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.infrastructure.Jwt
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.AuthenticatorError
+import org.knora.webapi.slice.security.ServiceTokenVerifier
+import org.knora.webapi.slice.security.TrustedServiceKeys
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class OntologyMappingEndpointsSpec extends ZIOSpecDefault {
@@ -38,8 +41,12 @@ class OntologyMappingEndpointsSpec extends ZIOSpecDefault {
     def authenticate(jwtToken: String): IO[AuthenticatorError, User] = ZIO.fail(AuthenticatorError.BadCredentials)
   }
 
-  private val baseEndpoint = V3BaseEndpoint(stubAuthenticator, new AuthorizationRestService(null, null))
-  private val endpoints    = new OntologyMappingEndpoints(baseEndpoint)
+  private val baseEndpoint = V3BaseEndpoint(
+    stubAuthenticator,
+    new AuthorizationRestService(null, null),
+    ServiceTokenVerifier(TrustedServiceKeys.empty, KnoraApi("0.0.0.0", 3333, "http", "localhost", 3333, 3333)),
+  )
+  private val endpoints = new OntologyMappingEndpoints(baseEndpoint)
 
   // Collect the Tapir endpoint show strings (method + path) for all four endpoints
   private val endpointShows = List(

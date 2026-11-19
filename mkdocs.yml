@@ -78,6 +78,7 @@ nav:
       - 0011 Cross-context access through consumer-defined ports: adr/0011-cross-context-access-ports-and-adapters.md
       - 0012 Graph-scoped Lucene text lookups: adr/0012-graph-scoped-lucene-text-lookups.md
       - 0013 Authorization policy enforcement: adr/0013-authorization-policy-enforcement.md
+      - 0014 Service identity for exports: adr/0014-service-identity-for-exports.md
   - DSP Internals:
       - Design:
           - DSP-API Design Principles:

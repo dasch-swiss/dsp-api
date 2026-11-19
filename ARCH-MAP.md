@@ -44,7 +44,8 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     `knora-api` image.
 - **Key entities**: `Main`, `LayersLive`, `DspApiServer`, `Db`, `State`, `AppState`, `AppConfig`,
     `AppConfig.AppConfigurations`, `KnoraApi`, `Sipi`, `Triplestore`, `JwtConfig`, `DspIngestConfig`,
-    `GraphRoute`, `Resources`, `InstrumentationServerConfig`, `Features`, `MetricsServer`, `FairConfig`
+    `GraphRoute`, `Resources`, `InstrumentationServerConfig`, `Features`, `MetricsServer`, `FairConfig`,
+    `ServiceIdentityConfig`
 - **Public interface**: `Main.run`; `LayersLive.bootstrap` / `LayersLive.remainingLayer`;
     `DspApiServer.layer` / `DspApiServer.startup`; `Db.init` / `Db.initWithTestData`; `State`
     (`getAppState` / `set`); `AppConfig.layer` and the individual config case classes that other slices
@@ -80,6 +81,11 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         chain and projected in `AppConfigurations`; `LayersLive` wires `FairResourcesLive`,
         `FairProjectsLive`, `FairClassesLive`, `FairAssetsLive` and `IngestModule.layer` - enforcement:
         review.
+    - `ServiceIdentityConfig` (`app.service-identity.trusted-keys`, env
+        `KNORA_WEBAPI_SERVICE_IDENTITY_TRUSTED_KEYS`, default `"[]"`) is projected in `AppConfigurations` as one raw
+        JSON string. It is parsed and validated by `TrustedServiceKeys` in webapi-security, not in the
+        `.validate(...)` chain, which would make this component depend on security; a bad value fails startup
+        there (ADR-0014) - enforcement: review.
     - `DspApiServer` skips the server's `406` check for endpoints marked `NegotiatesOwnAccept`
         (`negotiatesItsOwnAccept`), the SPARQL passthrough and the fair routes - enforcement: review.
     - `DspApiServer` closes the connection on a rejection that leaves a streamed request body unread; the marker
@@ -107,7 +113,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
 - **Key entities**: `ApiModule`, `Endpoints`, `AdminApiModule`, `AdminApiServerEndpoints`, `ApiV2Module`,
     `ApiV2ServerEndpoints`, `ApiV3Module`, `ApiV3ServerEndpoints`, `ManagementServerEndpoints`,
     `OntologyApiModule`, `V3BaseEndpoint`, `V3ErrorInfo`, `V3ErrorCode`, `V3Authorizer`, `PageAndSize`,
-    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `Codecs`,
+    `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `ExportServiceAudit`, `Codecs`,
     `StoredXmlServing`, `FairApiModule` (webapi-fair)
 - **Public interface**: `ApiModule.layer`; `Endpoints.serverEndpoints`; the four `*RestService`s re-exported
     by `AdminApiModule.Provided` (`GroupRestService`, `PermissionRestService`, `ProjectRestService`,
@@ -131,13 +137,22 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
 - **Depends on**: webapi-common (`BaseEndpoints`, `AuthorizationRestService`, `KnoraResponseRenderer`,
     `IriConverter`, `KnoraIris`, `dsp.errors.*`), webapi-admin, webapi-ontology, webapi-resources,
     webapi-search, webapi-standoff, webapi-export, webapi-fair (`FairApiModule`, `FairServerEndpoints`),
-    webapi-security (`Authenticator`), webapi-infrastructure (`CacheManager`, `CsvService`), webapi-triplestore (`TriplestoreService`, `Sparql*` errors), webapi-app
+    webapi-security (`Authenticator`, `ServiceTokenVerifier`, `ExportCaller`), jwt (`EdDsaJwt.peekHeader`),
+    webapi-infrastructure (`CacheManager`, `CsvService`), webapi-triplestore (`TriplestoreService`, `Sparql*` errors), webapi-app
     (`AppConfig`), ingest (`IngestServerEndpoints`), build-toolchain.
 - **Used by**: webapi-app, webapi-infrastructure (`DocsServer` builds the OpenAPI and Swagger UI from
     `Endpoints.serverEndpoints`), webapi-admin (inverted), webapi-ontology (inverted), webapi-resources
     (inverted), webapi-export (inverted), webapi-common (inverted), webapi-sipi-client (inverted), testkit,
     test-it, test-e2e.
 - **Boundary rules**:
+    - The four project export handlers on `systemAdminOrExportServicePolicy` receive an `ExportCaller` and run
+        inside `exportCall` (one `ExportServiceAudit` line and the bounded `dsp.service.*` span attributes per
+        service call). `mayAccess` is the one ownership predicate: status, download and delete look the export up
+        through `findExport` (ownership before any state check; another caller's export is the shared
+        `404 export_not_found`); the trigger does not use it and answers `export_exists` for any export in the
+        slot, whoever created it. `ExportCaller` is matched exhaustively. A fifth handler on
+        the policy compiles without any of this (ADR-0014) - enforcement: review; `V3ProjectsRestServiceSpec`
+        tests the four handlers' behaviour and does not detect a fifth.
     - Every route is the three-tier triad `*Endpoints.scala` for the Tapir definition, `*ServerEndpoints.scala`
         for wiring, `*RestService.scala` for auth check then service then `format.toExternal`
         (`CONVENTIONS.md` lines 28-33) - enforcement: review. Currently violated by
@@ -222,7 +237,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     and Resources and Values. This is the "false foundation" that MODULARIZATION-PLAN.md Phase 1 dissolves.
 - **Key entities**: `SmartIri`, `StringFormatter`, `OntologyConstants`, `KnoraIris`, `ResourceIri`,
     `ValueIri`, `StandoffMappingIri`, `IriConverter`, `InternalIri`, `Value`, `StringValue`, `WithFrom`,
-    `LanguageCode`, `BaseEndpoints`, `AuthorizationRestService`, `KnoraResponseRenderer`, `Vocabulary`,
+    `LanguageCode`, `ServiceName`, `BaseEndpoints`, `AuthorizationRestService`, `KnoraResponseRenderer`, `Vocabulary`,
     `PredicateObjectMapper`, `Repository`, `CrudRepository`, `IriLocker`, `IriService`,
     `KnoraSystemInstances`, `PermissionUtilADM`, `NegotiatesOwnAccept`, `ClosesOnUnreadBody`, `OwnAcceptNegotiation`,
     `RequiresMethod`, `JsonLDUtil`, `RdfFormatUtil`, `SparqlSelectResult`,
@@ -321,24 +336,32 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     - `modules/webapi/src/test/scala/org/knora/webapi/slice/security/**`
 - **Purpose**: Authentication decisions and authorization-scope derivation. Verifies credentials, issues and
     invalidates sessions via JWT, and resolves a user's permissions into the `Scope` embedded in their token.
-    Hosts the Authentication bounded context; the JWT mechanics live in webapi-infrastructure.
+    Also verifies the Ed25519 service tokens of trusted export services, which are not users (ADR-0014).
+    Hosts the Authentication bounded context; the JWT mechanics live in webapi-infrastructure and jwt.
 - **Key entities**: `Authenticator`, `AuthenticatorLive`, `AuthenticatorError`, `ScopeResolver`,
-    `CredentialsIdentifier`, `KnoraCredentialsV2`, `SecurityModule`
+    `CredentialsIdentifier`, `KnoraCredentialsV2`, `SecurityModule`, `ServiceTokenVerifier`,
+    `ServiceTokenRejection`, `ServicePrincipal`, `TrustedServiceKeys`, `TrustedServiceKey`, `ExportCaller`
 - **Public interface**: the `Authenticator` trait (`calculateCookieName`, `invalidateToken`, `parseToken`,
     `authenticate` overloads for `UserIri` / `Username` / `Email` plus password and for a bare JWT string);
-    `ScopeResolver.resolve(user): UIO[Scope]`; `SecurityModule.layer` / `.Provided` / `.Dependencies`;
-    the `AuthenticatorError` enum.
+    `ScopeResolver.resolve(user): UIO[Scope]`; `ServiceTokenVerifier.verify(token): IO[ServiceTokenRejection,
+    ServicePrincipal]`; `TrustedServiceKeys.parse` / `.layer`; the `ExportCaller` enum (`Admin(user)`,
+    `Service(principal)`); `SecurityModule.layer` / `.Provided` / `.Dependencies`; the `AuthenticatorError` enum.
 - **Local-context kit**:
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/security/SecurityModule.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/security/Authenticator.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/security/ScopeResolver.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/security/ServiceTokenVerifier.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/security/TrustedServiceKeys.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/security/ExportCaller.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/common/api/BaseEndpoints.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/api/v2/authentication/AuthenticationRestService.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/core/LayersLive.scala`
 - **Depends on**: webapi-infrastructure (`JwtService`, `InvalidTokenCache`, `Scope` / `ScopeValue`),
     webapi-admin (`KnoraProjectService`, `PasswordService`, `UserService`, `KnoraUserRepo.builtIn`, and the
-    domain models `User`, `UserIri`, `Username`, `Email`, `Permission`), webapi-app (`AppConfig`, only for
-    `knoraApi.externalKnoraApiHostPort` in the cookie name), build-toolchain.
+    domain models `User`, `UserIri`, `Username`, `Email`, `Permission`), webapi-app (`AppConfig`, for
+    `knoraApi.externalKnoraApiHostPort` in the cookie name; `KnoraApi`, for the service-token audience;
+    `ServiceIdentityConfig`, for the trusted keys), webapi-common (`ServiceName`), jwt (`EdDsaJwt`,
+    `JwtClaim`), build-toolchain.
 - **Used by**: webapi-common (`BaseEndpoints` builds its policy factories from
     `Authenticator`), webapi-api (`AuthenticationRestService`, `AuthenticationEndpointsV2`, `ApiV2Module`,
     `V3BaseEndpoint`, `ApiV3Module`), webapi-app, ingest (`IngestModule.endpointsLayer` takes `Authenticator`),
@@ -355,8 +378,18 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         authorization originates here - enforcement: docs-only.
     - No reach-ins observed: nothing imports `AuthenticatorLive` or `ScopeResolver` internals; consumption is
         through `SecurityModule.Provided`.
-    - Wiring: shared inventory. `SecurityModule.layer` (`ScopeResolver.layer >+> AuthenticatorLive.layer`) is
-        registered once in `core/LayersLive.scala`; there is no reserved-path mechanism.
+    - Only the routing function of `V3BaseEndpoint.systemAdminOrExportServicePolicy` calls
+        `ServiceTokenVerifier`; it routes a token by its exact header `alg` (`EdDSA` to the verifier, anything
+        else to `Authenticator`), so a service token never reaches the user path. `SecurityModule.Provided` makes
+        the verifier injectable anywhere (ADR-0014) - enforcement: review.
+    - webapi-security depends on webapi-common for `ServiceName` while `BaseEndpoints` (webapi-common) builds on
+        `Authenticator` and `ExportCaller`: a known two-way edge; moving `ServiceName` into webapi-security (an
+        ADR-0014 open point) would remove one direction - enforcement: review.
+    - A rejected service token logs one WARN line with its reason; the token is never logged, and the `kid`
+        only once it matched a configured key - enforcement: test (`ServiceTokenVerifierSpec`).
+    - Wiring: shared inventory. `SecurityModule.layer` (`ScopeResolver.layer >+> AuthenticatorLive.layer >+>
+        TrustedServiceKeys.layer >+> ServiceTokenVerifier.layer`) is registered once in `core/LayersLive.scala`;
+        there is no reserved-path mechanism.
 - **Durable state**: none owned. It writes through webapi-infrastructure's `InvalidTokenCache` (single writer
     `Authenticator.invalidateToken`) and only reads user and project state owned by webapi-admin.
     - `Authenticator.authenticate(jwtToken)` re-derives the `User` via `getUserByIri` rather than trusting a
@@ -1107,8 +1140,9 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
 - **Key entities**: `ProjectMigrationExportService`, `ProjectMigrationImportService`,
     `ProjectMigrationImportValidator`, `ProjectDataImportService`, `ProjectMigrationStorageService`,
     `ProjectDataImportStorageService`, `DataTaskState`, `DataTaskPersistence`,
-    `FilesystemDataTaskPersistence`, `CurrentDataTask`, `DataTaskId`, `DataTaskStatus`, `AdminDataQuery`,
-    `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`, `ImportSlot`, `ProjectOntologyShapes`
+    `FilesystemDataTaskPersistence`, `CurrentDataTask`, `DataTaskId`, `DataTaskStatus`, `TaskCreator`,
+    `AdminDataQuery`, `AdminModelScoping`, `ProjectDataGraphExistsQuery`, `ExportService`, `FindResourcesService`,
+    `ImportSlot`, `ProjectOntologyShapes`
 - **Public interface**: `ExportModule.layer`, providing `ProjectMigrationExportService &
     ProjectMigrationImportService & ProjectDataImportService`; `ExportApiModule.layer`, providing
     `ExportService`; the value types `DataTaskId`, `DataTaskStatus`, `CurrentDataTask`; the task error types
@@ -1129,11 +1163,19 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         any change on the export or data-import paths.
 - **Depends on**: webapi-admin, webapi-ontology (`OntologyRepo`, see the boundary rule on
     `ProjectOntologyShapes`), webapi-triplestore, webapi-resources, webapi-standoff,
-    webapi-common, webapi-infrastructure, webapi-app (`AppConfig`), webapi-api (inverted and cyclic), bagit,
+    webapi-common (`ServiceName` for `TaskCreator`), webapi-infrastructure, webapi-app (`AppConfig`), webapi-api
+    (inverted and cyclic), bagit,
     shacl-validator, ingest (in-process for `swiss.dasch.domain.AssetInfoService` and, through
     `DspIngestClient`, asset export and import), build-toolchain.
 - **Used by**: webapi-api, webapi-app, testkit, test-it, test-e2e.
 - **Boundary rules**:
+    - `ProjectMigrationExportService.getExportStatus`, `downloadExport` and `deleteExport` take a bare export id
+        and check no ownership. A trusted export service may act only on the exports it created; that check lives
+        one component away, in webapi-api's `V3ProjectsRestService.findExport` / `mayAccess` (ADR-0014). Any new
+        caller of these methods on behalf of a service must go through it. `TaskCreator` is persisted as one
+        string, a user IRI or `urn:dsp:service:<name>`, which older task files and the API's `createdBy` share -
+        enforcement: review and `V3ProjectsRestServiceSpec`; a structural guard (an ownership proof the methods
+        require) is not built.
     - Reads of admin and permission data go through webapi-admin services, not raw SPARQL against
         `adminDataNamedGraph` or `permissionsDataNamedGraph` - enforcement: docs-only. Currently violated by
         `AdminDataQuery`, `AdminUsersQuery`, `PermissionDataQuery` and `ReferencedUserIrisQuery`.
@@ -1473,32 +1515,44 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
 ### jwt
 
 - **Paths**: `modules/jwt/**`
-- **Purpose**: Minimal HS256-only JWT codec for encode, decode and verify. A pure leaf library with no
-    bounded context; it implements the token mechanics that webapi-infrastructure's `JwtService` and ingest's
-    `AuthService` build session issuance and verification on.
-- **Key entities**: `JwtCodec`, `JwtClaim`, `JwtHeader`
+- **Purpose**: Minimal JWT mechanics: an HS256 codec for encode, decode and verify, and Ed25519 (`EdDSA`)
+    verification for service tokens. A pure leaf library with no bounded context; it implements the token
+    mechanics that webapi-infrastructure's `JwtService`, ingest's `AuthService` and webapi-security's
+    `ServiceTokenVerifier` build on. It never signs with a private key in main code.
+- **Key entities**: `JwtCodec`, `EdDsaJwt`, `JwtClaim`, `JwtHeader`, `Ed25519TestSigner` (test-only)
 - **Public interface**: `JwtCodec.encode`, `JwtCodec.decode`, `JwtCodec.decodeAll` (returns
     `Try[(JwtHeader, JwtClaim, String)]` and validates signature, `alg=HS256`, expiration and optional issuer
-    and audience); `JwtClaim` (`+`, `toJson`, `fromJsonString`); `JwtHeader.fromJsonString`. There is no
-    `internal/` package.
+    and audience); `EdDsaJwt.peekHeader` (unverified, for routing and key lookup) and `EdDsaJwt.verify(token,
+    key)` (exact `alg=EdDSA`, no `crit`, Ed25519 key, 64-byte signature; checks no claim); `JwtClaim` (`+`,
+    `toJson`, `fromJsonString`); `JwtHeader.fromJsonString` (with `kid` and a `crit` presence flag). The
+    `testonly` target `//modules/jwt:testkit` (`src/testkit`) holds `Ed25519TestSigner` for the jwt, webapi and
+    e2e tests. There is no `internal/` package.
 - **Local-context kit**:
     - `modules/jwt/BUILD.bazel`
     - `modules/jwt/src/main/scala/org/knora/jwt/JwtCodec.scala`
+    - `modules/jwt/src/main/scala/org/knora/jwt/EdDsaJwt.scala`
     - `modules/jwt/src/main/scala/org/knora/jwt/JwtClaim.scala`
     - `modules/jwt/src/main/scala/org/knora/jwt/JwtHeader.scala`
+    - `modules/jwt/src/testkit/scala/org/knora/jwt/Ed25519TestSigner.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/infrastructure/JwtService.scala`
     - `modules/ingest/src/main/scala/swiss/dasch/api/AuthService.scala`
     - `docs/05-internals/design/principles/authentication.md`
 - **Depends on**: build-toolchain. No other inventory component; `zio`, `zio-json` and `zio-streams` only,
     the last pulled in solely because `zio-json`'s public API references `ZStream` and `ZPipeline`.
-- **Used by**: webapi-infrastructure (`JwtService`), ingest (`AuthService`), test-it (`SipiIT`, minting test
-    tokens).
+- **Used by**: webapi-infrastructure (`JwtService`), webapi-security (`ServiceTokenVerifier`), webapi-api
+    (`V3BaseEndpoint`, `EdDsaJwt.peekHeader` for routing), ingest (`AuthService`), test-it (`SipiIT`, minting test
+    tokens), test-e2e (`ExportServiceIdentityE2ESpec`, through `:testkit`).
 - **Boundary rules**:
     - The secret key is accepted as `Array[Byte]`, not `String`, so key material is not retained in
         immutable, non-clearable JVM strings - enforcement: docs-only (a doc comment, not statically checked).
     - `decodeAll` hard-requires the `exp` claim and an `HS256` `alg`; tokens missing either fail closed -
         enforcement: review.
-    - There is no `internal/` package, so there is nothing to reach into; all three files are the public
+    - `decodeAll` rejects an EdDSA-signed token, so a service token gets 401 on every HS256 path, ingest
+        included - enforcement: test (`JwtCodecSpec`).
+    - `EdDsaJwt.verify` checks the signature only; every claim check is the caller's, and only
+        `ServiceTokenVerifier` calls it - enforcement: review.
+    - Signing code is test-only (`src/testkit`, `testonly = True`) - enforcement: structure.
+    - There is no `internal/` package, so there is nothing to reach into; all main files are the public
         surface - enforcement: structure.
     - Wiring: no shared inventory. A single Bazel leaf target added as a `deps` entry in each consumer's
         `BUILD.bazel`.

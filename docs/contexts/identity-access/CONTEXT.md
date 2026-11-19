@@ -48,11 +48,29 @@ _Avoid_: Administrative permission
 
 **Policy**:
 The function-level requirement an endpoint declares, such as Public, Authenticated, SystemAdmin,
-ProjectAdmin, ProjectMember, SelfOrSystemAdmin, ProjectAdminOfAnyProject or ObjectAccess
-([ADR-0013](../../adr/0013-authorization-policy-enforcement.md)). SelfOrSystemAdmin admits the User
-named by the request and System administrators; ProjectAdminOfAnyProject admits System administrators
-and Project administrators of at least one Project.
+ProjectAdmin, ProjectMember, SelfOrSystemAdmin, ProjectAdminOfAnyProject, SystemAdminOrExportService
+or ObjectAccess ([ADR-0013](../../adr/0013-authorization-policy-enforcement.md)). SelfOrSystemAdmin
+admits the User named by the request and System administrators; ProjectAdminOfAnyProject admits System
+administrators and Project administrators of at least one Project; SystemAdminOrExportService admits
+System administrators and a trusted **Service identity**, which only sees the exports it created
+([ADR-0014](../../adr/0014-service-identity-for-exports.md)). It is the only Policy that admits a caller
+who is not a User.
 _Avoid_: Administrative permission, Permission policy, Scope
+
+**Service identity**:
+A trusted machine client, named by a service name in the server's configuration, that may trigger,
+poll, download and delete project exports. It is not a **User**: it has no account, no Memberships, no
+Groups and no Permission profile, and it is never looked up as a User. A service identity sees only the
+exports it created; ownership is keyed on its name, not on its key. In code an export handler receives
+the caller as an `ExportCaller`: `Admin` for a System administrator, `Service` for a service identity.
+_Avoid_: Service user, Machine user, Technical user, System user
+
+**Service token**:
+An Ed25519-signed JWT that a Service identity mints for itself with its own private key, naming the
+key in its `kid` header, its name in `iss` and `sub`, and this server in `aud`, at most 15 minutes
+long-lived. The server holds only the public keys; a service token is not a user's JWT and grants no
+**Scope**.
+_Avoid_: API key, Service account token
 
 **Project candidate**:
 An authenticated User who passed the endpoint's Policy but has not yet been checked against a specific
@@ -75,6 +93,8 @@ _Avoid_: Administrative permission
   created in a **Project**.
 - **Authentication** depends on **Identity & Access**: an authenticated request carries an effective
   identity and **Permission profile**.
+- A **Service token** authenticates a **Service identity**, never a **User**; only the
+  SystemAdminOrExportService **Policy** accepts it, and every other endpoint answers 401.
 - **Resources & Values** evaluates its **Object-access permissions** against a **Permission profile**
   using the shared **Permission policy**.
 - **Project Migration** and **Operations** read Users, Groups, and permissions through ports they
@@ -101,3 +121,5 @@ _Avoid_: Administrative permission
 - "Scope" was used interchangeably with permission. Resolved: **Scope** is an Authentication concept
   that gates endpoints, not an authorization decision.
 - "Account" was used for **User**. Resolved: use **User**.
+- "Service user" and "technical user" suggested that a machine client is a **User** with special
+  rights. Resolved: a **Service identity** is not a User; it has no account and passes no User Policy.

@@ -10,9 +10,9 @@ import sttp.tapir.Endpoint
 
 /**
  * The function-level authorization an endpoint declares, carried as the tapir attribute [[Policy.key]] (ADR-0013).
- * Every authenticated caller must be active: authentication refuses inactive users, and the factories for
+ * Every authenticated user must be active: authentication refuses inactive users, and the factories for
  * `Authenticated`, `SystemAdmin`, `SelfOrSystemAdmin`, `ProjectAdminOfAnyProject` and `ProjectAdmin` check it again. `ObjectAccess` admits anonymous callers unless
- * `admitsAnonymous` is false.
+ * `admitsAnonymous` is false. `SystemAdminOrExportService` is the only policy that admits a caller who is not a user.
  */
 enum Policy {
 
@@ -37,6 +37,12 @@ enum Policy {
   case ProjectAdminOfAnyProject
 
   /**
+   * SystemAdmin, or a trusted export service authenticated by its own token; a service is not a user. The service may
+   * only see the exports it created, which the handler enforces because the export is named in the path.
+   */
+  case SystemAdminOrExportService
+
+  /**
    * Per-object permissions, checked where the owning domain loads the object; `enforcedIn` names that place. A write
    * sets `admitsAnonymous` to false, so an anonymous caller is refused before the body is decoded.
    */
@@ -53,9 +59,11 @@ enum Policy {
       s"Requires SystemAdmin, ProjectAdmin or ProjectMember permissions for the project given by the $projectFrom."
     case SelfOrSystemAdmin(userFrom) =>
       s"Requires SystemAdmin permissions, or that the caller is the user given by the $userFrom."
-    case ProjectAdminOfAnyProject => "Requires SystemAdmin or ProjectAdmin permissions in any project."
-    case ObjectAccess(_, true)    => Policy.objectReadRequirement
-    case ObjectAccess(_, false)   => Policy.objectWriteRequirement
+    case ProjectAdminOfAnyProject   => "Requires SystemAdmin or ProjectAdmin permissions in any project."
+    case SystemAdminOrExportService =>
+      "Requires SystemAdmin permissions, or a trusted export service, which only sees the exports it created."
+    case ObjectAccess(_, true)  => Policy.objectReadRequirement
+    case ObjectAccess(_, false) => Policy.objectWriteRequirement
   }
 }
 

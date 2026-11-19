@@ -8,8 +8,10 @@ package org.knora.webapi.slice.api.v3.projects
 import sttp.capabilities.zio.ZioStreams
 import zio.*
 import zio.stream.ZStream
+import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.slice.`export`.domain.CurrentDataTask
 import org.knora.webapi.slice.`export`.domain.DataTaskId
 import org.knora.webapi.slice.`export`.domain.ExportExistsError
 import org.knora.webapi.slice.`export`.domain.ExportFailedError
@@ -20,8 +22,10 @@ import org.knora.webapi.slice.`export`.domain.ImportSlotBusyError
 import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
+import org.knora.webapi.slice.`export`.domain.TaskCreator
 import org.knora.webapi.slice.admin.domain.model.Email
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
@@ -45,6 +49,8 @@ import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_ineligible
 import org.knora.webapi.slice.api.v3.V3ErrorCode.on_behalf_of_user_not_found
 import org.knora.webapi.slice.api.v3.V3ErrorCode.project_ontologies_missing
 import org.knora.webapi.slice.api.v3.V3ErrorInfo
+import org.knora.webapi.slice.security.ExportCaller
+import org.knora.webapi.slice.security.ServicePrincipal
 
 final class V3ProjectsRestService(
   exportService: ProjectMigrationExportService,
@@ -52,10 +58,16 @@ final class V3ProjectsRestService(
   dataImportService: ProjectDataImportService,
   projectService: KnoraProjectService,
   userService: UserService,
+  tracing: Tracing,
 ) {
 
+  import V3ProjectsRestService.ExportCallFacts
+  import V3ProjectsRestService.ExportLookupError
   import V3ProjectsRestService.conflict
+  import V3ProjectsRestService.creatorOf
   import V3ProjectsRestService.importConflict
+  import V3ProjectsRestService.mayAccess
+  import V3ProjectsRestService.outcomeOf
 
   private def ensureProjectExists(projectIri: ProjectIri) =
     projectService.findById(projectIri).orDie.someOrFail(NotFound.from(projectIri))
@@ -67,52 +79,138 @@ final class V3ProjectsRestService(
       Map("id" -> id.value, "projectIri" -> prj.value),
     )
 
-  def triggerProjectExportCreate(
-    user: User,
-  )(projectIri: ProjectIri, skipAssets: Boolean): IO[V3ErrorInfo, DataTaskStatusResponse] =
-    for {
-      project <- ensureProjectExists(projectIri)
-      state   <-
-        exportService
-          .createExport(project, user, skipAssets)
-          .mapError { case ExportExistsError(t) => conflict(export_exists, t.projectIri, t.id) }
-    } yield DataTaskStatusResponse.from(state)
+  /**
+   * Runs one export handler. For a service caller it sets the service's span attributes and writes the call's single
+   * audit line from `onExit`, so a failed, crashed or interrupted call is recorded too; a download is recorded when
+   * its stream is handed over, not when the stream ends. A SystemAdmin call gets neither. The handler records in
+   * `facts` what it learns about the export, which is all the audit line knows beyond the call's arguments.
+   */
+  private def exportCall[A](
+    caller: ExportCaller,
+    action: ExportAction,
+    projectIri: ProjectIri,
+    exportId: Option[DataTaskId],
+  )(
+    handler: Ref[ExportCallFacts] => IO[V3ErrorInfo, A],
+  ): IO[V3ErrorInfo, A] =
+    Ref.make(ExportCallFacts()).flatMap { facts =>
+      caller match
+        case ExportCaller.Admin(_)           => handler(facts)
+        case ExportCaller.Service(principal) =>
+          serviceSpanAttributes(principal, action) *>
+            handler(facts).onExit(exit =>
+              facts.get.flatMap(f =>
+                ExportServiceAudit(
+                  principal,
+                  action,
+                  outcomeOf(exit, f),
+                  f.task.fold(projectIri)(_.projectIri),
+                  projectIri,
+                  f.task.map(_.id).orElse(exportId),
+                ).log,
+              ),
+            )
+    }
 
-  // The three handlers below — status, delete and download — resolve the export by id alone from the server-wide
+  // Only bounded values go on the span: ids, IRIs and the jti would become metric labels; they are in the audit line.
+  private def serviceSpanAttributes(principal: ServicePrincipal, action: ExportAction): UIO[Unit] =
+    tracing.setAttribute(ExportServiceAudit.ServiceNameKey, principal.name.value) *>
+      tracing.setAttribute(ExportServiceAudit.ServiceKidKey, principal.kid) *>
+      tracing.setAttribute(ExportServiceAudit.ActionKey, action.value).unit
+
+  private def serviceShortcode(caller: ExportCaller, shortcode: Shortcode): UIO[Unit] = caller match
+    case ExportCaller.Admin(_)   => ZIO.unit
+    case ExportCaller.Service(_) => tracing.setAttribute(ExportServiceAudit.ShortcodeKey, shortcode.value).unit
+
+  // Looks up the found export's project for its shortcode only; it never gates the call. A project that is gone, or
+  // a lookup that fails, leaves the attribute out.
+  private def serviceShortcodeOf(caller: ExportCaller, task: CurrentDataTask): UIO[Unit] = caller match
+    case ExportCaller.Admin(_)   => ZIO.unit
+    case ExportCaller.Service(_) =>
+      projectService
+        .findById(task.projectIri)
+        .orElseSucceed(None)
+        .flatMap(ZIO.foreachDiscard(_)(project => serviceShortcode(caller, project.shortcode)))
+
+  def triggerProjectExportCreate(
+    caller: ExportCaller,
+  )(projectIri: ProjectIri, skipAssets: Boolean): IO[V3ErrorInfo, DataTaskStatusResponse] =
+    exportCall(caller, ExportAction.Create, projectIri, None) { facts =>
+      for {
+        project <- ensureProjectExists(projectIri)
+        _       <- serviceShortcode(caller, project.shortcode)
+        state   <-
+          exportService
+            .createExport(project, creatorOf(caller), skipAssets)
+            .flatMapError { case ExportExistsError(t) =>
+              facts.update(_.found(t)).as(conflict(export_exists, t.projectIri, t.id))
+            }
+        _ <- facts.update(_.found(state))
+      } yield DataTaskStatusResponse.from(state)
+    }
+
+  // The three handlers below - status, delete and download - resolve the export by id alone from the server-wide
   // task slot. Their `projectIri` is unvalidated path input, echoed into the error payload and never checked
   // against the export, so it must stay unresolved here: re-adding an existence gate reproduces DEV-6766, where
   // an erased project's export becomes unreachable and wedges the one global slot for every project.
-  def getProjectExportStatus(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
-    for {
-      state <-
-        exportService.getExportStatus(exportId).orElseFail(notFound(export_not_found, projectIri, exportId))
-    } yield DataTaskStatusResponse.from(state)
+  // Each checks ownership in `findExport` before any state check or deletion, so a service cannot read, download
+  // or delete another caller's export, nor learn its state, not even that it is in progress.
+  private def findExport(
+    caller: ExportCaller,
+    exportId: DataTaskId,
+    facts: Ref[ExportCallFacts],
+  ): IO[ExportLookupError, CurrentDataTask] =
+    exportService
+      .getExportStatus(exportId)
+      .orElseFail(ExportLookupError.NotFound)
+      .tap(task => facts.update(_.found(task)))
+      .filterOrFail(mayAccess(caller, _))(ExportLookupError.NotOwner)
+      .tapError(refusal => facts.update(_.copy(refusal = Some(refusal))))
+      .tap(serviceShortcodeOf(caller, _))
 
-  // `projectIri` is unvalidated path input here — see getProjectExportStatus above.
-  def deleteProjectExport(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, Unit] = for {
-    _ <- exportService
-           .deleteExport(exportId)
-           .mapError {
-             case Some(ExportInProgressError(t)) => conflict(export_in_progress, t.projectIri, t.id)
-             case None                           => notFound(export_not_found, projectIri, exportId)
-           }
-  } yield ()
+  // A refused owner and an unknown id get the same answer.
+  private def exportNotFound(projectIri: ProjectIri, exportId: DataTaskId)(e: ExportLookupError): NotFound = e match
+    case ExportLookupError.NotFound | ExportLookupError.NotOwner => notFound(export_not_found, projectIri, exportId)
+
+  def getProjectExportStatus(
+    caller: ExportCaller,
+  )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, DataTaskStatusResponse] =
+    exportCall(caller, ExportAction.Status, projectIri, Some(exportId)) { facts =>
+      findExport(caller, exportId, facts).mapBoth(exportNotFound(projectIri, exportId), DataTaskStatusResponse.from)
+    }
+
+  // `projectIri` is unvalidated path input here - see findExport above. The `None` below is not dead: the slot can
+  // change between `findExport` and the deletion, and the deletion then finds no export with this id.
+  def deleteProjectExport(caller: ExportCaller)(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, Unit] =
+    exportCall(caller, ExportAction.Delete, projectIri, Some(exportId)) { facts =>
+      for {
+        _ <- findExport(caller, exportId, facts).mapError(exportNotFound(projectIri, exportId))
+        _ <- exportService
+               .deleteExport(exportId)
+               .mapError {
+                 case Some(ExportInProgressError(t)) => conflict(export_in_progress, t.projectIri, t.id)
+                 case None                           => notFound(export_not_found, projectIri, exportId)
+               }
+      } yield ()
+    }
 
   // Download the export as a zip stream. Annotated to match the tapir endpoint (stream + media type + filename).
-  // `projectIri` is unvalidated path input here — see getProjectExportStatus above.
+  // `projectIri` is unvalidated path input here - see findExport above.
   def downloadProjectExport(
-    projectIri: ProjectIri,
-    exportId: DataTaskId,
-  ): IO[V3ErrorInfo, (String, ZioStreams.BinaryStream)] =
-    for {
-      filenameAndStream <- exportService.downloadExport(exportId).mapError {
-                             case Some(ExportInProgressError(t)) => conflict(export_in_progress, t.projectIri, t.id)
-                             case Some(ExportFailedError(t))     => conflict(export_failed, t.projectIri, t.id)
-                             case None                           => notFound(export_not_found, projectIri, exportId)
-                           }
-      (filename, stream)            = filenameAndStream
-      contentDispositionHeaderValue = s"""attachment; filename="$filename""""
-    } yield (contentDispositionHeaderValue, stream)
+    caller: ExportCaller,
+  )(projectIri: ProjectIri, exportId: DataTaskId): IO[V3ErrorInfo, (String, ZioStreams.BinaryStream)] =
+    exportCall(caller, ExportAction.Download, projectIri, Some(exportId)) { facts =>
+      for {
+        _                 <- findExport(caller, exportId, facts).mapError(exportNotFound(projectIri, exportId))
+        filenameAndStream <- exportService.downloadExport(exportId).mapError {
+                               case Some(ExportInProgressError(t)) => conflict(export_in_progress, t.projectIri, t.id)
+                               case Some(ExportFailedError(t))     => conflict(export_failed, t.projectIri, t.id)
+                               case None                           => notFound(export_not_found, projectIri, exportId)
+                             }
+        (filename, stream)            = filenameAndStream
+        contentDispositionHeaderValue = s"""attachment; filename="$filename""""
+      } yield (contentDispositionHeaderValue, stream)
+    }
 
   private val failImportFeatureMissing: IO[V3ErrorInfo, Unit] = ZIO
     .fail(NotFound.featureMissing("allowImportMigrationBagit"))
@@ -285,6 +383,44 @@ final class V3ProjectsRestService(
 
 object V3ProjectsRestService {
   val layer = ZLayer.derive[V3ProjectsRestService]
+
+  /** Why an export lookup failed. Both are answered with the same 404; only the server tells them apart. */
+  private[projects] enum ExportLookupError {
+    case NotFound
+    case NotOwner
+  }
+
+  /** What one export call learned about the export it acted on or collided with, for its audit line. */
+  private[projects] final case class ExportCallFacts(
+    task: Option[CurrentDataTask] = None,
+    refusal: Option[ExportLookupError] = None,
+  ) {
+    def found(t: CurrentDataTask): ExportCallFacts = copy(task = Some(t))
+  }
+
+  /** The outcome is taken from the lookup's refusal, if any, before it became the shared 404. */
+  private[projects] def outcomeOf(exit: Exit[V3ErrorInfo, Any], facts: ExportCallFacts): ExportOutcome =
+    exit match
+      case Exit.Success(_)     => ExportOutcome.Ok
+      case Exit.Failure(cause) =>
+        (facts.refusal, cause.failureOption) match
+          case (Some(ExportLookupError.NotOwner), _) => ExportOutcome.NotOwner
+          case (Some(ExportLookupError.NotFound), _) => ExportOutcome.NotFound
+          case (None, Some(_: NotFound))             => ExportOutcome.NotFound
+          case (None, Some(_: Conflict))             => ExportOutcome.Conflict
+          case (None, _)                             => ExportOutcome.Error
+
+  private[projects] def creatorOf(caller: ExportCaller): TaskCreator = caller match
+    case ExportCaller.Admin(user)        => TaskCreator.ByUser(user.userIri)
+    case ExportCaller.Service(principal) => TaskCreator.ByService(principal.name)
+
+  /**
+   * A SystemAdmin may access every export, a service only those it created. Ownership is keyed on the service name, so
+   * an export stays its service's across a key rotation.
+   */
+  private[projects] def mayAccess(caller: ExportCaller, task: CurrentDataTask): Boolean = caller match
+    case ExportCaller.Admin(_)   => true
+    case ExportCaller.Service(_) => task.createdBy == creatorOf(caller)
 
   private[projects] def conflict(code: Conflicts, prj: ProjectIri, id: DataTaskId): Conflict =
     Conflict(

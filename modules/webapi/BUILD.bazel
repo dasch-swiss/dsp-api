@@ -147,6 +147,7 @@ scala_junit_test(
     deps = [
         ":webapi",
         ":export_spec_fixtures",  # ExportServiceSpec .ttl at the webapi/src/test/resources/... key
+        "//modules/jwt:testkit",
         "//modules/test-runner",
         "//test_data:fixtures",  # RDF fixtures on the classpath (see test_data/BUILD.bazel)
         "@maven//:dev_zio_zio_3",
