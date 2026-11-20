@@ -242,7 +242,8 @@ oci_image(
     name = "image_amd64",
     base = "@temurin_base_amd64",
     entrypoint = ["java", "-cp", "/opt/docker/lib/*", "org.knora.webapi.Main"],
-    env = OTEL_DISABLE_ENV,
+    # Matches @temurin_jre_patch_amd64 (see MODULE.bazel); drop with that layer.
+    env = OTEL_DISABLE_ENV | {"JAVA_VERSION": "jdk-25.0.5.1+2"},
     exposed_ports = [
         "3333",
         "3339",
@@ -254,6 +255,7 @@ oci_image(
         ":scripts_layer",
         ":otel_layer",
         ":curl_jq_layer_amd64",
+        "@temurin_jre_patch_amd64//:layer",
     ],
     # WORKDIR: ResetTriplestoreContent resolves test-data files relative to the CWD (../test_data ->
     # the /opt/test_data bind-mount); rules_oci sets none, so without it the container runs from /

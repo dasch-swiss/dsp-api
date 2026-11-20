@@ -319,15 +319,15 @@ use_repo(
 # arches together, re-resolving each (swap amd64 for arm64):
 #   crane manifest eclipse-temurin:25-jre-noble | jq -r \
 #     '.manifests[] | select(.platform.os=="linux" and .platform.architecture=="amd64") | .digest'
-# Index digest: sha256:b4c93a50fc67612798db73d68ca3b0ee4ebdd51736e59cca370e689b9797037e
+# Index digest: sha256:23481dc33a759b79d62814ceb1ec27a0d1a84da9d7aab0609577427176fbb1b7
 oci.pull(
     name = "temurin_base_amd64",
-    digest = "sha256:8c6736fa623090b057a5bbd36d42f90c9de4c7d2d4b6c285921a4f85ce65a445",
+    digest = "sha256:fe63eaaca16c181bfff30295b02f093225a631f9cf86f617f7887e9fa768a970",
     image = "index.docker.io/library/eclipse-temurin",
 )
 oci.pull(
     name = "temurin_base_arm64",
-    digest = "sha256:6c3e50fade4ae5257eed863323b1efe19162a913446cd3dd166747eac8f76298",
+    digest = "sha256:24acdf622ab7d2299809f130733980e1e74096f88456f5296c98a71153c3ed2b",
     image = "index.docker.io/library/eclipse-temurin",
 )
 use_repo(
@@ -403,6 +403,39 @@ http_file(
     executable = True,
     sha256 = "8b85c817833814ddca00a144c33705546355afccf0cf39b188f3cdb48b852309",
     urls = ["https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-linux-arm64"],
+)
+
+#############################################
+# Temurin JRE patch layer (amd64)
+#############################################
+
+# Java4Shell (CVE-2026-114938) is fixed in 25.0.5.1, which Adoptium ships as a tarball before
+# Docker Hub publishes an eclipse-temurin image for it; arm64 is unaffected and has no 25.0.5.1
+# build. This layer replaces the amd64 base's /opt/java/openjdk: the opaque whiteout hides the
+# base's JRE files. Drop it (and the JAVA_VERSION env overrides in modules/webapi and
+# modules/fuseki) once the temurin_base digests above ship 25.0.5.1 or later.
+http_archive(
+    name = "temurin_jre_patch_amd64",
+    build_file_content = "\n".join([
+        'load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")',
+        'load("@rules_pkg//pkg:tar.bzl", "pkg_tar")',
+        "pkg_files(",
+        '    name = "jre",',
+        '    srcs = glob(["**"], exclude = ["BUILD.bazel", "REPO.bazel"]),',
+        '    attributes = pkg_attributes(mode = "0755"),',
+        "    strip_prefix = strip_prefix.from_pkg(),",
+        ")",
+        "pkg_tar(",
+        '    name = "layer",',
+        '    srcs = [":jre"],',
+        '    empty_files = [".wh..wh..opq"],',
+        '    package_dir = "/opt/java/openjdk",',
+        '    visibility = ["//visibility:public"],',
+        ")",
+    ]),
+    sha256 = "2edef9e4f81ec5ee426d023336d4cfbd7b4644e99884e7a73a6a867b70b17acf",
+    strip_prefix = "jdk-25.0.5.1+2-jre",
+    urls = ["https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jre_x64_linux_hotspot_25.0.5.1_2.tar.gz"],
 )
 
 #############################################

@@ -153,6 +153,8 @@ oci_image(
         # service_version, the same channel sipi's version panel reads.
         # Single-sourced from FUSEKI_DIST_VERSION (MODULE.bazel).
         "OTEL_RESOURCE_ATTRIBUTES": "service.version=" + FUSEKI_DIST_VERSION,
+        # Matches @temurin_jre_patch_amd64 (see MODULE.bazel); drop with that layer.
+        "JAVA_VERSION": "jdk-25.0.5.1+2",
     },
     exposed_ports = ["3030"],
     labels = ":image_labels",
@@ -164,6 +166,7 @@ oci_image(
         ":scripts_layer",
         ":tini_curl_layer_amd64",
         ":otel_layer",
+        "@temurin_jre_patch_amd64//:layer",
     ],
 )
 
