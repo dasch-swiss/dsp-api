@@ -35,6 +35,10 @@
             "@value": "IIIF_BASE_URL/0001",
             "@type": "xsd:anyURI"
         },
+        "knora-api:stillImageFileValueHasIIIFImageService": {
+            "@value": "IIIF_BASE_URL/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2",
+            "@type": "xsd:anyURI"
+        },
         "@id": "http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q"
     },
     "knora-api:versionArkUrl": {

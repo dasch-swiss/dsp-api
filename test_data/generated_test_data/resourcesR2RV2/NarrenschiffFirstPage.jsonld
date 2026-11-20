@@ -168,6 +168,10 @@
             "@value": "IIIF_BASE_URL/0803",
             "@type": "xsd:anyURI"
         },
+        "knora-api:stillImageFileValueHasIIIFImageService": {
+            "@value": "IIIF_BASE_URL/0803/incunabula_0000004159.jp2",
+            "@type": "xsd:anyURI"
+        },
         "@id": "http://rdfh.ch/0803/7bbb8e59b703/values/22bc3f713f07",
         "knora-api:fileValueAsUrl": {
             "@value": "IIIF_BASE_URL/0803/incunabula_0000004159.jp2/full/max/0/default.jpg",

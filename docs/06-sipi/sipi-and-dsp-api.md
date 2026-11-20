@@ -29,9 +29,26 @@ DSP. The implementation of this procedure is described in
 
 In DSP-API v2, image file URLs are provided in [IIIF](https://iiif.io/) format. In the simple
 [ontology schema](../03-endpoints/api-v2/introduction.md#api-schema), a file value is simply
-a IIIF URL that can be used to retrieve the file from Sipi. In the complex schema,
-it is a `StillImageFileValue` with additional properties that the client can use to construct
-different IIIF URLs, e.g. at different resolutions. See the `knora-api` ontology for details.
+a IIIF URL that can be used to retrieve the file from Sipi.
+
+In the complex schema, a `StillImageFileValue` carries
+`knora-api:stillImageFileValueHasIIIFImageService`: the id of the IIIF Image API service
+that serves the image. Append `/info.json` to read the sizes, tiles and formats the service
+offers to the requesting user, and build IIIF image requests from that id.
+The id is built from `sipi.externalBaseUrl`. It matches the `id` in Sipi's `info.json` only
+if the reverse proxy in front of Sipi forwards the public host and scheme
+(`X-Forwarded-Host` or `Host`, and `X-Forwarded-Proto`).
+Knowing the id does not grant access to the image; access is checked on every request.
+Placeholder file values, which have no stored image, carry no image service.
+
+`knora-api:stillImageFileValueHasDimX` and `knora-api:stillImageFileValueHasDimY` are the
+native size of the stored file, not the size served to a user, which may be smaller.
+Take the sizes and region coordinates to request from `info.json`.
+
+A `StillImageExternalFileValue` points at an image served by an external IIIF server.
+It has no `stillImageFileValueHasIIIFImageService`: `knora-api:stillImageFileValueHasExternalUrl`
+gives the image URL and `knora-api:stillImageFileValueHasIIIFBaseUrl` the server's base URL.
+See the `knora-api` ontology for details.
 
 ## Authentication of Users with Sipi
 
