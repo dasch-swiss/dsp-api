@@ -1,5 +1,42 @@
 # Changelog
 
+## [41.0.0](https://github.com/dasch-swiss/dsp-api/compare/v40.7.0...v41.0.0) (2026-11-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* **ingest:** the dsp-ingest image and service are gone. Ingest is served by dsp-api under /ingest/ and configured with INGEST_* variables; KNORA_WEBAPI_DSP_INGEST_BASE_URL, _EXTERNAL_BASE_URL and _ASSET_DIR are removed.
+
+### Maintenances
+
+* **api:** Enforce the one-way dependency on slice/api (DEV-7643) ([7e8858d](https://github.com/dasch-swiss/dsp-api/commit/7e8858de0970b71d1ac563763a2e26508a5bc245))
+* **ci:** Add eng.yaml (DEV-7643) ([faddfd3](https://github.com/dasch-swiss/dsp-api/commit/faddfd3b0c730f84d8cc4b17d569b5ed868991a6))
+
+
+### Documentation
+
+* **docs:** Add a security policy and .env.example, fix agent docs (DEV-7643) ([7b38b10](https://github.com/dasch-swiss/dsp-api/commit/7b38b105b2a91e650d34c5088ca419fa59584897))
+* **docs:** Align the convention docs with each other and the code ([65d173f](https://github.com/dasch-swiss/dsp-api/commit/65d173f414e50e3d451a4ce88cc81ff1ca453c45))
+* **docs:** Rename the conventions doc and fix references to renamed docs ([52dee11](https://github.com/dasch-swiss/dsp-api/commit/52dee11d8fb679ee2d1b56ea6326f98ab86366b5))
+* **docs:** Triage the agent-readiness baseline gaps (DEV-7643) ([1a3d210](https://github.com/dasch-swiss/dsp-api/commit/1a3d210906e9b588cd5ed89ad47b0f650f394041))
+* **observability:** Link the Gravsearch dashboard from the trace runbook (DEV-6673) ([689bb22](https://github.com/dasch-swiss/dsp-api/commit/689bb226e2779a9f1cfd673a79904fdfc771e38a))
+* **search:** Mark the ResourceSearch port split as a target (DEV-7643) ([8d6c38f](https://github.com/dasch-swiss/dsp-api/commit/8d6c38f5642b8ee1a4b73658ce64d70165437ff6))
+
+
+### Enhancements
+
+* **export:** Let a trusted service export projects without a user account (DEV-7936) ([8010435](https://github.com/dasch-swiss/dsp-api/commit/801043531b83de189fc443a6bf5a58a5725ef099))
+* **export:** Validate bulk imports against the project ontology (DEV-7290) ([b32eca1](https://github.com/dasch-swiss/dsp-api/commit/b32eca1ed48b114a66f38b2ffb6903e618241477))
+* **ingest:** Serve ingest from dsp-api under /ingest/ ([d958ce0](https://github.com/dasch-swiss/dsp-api/commit/d958ce0825c14240a87b80eda0ba6e0df6a1725b))
+* **standoff:** Serve the stored XML of formatted text values (DEV-7810) ([58879fb](https://github.com/dasch-swiss/dsp-api/commit/58879fba982e8274eaf91843e9a5b296d13fc189))
+
+
+### Bug Fixes
+
+* **app,fuseki:** Run the amd64 images on Temurin 25.0.5.1 to fix Java4Shell (DEV-7966) ([76fb25b](https://github.com/dasch-swiss/dsp-api/commit/76fb25bb33169b647c67b1af960ef638eaec18f7))
+* **deps:** Bump vulnerable Maven dependencies flagged by Dependabot ([8270884](https://github.com/dasch-swiss/dsp-api/commit/827088497cfb6355ff320d8a88b6604abb9371f1))
+* **resources:** Reject a link that already exists with 400 instead of 500 (DEV-7755) ([7de9cc1](https://github.com/dasch-swiss/dsp-api/commit/7de9cc1afffaba59a206f871164d40d660610955))
+
 ## [40.7.0](https://github.com/dasch-swiss/dsp-api/compare/v40.6.1...v40.7.0) (2026-11-16)
 
 
