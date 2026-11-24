@@ -1089,7 +1089,7 @@ final class ValuesResponderV2(
                  valueRepo.eraseValue(project)(deletableIri)
              }
       } yield ()
-    }.as(SuccessResponseV2(s"Value <$req.propertyIri}> deleted"))
+    }.as(SuccessResponseV2(s"Value <${req.propertyIri}> deleted"))
 
   def eraseValueHistory(
     req: EraseValueHistoryV2,
