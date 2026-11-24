@@ -35,7 +35,11 @@ final case class ExportEndpoints(baseEndpoints: V3BaseEndpoint) extends Endpoint
     )
     .post
     .in(ApiV3.basePath / "export" / "resources")
-    .description(s"Export resources to CSV format. Publicly accessible. ${Policy.objectReadRequirement}")
+    .description(
+      s"Export resources to CSV format. Exports the whole `resourceClass`, or only the resources in `resourceIris` " +
+        s"(at most ${ExportRequest.MaxResourceIris}, all of `resourceClass`, else 400). " +
+        s"Publicly accessible. ${Policy.objectReadRequirement}",
+    )
     .in(
       jsonBody[ExportRequest].example(
         ExportRequest(

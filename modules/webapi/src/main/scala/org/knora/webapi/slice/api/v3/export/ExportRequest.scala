@@ -16,8 +16,12 @@ final case class ExportRequest(
   language: LanguageCode = LanguageCode.EN,
   includeIris: Boolean = false,
   includeArkUrls: Boolean = false,
+  // Exports only these resources when set; all must be resources of `resourceClass`. Unset exports the whole class.
+  resourceIris: Option[List[String]] = None,
 )
 
 object ExportRequest {
+  val MaxResourceIris: Int = 10_000
+
   implicit val codec: JsonCodec[ExportRequest] = DeriveJsonCodec.gen[ExportRequest]
 }

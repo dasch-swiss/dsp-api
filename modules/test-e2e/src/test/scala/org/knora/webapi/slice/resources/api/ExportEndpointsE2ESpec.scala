@@ -64,6 +64,33 @@ class ExportEndpointsE2ESpec extends E2EZSpec with GoldenTest {
             assertTrue(transferEncoding.exists(_.toLowerCase.contains("chunked")) || contentLength.isEmpty)
           }
       },
+      test("with resourceIris, only those resources") {
+        TestExportApiClient
+          .postExportResources(
+            request.copy(resourceIris = Some(List("http://rdfh.ch/0803/c5058f3a"))),
+            anythingAdminUser,
+          )
+          .flatMap(_.assert200)
+          .map(csv => assertTrue(csv.trim.split("\r\n").length == 2)) // header + one book
+      },
+    ),
+    suite("postExportResources should reject resourceIris with 400")(
+      test("when one is not a resource of the class") {
+        TestExportApiClient
+          .postExportResources(
+            request.copy(resourceIris = Some(List("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/4f11adaf"))),
+            anythingAdminUser,
+          )
+          .flatMap(_.assert400V3)
+          .map(err => assertTrue(err.message.contains("http://rdfh.ch/0803/4f11adaf")))
+      },
+      test("when there are more than the maximum") {
+        val tooMany = List.tabulate(ExportRequest.MaxResourceIris + 1)(i => s"http://rdfh.ch/0803/r$i")
+        TestExportApiClient
+          .postExportResources(request.copy(resourceIris = Some(tooMany)), anythingAdminUser)
+          .flatMap(_.assert400V3)
+          .map(err => assertTrue(err.message.contains(s"At most ${ExportRequest.MaxResourceIris}")))
+      },
     ),
   )
 }
