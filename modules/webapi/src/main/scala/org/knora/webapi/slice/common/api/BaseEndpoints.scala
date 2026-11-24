@@ -296,6 +296,23 @@ final case class BaseEndpoints(authenticator: Authenticator, authorization: Auth
       _.method(_),
     )
 
+  /**
+   * Declares [[Policy.ObjectAccess]] for a route that changes data, with a bearer JWT: the security logic refuses
+   * anonymous callers, the owning domain checks each object.
+   */
+  def bearerAuthenticatedObjectAccessPolicyEndpoint[E](
+    base: PublicEndpoint[Unit, E, Unit, Any],
+    enforcedIn: String,
+    authenticate: String => IO[E, User],
+    forbidden: ForbiddenException => E,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, User, Unit, E, Unit, Any]] =
+    bearerAuthorizingEndpoint(
+      base,
+      Policy.ObjectAccess(enforcedIn, admitsAnonymous = false),
+      authenticate,
+      user => authorization.ensureUserIsNotAnonymous(user).as(user).mapError(forbidden),
+    )
+
   private def bearerAuthorizingEndpoint[E, P](
     base: PublicEndpoint[Unit, E, Unit, Any],
     policy: Policy,

@@ -114,7 +114,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     `ApiV2ServerEndpoints`, `ApiV3Module`, `ApiV3ServerEndpoints`, `ManagementServerEndpoints`,
     `OntologyApiModule`, `V3BaseEndpoint`, `V3ErrorInfo`, `V3ErrorCode`, `V3Authorizer`, `PageAndSize`,
     `PagedResponse`, `AdminPathVariables`, `SparqlPassthroughEndpoints`, `SparqlPassthroughAudit`, `ExportServiceAudit`, `Codecs`,
-    `StoredXmlServing`, `FairApiModule` (webapi-fair)
+    `StoredXmlServing`, `BatchChangesRestService` (v3 bulk-edit batch route), `FairApiModule` (webapi-fair)
 - **Public interface**: `ApiModule.layer`; `Endpoints.serverEndpoints`; the four `*RestService`s re-exported
     by `AdminApiModule.Provided` (`GroupRestService`, `PermissionRestService`, `ProjectRestService`,
     `UserRestService`, exposed for the integration tests); `SparqlPassthroughEndpoints.isPassthroughRoute` /
@@ -811,8 +811,10 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     `SparqlTemplateLinkUpdate`, `IiifImageRequestUrl`, `ValueHasXmlBackfillService`, `ValueHasXmlBackfillRepo`,
     `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`, `StandoffLinkRefCountQuery`,
     `StandoffLinkRefCountRepo`, `StandoffLinkRefCountRepoLive`, `StandoffLinkRefCountMismatch`, `StandoffLinkRefCountService`,
-    `GetResourceInfoQuery`, `ResourceMetadataRules`, `FairResourcesLive`
-- **Public interface**: `ReadResourcesService` (10 external importers), `ResourcesRepo`, `ValueRepo`,
+    `GetResourceInfoQuery`, `ResourceMetadataRules`, `FairResourcesLive`, `BatchEditService`, `BatchEdit`,
+    `BatchEditOutcome`
+- **Public interface**: `ReadResourcesService` (10 external importers), `BatchEditService` (the v3 batch
+    route's domain service; its layer is wired in `ApiV3Module`, since `ResourcesModule` provides no responders), `ResourcesRepo`, `ValueRepo`,
     `MetadataService`, `ResourceInfoRepo`, `ValueContentValidator`, `ResourcesResponderV2`,
     `ValuesResponderV2`, `ResourceUtilV2`, `CreateResourceV2Handler`, the `ReadResourceV2` /
     `ReadResourcesSequenceV2` / `ValueContentV2` / `CreateResourceRequestV2` message model,

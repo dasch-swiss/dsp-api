@@ -116,6 +116,18 @@ final case class V3BaseEndpoint(
   ): RequiresMethod[ZPartialServerEndpoint[Any, Option[String], User, Unit, V3ErrorInfo, Unit, Any]] =
     policies.bearerObjectAccessPolicyEndpoint(withAuthErrors(errorOut), enforcedIn, handleBearerJwt)
 
+  /** Declares ObjectAccess for a write; anonymous callers are refused, the handler checks each object. */
+  def authenticatedObjectAccessPolicy(
+    errorOut: ErrorOut,
+    enforcedIn: String,
+  ): RequiresMethod[ZPartialServerEndpoint[Any, String, User, Unit, V3ErrorInfo, Unit, Any]] =
+    policies.bearerAuthenticatedObjectAccessPolicyEndpoint(
+      withAuthErrors(errorOut),
+      enforcedIn,
+      handleBearerJwt,
+      forbidden,
+    )
+
   /** Declares ProjectAdmin; the handler must obtain a grant from [[V3Authorizer.authorizeProjectAdminById]]. */
   def projectAdminPolicy(
     errorOut: ErrorOut,
