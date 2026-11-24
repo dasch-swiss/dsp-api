@@ -189,6 +189,9 @@ final case class ExportService(
     language: LanguageCode,
     includeIris: Boolean,
     includeArkUrls: Boolean,
+    // When set, only these resources are exported, in the same label order as a whole-class export. Fails with
+    // `ResourcesNotInClass` if any of them is not a (non-deleted) resource of `classIri`.
+    resourceIris: Option[Set[ResourceIri]] = None,
     // batchSize/parallelism default to the operational values from AppConfig (`app.export`), overridable per
     // deployment via env var. The explicit params exist only so tests can force resources across batch boundaries.
     batchSize: Int = appConfig.`export`.batchSize,
@@ -216,7 +219,12 @@ final case class ExportService(
     val setup: Task[StreamingExportContext] =
       for {
         orderedWithLabels <- findResources.findResourceIrisOrderedByLabel(project, classIri)
-        orderedIris        = orderedWithLabels.map(_._1)
+        classIris          = orderedWithLabels.map(_._1)
+        orderedIris       <- resourceIris.fold(ZIO.succeed(classIris)) { requested =>
+                         val notInClass = requested -- classIris
+                         if notInClass.nonEmpty then ZIO.fail(ExportService.ResourcesNotInClass(classIri, notInClass))
+                         else ZIO.succeed(classIris.filter(requested.contains))
+                       }
         // The ordered query already carries each resource's label, so the cross-batch link-label map is built
         // from it directly — no second SPARQL round-trip. Link targets outside the exported class are absent
         // here and fall back to "" in valueColumns, same as before.
@@ -455,6 +463,11 @@ final case class ExportService(
 
 object ExportService {
   val layer = ZLayer.derive[ExportService]
+
+  final case class ResourcesNotInClass(classIri: ResourceClassIri, iris: Set[ResourceIri])
+      extends Exception(
+        s"These resources are not resources of class ${classIri.toComplexSchema}: ${iris.map(_.value).toList.sorted.mkString(", ")}",
+      )
 
   object Internals {
     val ValueSep = " :: "

@@ -13,6 +13,7 @@ import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v3.*
 import org.knora.webapi.slice.api.v3.NotFound
 import org.knora.webapi.slice.api.v3.export_.ExportService
+import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 
@@ -31,6 +32,7 @@ final class ExportRestService(
       resourceClassIri <- iriConverter.asResourceClassIri(request.resourceClass).mapError(BadRequest(_))
       shortcode        <- ZIO.fromEither(resourceClassIri.smartIri.getProjectShortcode).mapError(BadRequest(_))
       properties       <- ZIO.foreach(request.selectedProperties)(iriConverter.asPropertyIri).mapError(BadRequest(_))
+      resourceIris     <- ZIO.foreach(request.resourceIris)(parseResourceIris)
 
       project    <- projectService.findByShortcode(shortcode).orDie.someOrFail(NotFound(resourceClassIri))
       ontologyIri = resourceClassIri.ontologyIri
@@ -46,11 +48,22 @@ final class ExportRestService(
                     request.language,
                     request.includeIris,
                     request.includeArkUrls,
+                    resourceIris,
                   )
-                  .orDie
+                  .refineOrDie { case e: ExportService.ResourcesNotInClass => BadRequest(e.getMessage) }
       contentDisposition =
         s"""attachment; filename="project_${shortcode.value}_resources_${resourceClassIri.name}_${now}.csv""""
     } yield (contentDisposition, stream)
+
+  private def parseResourceIris(iris: List[String]): IO[BadRequest, Set[ResourceIri]] =
+    if iris.size > ExportRequest.MaxResourceIris then
+      ZIO.fail(
+        BadRequest(
+          s"At most ${ExportRequest.MaxResourceIris} resourceIris can be exported at once, got ${iris.size}. " +
+            "Export the whole class instead.",
+        ),
+      )
+    else ZIO.foreach(iris)(iri => ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequest(_))).map(_.toSet)
 
   def exportResourcesOai(
     user: User,

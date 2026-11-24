@@ -490,6 +490,55 @@ class ExportServiceSpec extends ZIOSpecDefault with GoldenTest {
           mikeIris == List("http://rdfh.ch/1612/ordering-Mike-1", "http://rdfh.ch/1612/ordering-Mike-2"),
         )
       },
+      test("with resourceIris, only those resources are exported, in label order") {
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          bytes         <-
+            exportService
+              .exportResources(
+                project,
+                orderingTestClassIri,
+                List.empty,
+                user,
+                LanguageCode.EN,
+                includeIris = false,
+                includeArkUrls = false,
+                resourceIris = Some(
+                  Set("ordering-Echo", "ordering-Bravo")
+                    .map(id => ResourceIri.unsafeFrom(s"http://rdfh.ch/1612/$id")),
+                ),
+              )
+              .flatMap(_.runCollect)
+          csv    = new String(bytes.toArray, StandardCharsets.UTF_8)
+          labels = csv.trim.split("\r\n").toList.tail.map(_.split(",")(1))
+        } yield assertTrue(labels == List("Bravo", "Echo"))
+      },
+      test("with resourceIris, a resource outside the class fails the export") {
+        val outsider = ResourceIri.unsafeFrom("http://rdfh.ch/1612/SubClass1Resource00001")
+        for {
+          _             <- ZIO.serviceWithZIO[TriplestoreService](_.insertDataIntoTriplestore(dataSets.toList, false))
+          _             <- ZIO.serviceWithZIO[OntologyCache](_.refreshCache())
+          project       <- ZIO.serviceWithZIO[KnoraProjectService](_.findById(projectIri)).map(_.get)
+          exportService <- ZIO.service[ExportService]
+          exit          <- exportService
+                    .exportResources(
+                      project,
+                      orderingTestClassIri,
+                      List.empty,
+                      user,
+                      LanguageCode.EN,
+                      includeIris = false,
+                      includeArkUrls = false,
+                      resourceIris = Some(Set(ResourceIri.unsafeFrom("http://rdfh.ch/1612/ordering-Alpha"), outsider)),
+                    )
+                    .exit
+        } yield assertTrue(
+          exit == Exit.fail(ExportService.ResourcesNotInClass(orderingTestClassIri, Set(outsider))),
+        )
+      },
       test("deleted values are excluded from the export") {
         // DEV-7008: Resource1 carries a deleted link value (target Resource0, still alive) and a deleted text
         // value alongside its live ones. The export read collapses deleted values the way /v2/resources does,
