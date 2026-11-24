@@ -8,10 +8,15 @@ package org.knora.webapi.slice.api.v3.resources
 import sttp.tapir.ztapir.*
 import zio.*
 
-class ResourcesServerEndpointsV3(endpoints: ResourcesEndpointsV3, restService: ResourcesRestServiceV3) {
+class ResourcesServerEndpointsV3(
+  endpoints: ResourcesEndpointsV3,
+  restService: ResourcesRestServiceV3,
+  batchChanges: BatchChangesRestService,
+) {
 
   val serverEndpoints: List[ZServerEndpoint[Any, Any]] = List(
     endpoints.getResourcesResourcesPerOntology.zServerLogic(restService.resourcesPerOntology),
+    endpoints.postValuesBatch.serverLogic(batchChanges.applyBatch),
   )
 }
 

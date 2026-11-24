@@ -10,3 +10,4 @@ modules/webapi/src/main/scala/org/knora/webapi/slice/api/v2/values/ValuesRestSer
 modules/webapi/src/main/scala/org/knora/webapi/slice/ontology/OntologyTransformer.scala  # SystemUser as owner of standoff link values
 modules/webapi/src/main/scala/org/knora/webapi/slice/resources/service/ReadResourcesServiceLive.scala  # elevated read of region and image resources
 modules/webapi/src/main/scala/org/knora/webapi/slice/resources/service/ValueHasXmlRenderer.scala  # standoff tags built as SystemUser
+modules/webapi/src/main/scala/org/knora/webapi/slice/resources/service/BatchEditService.scala  # prefetch for the batch edit; the caller's permission is checked before any conflict or write

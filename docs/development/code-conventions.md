@@ -192,8 +192,9 @@ Every new endpoint declares its function-level authorization with a policy-decla
 | `authenticatedObjectAccessPolicyEndpoint(enforcedIn)` | `ObjectAccess` for a route that changes data: anonymous and inactive users refused | `User` |
 
 The v3 API, which has its own error type and takes only a bearer JWT, uses the bearer counterparts
-`bearerSystemAdminPolicyEndpoint`, `bearerProjectAdminPolicyEndpoint` and `bearerObjectAccessPolicyEndpoint` through
-`V3BaseEndpoint` (`systemAdminPolicy`, `projectAdminPolicy`, `objectAccessPolicy`; `publicPolicy` for `Public`).
+`bearerSystemAdminPolicyEndpoint`, `bearerProjectAdminPolicyEndpoint`, `bearerObjectAccessPolicyEndpoint` and
+`bearerAuthenticatedObjectAccessPolicyEndpoint` through `V3BaseEndpoint` (`systemAdminPolicy`, `projectAdminPolicy`,
+`objectAccessPolicy`, `authenticatedObjectAccessPolicy` for a write; `publicPolicy` for `Public`).
 
 `bearerSystemAdminOrServicePolicyEndpoint` declares `SystemAdminOrExportService` and hands the handler an
 `ExportCaller`: a SystemAdmin (`Admin(user)`) or a trusted export service (`Service(principal)`), which is not a user

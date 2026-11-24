@@ -180,6 +180,12 @@ class V3BaseEndpointSpec extends ZIOSpecDefault {
             .contains(Policy.ObjectAccess("the domain", admitsAnonymous = true)),
         )
       },
+      test("ObjectAccess for a write") {
+        assertTrue(
+          policyOf(base.authenticatedObjectAccessPolicy(errorOut, "the domain"))
+            .contains(Policy.ObjectAccess("the domain", admitsAnonymous = false)),
+        )
+      },
       test("SystemAdminOrExportService") {
         assertTrue(
           policyOf(base.systemAdminOrExportServicePolicy(errorOut)).contains(Policy.SystemAdminOrExportService),
@@ -294,6 +300,21 @@ class V3BaseEndpointSpec extends ZIOSpecDefault {
       },
       test("admits an authenticated user") {
         call(base.objectAccessPolicy(errorOut, "the domain"), Some("normal"))
+          .map((status, principal) => assertTrue(status == Status.Ok, principal.contains(activeUser)))
+      },
+    ),
+    suite("authenticatedObjectAccessPolicy")(
+      test("refuses a caller without credentials with 401") {
+        refused(base.authenticatedObjectAccessPolicy(errorOut, "the domain"), None, Status.Unauthorized)
+      },
+      test("refuses an invalid token with 401") {
+        refused(base.authenticatedObjectAccessPolicy(errorOut, "the domain"), Some("invalid"), Status.Unauthorized)
+      },
+      test("refuses the anonymous user with 403") {
+        refused(base.authenticatedObjectAccessPolicy(errorOut, "the domain"), Some("anonymous"), Status.Forbidden)
+      },
+      test("hands an authenticated user to the handler") {
+        call(base.authenticatedObjectAccessPolicy(errorOut, "the domain"), Some("normal"))
           .map((status, principal) => assertTrue(status == Status.Ok, principal.contains(activeUser)))
       },
     ),

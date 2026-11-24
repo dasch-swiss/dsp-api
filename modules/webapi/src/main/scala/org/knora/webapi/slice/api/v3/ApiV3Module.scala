@@ -10,6 +10,9 @@ import zio.*
 import zio.telemetry.opentelemetry.tracing.Tracing
 
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.responders.v2.ResourceUtilV2
+import org.knora.webapi.responders.v2.ResourcesResponderV2
+import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
@@ -24,6 +27,7 @@ import org.knora.webapi.slice.api.v3.ontology.OntologyMappingRestService
 import org.knora.webapi.slice.api.v3.ontology.OntologyMappingServerEndpoints
 import org.knora.webapi.slice.api.v3.ontology.OntologyRestServiceV3
 import org.knora.webapi.slice.api.v3.projects.*
+import org.knora.webapi.slice.api.v3.resources.BatchChangesRestService
 import org.knora.webapi.slice.api.v3.resources.ResourcesEndpointsV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesRestServiceV3
 import org.knora.webapi.slice.api.v3.resources.ResourcesServerEndpointsV3
@@ -32,6 +36,8 @@ import org.knora.webapi.slice.common.service.IriConverter
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
 import org.knora.webapi.slice.ontology.repo.service.OntologyCache
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
+import org.knora.webapi.slice.resources.service.BatchEditService
+import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.security.Authenticator
 import org.knora.webapi.slice.security.ServiceTokenVerifier
 import org.knora.webapi.store.triplestore.api.TriplestoreService
@@ -50,12 +56,16 @@ object ApiV3Module {
     ProjectDataImportService &
     ProjectMigrationExportService &
     ProjectMigrationImportService &
+    ReadResourcesService &
+    ResourceUtilV2 &
     ResourcesRepo &
+    ResourcesResponderV2 &
     ServiceTokenVerifier &
     StringFormatter &
     Tracing &
     TriplestoreService &
-    UserService
+    UserService &
+    ValuesResponderV2
     // format: on
 
   type Provided = ApiV3ServerEndpoints
@@ -71,6 +81,8 @@ object ApiV3Module {
       ResourcesEndpointsV3.layer >+>
       V3ProjectsEndpoints.layer >+>
       ResourcesRestServiceV3.layer >+>
+      BatchEditService.layer >+>
+      BatchChangesRestService.layer >+>
       V3ProjectsRestService.layer >+>
       ResourcesServerEndpointsV3.layer >+>
       V3ProjectsServerEndpoints.layer >>>
