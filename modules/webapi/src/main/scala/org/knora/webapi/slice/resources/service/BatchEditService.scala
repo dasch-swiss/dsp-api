@@ -86,10 +86,13 @@ final class BatchEditService(
   // The current state is read as the system user so that the permission checks below decide what the caller may do.
   // Every path checks the caller's permission on what was read before a conflict is reported, so a conflict never
   // reveals content or versions the caller may not see.
+  // Deleted values are moved out of their property, so a property whose values were all deleted reads as empty and a
+  // deleted value is not taken for the current version.
   private def readResource(edit: BatchEdit): Task[ReadResourceV2] =
     readResources
-      .getResources(
+      .getResourcesWithDeletedResource(
         Seq(edit.resource),
+        showDeletedValues = false,
         targetSchema = ApiV2Complex,
         schemaOptions = Set.empty,
         requestingUser = systemUser,

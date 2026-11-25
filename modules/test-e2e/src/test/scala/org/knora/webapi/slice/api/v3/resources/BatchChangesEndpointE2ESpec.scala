@@ -46,6 +46,22 @@ class BatchChangesEndpointE2ESpec extends E2EZSpec {
       .flatMap(_.assert200)
       .map(_.results)
 
+  private val timestampThing = "http://rdfh.ch/0001/nsWBzKwETHCUckokeQm6FA"
+
+  private def deleteTextValueRequest(resourceIri: String, valueIri: String) =
+    s"""{
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasText" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "knora-api:TextValue"
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "$onto#"
+       |  }
+       |}""".stripMargin
+
   private def updateText(value: String, expected: String, newText: String) =
     BatchChange(resource, Some(hasText), Some(value), Some(expected), Some(newText))
 
@@ -142,6 +158,19 @@ class BatchChangesEndpointE2ESpec extends E2EZSpec {
         first.map(_.status) == List(ok, ok),
         second.map(_.status) == List(conflict),
       )
+    },
+    test("creates a value in a property expected to be empty whose only value was deleted") {
+      for {
+        created <- send(anythingUser1, BatchChange(timestampThing, Some(hasText), newValue = Some("to be deleted")))
+        valueIri = created.head.valueIri.getOrElse("")
+        _       <- TestApiClient
+               .postJsonLd(uri"/v2/values/delete", deleteTextValueRequest(timestampThing, valueIri), anythingUser1)
+               .flatMap(_.assert200)
+        results <- send(
+                     anythingUser1,
+                     BatchChange(timestampThing, Some(hasText), newValue = Some("x"), expectEmpty = Some(true)),
+                   )
+      } yield assertTrue(results.map(_.status) == List(ok))
     },
     test("refuses `expectEmpty` on an update") {
       for {
