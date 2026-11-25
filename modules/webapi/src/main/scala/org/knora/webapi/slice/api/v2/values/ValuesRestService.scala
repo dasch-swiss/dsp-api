@@ -6,7 +6,6 @@
 package org.knora.webapi.slice.api.v2.values
 
 import sttp.model.MediaType
-import zio.Clock
 import zio.IO
 import zio.Random
 import zio.Task
@@ -14,31 +13,22 @@ import zio.ZIO
 import zio.ZLayer
 
 import dsp.errors.*
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions.*
-import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
-import org.knora.webapi.slice.admin.domain.model.Permission
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
-import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.v2.StoredXmlServing
 import org.knora.webapi.slice.api.v2.ValueUuid
 import org.knora.webapi.slice.api.v2.VersionDate
 import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
+import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.RenderedResponse
-import org.knora.webapi.slice.common.domain.InternalIri
-import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final class ValuesRestService(
@@ -47,8 +37,6 @@ final class ValuesRestService(
   requestParser: ApiComplexV2JsonLdRequestParser,
   renderer: KnoraResponseRenderer,
   knoraProjectService: KnoraProjectService,
-  resourceUtilV2: ResourceUtilV2,
-  valueRepo: ValueRepo,
   storedXmlServing: StoredXmlServing,
 )(implicit private val stringFormatter: StringFormatter) {
 
@@ -103,44 +91,23 @@ final class ValuesRestService(
 
   def reorderValues(user: User)(request: ReorderValuesRequest): Task[ReorderValuesResponse] =
     for {
-      resIri                                <- parseResourceIri(request.resourceIri)
-      validated                             <- validateReorderRequest(request)
-      (propertySmartIri, requestedValueIris) = validated
-
-      // An internal read: deliberately not served through StoredXmlServing.
-      // Fetch as system user so we see ALL values for canonical verification.
-      // This is safe: only value IRIs are compared (verifyCanonicalValues), no content is leaked to the caller.
-      resourcesSeq <- readResources.getResources(
-                        Seq(resIri),
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = Set.empty,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser,
-                      )
-      resourceInfo <- ZIO
-                        .fromOption(resourcesSeq.resources.headOption)
-                        .orElseFail(NotFoundException(s"Resource <$resIri> not found."))
-
-      // Check that the user has modify permission on the resource
-      _ <- resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.Modify, user)
-
-      // Verify requested value IRIs match the canonical non-deleted values for this property
-      _ <- verifyCanonicalValues(request, propertySmartIri, requestedValueIris, resourceInfo)
-
-      // Derive project data graph and execute the reorder
-      projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM)
-      now             <- Clock.instant
-      _               <- valueRepo.reorderValues(projectDataGraph, InternalIri(resIri.value), requestedValueIris, now)
+      resIri                        <- parseResourceIri(request.resourceIri)
+      validated                     <- validateReorderRequest(request)
+      (property, requestedValueIris) = validated
+      apiRequestId                  <- Random.nextUUID
+      reordered                     <- valuesService.reorderValues(resIri, property, requestedValueIris, user, apiRequestId)
     } yield ReorderValuesResponse(
       resourceIri = resIri.value,
       propertyIri = request.propertyIri,
-      valuesReordered = requestedValueIris.size,
+      valuesReordered = reordered,
     )
 
   private def validateReorderRequest(request: ReorderValuesRequest) =
     for {
-      propertySmartIri <- ZIO
-                            .attempt(request.propertyIri.toSmartIri)
-                            .mapError(_ => BadRequestException(s"Invalid property IRI: <${request.propertyIri}>"))
+      property <- ZIO
+                    .attempt(request.propertyIri.toSmartIri)
+                    .flatMap(iri => ZIO.fromEither(PropertyIri.fromApiV2Complex(iri)))
+                    .mapError(_ => BadRequestException(s"Invalid property IRI: <${request.propertyIri}>"))
       _ <- ZIO.when(request.orderedValueIris.isEmpty)(
              ZIO.fail(BadRequestException("Value list must not be empty.")),
            )
@@ -152,32 +119,7 @@ final class ValuesRestService(
                                 .fromEither(ValueIri.from(iriStr))
                                 .mapError(e => BadRequestException(s"Invalid value IRI: $e"))
                             }
-    } yield (propertySmartIri, requestedValueIris)
-
-  private def verifyCanonicalValues(
-    request: ReorderValuesRequest,
-    propertySmartIri: SmartIri,
-    requestedValueIris: List[ValueIri],
-    resourceInfo: ReadResourceV2,
-  ): Task[Unit] = {
-    // ReadResourceV2.values uses internal ontology IRIs as keys
-    val propertyInternalIri = propertySmartIri.toOntologySchema(InternalSchema)
-    val canonicalValues     = resourceInfo.values.getOrElse(propertyInternalIri, Seq.empty).filter(_.deletionInfo.isEmpty)
-    val canonicalIris       = canonicalValues.map(_.valueIri).toSet
-    val requestedIris       = requestedValueIris.toSet
-    ZIO
-      .when(canonicalIris != requestedIris)(
-        ZIO.fail(
-          BadRequestException(
-            s"The provided value IRIs do not match the existing values for property <${request.propertyIri}> on resource <${request.resourceIri}>. " +
-              s"Expected ${canonicalIris.size} value(s), got ${requestedIris.size}. " +
-              s"Missing: ${(canonicalIris -- requestedIris).mkString(", ")}. " +
-              s"Extra: ${(requestedIris -- canonicalIris).mkString(", ")}.",
-          ),
-        ),
-      )
-      .unit
-  }
+    } yield (property, requestedValueIris)
 
   private def render(task: Task[KnoraResponseV2], formatOptions: FormatOptions): Task[(RenderedResponse, MediaType)] =
     task.flatMap(renderer.render(_, formatOptions))

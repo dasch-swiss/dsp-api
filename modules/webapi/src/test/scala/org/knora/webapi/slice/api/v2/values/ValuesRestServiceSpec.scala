@@ -32,8 +32,6 @@ class ValuesRestServiceSpec extends ZIOSpecDefault {
       requestParser = null,
       renderer = probe.renderer,
       knoraProjectService = null,
-      resourceUtilV2 = null,
-      valueRepo = null,
       storedXmlServing = serving,
     )
 

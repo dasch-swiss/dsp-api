@@ -22,13 +22,11 @@ import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageFileValue
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.StillImageVectorFileValue
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
-import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.*
 import org.knora.webapi.messages.v2.responder.resourcemessages.*
 import org.knora.webapi.messages.v2.responder.valuemessages.*
-import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
@@ -40,14 +38,25 @@ import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.ValueIri
-import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.common.service.IriConverter
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.AtLeastOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
-import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.access.AccessRequest.ChangeValueRights
+import org.knora.webapi.slice.resources.access.AccessRequest.CreateValue
+import org.knora.webapi.slice.resources.access.AccessRequest.DeleteValue
+import org.knora.webapi.slice.resources.access.AccessRequest.EraseValue
+import org.knora.webapi.slice.resources.access.AccessRequest.ReorderValues
+import org.knora.webapi.slice.resources.access.AccessRequest.UpdateValue
+import org.knora.webapi.slice.resources.access.Grant
+import org.knora.webapi.slice.resources.access.IntegrityRules
+import org.knora.webapi.slice.resources.access.LinkValueWrites
+import org.knora.webapi.slice.resources.access.ObjectAccess
+import org.knora.webapi.slice.resources.access.PermissionsChange
+import org.knora.webapi.slice.resources.access.ValueToCreate
+import org.knora.webapi.slice.resources.access.ValueToDelete
+import org.knora.webapi.slice.resources.access.ValueToRescope
+import org.knora.webapi.slice.resources.access.ValueToUpdate
 import org.knora.webapi.slice.resources.repo.ChangeLinkMetadataQuery
 import org.knora.webapi.slice.resources.repo.ChangeLinkTargetQuery
 import org.knora.webapi.slice.resources.repo.CreateLinkQuery
@@ -57,12 +66,10 @@ import org.knora.webapi.slice.resources.repo.model.SparqlTemplateLinkUpdate
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 import org.knora.webapi.slice.resources.service.ValueContentValidator
-import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
 
 final class ValuesResponderV2(
-  auth: AuthorizationRestService,
   iriConverter: IriConverter,
   iriService: IriService,
   ontologyCacheHelpers: OntologyCacheHelpers,
@@ -71,15 +78,15 @@ final class ValuesResponderV2(
   permissionUtilADM: PermissionUtilADM,
   permissionsResponder: PermissionsResponder,
   resourceUtilV2: ResourceUtilV2,
-  searchResponderV2: SearchResponderV2,
   triplestoreService: TriplestoreService,
   valueRepo: ValueRepo,
   valueValidator: ValueContentValidator,
   readResources: ReadResourcesService,
+  objectAccess: ObjectAccess,
 )(implicit private val stringFormatter: StringFormatter) {
 
   /**
-   * Creates a new value in an existing resource.
+   * Creates a new value in an existing resource, inside the object-access gate.
    *
    * @param valueToCreate the value to be created.
    * @param requestingUser the user making the request.
@@ -90,210 +97,132 @@ final class ValuesResponderV2(
     valueToCreate: CreateValueV2,
     requestingUser: User,
     apiRequestID: UUID,
-  ): Task[CreateValueResponseV2] = IriLocker.runWithIriLock(apiRequestID, valueToCreate.resourceIri) {
+  ): Task[CreateValueResponseV2] =
     for {
-      _ <- auth.ensureUserIsNotAnonymous(requestingUser)
+      adjustedProperty <- writableProperty(
+                            valueToCreate.propertyIri,
+                            valueToCreate.valueContent.valueType,
+                            "created",
+                            requestingUser,
+                          )
+      property    <- ZIO.fromEither(PropertyIri.from(valueToCreate.propertyIri)).mapError(BadRequestException.apply)
+      permissions <- ZIO.foreach(valueToCreate.permissions)(permissionUtilADM.validatePermissions)
+      response    <- objectAccess.within(requestingUser, apiRequestID, CreateValue(valueToCreate.resourceIri, property))(
+                    createValue(valueToCreate, property, adjustedProperty, permissions, _),
+                  )
+    } yield response
+
+  /**
+   * Creates the value in the grant's resource. The request is validated against the grant's target, after the gate
+   * decided.
+   */
+  private def createValue(
+    valueToCreate: CreateValueV2,
+    property: PropertyIri,
+    adjustedInternalPropertyInfo: ReadPropertyInfoV2,
+    customPermissions: Option[String],
+    grant: Grant[ValueToCreate],
+  ): Task[CreateValueResponseV2] = {
+    val resource                      = grant.target.resource
+    val submittedInternalPropertyIri  = property.toInternalSchema
+    val submittedInternalValueContent = valueToCreate.valueContent.toOntologySchema(InternalSchema)
+    for {
       _ <- valueValidator.validate(valueToCreate).mapError(BadRequestException.apply)
-
-      // Convert the submitted value to the internal schema.
-      submittedInternalPropertyIri <- ZIO.attempt(valueToCreate.propertyIri.toOntologySchema(InternalSchema))
-      submittedInternalValueContent = valueToCreate.valueContent.toOntologySchema(InternalSchema)
-
-      // Get ontology information about the submitted property.
-      propertyInfoResponseForSubmittedProperty <-
-        ontologyResponder.getPropertyDefinitionsFromOntologyV2(
-          propertyIris = Set(submittedInternalPropertyIri),
-          allLanguages = false,
-          requestingUser = requestingUser,
-        )
-
-      propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
-        propertyInfoResponseForSubmittedProperty.properties(
-          submittedInternalPropertyIri,
-        )
-
-      // Don't accept link properties.
-      _ <- ZIO.when(propertyInfoForSubmittedProperty.isLinkProp)(
-             ZIO.fail(
-               BadRequestException(
-                 s"Invalid property <${valueToCreate.propertyIri}>. Use a link value property to submit a link.",
-               ),
-             ),
-           )
-
-      // Don't accept knora-api:hasStandoffLinkToValue.
-      _ <- ZIO.when(valueToCreate.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)(
-             ZIO.fail(
-               BadRequestException(
-                 s"Values of <${valueToCreate.propertyIri}> cannot be created directly",
-               ),
-             ),
-           )
-
-      // Make an adjusted version of the submitted property: if it's a link value property, substitute the
-      // corresponding link property, whose objects we will need to query. Get ontology information about the
-      // adjusted property.
-      adjustedInternalPropertyInfo <-
-        getAdjustedInternalPropertyInfo(
-          submittedPropertyIri = valueToCreate.propertyIri,
-          maybeSubmittedValueType = Some(valueToCreate.valueContent.valueType),
-          propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
-        )
-
-      adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
-
-      // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
-      // so we can see objects that the user doesn't have permission to see.
-      resourceInfo <-
-        getResourceWithPropertyValues(
-          resourceIri = valueToCreate.resourceIri,
-          propertyInfo = adjustedInternalPropertyInfo,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-        )
-
-      // Check that the user has permission to modify the resource.
-      _ <- resourceUtilV2.checkResourcePermission(
-             resourceInfo = resourceInfo,
-             permissionNeeded = Permission.ObjectAccess.Modify,
-             requestingUser = requestingUser,
-           )
-
-      // Check that the resource has the rdf:type that the client thinks it has.
-      _ <- ZIO.when(resourceInfo.resourceClassIri != valueToCreate.resourceClassIri.toOntologySchema(InternalSchema))(
-             ZIO.fail(
+      _ <- ZIO
+             .fail(
                BadRequestException(
                  s"The rdf:type of resource <${valueToCreate.resourceIri}> is not <${valueToCreate.resourceClassIri}>",
                ),
-             ),
-           )
+             )
+             .when(resource.resourceClassIri != valueToCreate.resourceClassIri.toOntologySchema(InternalSchema))
 
-      // Get the definition of the resource class.
       classInfoResponse <-
         ontologyCacheHelpers.getClassDefinitionsFromOntologyV2(
-          classIris = Set(resourceInfo.resourceClassIri),
+          classIris = Set(resource.resourceClassIri),
           allLanguages = false,
-          requestingUser = requestingUser,
+          requestingUser = grant.caller,
         )
 
-      // Check that the resource class has a cardinality for the submitted property.
+      // The resource class must have a cardinality for the submitted property.
       cardinalityInfo <-
         ZIO
           .fromOption(
-            for {
-              classInfo       <- classInfoResponse.classes.get(resourceInfo.resourceClassIri)
-              cardinalityInfo <- classInfo.allCardinalities.get(submittedInternalPropertyIri)
-            } yield cardinalityInfo,
+            classInfoResponse.classes
+              .get(resource.resourceClassIri)
+              .flatMap(_.allCardinalities.get(submittedInternalPropertyIri)),
           )
           .orElseFail(
             BadRequestException(
-              s"Resource <${valueToCreate.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+              s"Resource <${valueToCreate.resourceIri}> belongs to class <${resource.resourceClassIri
                   .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${valueToCreate.propertyIri}>",
             ),
           )
 
-      // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
-      // the correct type for the adjusted property's knora-base:objectClassConstraint.
-      _ <- checkPropertyObjectClassConstraint(
-             propertyInfo = adjustedInternalPropertyInfo,
-             valueContent = submittedInternalValueContent,
-             requestingUser = requestingUser,
-           )
-
+      // The object of the adjusted property (the value, or the target of the link) must have the correct type for the
+      // adjusted property's knora-base:objectClassConstraint.
+      _ <- checkPropertyObjectClassConstraint(adjustedInternalPropertyInfo, submittedInternalValueContent, grant.caller)
       _ <- ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(submittedInternalValueContent)
-
-      // Check that the resource class's cardinality for the submitted property allows another value to be added
-      // for that property.
-      currentValuesForProp: Seq[ReadValueV2] =
-        resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
-
-      _ <-
-        ZIO.when(
-          (cardinalityInfo.cardinality == ExactlyOne || cardinalityInfo.cardinality == AtLeastOne) && currentValuesForProp.isEmpty,
-        )(
-          ZIO.fail(
-            InconsistentRepositoryDataException(
-              s"Resource class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, but resource <${valueToCreate.resourceIri}> has no value for that property",
-            ),
-          ),
-        )
-
-      _ <-
-        ZIO.when(
-          cardinalityInfo.cardinality == ExactlyOne || (cardinalityInfo.cardinality == ZeroOrOne && currentValuesForProp.nonEmpty),
-        )(
-          ZIO.fail(
-            OntologyConstraintException(
-              s"Resource class <${resourceInfo.resourceClassIri
-                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${valueToCreate.propertyIri}>, and this does not allow a value to be added for that property to resource <${valueToCreate.resourceIri}>",
-            ),
-          ),
-        )
-
-      // If this is a text value, check that the resources pointed to by any standoff link tags exist
-      // and that the user has permission to see them.
       _ <- submittedInternalValueContent match {
              case textValueContent: TextValueContentV2 =>
-               for {
-                 targets <- StandoffLinkTargets.resourceIris(textValueContent.standoffLinkTagTargetResourceIris)
-                 _       <- checkResourceIris(targets, requestingUser)
-               } yield ()
-
+               StandoffLinkTargets
+                 .resourceIris(textValueContent.standoffLinkTagTargetResourceIris)
+                 .flatMap(checkResourceIris(_, grant.caller))
              case _ => ZIO.unit
            }
+      _ <- grant.verify(IntegrityRules.valueAddable(resource.resourceIri, property, cardinalityInfo.cardinality))
 
-      // Get the default permissions for the new value.
       defaultValuePermissions <- permissionsResponder.newValueDefaultObjectAccessPermissions(
-                                   resourceInfo.projectADM.id,
-                                   resourceInfo.resourceClassIri,
+                                   resource.projectADM.id,
+                                   resource.resourceClassIri,
                                    submittedInternalPropertyIri,
-                                   requestingUser,
+                                   grant.caller,
                                  )
+      newValuePermissionLiteral <- customPermissions.fold(ZIO.succeed(defaultValuePermissions.permissionLiteral))(
+                                     custom =>
+                                       PermissionUtilADM
+                                         .ensureWithinDefaultPermissions(
+                                           resource.projectADM.id,
+                                           custom,
+                                           defaultValuePermissions.permissionLiteral,
+                                           grant.caller,
+                                           "The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
+                                         )
+                                         .as(custom),
+                                   )
 
-      // Did the user submit permissions for the new value?
-      newValuePermissionLiteral <-
-        valueToCreate.permissions match {
-          case Some(permissions: String) =>
-            // Yes. Validate them.
-            for {
-              validatedCustomPermissions <- permissionUtilADM.validatePermissions(permissions)
-              _                          <- PermissionUtilADM.ensureWithinDefaultPermissions(
-                     resourceInfo.projectADM.id,
-                     validatedCustomPermissions,
-                     defaultValuePermissions.permissionLiteral,
-                     requestingUser,
-                     "The specified value permissions would give a value's creator a higher permission on the value than the default permissions",
-                   )
-            } yield validatedCustomPermissions
-
-          case None =>
-            // No. Use the default permissions.
-            ZIO.succeed(defaultValuePermissions.permissionLiteral)
-        }
-
-      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
-
-      // Create the new value.
       created <-
-        createValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
-          resourceInfo = resourceInfo,
-          propertyIri = adjustedInternalPropertyIri,
-          value = submittedInternalValueContent,
-          valueIri = valueToCreate.valueIri,
-          valueUUID = valueToCreate.valueUUID,
-          valueCreationDate = valueToCreate.valueCreationDate,
-          valueCreator = requestingUser.id,
-          valuePermissions = newValuePermissionLiteral,
-          valueHasOrder = valueToCreate.valueHasOrder,
-        )
+        submittedInternalValueContent match {
+          case linkValueContent: LinkValueContentV2 =>
+            createLinkValueV2AfterChecks(
+              grant = grant,
+              linkPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
+              linkValueProperty = property,
+              linkValueContent = linkValueContent,
+              maybeValueIri = valueToCreate.valueIri,
+              maybeValueUUID = valueToCreate.valueUUID,
+              maybeCreationDate = valueToCreate.valueCreationDate,
+              valuePermissions = newValuePermissionLiteral,
+              valueHasOrder = valueToCreate.valueHasOrder,
+            )
 
+          case ordinaryValueContent =>
+            createOrdinaryValueV2AfterChecks(
+              grant = grant,
+              propertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
+              value = ordinaryValueContent,
+              maybeValueIri = valueToCreate.valueIri,
+              maybeValueUUID = valueToCreate.valueUUID,
+              maybeValueCreationDate = valueToCreate.valueCreationDate,
+              valuePermissions = newValuePermissionLiteral,
+              valueHasOrder = valueToCreate.valueHasOrder,
+            )
+        }
     } yield CreateValueResponseV2(
       valueIri = created.newValueIri,
       valueType = created.valueContent.valueType,
       valueUUID = created.newValueUUID,
       valueCreationDate = created.creationDate,
-      projectADM = resourceInfo.projectADM,
+      projectADM = resource.projectADM,
     )
   }
 
@@ -316,89 +245,29 @@ final class ValuesResponderV2(
     }
 
   /**
-   * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
-   * pre-update checks have already been done.
+   * Creates an ordinary value (i.e. not a link) in the grant's resource, after the checks. The caller becomes its
+   * creator.
    *
-   * @param dataNamedGraph    the named graph in which the value is to be created.
-   * @param resourceInfo      information about the the resource in which to create the value.
-   * @param propertyIri       the IRI of the property that will point from the resource to the value, or, if
-   *                          the value is a link value, the IRI of the link property.
-   * @param value             the value to create.
-   * @param valueIri          the optional custom IRI supplied for the value.
-   * @param valueUUID         the optional custom UUID supplied for the value.
-   * @param valueCreationDate the optional custom creation date supplied for the value.
-   * @param valueCreator      the IRI of the new value's owner.
-   * @param valuePermissions  the literal that should be used as the object of the new value's
-   *                          `knora-base:hasPermissions` predicate.
-   * @return an [[UnverifiedValueV2]].
-   */
-  private def createValueV2AfterChecks(
-    dataNamedGraph: IRI,
-    resourceInfo: ReadResourceV2,
-    propertyIri: SmartIri,
-    value: ValueContentV2,
-    valueIri: Option[SmartIri],
-    valueUUID: Option[UUID],
-    valueCreationDate: Option[Instant],
-    valueCreator: IRI,
-    valuePermissions: IRI,
-    valueHasOrder: Option[Int],
-  ): ZIO[Any, Throwable, UnverifiedValueV2] =
-    value match {
-      case linkValueContent: LinkValueContentV2 =>
-        createLinkValueV2AfterChecks(
-          resourceInfo = resourceInfo,
-          linkPropertyIri = propertyIri,
-          linkValueContent = linkValueContent,
-          maybeValueIri = valueIri,
-          maybeValueUUID = valueUUID,
-          maybeCreationDate = valueCreationDate,
-          valueCreator = valueCreator,
-          valuePermissions = valuePermissions,
-          valueHasOrder = valueHasOrder,
-        )
-
-      case ordinaryValueContent =>
-        createOrdinaryValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
-          resourceInfo = resourceInfo,
-          propertyIri = propertyIri,
-          value = ordinaryValueContent,
-          maybeValueIri = valueIri,
-          maybeValueUUID = valueUUID,
-          maybeValueCreationDate = valueCreationDate,
-          valueCreator = valueCreator,
-          valuePermissions = valuePermissions,
-          valueHasOrder = valueHasOrder,
-        )
-    }
-
-  /**
-   * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
-   *
-   * @param dataNamedGraph         the named graph in which the value is to be created.
-   * @param resourceInfo           information about the resource in which to create the value.
+   * @param grant                  the gate's grant; its target holds the resource.
    * @param propertyIri            the property that should point to the value.
    * @param value                  an [[ValueContentV2]] describing the value.
    * @param maybeValueIri          the optional custom IRI supplied for the value.
    * @param maybeValueUUID         the optional custom UUID supplied for the value.
    * @param maybeValueCreationDate the optional custom creation date supplied for the value.
-   * @param valueCreator           the IRI of the new value's owner.
    * @param valuePermissions       the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
    * @return an [[UnverifiedValueV2]].
    */
   private def createOrdinaryValueV2AfterChecks(
-    dataNamedGraph: IRI,
-    resourceInfo: ReadResourceV2,
+    grant: Grant[ValueToCreate],
     propertyIri: SmartIri,
     value: ValueContentV2,
     maybeValueIri: Option[SmartIri],
     maybeValueUUID: Option[UUID],
     maybeValueCreationDate: Option[Instant],
-    valueCreator: IRI,
     valuePermissions: IRI,
     valueHasOrder: Option[Int],
-  ) =
+  ) = {
+    val resourceInfo = grant.target.resource
     for {
 
       // Make a new value UUID.
@@ -410,7 +279,7 @@ final class ValuesResponderV2(
           maybeValueIri,
           ValueIri.from(resourceInfo.resourceIri, newValueUUID).value,
         )
-      newValueIri <- ZIO.fromEither(ValueIri.from(newValueIriStr)).mapError(BadRequestException.apply)
+      createdValueIri <- ZIO.fromEither(ValueIri.from(newValueIriStr)).mapError(BadRequestException.apply)
 
       // Make a creation date for the new value
       creationDate: Instant = maybeValueCreationDate match {
@@ -426,24 +295,26 @@ final class ValuesResponderV2(
             StandoffLinkTargets
               .resourceIris(textValueContent.standoffLinkTagTargetResourceIris)
               .flatMap(targets =>
-                ZIO.foreach(targets.toVector) { targetResourceIri =>
-                  incrementLinkValue(
-                    sourceResourceInfo = resourceInfo,
-                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                    targetResourceIri = targetResourceIri,
-                    valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
-                    valuePermissions = standoffLinkValuePermissions,
-                  )
-                },
+                ZIO.foreach(targets.toVector)(target =>
+                  LinkValueWrites.increment(
+                    grant,
+                    OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                    target,
+                    KnoraUserRepo.builtIn.SystemUser.id.value,
+                    standoffLinkValuePermissions,
+                    newValueIri(None, resourceInfo.resourceIri),
+                  ),
+                ),
               )
 
           case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
         }
 
-      dataNamedGraphInternal <- iriConverter.asInternalIri(dataNamedGraph)
-      resourceIriInternal    <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
-      newValueIriInternal    <- iriConverter.asInternalIri(newValueIri.value)
-      valueCreatorInternal   <- iriConverter.asInternalIri(valueCreator)
+      dataNamedGraphInternal <-
+        iriConverter.asInternalIri(ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value)
+      resourceIriInternal  <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
+      newValueIriInternal  <- iriConverter.asInternalIri(createdValueIri.value)
+      valueCreatorInternal <- iriConverter.asInternalIri(grant.caller.id)
 
       // Use repository method which handles dual validation
       _ <- valueRepo.createValue(
@@ -460,47 +331,55 @@ final class ValuesResponderV2(
              valueHasOrder = valueHasOrder,
            )
     } yield UnverifiedValueV2(
-      newValueIri = newValueIri,
+      newValueIri = createdValueIri,
       newValueUUID = newValueUUID,
       valueContent = value.unescape,
       permissions = valuePermissions,
       creationDate = creationDate,
     )
+  }
 
   /**
-   * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
+   * Creates a link from the grant's resource, after the checks. The caller becomes the link value's creator.
    *
-   * @param resourceInfo     information about the the resource in which to create the value.
-   * @param linkPropertyIri  the link property.
-   * @param linkValueContent a [[LinkValueContentV2]] specifying the target resource.
-   * @param maybeValueIri    the optional custom IRI supplied for the value.
-   * @param maybeValueUUID   the optional custom UUID supplied for the value.
-   * @param valueCreator     the IRI of the new link value's owner.
-   * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+   * @param grant             the gate's grant; its target holds the resource.
+   * @param linkPropertyIri   the link property.
+   * @param linkValueProperty the link value property of the request.
+   * @param linkValueContent  a [[LinkValueContentV2]] specifying the target resource.
+   * @param maybeValueIri     the optional custom IRI supplied for the value.
+   * @param maybeValueUUID    the optional custom UUID supplied for the value.
+   * @param valuePermissions  the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
    * @return an [[UnverifiedValueV2]].
    */
   private def createLinkValueV2AfterChecks(
-    resourceInfo: ReadResourceV2,
+    grant: Grant[ValueToCreate],
     linkPropertyIri: SmartIri,
+    linkValueProperty: PropertyIri,
     linkValueContent: LinkValueContentV2,
     maybeValueIri: Option[SmartIri],
     maybeValueUUID: Option[UUID],
     maybeCreationDate: Option[Instant],
-    valueCreator: IRI,
     valuePermissions: IRI,
     valueHasOrder: Option[Int],
-  ) =
+  ) = {
+    val resourceInfo = grant.target.resource
     for {
-      _                        <- ensureNoLinkTo(resourceInfo, linkPropertyIri, linkValueContent.referredResourceIri)
+      _ <- grant.verify(
+             IntegrityRules.noDuplicateLink(
+               resourceInfo.resourceIri,
+               linkValueProperty,
+               linkValueContent.referredResourceIri,
+             ),
+           )
       newValueUUID             <- ValuesResponderV2.makeNewValueUUID(maybeValueIri, maybeValueUUID)
       sparqlTemplateLinkUpdate <-
-        incrementLinkValue(
-          sourceResourceInfo = resourceInfo,
-          linkPropertyIri = linkPropertyIri,
-          targetResourceIri = linkValueContent.referredResourceIri,
-          customNewLinkValueIri = maybeValueIri,
-          valueCreator = valueCreator,
-          valuePermissions = valuePermissions,
+        LinkValueWrites.increment(
+          grant,
+          linkPropertyIri,
+          linkValueContent.referredResourceIri,
+          grant.caller.id,
+          valuePermissions,
+          newValueIri(maybeValueIri, resourceInfo.resourceIri),
         )
 
       creationDate: Instant =
@@ -512,7 +391,7 @@ final class ValuesResponderV2(
       // Duplicate-order check: use the link value property IRI (the property that attaches the LinkValue to the resource).
       linkValuePropertyIri = sparqlTemplateLinkUpdate.linkPropertyIri.toInternalSchema.fromLinkPropToLinkValueProp
       resourceIriInternal <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
-      // IriLocker serialises concurrent writes per resource IRI within a single JVM instance,
+      // The gate's IriLocker lock serialises concurrent writes per resource IRI within a single JVM instance,
       // making the ASK check + INSERT effectively atomic under single-instance deployment.
       // Multi-instance deployments do not share this lock; a race window exists there.
       _ <- ZIO.foreach(valueHasOrder)(order =>
@@ -538,9 +417,10 @@ final class ValuesResponderV2(
       permissions = valuePermissions,
       creationDate = creationDate,
     )
+  }
 
   /**
-   * Creates a new version of an existing value.
+   * Creates a new version of an existing value, or changes its permissions, inside the object-access gate.
    *
    * @param updateValue       the value update.
    * @param requestingUser    the user making the request.
@@ -552,167 +432,152 @@ final class ValuesResponderV2(
     requestingUser: User,
     apiRequestId: UUID,
   ): Task[UpdateValueResponseV2] =
-    auth.ensureUserIsNotAnonymous(requestingUser) *>
-      IriLocker.runWithIriLock(apiRequestId, updateValue.resourceIri)(
-        updateValue match {
-          case updateContent: UpdateValueContentV2         => updateValueContent(updateContent, requestingUser)
-          case updatePermissions: UpdateValuePermissionsV2 => updateValuePermissions(updatePermissions, requestingUser)
-        },
-      )
+    for {
+      adjustedProperty <- writableProperty(updateValue.propertyIri, updateValue.valueType, "updated", requestingUser)
+      property         <- ZIO.fromEither(PropertyIri.from(updateValue.propertyIri)).mapError(BadRequestException.apply)
+      response         <- updateValue match {
+                    case content: UpdateValueContentV2 =>
+                      updateContentInGate(content, property, adjustedProperty, requestingUser, apiRequestId)
+                    case rights: UpdateValuePermissionsV2 =>
+                      updatePermissionsInGate(rights, property, requestingUser, apiRequestId)
+                  }
+    } yield response
+
+  private def updateContentInGate(
+    content: UpdateValueContentV2,
+    property: PropertyIri,
+    adjustedProperty: ReadPropertyInfoV2,
+    requestingUser: User,
+    apiRequestId: UUID,
+  ): Task[UpdateValueResponseV2] =
+    for {
+      permissions <- ZIO.foreach(content.permissions)(permissionUtilADM.validatePermissions)
+      change       = permissions.fold(PermissionsChange.Unchanged)(PermissionsChange.To(_))
+      request      = UpdateValue(content.resourceIri, property, content.valueIri, change)
+      response    <- objectAccess.within(requestingUser, apiRequestId, request)(
+                    updateValueContent(content, property, adjustedProperty, _),
+                  )
+    } yield response
+
+  private def updatePermissionsInGate(
+    rights: UpdateValuePermissionsV2,
+    property: PropertyIri,
+    requestingUser: User,
+    apiRequestId: UUID,
+  ): Task[UpdateValueResponseV2] =
+    for {
+      permissions <- permissionUtilADM.validatePermissions(rights.permissions)
+      request      = ChangeValueRights(rights.resourceIri, property, rights.valueIri)
+      response    <- objectAccess.within(requestingUser, apiRequestId, request)(
+                    updateValuePermissions(rights, permissions, _),
+                  )
+    } yield response
 
   /**
-   * Updates the permissions attached to a value.
+   * The checks of a value creation or update that use only the request and the ontology; they run before the gate.
+   * Returns the adjusted property: for a link value property, its link property.
    *
-   * @param updateValue the update request.
-   * @return an [[UpdateValueResponseV2]].
+   * @param verb what the write does to a value, for the message refusing `knora-api:hasStandoffLinkToValue`.
    */
-  private def updateValuePermissions(updateValue: UpdateValuePermissionsV2, requestingUser: User) =
+  private def writableProperty(
+    propertyIri: SmartIri,
+    valueType: SmartIri,
+    verb: String,
+    requestingUser: User,
+  ): Task[ReadPropertyInfoV2] =
     for {
-      // Do the initial checks, and get information about the resource, the property, and the value.
-      resourcePropertyValue <- checkValueAndRetrieveResourceProperties(updateValue, requestingUser)
-
-      resourceInfo: ReadResourceV2 = resourcePropertyValue.resource
-      currentValue: ReadValueV2    = resourcePropertyValue.value
-
-      // Validate and reformat the submitted permissions.
-      newValuePermissionLiteral <- permissionUtilADM.validatePermissions(updateValue.permissions)
-      _                         <- resourceUtilV2.checkValuePermission(
-             resourceInfo = resourceInfo,
-             valueInfo = currentValue,
-             permissionNeeded = Permission.ObjectAccess.ChangeRights,
-             requestingUser = requestingUser,
+      submittedInternalPropertyIri <- ZIO.attempt(propertyIri.toInternalSchema)
+      propertyInfoResponse         <- ontologyResponder.getPropertyDefinitionsFromOntologyV2(
+                                propertyIris = Set(submittedInternalPropertyIri),
+                                allLanguages = false,
+                                requestingUser = requestingUser,
+                              )
+      submittedPropertyInfo = propertyInfoResponse.properties(submittedInternalPropertyIri)
+      _                    <- {
+        val msg =
+          s"Invalid property <${submittedPropertyInfo.entityInfoContent.propertyIri.toComplexSchema}>." +
+            s" Use a link value property to submit a link."
+        ZIO.fail(BadRequestException(msg)).when(submittedPropertyInfo.isLinkProp)
+      }
+      _ <- ZIO.when(propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)(
+             ZIO.fail(BadRequestException(s"Values of <$propertyIri> cannot be $verb directly")),
            )
+      adjusted <- getAdjustedInternalPropertyInfo(propertyIri, Some(valueType), submittedPropertyInfo)
+    } yield adjusted
 
+  /** Updates the permissions attached to the grant's value. */
+  private def updateValuePermissions(
+    updateValue: UpdateValuePermissionsV2,
+    permissions: String,
+    grant: Grant[ValueToRescope],
+  ): Task[UpdateValueResponseV2] = {
+    val resource = grant.target.resource
+    val value    = grant.target.value
+    for {
+      _ <- checkUpdateTarget(updateValue, resource, value)
       _ <- valueRepo.updateValuePermissions(
-             projectDataGraph = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM),
-             resourceIri = InternalIri(resourceInfo.resourceIri.value),
-             valueIri = currentValue.valueIri,
-             newPermissions = newValuePermissionLiteral,
+             projectDataGraph = ProjectService.projectDataNamedGraphV2(resource.projectADM),
+             resourceIri = InternalIri(resource.resourceIri.value),
+             valueIri = value.valueIri,
+             newPermissions = permissions,
              currentTime = Instant.now,
            )
-    } yield UpdateValueResponseV2(
-      currentValue.valueIri,
-      currentValue.valueContent.valueType,
-      currentValue.valueHasUUID,
-      resourceInfo.projectADM,
-    )
+    } yield UpdateValueResponseV2(value.valueIri, value.valueContent.valueType, value.valueHasUUID, resource.projectADM)
+  }
 
   /**
-   * Updates the contents of a value.
-   *
-   * @param updateValue the update request.
-   * @return an [[UpdateValueResponseV2]].
+   * Updates the contents of the grant's value. The request is validated against the grant's target, after the gate
+   * decided; the new version takes its permissions from the grant.
    */
   private def updateValueContent(
     updateValue: UpdateValueContentV2,
-    requestingUser: User,
+    property: PropertyIri,
+    adjustedInternalPropertyInfo: ReadPropertyInfoV2,
+    grant: Grant[ValueToUpdate],
   ): Task[UpdateValueResponseV2] = {
+    val resource                      = grant.target.resource
+    val currentValue                  = grant.target.value
+    val submittedInternalValueContent = updateValue.valueContent.toOntologySchema(InternalSchema)
+    val newValueVersionPermissions    = grant.target.permissions match {
+      case PermissionsChange.To(literal) => literal
+      case PermissionsChange.Unchanged   => currentValue.permissions
+    }
     for {
-      _                     <- valueValidator.validate(updateValue).mapError(BadRequestException.apply)
-      resourcePropertyValue <- checkValueAndRetrieveResourceProperties(updateValue, requestingUser)
+      _ <- valueValidator.validate(updateValue).mapError(BadRequestException.apply)
+      _ <- checkUpdateTarget(updateValue, resource, currentValue)
 
-      resourceInfo: ReadResourceV2                     = resourcePropertyValue.resource
-      adjustedInternalPropertyInfo: ReadPropertyInfoV2 = resourcePropertyValue.adjustedInternalPropertyInfo
-      currentValue: ReadValueV2                        = resourcePropertyValue.value
-
-      // Did the user submit permissions for the new value?
-      newValueVersionPermissionLiteral <-
-        updateValue.permissions match {
-          case Some(permissions) =>
-            // Yes. Validate them.
-            permissionUtilADM.validatePermissions(permissions)
-
-          case None =>
-            // No. Use the permissions on the current version of the value.
-            ZIO.succeed(currentValue.permissions)
-        }
-
-      // Check that the user has permission to do the update. If they want to change the permissions
-      // on the value, they need Permission.ObjectAccess.ChangeRights, otherwise they need Permission.ObjectAccess.Modify.
-      currentPermissionsParsed <- ZIO.attempt(PermissionUtilADM.parsePermissions(currentValue.permissions))
-      newPermissionsParsed     <-
-        ZIO.attempt(
-          PermissionUtilADM.parsePermissions(
-            newValueVersionPermissionLiteral,
-            (permissionLiteral: String) => throw AssertionException(s"Invalid permission literal: $permissionLiteral"),
-          ),
-        )
-
-      permissionNeeded =
-        if (newPermissionsParsed != currentPermissionsParsed) { Permission.ObjectAccess.ChangeRights }
-        else { Permission.ObjectAccess.Modify }
-
-      _ <- resourceUtilV2.checkValuePermission(
-             resourceInfo = resourceInfo,
-             valueInfo = currentValue,
-             permissionNeeded = permissionNeeded,
-             requestingUser = requestingUser,
-           )
-
-      // Convert the submitted value content to the internal schema.
-      submittedInternalValueContent = updateValue.valueContent.toOntologySchema(InternalSchema)
-
-      // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
-      // the correct type for the adjusted property's knora-base:objectClassConstraint.
-      _ <- checkPropertyObjectClassConstraint(
-             propertyInfo = adjustedInternalPropertyInfo,
-             valueContent = submittedInternalValueContent,
-             requestingUser = requestingUser,
-           )
-
+      // The object of the adjusted property (the value, or the target of the link) must have the correct type for the
+      // adjusted property's knora-base:objectClassConstraint.
+      _ <- checkPropertyObjectClassConstraint(adjustedInternalPropertyInfo, submittedInternalValueContent, grant.caller)
       _ <- ifIsListValueThenCheckItPointsToListNodeWhichIsNotARootNode(submittedInternalValueContent)
-
       _ <- submittedInternalValueContent match {
              case textValueContent: TextValueContentV2 =>
-               // This is a text value. Check that the resources pointed to by any standoff link tags exist
-               // and that the user has permission to see them.
-               for {
-                 targets <- StandoffLinkTargets.resourceIris(textValueContent.standoffLinkTagTargetResourceIris)
-                 _       <- checkResourceIris(targets, requestingUser)
-               } yield ()
-
-             case _: LinkValueContentV2 =>
-               // We're updating a link. This means deleting an existing link and creating a new one, so
-               // check that the user has permission to modify the resource.
-               resourceUtilV2.checkResourcePermission(
-                 resourceInfo = resourceInfo,
-                 permissionNeeded = Permission.ObjectAccess.Modify,
-                 requestingUser = requestingUser,
-               )
-
+               StandoffLinkTargets
+                 .resourceIris(textValueContent.standoffLinkTagTargetResourceIris)
+                 .flatMap(checkResourceIris(_, grant.caller))
              case _ => ZIO.unit
            }
 
-      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
-
-      // Create the new value version.
       newValueVersion <-
         (currentValue, submittedInternalValueContent) match {
-          case (
-                currentLinkValue: ReadLinkValueV2,
-                newLinkValue: LinkValueContentV2,
-              ) =>
+          case (currentLinkValue: ReadLinkValueV2, newLinkValue: LinkValueContentV2) =>
             updateLinkValueV2AfterChecks(
-              resourceInfo = resourceInfo,
+              grant = grant,
               linkPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
+              linkValueProperty = property,
               currentLinkValue = currentLinkValue,
               newLinkValue = newLinkValue,
-              valueCreator = requestingUser.id,
-              valuePermissions = newValueVersionPermissionLiteral,
+              valuePermissions = newValueVersionPermissions,
               valueCreationDate = updateValue.valueCreationDate,
               newValueVersionIri = updateValue.newValueVersionIri,
-              requestingUser = requestingUser,
             )
 
           case _ =>
             updateOrdinaryValueV2AfterChecks(
-              dataNamedGraph = dataNamedGraph,
-              resourceInfo = resourceInfo,
+              grant = grant,
               propertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
-              currentValue = currentValue,
               newValueVersion = submittedInternalValueContent,
-              valueCreator = requestingUser.id,
-              valuePermissions = newValueVersionPermissionLiteral,
+              valuePermissions = newValueVersionPermissions,
               valueCreationDate = updateValue.valueCreationDate,
               newValueVersionIri = updateValue.newValueVersionIri,
             )
@@ -721,107 +586,30 @@ final class ValuesResponderV2(
       valueIri = newValueVersion.newValueIri,
       valueType = newValueVersion.valueContent.valueType,
       valueUUID = newValueVersion.newValueUUID,
-      projectADM = resourceInfo.projectADM,
+      projectADM = resource.projectADM,
     )
   }
 
-  /**
-   * Information about a resource, a submitted property, and a value of the property.
-   *
-   * @param resource                     the contents of the resource.
-   * @param adjustedInternalPropertyInfo the internal definition of the submitted property, adjusted
-   *                                     as follows: an adjusted version of the submitted property:
-   *                                     if it's a link value property, substitute the
-   *                                     corresponding link property.
-   * @param value                        the requested value.
-   */
-  private case class ResourcePropertyValue(
-    resource: ReadResourceV2,
-    adjustedInternalPropertyInfo: ReadPropertyInfoV2,
-    value: ReadValueV2,
-  )
-
-  /**
-   * Gets information about a resource, a submitted property, and a value of the property, and does
-   * some checks to see if the submitted information is correct.
-   *
-   * @param updateValue the submitted value update to check
-   * @return a [[ResourcePropertyValue]].
-   */
-  private def checkValueAndRetrieveResourceProperties(updateValue: UpdateValueV2, requestingUser: User) =
+  /** The checks of a value update on the grant's target; they run inside the gate, after its decision. */
+  private def checkUpdateTarget(updateValue: UpdateValueV2, resource: ReadResourceV2, currentValue: ReadValueV2) = {
+    val submittedInternalValueType = updateValue.valueType.toInternalSchema
+    val isSameType                 = currentValue.valueContent.valueType == submittedInternalValueType
+    // Cross-type updates are intentionally allowed between all three still-image subtypes
+    // (raster, IIIF external, and vector/SVG), since they all represent the same resource
+    // and differ only in storage/delivery method.
+    val isStillImageTypes =
+      Set(
+        submittedInternalValueType.toInternalIri.value,
+        currentValue.valueContent.valueType.toInternalIri.value,
+      ).subsetOf(Set(StillImageExternalFileValue, StillImageFileValue, StillImageVectorFileValue))
     for {
-      submittedInternalPropertyIri <- ZIO.attempt(updateValue.propertyIri.toInternalSchema)
-      submittedInternalValueType   <- ZIO.attempt(updateValue.valueType.toInternalSchema)
-
-      // Get ontology information about the submitted property.
-      propertyInfoResponseForSubmittedProperty <-
-        ontologyResponder.getPropertyDefinitionsFromOntologyV2(
-          propertyIris = Set(submittedInternalPropertyIri),
-          allLanguages = false,
-          requestingUser = requestingUser,
-        )
-
-      propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
-        propertyInfoResponseForSubmittedProperty.properties(submittedInternalPropertyIri)
-
-      _ <- {
-        val msg =
-          s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toComplexSchema}>." +
-            s" Use a link value property to submit a link."
-        ZIO.fail(BadRequestException(msg)).when(propertyInfoForSubmittedProperty.isLinkProp)
-      }
-
-      // Don't accept knora-api:hasStandoffLinkToValue.
-      _ <- ZIO.when(
-             updateValue.propertyIri.toString == OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue,
-           )(ZIO.fail(BadRequestException(s"Values of <${updateValue.propertyIri}> cannot be updated directly")))
-
-      // Make an adjusted version of the submitted property: if it's a link value property, substitute the
-      // corresponding link property, whose objects we will need to query. Get ontology information about the
-      // adjusted property.
-      adjustedInternalPropertyInfo <- getAdjustedInternalPropertyInfo(
-                                        updateValue.propertyIri,
-                                        Some(updateValue.valueType),
-                                        propertyInfoForSubmittedProperty,
-                                      )
-
-      // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
-      // so we can see objects that the user doesn't have permission to see.
-      resourceInfo <-
-        getResourceWithPropertyValues(
-          resourceIri = updateValue.resourceIri,
-          propertyInfo = adjustedInternalPropertyInfo,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-        )
-
-      currentValue <- findVisibleValue(
-                        resourceInfo,
-                        submittedInternalPropertyIri,
-                        updateValue.valueIri,
-                        NotFoundException(
-                          s"Resource <${updateValue.resourceIri}> does not have value <${updateValue.valueIri}> as an object of property <${updateValue.propertyIri}>",
-                        ),
-                        requestingUser,
-                      )
-
       _ <- {
         val msg =
           s"The rdf:type of resource <${updateValue.resourceIri.value}> is not <${updateValue.resourceClassIri}>"
         ZIO
           .fail(BadRequestException(msg))
-          .when(resourceInfo.resourceClassIri != updateValue.resourceClassIri.toInternalSchema)
+          .when(resource.resourceClassIri != updateValue.resourceClassIri.toInternalSchema)
       }
-
-      isSameType = currentValue.valueContent.valueType == submittedInternalValueType
-      // Cross-type updates are intentionally allowed between all three still-image subtypes
-      // (raster, IIIF external, and vector/SVG), since they all represent the same resource
-      // and differ only in storage/delivery method.
-      isStillImageTypes =
-        Set(
-          submittedInternalValueType.toInternalIri.value,
-          currentValue.valueContent.valueType.toInternalIri.value,
-        ).subsetOf(Set(StillImageExternalFileValue, StillImageFileValue, StillImageVectorFileValue))
-
       _ <-
         ZIO.unless(isSameType || isStillImageTypes)(
           ZIO.fail(
@@ -839,112 +627,83 @@ final class ValuesResponderV2(
                ),
              ),
            )
-    } yield ResourcePropertyValue(resourceInfo, adjustedInternalPropertyInfo, currentValue)
+    } yield ()
+  }
 
   /**
-   * Changes an ordinary value (i.e. not a link), assuming that pre-update checks have already been done.
+   * Changes an ordinary value (i.e. not a link) of the grant's target, after the checks.
    *
-   * @param dataNamedGraph     the IRI of the named graph to be updated.
-   * @param resourceInfo       information about the resource containing the value.
+   * @param grant              the gate's grant; its target holds the resource and the current value version.
    * @param propertyIri        the IRI of the property that points to the value.
-   * @param currentValue       a [[ReadValueV2]] representing the existing value version.
    * @param newValueVersion    a [[ValueContentV2]] representing the new value version, in the internal schema.
-   * @param valueCreator       the IRI of the new value's owner.
    * @param valuePermissions   the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
    * @param valueCreationDate  a custom value creation date.
    * @param newValueVersionIri an optional IRI to be used for the new value version.
-   * @param requestingUser     the user making the request.
    * @return an [[UnverifiedValueV2]].
    */
   private def updateOrdinaryValueV2AfterChecks(
-    dataNamedGraph: IRI,
-    resourceInfo: ReadResourceV2,
+    grant: Grant[ValueToUpdate],
     propertyIri: SmartIri,
-    currentValue: ReadValueV2,
     newValueVersion: ValueContentV2,
-    valueCreator: IRI,
     valuePermissions: String,
     valueCreationDate: Option[Instant],
     newValueVersionIri: Option[SmartIri],
-  ): Task[UnverifiedValueV2] =
+  ): Task[UnverifiedValueV2] = {
+    val resourceInfo = grant.target.resource
+    val currentValue = grant.target.value
     for {
-      newValueIriStr <-
-        iriService.checkOrCreateEntityIri(
-          newValueVersionIri,
-          ValueIri.makeNew(resourceInfo.resourceIri).value,
-        )
-      newValueIri <- ZIO.fromEither(ValueIri.from(newValueIriStr)).mapError(BadRequestException.apply)
+      newVersionIri <- newValueIri(newValueVersionIri, resourceInfo.resourceIri)
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
       standoffLinkUpdates <-
         (currentValue.valueContent, newValueVersion) match {
-          case (
-                currentTextValue: TextValueContentV2,
-                newTextValue: TextValueContentV2,
-              ) =>
-            // Identify the resource references that have been added or removed in the new version of
-            // the value.
-            val changedResourceRefs: IO[AssertionException, (Set[IRI], Set[IRI])] = ZIO.fromEither(
-              for {
-                newRefs     <- newTextValue.standoffLinkTagTargetResourceIris
-                currentRefs <- StandoffLinkTargets.withValueIri(
-                                 currentValue.valueIri.value,
-                                 currentTextValue.standoffLinkTagTargetResourceIris,
-                               )
-              } yield (newRefs -- currentRefs, currentRefs -- newRefs),
-            )
-
-            // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-            val standoffLinkUpdatesForAddedResourceRefsFuture: Task[Seq[SparqlTemplateLinkUpdate]] =
-              changedResourceRefs.map { case (added, _) => added.toVector }.flatMap(ZIO.foreach(_) { iri =>
-                for {
-                  targetResourceIri <- ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply)
-                  update            <- incrementLinkValue(
-                              sourceResourceInfo = resourceInfo,
-                              linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                              targetResourceIri = targetResourceIri,
-                              valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
-                              valuePermissions = standoffLinkValuePermissions,
-                            )
-                } yield update
-              })
-
-            // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
-            val standoffLinkUpdatesForRemovedResourceRefFuture: Task[Seq[SparqlTemplateLinkUpdate]] =
-              changedResourceRefs.map { case (_, removed) => removed.toVector }.flatMap(ZIO.foreach(_) { iri =>
-                for {
-                  removedTargetResource <- ZIO.fromEither(ResourceIri.from(iri)).mapError(BadRequestException.apply)
-                  update                <- decrementLinkValue(
-                              sourceResourceInfo = resourceInfo,
-                              linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                              targetResourceIri = removedTargetResource,
-                              valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
-                              valuePermissions = standoffLinkValuePermissions,
-                            )
-                } yield update
-              })
-
+          case (currentTextValue: TextValueContentV2, newTextValue: TextValueContentV2) =>
             for {
-              standoffLinkUpdatesForAddedResourceRefs <-
-                standoffLinkUpdatesForAddedResourceRefsFuture
-              standoffLinkUpdatesForRemovedResourceRefs <-
-                standoffLinkUpdatesForRemovedResourceRefFuture
-            } yield standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs
+              (added, removed) <- ZIO.fromEither(
+                                    for {
+                                      newRefs     <- newTextValue.standoffLinkTagTargetResourceIris
+                                      currentRefs <- StandoffLinkTargets.withValueIri(
+                                                       currentValue.valueIri.value,
+                                                       currentTextValue.standoffLinkTagTargetResourceIris,
+                                                     )
+                                    } yield (newRefs -- currentRefs, currentRefs -- newRefs),
+                                  )
+              addedTargets   <- StandoffLinkTargets.toResourceIris(added)
+              removedTargets <- StandoffLinkTargets.toResourceIris(removed)
+              increments     <- ZIO.foreach(addedTargets.toVector)(target =>
+                              LinkValueWrites.increment(
+                                grant,
+                                OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                                target,
+                                KnoraUserRepo.builtIn.SystemUser.id.value,
+                                standoffLinkValuePermissions,
+                                newValueIri(None, resourceInfo.resourceIri),
+                              ),
+                            )
+              decrements <- ZIO.foreach(removedTargets.toVector)(target =>
+                              LinkValueWrites.decrement(
+                                grant,
+                                OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                                target,
+                                KnoraUserRepo.builtIn.SystemUser.id.value,
+                                standoffLinkValuePermissions,
+                                makeUnusedValueIri(resourceInfo.resourceIri),
+                              ),
+                            )
+            } yield increments ++ decrements
 
-          case _ =>
-            ZIO.succeed(
-              Vector.empty[SparqlTemplateLinkUpdate],
-            )
+          case _ => ZIO.succeed(Vector.empty[SparqlTemplateLinkUpdate])
         }
 
       // If no custom value creation date was provided, make a timestamp to indicate when the value
       // was updated.
-      currentTime: Instant     = valueCreationDate.getOrElse(Instant.now)
-      dataNamedGraphInternal  <- iriConverter.asInternalIri(dataNamedGraph)
+      currentTime: Instant    = valueCreationDate.getOrElse(Instant.now)
+      dataNamedGraphInternal <-
+        iriConverter.asInternalIri(ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value)
       resourceIriInternal     <- iriConverter.asInternalIri(resourceInfo.resourceIri.value)
       currentValueIriInternal <- iriConverter.asInternalIri(currentValue.valueIri.value)
-      newValueIriInternal     <- iriConverter.asInternalIri(newValueIri.value)
-      valueCreatorInternal    <- iriConverter.asInternalIri(valueCreator)
+      newValueIriInternal     <- iriConverter.asInternalIri(newVersionIri.value)
+      valueCreatorInternal    <- iriConverter.asInternalIri(grant.caller.id)
       // Generate a SPARQL update.
       _ <- valueRepo.updateValue(
              dataNamedGraph = dataNamedGraphInternal,
@@ -959,62 +718,70 @@ final class ValuesResponderV2(
              creationDate = currentTime,
            )
     } yield UnverifiedValueV2(
-      newValueIri = newValueIri,
+      newValueIri = newVersionIri,
       newValueUUID = currentValue.valueHasUUID,
       valueContent = newValueVersion.unescape,
       permissions = valuePermissions,
       creationDate = currentTime,
     )
+  }
 
   /**
-   * Changes a link, assuming that pre-update checks have already been done.
+   * Changes a link of the grant's target, after the checks.
    *
-   * @param resourceInfo       information about the resource containing the link.
+   * @param grant              the gate's grant; its target holds the resource and the current link value.
    * @param linkPropertyIri    the IRI of the link property.
+   * @param linkValueProperty  the link value property of the request.
    * @param currentLinkValue   a [[ReadLinkValueV2]] representing the `knora-base:LinkValue` for the existing link.
    * @param newLinkValue       a [[LinkValueContentV2]] indicating the new target resource.
-   * @param valueCreator       the IRI of the new link value's owner.
    * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
    * @param valueCreationDate  a custom value creation date.
    * @param newValueVersionIri an optional IRI to be used for the new value version.
-   * @param requestingUser     the user making the request.
    * @return an [[UnverifiedValueV2]].
    */
   private def updateLinkValueV2AfterChecks(
-    resourceInfo: ReadResourceV2,
+    grant: Grant[ValueToUpdate],
     linkPropertyIri: SmartIri,
+    linkValueProperty: PropertyIri,
     currentLinkValue: ReadLinkValueV2,
     newLinkValue: LinkValueContentV2,
-    valueCreator: IRI,
     valuePermissions: String,
     valueCreationDate: Option[Instant],
     newValueVersionIri: Option[SmartIri],
-    requestingUser: User,
-  ): Task[UnverifiedValueV2] =
+  ): Task[UnverifiedValueV2] = {
+    val resourceInfo = grant.target.resource
+    val valueCreator = grant.caller.id
     // Are we changing the link target?
     if (currentLinkValue.valueContent.referredResourceIri != newLinkValue.referredResourceIri) {
       for {
         // Yes. The resource must not already link to the new target.
-        _ <- ensureNoLinkTo(resourceInfo, linkPropertyIri, newLinkValue.referredResourceIri)
+        _ <- grant.verify(
+               IntegrityRules.noDuplicateLink(
+                 resourceInfo.resourceIri,
+                 linkValueProperty,
+                 newLinkValue.referredResourceIri,
+               ),
+             )
         // Delete the existing link and decrement its LinkValue's reference count.
         sparqlTemplateLinkUpdateForCurrentLink <-
-          decrementLinkValue(
-            sourceResourceInfo = resourceInfo,
-            linkPropertyIri = linkPropertyIri,
-            targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
-            valueCreator = valueCreator,
-            valuePermissions = valuePermissions,
+          LinkValueWrites.decrement(
+            grant,
+            linkPropertyIri,
+            currentLinkValue.valueContent.referredResourceIri,
+            valueCreator,
+            valuePermissions,
+            makeUnusedValueIri(resourceInfo.resourceIri),
           )
 
         // Create a new link, and create a new LinkValue for it.
         sparqlTemplateLinkUpdateForNewLink <-
-          incrementLinkValue(
-            sourceResourceInfo = resourceInfo,
-            linkPropertyIri = linkPropertyIri,
-            targetResourceIri = newLinkValue.referredResourceIri,
-            customNewLinkValueIri = newValueVersionIri,
-            valueCreator = valueCreator,
-            valuePermissions = valuePermissions,
+          LinkValueWrites.increment(
+            grant,
+            linkPropertyIri,
+            newLinkValue.referredResourceIri,
+            valueCreator,
+            valuePermissions,
+            newValueIri(newValueVersionIri, resourceInfo.resourceIri),
           )
 
         // If no custom value creation date was provided, make a timestamp to indicate when the link value
@@ -1028,7 +795,7 @@ final class ValuesResponderV2(
                     linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
                     maybeComment = newLinkValue.comment,
                     currentTime = currentTime,
-                    requestingUser = requestingUser.userIri,
+                    requestingUser = grant.caller.userIri,
                   )
         (newLinkValueUUID, sparqlUpdate) = result
 
@@ -1044,13 +811,13 @@ final class ValuesResponderV2(
       for {
         // We're not changing the link target, just the metadata on the LinkValue.
         sparqlTemplateLinkUpdate <-
-          changeLinkValueMetadata(
-            sourceResourceInfo = resourceInfo,
-            linkPropertyIri = linkPropertyIri,
-            targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
-            customNewLinkValueIri = newValueVersionIri,
-            valueCreator = valueCreator,
-            valuePermissions = valuePermissions,
+          LinkValueWrites.changeMetadata(
+            grant,
+            linkPropertyIri,
+            currentLinkValue.valueContent.referredResourceIri,
+            valueCreator,
+            valuePermissions,
+            newValueIri(newValueVersionIri, resourceInfo.resourceIri),
           )
 
         result <- ChangeLinkMetadataQuery.build(
@@ -1070,26 +837,61 @@ final class ValuesResponderV2(
         creationDate = currentTime,
       )
     }
+  }
+
+  /**
+   * Reorders the values of a property inside the object-access gate. The caller's visible values are permuted among
+   * their own `knora-base:valueHasOrder` slots; values hidden from the caller keep theirs.
+   *
+   * @param orderedValues each of the caller's visible values of the property once, in their new order.
+   * @return the number of values reordered.
+   */
+  def reorderValues(
+    resourceIri: ResourceIri,
+    propertyIri: PropertyIri,
+    orderedValues: List[ValueIri],
+    requestingUser: User,
+    apiRequestId: UUID,
+  ): Task[Int] =
+    existingValuesProperty(propertyIri, "reordered") *>
+      objectAccess.within(requestingUser, apiRequestId, ReorderValues(resourceIri, propertyIri)) { grant =>
+        for {
+          slots <- objectAccess.reorderSlots(grant, orderedValues)
+          now   <- Clock.instant
+          _     <- valueRepo.reorderValues(
+                 ProjectService.projectDataNamedGraphV2(grant.project),
+                 InternalIri(grant.target.resource.resourceIri.value),
+                 slots,
+                 now,
+               )
+        } yield slots.size
+      }
 
   def eraseValue(
     req: EraseValueV2,
     requestingUser: User,
     project: KnoraProject,
     onlyHistory: Boolean = false,
-  ): Task[SuccessResponseV2] =
-    canRemoveValue(req, requestingUser, onlyHistory).flatMap { case (_, _, value) =>
-      for {
-        valueIri         <- ZIO.succeed(value.valueIri)
-        _                <- failBadRequestForStandoffWithLinks(value)
-        allPrevious      <- valueRepo.findAllPrevious(valueIri)
-        isLink            = cond(value) { case _: ReadLinkValueV2 => true }
-        deletableValueIri = if (onlyHistory) List() else List(valueIri)
-        _                <- ZIO.foreachDiscard(allPrevious.reverse ++ deletableValueIri) { deletableIri =>
-               ZIO.when(isLink)(valueRepo.eraseValueDirectLink(project)(deletableIri)) *>
-                 valueRepo.eraseValue(project)(deletableIri)
-             }
-      } yield ()
-    }.as(SuccessResponseV2(s"Value <${req.propertyIri}> deleted"))
+  ): Task[SuccessResponseV2] = {
+    val request = EraseValue(req.resourceIri, req.propertyIri, req.valueIri, project, onlyHistory)
+    existingValuesProperty(req.propertyIri, "deleted") *>
+      objectAccess
+        .within(requestingUser, req.apiRequestId, request) { grant =>
+          val value = grant.target.value
+          for {
+            _           <- checkRemoval(req, grant, grant.target.resource, value, onlyHistory)
+            _           <- failBadRequestForStandoffWithLinks(value)
+            allPrevious <- valueRepo.findAllPrevious(value.valueIri)
+            isLink       = cond(value) { case _: ReadLinkValueV2 => true }
+            erased       = if (onlyHistory) List() else List(value.valueIri)
+            _           <- ZIO.foreachDiscard(allPrevious.reverse ++ erased) { erasedIri =>
+                   ZIO.when(isLink)(valueRepo.eraseValueDirectLink(grant.project)(erasedIri)) *>
+                     valueRepo.eraseValue(grant.project)(erasedIri)
+                 }
+          } yield ()
+        }
+        .as(SuccessResponseV2(s"Value <${req.propertyIri}> deleted"))
+  }
 
   def eraseValueHistory(
     req: EraseValueHistoryV2,
@@ -1132,141 +934,71 @@ final class ValuesResponderV2(
     } yield result
 
   /**
-   * The authorization gate of value removal and update, given a resource loaded as the system user so that hidden
-   * values are found: answers only after the caller's view permissions are checked. A hidden resource answers 403, a
-   * hidden value the same 404 as a missing one. Any check that depends on the resource's class or values belongs
-   * after this call, never before it.
+   * The checks of a value removal or reorder that use only the request and the ontology; they run before the gate.
+   * Returns the adjusted property: for a link value property, its link property.
+   *
+   * @param verb what the write does to a value, for the message refusing `knora-api:hasStandoffLinkToValue`.
    */
-  private def findVisibleValue(
-    resourceInfo: ReadResourceV2,
-    internalPropertyIri: SmartIri,
-    valueIri: ValueIri,
-    valueNotFound: NotFoundException,
-    requestingUser: User,
-  ): Task[ReadValueV2] =
+  private def existingValuesProperty(property: PropertyIri, verb: String): Task[ReadPropertyInfoV2] =
     for {
-      _            <- resourceUtilV2.checkResourcePermission(resourceInfo, Permission.ObjectAccess.View, requestingUser)
-      currentValue <-
+      _ <- ZIO
+             .fail(BadRequestException(s"Values of <${KA.HasStandoffLinkToValue}> cannot be $verb directly"))
+             .when(property.toComplexSchema.toIri == KA.HasStandoffLinkToValue)
+      submitted <- ontologyRepo
+                     .findProperty(property)
+                     .someOrFail(NotFoundException(s"Property not found: $property"))
+                     .filterOrFail(!_.isLinkProp)(
+                       BadRequestException(s"Invalid property <$property>. Use a link value property to submit a link."),
+                     )
+      adjusted <- linkPropertyIfLinkValue(submitted)
+    } yield adjusted
+
+  /** The checks of a value removal on the grant's target, after the gate: class, value type, then cardinality. */
+  private def checkRemoval(
+    removal: ValueRemoval,
+    grant: Grant[?],
+    resource: ReadResourceV2,
+    value: ReadValueV2,
+    onlyHistory: Boolean,
+  ): Task[Unit] =
+    for {
+      _ <- ZIO
+             .fail(
+               BadRequestException(
+                 s"Resource <${removal.resourceIri}> does not belong to class <${removal.resourceClassIri}>",
+               ),
+             )
+             .when(resource.resourceClassIri != removal.resourceClassIri.toInternalSchema)
+      _ <-
         ZIO
-          .fromOption(resourceInfo.values.get(internalPropertyIri).flatMap(_.find(_.valueIri == valueIri)))
-          .orElseFail(valueNotFound)
-      _ <- resourceUtilV2
-             .checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.View, requestingUser)
-             .orElseFail(valueNotFound)
-    } yield currentValue
-
-  /**
-   * The authorization gate of value removal: on top of [[findVisibleValue]], a visible value the caller may not delete
-   * answers 403. Any check that depends on the resource's class or values belongs after this call, never inside it.
-   */
-  private def findDeletableValue(
-    deleteValue: ValueRemoval,
-    requestingUser: User,
-  ): Task[(ReadResourceV2, ReadValueV2)] = {
-    val valueNotFound = NotFoundException(
-      s"Resource <${deleteValue.resourceIri}> does not have value <${deleteValue.valueIri}> as an object of property <${deleteValue.propertyIri}>",
-    )
-    for {
-      resourceInfo <- readResources
-                        .getResources(
-                          resourceIris = Seq(deleteValue.resourceIri),
-                          targetSchema = ApiV2Complex,
-                          schemaOptions = Set.empty,
-                          requestingUser = KnoraSystemInstances.Users.SystemUser,
-                        )
-                        .flatMap(_.toResource(deleteValue.resourceIri))
-      currentValue <- findVisibleValue(
-                        resourceInfo,
-                        deleteValue.propertyIri.toInternalSchema,
-                        deleteValue.valueIri,
-                        valueNotFound,
-                        requestingUser,
-                      )
-      _ <- resourceUtilV2
-             .checkValuePermission(resourceInfo, currentValue, Permission.ObjectAccess.Delete, requestingUser)
-    } yield (resourceInfo, currentValue)
-  }
-
-  private def canRemoveValue(
-    deleteValue: ValueRemoval,
-    requestingUser: User,
-    onlyHistory: Boolean = false,
-  ): IO[Throwable, (ReadResourceV2, ReadPropertyInfoV2, ReadValueV2)] = for {
-    _           <- auth.ensureUserIsNotAnonymous(requestingUser)
-    propertyIri <-
-      ZIO
-        .succeed(deleteValue.propertyIri)
-        // Don't accept knora-api:hasStandoffLinkToValue.
-        .filterOrFail(_.toComplexSchema.toIri != KA.HasStandoffLinkToValue)(
-          BadRequestException(s"Values of <${KA.HasStandoffLinkToValue}> cannot be deleted directly"),
-        )
-
-    propertyInfoForSubmittedProperty <-
-      ontologyRepo
-        .findProperty(propertyIri)
-        .someOrFail(NotFoundException(s"Property not found: $propertyIri"))
-        // Don't accept link properties.
-        .filterOrFail(!_.isLinkProp)(
-          BadRequestException(s"Invalid property <$propertyIri>. Use a link value property to submit a link."),
-        )
-
-    // Make an adjusted version of the submitted property: if it's a link value property, substitute the
-    // corresponding link property, whose objects we will need to query.
-    adjustedInternalPropertyInfo <- linkPropertyIfLinkValue(propertyInfoForSubmittedProperty)
-
-    (resourceInfo, currentValue) <- findDeletableValue(deleteValue, requestingUser)
-    submittedInternalPropertyIri  = propertyIri.toInternalSchema
-
-    // Check that the resource belongs to the class that the client submitted.
-    _ <- ZIO.when(resourceInfo.resourceClassIri != deleteValue.resourceClassIri.toInternalSchema) {
-           ZIO.fail(
-             BadRequestException(
-               s"Resource <${deleteValue.resourceIri}> does not belong to class <${deleteValue.resourceClassIri}>",
+          .fail(
+            BadRequestException(
+              s"Value <${removal.valueIri}> in resource <${removal.resourceIri}> is not of type <${removal.valueTypeIri}>",
+            ),
+          )
+          .when(value.valueContent.valueType != removal.valueTypeIri.toOntologySchema(InternalSchema))
+      cardinalityInfo <-
+        ontologyRepo
+          .findClassBy(resource.resourceClassIri.toInternalIri)
+          .someOrFail(NotFoundException(s"Resource class not found: ${resource.resourceClassIri}"))
+          .flatMap(c =>
+            ZIO
+              .fromOption(c.allCardinalities.get(removal.propertyIri.toInternalSchema))
+              .orElseFail(
+                InconsistentRepositoryDataException(
+                  s"Resource <${removal.resourceIri}> belongs to class <${resource.resourceClassIri.toComplexSchema}>, which has no cardinality for property <${removal.propertyIri}>",
+                ),
+              ),
+          )
+      _ <- grant.verify(
+             IntegrityRules.valueRemovable(
+               removal.resourceIri,
+               removal.propertyIri,
+               cardinalityInfo.cardinality,
+               onlyHistory,
              ),
            )
-         }
-
-    // Check that the value is of the type that the client submitted.
-    _ <-
-      ZIO.when(currentValue.valueContent.valueType != deleteValue.valueTypeIri.toOntologySchema(InternalSchema))(
-        ZIO.fail(
-          BadRequestException(
-            s"Value <${deleteValue.valueIri}> in resource <${deleteValue.resourceIri}> is not of type <${deleteValue.valueTypeIri}>",
-          ),
-        ),
-      )
-
-    // Get the definition of the resource class.
-    // Check that the resource class's cardinality for the submitted property allows this value to be deleted.
-    cardinalityInfo <-
-      ontologyRepo
-        .findClassBy(resourceInfo.resourceClassIri.toInternalIri)
-        .someOrFail(NotFoundException(s"Resource class not found: ${resourceInfo.resourceClassIri}"))
-        .map(_.allCardinalities)
-        .flatMap(c =>
-          ZIO
-            .fromOption(c.get(submittedInternalPropertyIri))
-            .orElseFail(
-              InconsistentRepositoryDataException(
-                s"Resource <${deleteValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toComplexSchema}>, which has no cardinality for property <${deleteValue.propertyIri}>",
-              ),
-            ),
-        )
-
-    currentValuesForProp: Seq[ReadValueV2] =
-      resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
-
-    _ <-
-      ZIO.when(!onlyHistory && cardinalityInfo.cardinality.min == 1 && currentValuesForProp.size == 1)(
-        ZIO.fail(
-          OntologyConstraintException(
-            s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of " +
-              s"${cardinalityInfo.cardinality} on property <${deleteValue.propertyIri}>, " +
-              s"and this does not allow a value to be deleted for that property from resource <${deleteValue.resourceIri}>",
-          ),
-        ),
-      )
-  } yield (resourceInfo, adjustedInternalPropertyInfo, currentValue)
+    } yield ()
 
   /**
    * Marks a value as deleted.
@@ -1275,188 +1007,125 @@ final class ValuesResponderV2(
    * @param requestingUser the user making the request.
    */
   def deleteValueV2(deleteValue: DeleteValueV2, requestingUser: User): Task[SuccessResponseV2] = {
-    val deleteTask = for {
-      rac                                                       <- canRemoveValue(deleteValue, requestingUser)
-      (resourceInfo, adjustedInternalPropertyInfo, currentValue) = rac
-      // Get information about the project that the resource is in, so we know which named graph to do the update in.
-      dataNamedGraph: IRI = ProjectService.projectDataNamedGraphV2(resourceInfo.projectADM).value
-      // Do the update.
-      deletedValueIri <- deleteValueV2AfterChecks(
-                           dataNamedGraph,
-                           resourceInfo,
-                           adjustedInternalPropertyInfo.propertyIri.toInternalSchema,
-                           deleteValue.deleteComment,
-                           deleteValue.deleteDate,
-                           currentValue,
-                           requestingUser,
-                         )
+    val request = DeleteValue(deleteValue.resourceIri, deleteValue.propertyIri, deleteValue.valueIri)
+    for {
+      property        <- existingValuesProperty(deleteValue.propertyIri, "deleted")
+      deletedValueIri <-
+        objectAccess.within(requestingUser, deleteValue.apiRequestId, request) { grant =>
+          checkRemoval(deleteValue, grant, grant.target.resource, grant.target.value, onlyHistory = false) *>
+            deleteValueV2AfterChecks(
+              grant,
+              property.propertyIri.toInternalSchema,
+              deleteValue.deleteComment,
+              deleteValue.deleteDate,
+            )
+        }
     } yield SuccessResponseV2(s"Value <$deletedValueIri> marked as deleted")
-    IriLocker.runWithIriLock(deleteValue.apiRequestId, deleteValue.resourceIri)(deleteTask)
   }
 
   /**
-   * Deletes a value (either an ordinary value or a link), using an existing transaction, assuming that
-   * pre-update checks have already been done.
+   * Deletes a value (either an ordinary value or a link) of the grant's target, after the checks.
    *
-   * @param dataNamedGraph the named graph in which the value is to be deleted.
-   * @param resourceInfo   information about the the resource in which to create the value.
-   * @param propertyIri    the IRI of the property that points from the resource to the value.
-   * @param currentValue   the value to be deleted.
+   * @param grant          the gate's grant; its target holds the resource and the value to be deleted.
+   * @param propertyIri    the IRI of the property that points from the resource to the value; for a link, the link
+   *                       property.
    * @param deleteComment  an optional comment explaining why the value is being deleted.
    * @param deleteDate     an optional timestamp indicating when the value was deleted.
-   * @param requestingUser the user making the request.
    * @return the IRI of the value that was marked as deleted.
    */
   private def deleteValueV2AfterChecks(
-    dataNamedGraph: IRI,
-    resourceInfo: ReadResourceV2,
+    grant: Grant[ValueToDelete],
     propertyIri: SmartIri,
     deleteComment: Option[String],
     deleteDate: Option[Instant],
-    currentValue: ReadValueV2,
-    requestingUser: User,
   ): Task[ValueIri] =
-    currentValue.valueContent match {
-      case _: LinkValueContentV2 =>
-        deleteLinkValueV2AfterChecks(
-          dataNamedGraph = dataNamedGraph,
-          resourceInfo = resourceInfo,
-          propertyIri = propertyIri,
-          currentValue = currentValue,
-          deleteComment = deleteComment,
-          deleteDate = deleteDate,
-          requestingUser = requestingUser,
-        )
-
-      case _ =>
-        deleteOrdinaryValueV2AfterChecks(
-          resourceInfo = resourceInfo,
-          propertyIri = propertyIri,
-          currentValue = currentValue,
-          deleteComment = deleteComment,
-          deleteDate = deleteDate,
-          requestingUser = requestingUser,
-        )
+    grant.target.value.valueContent match {
+      case link: LinkValueContentV2 => deleteLinkValueV2AfterChecks(grant, link, propertyIri, deleteComment, deleteDate)
+      case _                        => deleteOrdinaryValueV2AfterChecks(grant, propertyIri, deleteComment, deleteDate)
     }
 
   /**
-   * Deletes a link after checks.
-   *
-   * @param dataNamedGraph the named graph in which the value is to be deleted.
-   * @param resourceInfo   information about the the resource in which to create the value.
-   * @param propertyIri    the IRI of the property that points from the resource to the value.
-   * @param currentValue   the value to be deleted.
-   * @param deleteComment  an optional comment explaining why the value is being deleted.
-   * @param deleteDate     an optional timestamp indicating when the value was deleted.
-   * @param requestingUser the user making the request.
-   * @return the IRI of the value that was marked as deleted.
+   * Deletes a link: a new version of its `LinkValue` with the reference count decremented, marked as deleted when
+   * the count reaches 0, with the permissions of the previous version.
    */
   private def deleteLinkValueV2AfterChecks(
-    dataNamedGraph: IRI,
-    resourceInfo: ReadResourceV2,
+    grant: Grant[ValueToDelete],
+    link: LinkValueContentV2,
     propertyIri: SmartIri,
-    currentValue: ReadValueV2,
     deleteComment: Option[String],
     deleteDate: Option[Instant],
-    requestingUser: User,
-  ): Task[ValueIri] =
-    // Make a new version of of the LinkValue with a reference count of 0, and mark the new
-    // version as deleted. Give the new version the same permissions as the previous version.
-
+  ): Task[ValueIri] = {
+    val resource = grant.target.resource
+    val value    = grant.target.value
     for {
-      currentLinkValueContent <- currentValue.valueContent match {
-                                   case linkValueContent: LinkValueContentV2 => ZIO.succeed(linkValueContent)
-                                   case _                                    => ZIO.fail(AssertionException("Unreachable code"))
-                                 }
-
-      // If no custom delete date was provided, make a timestamp to indicate when the link value was
-      // marked as deleted.
-      currentTime: Instant = deleteDate.getOrElse(Instant.now)
-
-      // Delete the existing link and decrement its LinkValue's reference count.
-      sparqlTemplateLinkUpdate <-
-        decrementLinkValue(
-          sourceResourceInfo = resourceInfo,
-          linkPropertyIri = propertyIri,
-          targetResourceIri = currentLinkValueContent.referredResourceIri,
-          valueCreator = currentValue.attachedToUser,
-          valuePermissions = currentValue.permissions,
-        )
-
+      linkUpdate <- LinkValueWrites.decrement(
+                      grant,
+                      propertyIri,
+                      link.referredResourceIri,
+                      value.attachedToUser,
+                      value.permissions,
+                      makeUnusedValueIri(resource.resourceIri),
+                    )
       query <- DeleteLinkQuery
                  .build(
-                   dataNamedGraph,
-                   resourceInfo.resourceIri.value,
-                   sparqlTemplateLinkUpdate,
+                   ProjectService.projectDataNamedGraphV2(resource.projectADM).value,
+                   resource.resourceIri.value,
+                   linkUpdate,
                    deleteComment,
-                   currentTime,
-                   requestingUser.userIri,
+                   deleteDate.getOrElse(Instant.now),
+                   grant.caller.userIri,
                  )
                  .mapError(e => BadRequestException(e.message))
-
       _ <- triplestoreService.query(query)
-    } yield sparqlTemplateLinkUpdate.newLinkValueIri
+    } yield linkUpdate.newLinkValueIri
+  }
 
   /**
-   * Deletes an ordinary value after checks.
-   *
-   * @param resourceInfo   information about the the resource in which to create the value.
-   * @param propertyIri    the IRI of the property that points from the resource to the value.
-   * @param currentValue   the value to be deleted.
-   * @param deleteComment  an optional comment explaining why the value is being deleted.
-   * @param deleteDate     an optional timestamp indicating when the value was deleted.
-   * @param requestingUser the user making the request.
-   * @return the IRI of the value that was marked as deleted.
+   * Deletes an ordinary value. For a text value, the `LinkValue`s of the links in its standoff markup are
+   * decremented in the same update.
    */
   private def deleteOrdinaryValueV2AfterChecks(
-    resourceInfo: ReadResourceV2,
+    grant: Grant[ValueToDelete],
     propertyIri: SmartIri,
-    currentValue: ReadValueV2,
     deleteComment: Option[String],
     deleteDate: Option[Instant],
-    requestingUser: User,
   ): Task[ValueIri] = {
-    // Mark the existing version of the value as deleted.
-
-    // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
-    // links in standoff markup.
-    val linkUpdatesTask: Task[Seq[SparqlTemplateLinkUpdate]] = currentValue.valueContent match {
+    val resource                                             = grant.target.resource
+    val value                                                = grant.target.value
+    val linkUpdatesTask: Task[Seq[SparqlTemplateLinkUpdate]] = value.valueContent match {
       case textValue: TextValueContentV2 =>
         StandoffLinkTargets
           .resourceIris(
-            StandoffLinkTargets.withValueIri(currentValue.valueIri.value, textValue.standoffLinkTagTargetResourceIris),
+            StandoffLinkTargets.withValueIri(value.valueIri.value, textValue.standoffLinkTagTargetResourceIris),
           )
           .flatMap(removedTargets =>
             ZIO.foreach(removedTargets.toVector) { removedTargetResource =>
-              decrementLinkValue(
-                sourceResourceInfo = resourceInfo,
-                linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                targetResourceIri = removedTargetResource,
-                valueCreator = KnoraUserRepo.builtIn.SystemUser.id.value,
-                valuePermissions = standoffLinkValuePermissions,
+              LinkValueWrites.decrement(
+                grant,
+                OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                removedTargetResource,
+                KnoraUserRepo.builtIn.SystemUser.id.value,
+                standoffLinkValuePermissions,
+                makeUnusedValueIri(resource.resourceIri),
               )
             },
           )
-
       case _ => ZIO.succeed(Seq.empty)
     }
-
-    // If no custom delete date was provided, make a timestamp to indicate when the value was
-    // marked as deleted.
     for {
       linkUpdates  <- linkUpdatesTask
       sparqlUpdate <- DeleteValueQuery.build(
-                        project = resourceInfo.projectADM,
-                        resourceIri = resourceInfo.resourceIri,
+                        project = resource.projectADM,
+                        resourceIri = resource.resourceIri,
                         propertyIri = PropertyIri.unsafeFrom(propertyIri),
-                        valueIri = currentValue.valueIri,
+                        valueIri = value.valueIri,
                         maybeDeleteComment = deleteComment,
                         linkUpdates = linkUpdates,
                         currentTime = deleteDate.getOrElse(Instant.now),
-                        requestingUser = requestingUser.userIri,
+                        requestingUser = grant.caller.userIri,
                       )
       _ <- triplestoreService.query(sparqlUpdate)
-    } yield currentValue.valueIri
+    } yield value.valueIri
   }
 
   /**
@@ -1524,62 +1193,6 @@ final class ValuesResponderV2(
         )
       }
       .unit
-
-  /**
-   * Returns a resource's metadata and its values, if any, for the specified property. If the property is a link property, the result
-   * will contain any objects of the corresponding link value property (link values), as well as metadata for any resources that the link property points to.
-   * If the property's object type is `knora-base:TextValue`, the result will contain any objects of the property (text values), as well metadata
-   * for any resources that are objects of `knora-base:hasStandoffLinkTo`.
-   *
-   * @param resourceIri          the resource IRI.
-   * @param propertyInfo         the property definition (in the internal schema). If the caller wants to query a link, this must be the link property,
-   *                             not the link value property.
-   *
-   * @param requestingUser       the user making the request.
-   * @return a [[ReadResourceV2]] containing only the resource's metadata and its values for the specified property.
-   */
-  private def getResourceWithPropertyValues(
-    resourceIri: ResourceIri,
-    propertyInfo: ReadPropertyInfoV2,
-    requestingUser: User,
-  ): Task[ReadResourceV2] =
-    for {
-      // Get the property's object class constraint.
-      objectClassConstraint <-
-        ZIO
-          .fromOption(
-            propertyInfo.entityInfoContent.getIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri),
-          )
-          .orElseFail(
-            InconsistentRepositoryDataException(
-              s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint",
-            ),
-          )
-
-      // If the property points to a text value, also query the resource's standoff links.
-      maybeStandoffLinkToPropertyIri =
-        if (objectClassConstraint.toString == OntologyConstants.KnoraBase.TextValue) {
-          Some(OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri)
-        } else {
-          None
-        }
-
-      propertyIrisForGravsearchQuery <-
-        ZIO.foreach(
-          Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri,
-        )(iri => ZIO.fromEither(PropertyIri.from(iri)).mapError(BadRequestException(_)))
-
-      // Make a Gravsearch query.
-      gravsearchQuery =
-        GetResourceWithSpecifiedPropertiesGravsearchQuery.build(
-          resourceIri = resourceIri,
-          propertyIris = propertyIrisForGravsearchQuery,
-        )
-
-      // Run the query, routed through the IRI overload so it gets the root + parse spans + shape.
-      searchResponse <- searchResponderV2.gravsearchV2(gravsearchQuery, SchemaRendering.default, requestingUser, None)
-      result         <- searchResponse.toResource(resourceIri)
-    } yield result
 
   /**
    * Checks that a link value points to a resource with the correct type for the link property's object class constraint.
@@ -1754,280 +1367,6 @@ final class ValuesResponderV2(
     } yield ()
 
   /**
-   * Given a [[ReadResourceV2]], finds a link that uses the specified property and points to the specified target
-   * resource.
-   *
-   * @param sourceResourceInfo a [[ReadResourceV2]] describing the source of the link.
-   * @param linkPropertyIri    the IRI of the link property.
-   * @param targetResourceIri  the IRI of the target resource.
-   * @return a [[ReadLinkValueV2]] describing the link value, if found.
-   */
-  private def findLinkValue(
-    sourceResourceInfo: ReadResourceV2,
-    linkPropertyIri: SmartIri,
-    targetResourceIri: ResourceIri,
-  ): Option[ReadLinkValueV2] = {
-    val linkValueProperty = linkPropertyIri.fromLinkPropToLinkValueProp
-
-    sourceResourceInfo.values.get(linkValueProperty).flatMap { (linkValueInfos: Seq[ReadValueV2]) =>
-      linkValueInfos.collectFirst {
-        case linkValueInfo: ReadLinkValueV2
-            if linkValueInfo.valueContent.referredResourceIri == targetResourceIri && linkValueInfo.deletionInfo.isEmpty =>
-          linkValueInfo
-      }
-    }
-  }
-
-  /**
-   * Fails with a [[DuplicateValueException]] if the resource already links to the target via the link property.
-   * A resource can link to a given target only once per link property: the link is a single triple, described by
-   * a single `LinkValue`.
-   */
-  private def ensureNoLinkTo(
-    sourceResourceInfo: ReadResourceV2,
-    linkPropertyIri: SmartIri,
-    targetResourceIri: ResourceIri,
-  ): IO[DuplicateValueException, Unit] =
-    ZIO
-      .fail(
-        DuplicateValueException(
-          s"Resource <${sourceResourceInfo.resourceIri.value}> already has a link to <${targetResourceIri.value}> via property <${linkPropertyIri.fromLinkPropToLinkValueProp.toOntologySchema(ApiV2Complex)}>",
-        ),
-      )
-      .when(findLinkValue(sourceResourceInfo, linkPropertyIri, targetResourceIri).isDefined)
-      .unit
-
-  /**
-   * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to create a `LinkValue` or to
-   * increment the reference count of an existing `LinkValue`. This happens in two cases:
-   *
-   *  - When the user creates a link. In this case, neither the link nor the `LinkValue` exist yet. The
-   * [[SparqlTemplateLinkUpdate]] will specify that the link should be created, and that the `LinkValue` should be
-   * created with a reference count of 1.
-   *  - When a text value is updated so that its standoff markup refers to a resource that it did not previously
-   * refer to. Here there are two possibilities:
-   *    - If there is currently a `knora-base:hasStandoffLinkTo` link between the source and target resources, with a
-   * corresponding `LinkValue`, a new version of the `LinkValue` will be made, with an incremented reference count.
-   *    - If that link and `LinkValue` don't yet exist, they will be created, and the `LinkValue` will be given
-   * a reference count of 1.
-   *
-   * @param sourceResourceInfo    information about the source resource.
-   * @param linkPropertyIri       the IRI of the property that links the source resource to the target resource.
-   * @param targetResourceIri     the IRI of the target resource.
-   * @param customNewLinkValueIri the optional custom IRI supplied for the link value.
-   * @param valueCreator          the IRI of the new link value's owner.
-   * @param valuePermissions      the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
-   */
-  private def incrementLinkValue(
-    sourceResourceInfo: ReadResourceV2,
-    linkPropertyIri: SmartIri,
-    targetResourceIri: ResourceIri,
-    customNewLinkValueIri: Option[SmartIri] = None,
-    valueCreator: IRI,
-    valuePermissions: IRI,
-  ) = {
-    // Check whether a LinkValue already exists for this link.
-    val maybeLinkValueInfo: Option[ReadLinkValueV2] = findLinkValue(
-      sourceResourceInfo = sourceResourceInfo,
-      linkPropertyIri = linkPropertyIri,
-      targetResourceIri = targetResourceIri,
-    )
-
-    for {
-      // Make an IRI for the new LinkValue.
-      newLinkValueIriStr <-
-        iriService.checkOrCreateEntityIri(
-          customNewLinkValueIri,
-          ValueIri.makeNew(sourceResourceInfo.resourceIri).value,
-        )
-      newLinkValueIri <-
-        ZIO.fromEither(ValueIri.from(newLinkValueIriStr)).mapError(BadRequestException.apply)
-
-      linkUpdate =
-        maybeLinkValueInfo match {
-          case Some(linkValueInfo) =>
-            // There's already a LinkValue for links between these two resources. Increment
-            // its reference count.
-            SparqlTemplateLinkUpdate(
-              linkPropertyIri = linkPropertyIri,
-              directLinkExists = true,
-              insertDirectLink = false,
-              deleteDirectLink = false,
-              linkValueExists = true,
-              linkTargetExists = true,
-              newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri.value,
-              currentReferenceCount = linkValueInfo.valueHasRefCount,
-              newReferenceCount = linkValueInfo.valueHasRefCount + 1,
-              newLinkValueCreator = valueCreator,
-              newLinkValuePermissions = valuePermissions,
-            )
-
-          case None =>
-            // There's no LinkValue for links between these two resources, so create one, and give it
-            // a reference count of 1.
-            SparqlTemplateLinkUpdate(
-              linkPropertyIri = linkPropertyIri,
-              directLinkExists = false,
-              insertDirectLink = true,
-              deleteDirectLink = false,
-              linkValueExists = false,
-              linkTargetExists = true,
-              newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri.value,
-              currentReferenceCount = 0,
-              newReferenceCount = 1,
-              newLinkValueCreator = valueCreator,
-              newLinkValuePermissions = valuePermissions,
-            )
-        }
-    } yield linkUpdate
-  }
-
-  /**
-   * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to decrement the reference count
-   * of a `LinkValue`. This happens in two cases:
-   *
-   *  - When the user deletes (or changes) a user-created link. In this case, the current reference count will be 1.
-   * The existing link will be removed. A new version of the `LinkValue` be made with a reference count of 0, and
-   * will be marked as deleted.
-   *  - When a resource reference is removed from standoff markup on a text value, so that the text value no longer
-   * contains any references to that target resource. In this case, a new version of the `LinkValue` will be
-   * made, with a decremented reference count. If the new reference count is 0, the link will be removed and the
-   * `LinkValue` will be marked as deleted.
-   *
-   * @param sourceResourceInfo information about the source resource.
-   * @param linkPropertyIri    the IRI of the property that links the source resource to the target resource.
-   * @param targetResourceIri  the IRI of the target resource.
-   * @param valueCreator       the IRI of the new link value's owner.
-   * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
-   */
-  private def decrementLinkValue(
-    sourceResourceInfo: ReadResourceV2,
-    linkPropertyIri: SmartIri,
-    targetResourceIri: ResourceIri,
-    valueCreator: IRI,
-    valuePermissions: IRI,
-  ) = {
-
-    // Check whether a LinkValue already exists for this link.
-    val maybeLinkValueInfo = findLinkValue(
-      sourceResourceInfo = sourceResourceInfo,
-      linkPropertyIri = linkPropertyIri,
-      targetResourceIri = targetResourceIri,
-    )
-
-    // Did we find it?
-    maybeLinkValueInfo match {
-      case Some(linkValueInfo) =>
-        // Yes. Make a SparqlTemplateLinkUpdate.
-
-        // Decrement the LinkValue's reference count.
-        val newReferenceCount = linkValueInfo.valueHasRefCount - 1
-
-        // If the new reference count is 0, specify that the direct link between the source and target
-        // resources should be removed.
-        val deleteDirectLink = newReferenceCount == 0
-
-        makeUnusedValueIri(sourceResourceInfo.resourceIri)
-          .map(newLinkValueIri =>
-            SparqlTemplateLinkUpdate(
-              linkPropertyIri = linkPropertyIri,
-              directLinkExists = true,
-              insertDirectLink = false,
-              deleteDirectLink = deleteDirectLink,
-              linkValueExists = true,
-              linkTargetExists = true,
-              newLinkValueIri = newLinkValueIri,
-              linkTargetIri = targetResourceIri.value,
-              currentReferenceCount = linkValueInfo.valueHasRefCount,
-              newReferenceCount = newReferenceCount,
-              newLinkValueCreator = valueCreator,
-              newLinkValuePermissions = valuePermissions,
-            ),
-          )
-
-      case None =>
-        // We didn't find the LinkValue. This shouldn't happen.
-        ZIO.die(
-          InconsistentRepositoryDataException(
-            s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing",
-          ),
-        )
-    }
-  }
-
-  /**
-   * Generates a [[SparqlTemplateLinkUpdate]] to tell a SPARQL update template how to change the metadata
-   * on a `LinkValue`.
-   *
-   * @param sourceResourceInfo    information about the source resource.
-   * @param linkPropertyIri       the IRI of the property that links the source resource to the target resource.
-   * @param targetResourceIri     the IRI of the target resource.
-   * @param customNewLinkValueIri the optional custom IRI supplied for the link value.
-   * @param valueCreator          the IRI of the new link value's owner.
-   * @param valuePermissions      the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
-   */
-  private def changeLinkValueMetadata(
-    sourceResourceInfo: ReadResourceV2,
-    linkPropertyIri: SmartIri,
-    targetResourceIri: ResourceIri,
-    customNewLinkValueIri: Option[SmartIri],
-    valueCreator: IRI,
-    valuePermissions: IRI,
-  ) = {
-
-    // Check whether a LinkValue already exists for this link.
-    val maybeLinkValueInfo: Option[ReadLinkValueV2] = findLinkValue(
-      sourceResourceInfo = sourceResourceInfo,
-      linkPropertyIri = linkPropertyIri,
-      targetResourceIri = targetResourceIri,
-    )
-
-    // Did we find it?
-    maybeLinkValueInfo match {
-      case Some(linkValueInfo) =>
-        // Yes. Make a SparqlTemplateLinkUpdate.
-
-        for {
-          // If no custom IRI was provided, generate an IRI for the new LinkValue.
-          newLinkValueIriStr <-
-            iriService.checkOrCreateEntityIri(
-              customNewLinkValueIri,
-              ValueIri.makeNew(sourceResourceInfo.resourceIri).value,
-            )
-          newLinkValueIri <-
-            ZIO.fromEither(ValueIri.from(newLinkValueIriStr)).mapError(BadRequestException.apply)
-
-        } yield SparqlTemplateLinkUpdate(
-          linkPropertyIri = linkPropertyIri,
-          directLinkExists = true,
-          insertDirectLink = false,
-          deleteDirectLink = false,
-          linkValueExists = true,
-          linkTargetExists = true,
-          newLinkValueIri = newLinkValueIri,
-          linkTargetIri = targetResourceIri.value,
-          currentReferenceCount = linkValueInfo.valueHasRefCount,
-          newReferenceCount = linkValueInfo.valueHasRefCount,
-          newLinkValueCreator = valueCreator,
-          newLinkValuePermissions = valuePermissions,
-        )
-
-      case None =>
-        // We didn't find the LinkValue. This shouldn't happen.
-        ZIO.die(
-          InconsistentRepositoryDataException(
-            s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing",
-          ),
-        )
-    }
-  }
-
-  /**
    * The permissions that are granted by every `knora-base:LinkValue` describing a standoff link.
    */
   private lazy val standoffLinkValuePermissions: String = {
@@ -2038,6 +1377,12 @@ final class ValuesResponderV2(
 
     PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)
   }
+
+  /** The IRI of a new value version: the custom IRI, checked to be unused, or a new random one. */
+  private def newValueIri(custom: Option[SmartIri], resourceIri: ResourceIri): Task[ValueIri] =
+    iriService
+      .checkOrCreateEntityIri(custom, ValueIri.makeNew(resourceIri).value)
+      .flatMap(s => ZIO.fromEither(ValueIri.from(s)).mapError(BadRequestException.apply))
 
   /**
    * A convenience method for generating an unused random value IRI.

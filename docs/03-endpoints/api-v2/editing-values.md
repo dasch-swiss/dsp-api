@@ -110,13 +110,15 @@ and are not compacted.
 Returns 400 if the integer is negative or exceeds 2,147,483,647. Returns 400 if another non-deleted
 value for the same resource and property already holds the same order integer.
 
-**Compatibility note**: `PUT /v2/values/order` compacts the order of all non-deleted values for a
-property into a dense 0-based sequence (0, 1, 2, …). If you created values with intentional gaps or
-non-sequential positions using `knora-api:valueHasOrder`, calling `PUT /v2/values/order` afterward
-will overwrite those positions and compact them.
+`PUT /v2/values/order` keeps these positions: it permutes the listed values among their own
+`knora-api:valueHasOrder` integers, gaps and duplicates included (see [Reordering Values](#reordering-values)).
 
-To create a value, the user must have **modify permission** on the containing resource.
+To create a value, the user must have **view and modify permission** on the containing resource.
 Anonymous callers are refused with 401 Unauthorized here and on every other value write (update, reorder, delete).
+A resource the user cannot view answers 403, and a user without modify permission gets 403 before the submitted
+value is validated, so a request that would also fail validation (a cross-project link, a disallowed license)
+answers 403, not 400. Only the property and `knora-api:hasPermissions` (its syntax and that its groups exist) are
+checked first.
 
 The response is a JSON-LD document containing:
 
@@ -559,11 +561,13 @@ version.
 
 If you submit an outdated value ID in a request to update a value, the response will be an HTTP 404 (Not Found) error.
 
-The requesting user needs view permission on the resource and on the value. These are checked before the submitted
-resource class, value IRI and value type, so a resource the user cannot view answers 403 whatever class, value or type
-the request names, and a value the user cannot view answers 404, the same as a value that does not exist. A user who
-can view the value gets 400 for a wrong resource class or value type, and then needs modify permission on the value,
-or change rights permission to change its permissions.
+The requesting user needs view permission on the resource, and modify permission on the value, or change rights
+permission to change its permissions; updating a link also needs modify permission on the resource. These are checked before the submitted resource class, value type and value
+content, so a resource the user cannot view answers 403 whatever the request names, a value the user cannot view
+answers 404, the same as a value that does not exist, and a user with only restricted view permission on the resource
+or the value, or without the required permission on the value, gets 403. Only a user with the required permission
+gets 400 for a wrong resource class or value type, or for invalid content. Only the property and the syntax of
+`knora-api:hasPermissions` (its syntax and that its groups exist) are checked before the permissions.
 
 The response to a value update request contains:
 
@@ -571,6 +575,42 @@ The response to a value update request contains:
 - `@type`: the value's type.
 - `knora-api:valueHasUUID`, the value's UUID, which remains stable across value versions, unless the value is a link
   value and is changed to point to a different resource, in which case it is considered a new link and gets a new UUID.
+
+## Reordering Values
+
+To change the order of the values of one property of a resource, use this route:
+
+```text
+HTTP PUT to http://host/v2/values/order
+```
+
+The request body lists the values the user can see, in their new order:
+
+```json
+{
+  "resourceIri": "http://rdfh.ch/0001/a-thing",
+  "propertyIri": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
+  "orderedValueIris": [
+    "http://rdfh.ch/0001/a-thing/values/value-3",
+    "http://rdfh.ch/0001/a-thing/values/value-1",
+    "http://rdfh.ch/0001/a-thing/values/value-2"
+  ]
+}
+```
+
+These checks run before the permissions: `propertyIri` must be an API v2 complex property IRI (as above), and an
+internal-schema property IRI answers 400; an unknown property answers 404, and a link property or
+`knora-api:hasStandoffLinkToValue` answers 400; an empty list, a duplicate or a malformed value IRI answers 400.
+
+The listed values are permuted among their own `knora-api:valueHasOrder` integers: the first listed value takes the
+lowest of them, the second the next, and so on. Gaps and duplicate integers are kept. For each listed value without
+a `knora-api:valueHasOrder`, one new integer after the highest in use joins the set first. Values hidden from the
+user are not listed and keep their integers. The list must name every value of the property the user can see, each once, and
+nothing else; otherwise the request answers 400, naming only values the user can see and IRIs the request gave.
+
+The user needs **view and modify permission** on the resource; a resource the user cannot view answers 403. The
+response gives `resourceIri`, `propertyIri` and `valuesReordered`, the number of values reordered, which counts only
+values the user can see.
 
 ## Deleting a Value
 
@@ -612,9 +652,10 @@ specifies a custom timestamp indicating when the value was deleted. If not speci
 The response is a JSON-LD document containing the predicate `knora-api:result` with a confirmation message.
 
 The requesting user needs view permission on the resource and delete permission on the value. These are checked
-before the submitted resource class, value IRI and value type, so a resource the user cannot view answers 403
-whatever class, value or type the request names, and a value the user cannot view answers 404, the same as a value
-that does not exist. A user who may delete the value gets 400 for a wrong resource class or value type.
+before the submitted resource class and value type, so a resource the user cannot view answers 403 whatever class,
+value or type the request names, a value the user cannot view answers 404, the same as a value that does not exist,
+and a user with only restricted view permission on the resource or the value gets 403. A user who may delete the
+value gets 400 for a wrong resource class or value type.
 
 ### Requesting Deleted Values
 

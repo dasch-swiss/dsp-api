@@ -128,11 +128,11 @@ final case class ValueRepo(triplestore: TriplestoreService)(implicit val sf: Str
   def reorderValues(
     projectDataGraph: InternalIri,
     resourceIri: InternalIri,
-    orderedValueIris: List[ValueIri],
+    slots: List[(ValueIri, Int)],
     currentTime: Instant,
   ): Task[Unit] =
     triplestore
-      .query(ValueQueries.reorderValues(projectDataGraph, resourceIri, orderedValueIris, currentTime))
+      .query(ValueQueries.reorderValues(projectDataGraph, resourceIri, slots, currentTime))
       .unit
 
   def createValue(

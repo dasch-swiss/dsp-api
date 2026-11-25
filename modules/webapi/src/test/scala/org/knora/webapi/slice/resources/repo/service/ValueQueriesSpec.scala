@@ -44,10 +44,10 @@ class ValueQueriesSpec extends ZIOSpecDefault {
   private val valueIri         = ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/xyz")
   private val permissions      = "CR knora-admin:Creator|V knora-admin:KnownUser"
   private val currentTime      = Instant.parse("2024-01-01T00:00:00Z")
-  private val orderedValueIris = List(
-    ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/one"),
-    ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/two"),
-    ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/three"),
+  private val slots            = List(
+    ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/one")   -> 4,
+    ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/two")   -> 4,
+    ValueIri.unsafeFrom("http://rdfh.ch/0001/a-thing/values/three") -> 9,
   )
 
   private val legacyFindById =
@@ -96,7 +96,7 @@ class ValueQueriesSpec extends ZIOSpecDefault {
       |WHERE { <http://rdfh.ch/0001/a-thing/values/xyz> <http://www.knora.org/ontology/knora-base#hasPermissions> ?currentValuePermissions .
       |OPTIONAL { <http://rdfh.ch/0001/a-thing> <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModificationDate . } }""".stripMargin
 
-  private val legacyReorderValues =
+  private val expectedReorderValues =
     """
       |WITH <http://www.knora.org/data/0001/anything>
       |DELETE {
@@ -109,9 +109,9 @@ class ValueQueriesSpec extends ZIOSpecDefault {
       |}
       |WHERE {
       |  VALUES (?item ?newOrder) {
-      |    (<http://rdfh.ch/0001/a-thing/values/one> 0)
-      |    (<http://rdfh.ch/0001/a-thing/values/two> 1)
-      |    (<http://rdfh.ch/0001/a-thing/values/three> 2)
+      |    (<http://rdfh.ch/0001/a-thing/values/one> 4)
+      |    (<http://rdfh.ch/0001/a-thing/values/two> 4)
+      |    (<http://rdfh.ch/0001/a-thing/values/three> 9)
       |  }
       |  OPTIONAL { ?item <http://www.knora.org/ontology/knora-base#valueHasOrder> ?oldOrder }
       |  OPTIONAL { <http://rdfh.ch/0001/a-thing> <http://www.knora.org/ontology/knora-base#lastModificationDate> ?resourceLastModDate }
@@ -144,9 +144,9 @@ class ValueQueriesSpec extends ZIOSpecDefault {
         ValueQueries.updateValuePermissions(projectDataGraph, resourceIri, valueIri, permissions, currentTime).sparql
       assertTrue(canonicalUpdate(actual) == canonicalUpdate(legacyUpdateValuePermissions))
     },
-    test("reorderValues renders the legacy update") {
-      val actual = ValueQueries.reorderValues(projectDataGraph, resourceIri, orderedValueIris, currentTime).sparql
-      assertTrue(canonicalUpdate(actual) == canonicalUpdate(legacyReorderValues))
+    test("reorderValues writes each value's slot, duplicates included") {
+      val actual = ValueQueries.reorderValues(projectDataGraph, resourceIri, slots, currentTime).sparql
+      assertTrue(canonicalUpdate(actual) == canonicalUpdate(expectedReorderValues))
     },
   )
 }

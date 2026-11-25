@@ -17,6 +17,7 @@ class CheckAuthzTest(unittest.TestCase):
         self.root = self._tmp.name
         self.unused_allowlist = self._write("unused_user_allowlist.txt", "")
         self.system_allowlist = self._write("system_user_allowlist.txt", "")
+        self.elevated_allowlist = self._write("elevated_read_allowlist.txt", "")
 
     def tearDown(self):
         self._tmp.cleanup()
@@ -39,6 +40,8 @@ class CheckAuthzTest(unittest.TestCase):
                 self.unused_allowlist,
                 "--system-user-allowlist",
                 self.system_allowlist,
+                "--elevated-read-allowlist",
+                self.elevated_allowlist,
                 *paths,
             ]
         )
@@ -46,8 +49,9 @@ class CheckAuthzTest(unittest.TestCase):
     def _errors(self, *paths):
         unused, unused_errors = check_authz.read_allowlist(self.unused_allowlist, 2, check_authz.ISSUE_RE)
         system, system_errors = check_authz.read_allowlist(self.system_allowlist, 1)
-        errors, _ = check_authz.check([self._source("val ok = 1\n", "Ok.scala"), *paths], unused, system)
-        return unused_errors + system_errors + errors
+        elevated, elevated_errors = check_authz.read_allowlist(self.elevated_allowlist, 1)
+        errors, _ = check_authz.check([self._source("val ok = 1\n", "Ok.scala"), *paths], unused, system, elevated)
+        return unused_errors + system_errors + elevated_errors + errors
 
     def assertOnlyError(self, errors, fragment):
         self.assertEqual(len(errors), 1, errors)
@@ -90,7 +94,7 @@ class CheckAuthzTest(unittest.TestCase):
         self.assertOnlyError(self._errors(src), "stale unused-User allow-list entry")
 
     def test_system_user_not_allow_listed_fails(self):
-        src = self._source("val u = KnoraSystemInstances.Users.SystemUser\n")
+        src = self._source("val u = SystemUser\n")
         self.assertOnlyError(self._errors(src), "SystemUser outside the allow-list")
         self.assertEqual(self._run(src), 1)
 
@@ -169,6 +173,94 @@ class CheckAuthzTest(unittest.TestCase):
             "slice/api/X.scala",
         )
         self.assertEqual(self._errors(src), [])
+
+    def _elevated_read_source(self):
+        src = self._source("val u = KnoraSystemInstances.Users.SystemUser\n")
+        self.system_allowlist = self._write("system_user_allowlist.txt", f"{src}  # reason\n")
+        return src
+
+    def test_elevated_read_not_allow_listed_fails(self):
+        src = self._elevated_read_source()
+        self.assertOnlyError(self._errors(src), "elevated read outside the allow-list")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(self._run(src), 1)
+        self.assertIn(check_authz.ELEVATED_READ_HINT, out.getvalue())
+        self.assertNotIn(check_authz.SYSTEM_USER_HINT, out.getvalue())
+
+    def test_allow_listed_elevated_read_passes(self):
+        src = self._elevated_read_source()
+        self.elevated_allowlist = self._write("elevated_read_allowlist.txt", f"{src}  # reason\n")
+        self.assertEqual(self._run(src), 0)
+
+    def test_stale_elevated_read_entry_fails(self):
+        src = self._source("val u = KnoraUserRepo.builtIn.SystemUser.id\n")
+        self.system_allowlist = self._write("system_user_allowlist.txt", f"{src}  # reason\n")
+        self.elevated_allowlist = self._write("elevated_read_allowlist.txt", f"{src}  # reason\n")
+        self.assertOnlyError(self._errors(src), "stale elevated-read allow-list entry")
+        self.assertEqual(self._run(src), 1)
+
+    def test_elevated_read_in_comments_passes(self):
+        src = self._source(
+            "// as KnoraSystemInstances.Users.SystemUser\n * [[KnoraSystemInstances.Users.SystemUser]]\n"
+            "val u = user // not KnoraSystemInstances.Users.SystemUser\n"
+        )
+        self.assertEqual(self._errors(src), [])
+
+    def test_elevated_read_without_system_user_entry_fails_both_rules(self):
+        src = self._source("val u = KnoraSystemInstances.Users.SystemUser\n")
+        self.elevated_allowlist = self._write("elevated_read_allowlist.txt", f"{src}  # reason\n")
+        self.assertOnlyError(self._errors(src), ": SystemUser outside the allow-list")
+
+    def _access_source(self, body, name, module="modules/webapi"):
+        return self._write(f"{module}/src/main/scala/org/knora/webapi/{name}", body)
+
+    def test_access_package_outside_its_directory_fails(self):
+        src = self._access_source(
+            "/*\n * header\n */\n\npackage org.knora.webapi.slice.resources.access\n\nval g = 1\n",
+            "slice/resources/service/Forged.scala",
+        )
+        self.assertOnlyError(self._errors(src), "declares org.knora.webapi.slice.resources.access outside")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(self._run(src), 1)
+        self.assertIn(check_authz.ACCESS_PACKAGE_HINT, out.getvalue())
+
+    def test_chained_access_package_clauses_outside_its_directory_fail(self):
+        src = self._access_source(
+            "package org.knora.webapi.slice.resources\npackage access.sub\n\nval g = 1\n",
+            "slice/resources/Forged.scala",
+        )
+        self.assertOnlyError(self._errors(src), "declares org.knora.webapi.slice.resources.access.sub outside")
+
+    def test_access_package_in_its_directory_passes(self):
+        src = self._access_source(
+            "package org.knora.webapi.slice.resources.access\n\nval g = 1\n",
+            "slice/resources/access/Grant.scala",
+        )
+        self.assertEqual(self._run(src), 0)
+
+    def test_access_package_in_another_module_fails(self):
+        src = self._access_source(
+            "package org.knora.webapi.slice.resources.access\n", "slice/resources/access/Forged.scala", "modules/ingest"
+        )
+        self.assertOnlyError(self._errors(src), "declares org.knora.webapi.slice.resources.access outside")
+
+    def test_imported_handle_is_an_elevated_read(self):
+        handle = self._source("import KnoraSystemInstances.Users\nval u = Users.SystemUser\n", "H.scala")
+        self.system_allowlist = self._write("system_user_allowlist.txt", f"{handle}  # reason\n")
+        self.assertOnlyError(self._errors(handle), "elevated read outside the allow-list")
+
+    def test_sibling_packages_and_later_package_text_pass(self):
+        sibling = self._access_source(
+            "package org.knora.webapi.slice.resources.accessible\n", "slice/resources/service/A.scala"
+        )
+        later = self._access_source(
+            "package org.knora.webapi.slice.resources.service\n\nimport x\n"
+            "  package org.knora.webapi.slice.resources.access\n",
+            "slice/resources/service/B.scala",
+        )
+        self.assertEqual(self._errors(sibling, later), [])
 
     def test_test_sources_are_ignored(self):
         main_src = self._source("val ok = 1\n")

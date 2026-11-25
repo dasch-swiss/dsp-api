@@ -48,6 +48,14 @@ Scala 3, ZIO 2, Tapir, zio-json, Bazel. Package root: `org.knora.webapi` (new co
   handlers through `findExport`; the trigger answers `export_exists` for any export in the slot) and matches
   `ExportCaller` exhaustively, never with `case _`. Enforced by review only: the tests cover today's four handlers
   and do not detect a fifth.
+- **v2 resource and value writes go through the object-access gate** (ADR-0013 Addendum 1): the endpoint uses
+  `authenticatedObjectAccessPolicyEndpoint` with `enforcedIn` naming `ObjectAccess` and its levels in the
+  description; the write runs inside `ObjectAccess.within(caller, apiRequestId, request)(write)` (resource erase:
+  `withinAsProjectAdmin`; `candelete`: `decideOnly`) and takes the resource, values, IRIs and permissions it writes
+  from the `Grant`'s target, never from the request. Object-data validation runs inside the closure; before it, only
+  request parsing and public data (ontology, the named project, the permission literal's syntax and groups). Rules that need hidden values run through
+  `grant.verify`. A grant never leaves its closure. See
+  `docs/development/code-conventions.md#v2-resource-and-value-writes-the-object-access-gate`.
 - `*ServerEndpoints.scala` — wiring of endpoint to RestService method. `.zServerLogic(_ => …)` for public, `.serverLogic(restService.x)` for secured.
 - `*RestService.scala` — handler logic: auth and presentation only, with a minimal amount of business logic. The actual business logic lives in plain `*Service`s. Every secured method uses multiple parameter lists `def x(user: User)(args…): Task[Resp]` (a `ProjectCandidate` in place of the `User` for `projectAdminPolicyEndpoint`, which obtains a `ProjectAdminGrant` from `AuthorizationRestService.authorizeProjectAdminById` before it acts), which lets the `*ServerEndpoints` wire it concisely without enumerating every param. The body follows: **auth check → delegate to service → `format.toExternal(...)`**.
 - Register new endpoints in the API's aggregator — `AdminApiServerEndpoints` for admin, and the matching `*ServerEndpoints` aggregator for the other APIs.

@@ -25,8 +25,9 @@ py_test(
     main = "check_relative_imports.py",
 )
 
-# Authorization lint (ADR-0013): @unused on a User parameter and SystemUser in main sources, each
-# outside its allow-list. Wired into `just check`.
+# Authorization lint (ADR-0013): @unused on a User parameter, SystemUser and elevated reads (the Users.SystemUser
+# handle) in main sources, each outside its allow-list, and the access package outside its webapi directory. Wired
+# into `just check`.
 py_test(
     name = "check_authz",
     srcs = ["check_authz.py"],
@@ -35,8 +36,11 @@ py_test(
         "$(rootpath unused_user_allowlist.txt)",
         "--system-user-allowlist",
         "$(rootpath system_user_allowlist.txt)",
+        "--elevated-read-allowlist",
+        "$(rootpath elevated_read_allowlist.txt)",
     ] + ["$(rootpaths %s)" % t for t in _LINT_SRCS],
     data = _LINT_SRCS + [
+        "elevated_read_allowlist.txt",
         "system_user_allowlist.txt",
         "unused_user_allowlist.txt",
     ],

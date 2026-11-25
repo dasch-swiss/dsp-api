@@ -1,7 +1,7 @@
 ---
 dune_map: true
 schema_version: 2
-date: 2026-10-28
+date: 2026-11-24
 ---
 
 # dsp-api architecture map
@@ -153,6 +153,12 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         slot, whoever created it. `ExportCaller` is matched exhaustively. A fifth handler on
         the policy compiles without any of this (ADR-0014) - enforcement: review; `V3ProjectsRestServiceSpec`
         tests the four handlers' behaviour and does not detect a fifth.
+    - The v2 resource and value write endpoints are built with `authenticatedObjectAccessPolicyEndpoint`, whose
+        `enforcedIn` names `ObjectAccess` and whose description names the levels the gate can require
+        (resource erase stays on `projectAdminPolicyEndpoint`, value erase on `systemAdminPolicyEndpoint`); their
+        RestServices only parse the request and call the responder, which calls the gate - enforcement: review
+        (`REVIEW.md`); `AuthorizationMatrixE2ESpec` skips `ObjectAccess` endpoints, so the per-endpoint
+        hidden-object tests in `ValuesEndpointsE2ESpec` and `ResourcesRouteV2E2ESpec` cover them.
     - Every route is the three-tier triad `*Endpoints.scala` for the Tapir definition, `*ServerEndpoints.scala`
         for wiring, `*RestService.scala` for auth check then service then `format.toExternal`
         (`CONVENTIONS.md` lines 28-33) - enforcement: review. Currently violated by
@@ -199,6 +205,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     - `StoreRestService` writes other components' state: the test-only `/admin/store/ResetTriplestoreContent`
         route resets triplestore content (webapi-triplestore) and flushes `CacheManager`
         (webapi-infrastructure), making it a second writer of both.
+- **Fingerprint**: `ba0e07b8313f`
 
 ### webapi-common
 
@@ -247,7 +254,8 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
 - **Public interface**: `CommonModule.layer` (provides `IriConverter & StringFormatter & TriplestoreService`);
     `StringFormatter.live`; `IriConverter`; the `BaseEndpoints` policy factories (`*PolicyEndpoint`, ADR-0013;
     `withUserEndpoint` only for the five count routes waiting on DEV-7718); the `AuthorizationRestService` PDP
-    (`authorize*` minting `ProjectAdminGrant` / `ProjectMemberGrant` from a `ProjectCandidate`); `KnoraResponseRenderer`; value-type companions via `WithFrom.from` and
+    (`authorize*` minting `ProjectAdminGrant` / `ProjectMemberGrant` from a `ProjectCandidate`; webapi-resources'
+    `ObjectAccess.withinAsProjectAdmin` takes the `ProjectAdminGrant` for resource erase); `KnoraResponseRenderer`; value-type companions via `WithFrom.from` and
     `unsafeFrom`; `Repository` / `CrudRepository`; `IriLocker.runWithIriLock`; `IriService`;
     `Vocabulary.{KnoraBase,KnoraAdmin,SalsahGui}`; the `dsp.errors.*` hierarchy; `JsonLDUtil` /
     `RdfFormatUtil`; the Jena `ModelOps` / `ResourceOps` / `StatementOps` / `DatasetOps` extension syntax.
@@ -312,9 +320,10 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         `CommonModule.{Dependencies,Provided,layer}`.
 - **Durable state**:
     - `IriLocker.lockMap`, a JVM-global `ConcurrentHashMap[IRI, IriLock]`, single writer
-        `IriLocker.runWithIriLock` but eight call-site owners across webapi-admin (`PermissionsResponder`,
+        `IriLocker.runWithIriLock` but seven call-site owners across webapi-admin (`PermissionsResponder`,
         `ListsResponder`), webapi-ontology (`OntologyResponderV2`, `OntologyMappingRestService`),
-        webapi-resources (`ResourcesResponderV2`, `ValuesResponderV2`, `CreateResourceV2Handler`) and
+        webapi-resources (`ObjectAccess` for every v2 write on an existing resource, `CreateResourceV2Handler`
+        for a new resource's IRI) and
         webapi-standoff (`StandoffResponderV2`). Keys are ad hoc (`ONTOLOGY_CACHE_LOCK_IRI`,
         `LISTS_GLOBAL_LOCK_IRI`, `PERMISSIONS_GLOBAL_LOCK_IRI`, resource IRIs, `"<projectIri>/mappings"`)
         with no shared key registry. Single-JVM only.
@@ -328,6 +337,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         `Standoff`, `NamedGraphs`, `Fuseki`) and duplicates much of `slice/common/repo/rdf/Vocabulary.scala`.
     - `modules/webapi/BUILD.bazel` builds one `scala_library` covering all of webapi, so no Bazel visibility
         can enforce any rule above until Phase 1 splits targets.
+- **Fingerprint**: `50fef127c7fe`
 
 ### webapi-security
 
@@ -812,15 +822,21 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     `ValueHasXmlRenderer`, `ValueHasXmlBackfillQuery`, `StandoffLinkRefCountQuery`,
     `StandoffLinkRefCountRepo`, `StandoffLinkRefCountRepoLive`, `StandoffLinkRefCountMismatch`, `StandoffLinkRefCountService`,
     `GetResourceInfoQuery`, `ResourceMetadataRules`, `FairResourcesLive`, `BatchEditService`, `BatchEdit`,
-    `BatchEditOutcome`
+    `BatchEditOutcome`, the object-access gate in `slice/resources/access` (`ObjectAccess`, `AccessRequest`,
+    `Grant`, `AccessDecision`, `ObjectLoader`, `IntegrityRules`, `LinkValueWrites`, `ReorderSlots`)
 - **Public interface**: `ReadResourcesService` (10 external importers), `BatchEditService` (the v3 batch
     route's domain service; its layer is wired in `ApiV3Module`, since `ResourcesModule` provides no responders), `ResourcesRepo`, `ValueRepo`,
     `MetadataService`, `ResourceInfoRepo`, `ValueContentValidator`, `ResourcesResponderV2`,
     `ValuesResponderV2`, `ResourceUtilV2`, `CreateResourceV2Handler`, the `ReadResourceV2` /
     `ReadResourcesSequenceV2` / `ValueContentV2` / `CreateResourceRequestV2` message model,
-    `IiifImageRequestUrl`, `ResourcesModule.layer`.
+    `IiifImageRequestUrl`, `ResourcesModule.layer`; for writes, `ObjectAccess.within` /
+    `withinAsProjectAdmin` with an `AccessRequest`, answering with a `Grant[T]`, and `decideOnly`, which hands
+    its check the caller's view, never a grant.
 - **Local-context kit**:
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/resources/ResourcesModule.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/resources/access/ObjectAccess.scala`
+    - `modules/webapi/src/main/scala/org/knora/webapi/slice/resources/access/Grant.scala`
+    - `docs/adr/0013-authorization-policy-enforcement.md` (Addendum 1)
     - `modules/webapi/src/main/scala/org/knora/webapi/core/LayersLive.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/resources/repo/service/ResourcesRepoLive.scala`
     - `modules/webapi/src/main/scala/org/knora/webapi/slice/resources/repo/service/ValueRepo.scala`
@@ -839,6 +855,21 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     test-e2e. webapi-fair reads resources at runtime through the `FairResources` port and imports nothing
     from here.
 - **Boundary rules**:
+    - Every v2 resource and value write runs inside `ObjectAccess.within` (resource erase:
+        `withinAsProjectAdmin`; `candelete`: `decideOnly`, no lock, no grant) and takes what it writes from
+        the `Grant`'s target; validation that reads object data runs inside the closure, and rules over values
+        hidden from the caller run through `Grant.verify` - enforcement: structure for grant issuance
+        (`private[access]` constructors), lint for the package's location and for elevated reads
+        (`//tools/lint:check_authz` rules 5 and 4, `tools/lint/elevated_read_allowlist.txt`), review for the
+        rest (`REVIEW.md`, `docs/development/code-conventions.md`). The responders keep their public request
+        signatures and call the gate themselves; their write bodies are private functions taking the grant.
+        Exceptions recorded in ADR-0013 Addendum 1's "Not yet in code": `CreateResourceV2Handler` uses the grant
+        only for its first checks and then reads the caller and project from the request, and the in-use answer of
+        resource delete and `candelete` lists every referencing resource IRI.
+    - The access package depends on `responders.IriLocker` and `responders.v2.SearchResponderV2` (Gravsearch
+        for the property-scoped load) and reaches into webapi-search's repo
+        (`GetResourceWithSpecifiedPropertiesGravsearchQuery` in `ObjectLoader`) - enforcement: docs-only. No
+        layer cycle: `SearchResponderV2` depends on no write responder.
     - `FairResourcesLive` (`slice/resources/service`) implements the `FairResources` port declared by
         webapi-fair and is wired only in `core/LayersLive.scala`. `ResourceMetadataRules`
         (`slice/resources/domain`) holds the pure file-value selection and type-of-data rules shared by
@@ -870,8 +901,8 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         `ReadResourcesServiceLive.layer`, `ResourceUtilV2.layer`, `ResourcesResponderV2.layer`,
         `ValuesResponderV2.layer`, `CreateResourceV2Handler.layer`, `ValueHasXmlBackfillRepoLive.layer`,
         `ValueHasXmlBackfillService.layer`, `ValueHasXmlRendererLive.layer`,
-        `StandoffLinkRefCountRepoLive.layer` and `StandoffLinkRefCountService.layer` are listed individually in
-        `core/LayersLive.scala`.
+        `StandoffLinkRefCountRepoLive.layer`, `StandoffLinkRefCountService.layer`, `ObjectAccess.layer` and
+        `ObjectLoader.layer` are listed individually in `core/LayersLive.scala`.
 - **Durable state**:
     - The project data named graph in Fuseki holding resource and value triples, multi-writer with no single
         owner. Inside: `ResourcesRepoLive.createNewResource`, `ValueRepo` (`createValue`, `updateValue`,
@@ -912,15 +943,18 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         `MaintenanceCheckStandoffLinkRefCountsE2ESpec`,
         `StandoffLinkRefCountScenariosE2ESpec` and `refCountsConsistent` in `ValueHasXmlTestSupport` (test-e2e).
     - The in-JVM per-IRI write lock `IriLocker.runWithIriLock`, owned by webapi-common, keyed on resource
-        IRIs here and on list, permission, ontology and mapping IRIs elsewhere. Single-JVM only, noted in the
-        comment at the lock call in `ValuesResponderV2`.
+        IRIs here and on list, permission, ontology and mapping IRIs elsewhere. Here it is taken by `ObjectAccess`
+        for every write on an existing resource, and by `CreateResourceV2Handler` on the new resource's IRI.
+        Single-JVM only, noted in the comment in `ValuesResponderV2` where the value write runs under it.
     - Golden SPARQL dumps under `modules/webapi/src/test/resources/org/knora/webapi/slice/resources/repo/**`
         (65 files), single writer: the query specs that regenerate them.
-    - Read permissions are enforced late and in two places, `PermissionUtilADM.getUserPermissionADM` inside
-        `ResourceUtilV2` and `ConstructResponseUtilV2` in webapi-common, while write paths compare
-        permissions in `CreateResourceV2Handler` and `ValuesResponderV2`. There is no single chokepoint.
+    - v2 resource and value writes have one chokepoint, `ObjectAccess`: it loads as `SystemUser` through
+        `ObjectLoader`, decides visibility and the level in `AccessDecision`, and hands the write a `Grant`.
+        Read enforcement is still split: read permissions are applied late, in `ConstructResponseUtilV2`
+        (webapi-common) and the `PermissionUtilADM.getUserPermissionADM` calls of the read paths.
     - `GetStandoffTagByUUIDQuery` lives in test source under `modules/test-it` but sits in this component's
         production package namespace.
+- **Fingerprint**: `4ffd8bbc904d`
 
 ### webapi-standoff
 

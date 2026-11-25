@@ -222,6 +222,32 @@ service's audit line, and checks ownership with `mayAccess`, a by-id handler thr
 - Every role-based endpoint (any policy except `Public`) has a row in `AuthorizationMatrixE2ESpec`, or an `exempt`
   entry with a reason; the spec fails for an endpoint with neither.
 
+### v2 resource and value writes: the object-access gate
+
+Every v2 resource and value write goes through one gate, `ObjectAccess` in `slice/resources/access` (ADR-0013,
+Addendum 1). The endpoint is built with `authenticatedObjectAccessPolicyEndpoint` with `enforcedIn` naming the gate,
+and its description names every level the gate can require for it.
+
+- A write asks `ObjectAccess.within(caller, apiRequestId, request)(write)` with an `AccessRequest` case
+  (`CreateValue`, `UpdateValue`, `DeleteResource`, ...). For a request on an existing resource the gate takes the
+  write lock and loads the resource as `SystemUser`; for every request it decides visibility and the permission
+  level in a fixed order, and only then calls `write` with a `Grant[T]`. Resource erase uses `withinAsProjectAdmin` with the `ProjectAdminGrant`; the read-only `candelete`
+  check uses `decideOnly`, which takes no lock and hands its check the caller's view, never a grant.
+- The write takes the resource, the values and the IRIs it writes from `grant.target`, the caller's view, and the
+  permissions to write from the target's `PermissionsChange`, never from the request.
+- Validation that reads object data (value content, object class, list node, standoff and link targets,
+  cardinality) runs inside `write`, after the decision. Before the gate a write may only parse the request and read
+  public data: the ontology, the project a create or erase names, and a submitted permission literal (its syntax and
+  its groups).
+- A rule that must see values hidden from the caller (cardinality, a duplicate link) is an `IntegrityRules`
+  function run through `grant.verify`; only its verdict leaves the access package.
+- A grant is valid only inside the closure it was passed to: never store it, return it, or pass it to a fiber that
+  outlives the write.
+- Grants are issued only in `org.knora.webapi.slice.resources.access`: their constructors are `private[access]`,
+  `//tools/lint:check_authz` rule 5 keeps the package in its own directory, and rule 4 keeps the elevated read
+  `Users.SystemUser` to the files in `tools/lint/elevated_read_allowlist.txt`. A resource or value write is never
+  added to that list.
+
 ## Error Handling
 
 See [`error-handling.md`](error-handling.md) for the full rules: when to use the ZIO error channel (recoverable failures) vs. the `die` family (invariant violations), the `RequestRejectedException` / `InternalServerException` hierarchy, typed `IO[E, A]` vs. `Task[A]`, the V3 typed-error pattern, and the narrow legacy carve-out for `throw`.

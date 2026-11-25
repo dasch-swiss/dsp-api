@@ -51,6 +51,8 @@ import org.knora.webapi.slice.ontology.OntologyModule
 import org.knora.webapi.slice.ontology.OntologyTransformer
 import org.knora.webapi.slice.ontology.domain.service.FairClassesLive
 import org.knora.webapi.slice.resources.ResourcesModule
+import org.knora.webapi.slice.resources.access.ObjectAccess
+import org.knora.webapi.slice.resources.access.ObjectLoader
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepo
 import org.knora.webapi.slice.resources.repo.service.ResourcesRepoLive
 import org.knora.webapi.slice.resources.repo.service.StandoffLinkRefCountRepo
@@ -95,6 +97,7 @@ object LayersLive { self =>
     InfrastructureModule.Provided &
     IriService &
     ListsResponder &
+    ObjectAccess &
     OntologyInferencer &
     OntologyModule.Provided &
     OntologyResponderV2 &
@@ -164,6 +167,8 @@ object LayersLive { self =>
       IriService.layer,
       KnoraResponseRenderer.layer,
       ListsResponder.layer,
+      ObjectAccess.layer,
+      ObjectLoader.layer,
       OntologyModule.layer,
       OntologyResponderV2.layer,
       // OntologyTransformer belongs to the ontology slice but depends on StandoffMappingService (standoff slice) and
