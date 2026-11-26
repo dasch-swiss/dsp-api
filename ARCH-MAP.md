@@ -1889,6 +1889,10 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         license-checked: `scalafmt_targets` in the justfile, `_LICENSE_SRCS` in `tools/license/BUILD.bazel`
         and `_LINT_SRCS` in `tools/lint/BUILD.bazel`. A module missing from these silently skips `just fmt`
         and `just check` - enforcement: docs-only (no test fails if a module is omitted).
+    - A `build-and-test.yml` job that only exercises the API declares `needs: changes` and guards with
+        `!cancelled() && ... && needs.changes.outputs.api != 'false'`; a required check is never scoped
+        by a workflow-level `paths:` filter, because a workflow that never reports blocks the PR -
+        enforcement: review.
     - No top-level relative Scala imports; identifiers are fully qualified - enforcement: static-analysis
         (`//tools/lint:no_relative_imports`, part of `just check`).
     - Every Scala file carries an Apache-2.0 SPDX header - enforcement: static-analysis
