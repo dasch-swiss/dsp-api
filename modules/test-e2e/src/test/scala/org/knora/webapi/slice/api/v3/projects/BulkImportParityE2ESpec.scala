@@ -143,6 +143,7 @@ class BulkImportParityE2ESpec extends E2EZSpec {
     "richtext_multi_paragraph_mixed",
     "second_onto_class",
     "image_still",
+    "placeholder_legal_info",
     "image_still_svg",
     "iiif_image",
     "video_repr",

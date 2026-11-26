@@ -44,6 +44,7 @@ import dsp.errors.NotFoundException
 import dsp.valueobjects.UuidUtil
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.Geolocation
+import org.knora.webapi.messages.OntologyConstants.KnoraApiV2Complex
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.OntologyConstants.Rdf
 import org.knora.webapi.messages.StringFormatter
@@ -996,12 +997,11 @@ final class OntologyTransformer(
     } yield ()
 
   /**
-   * Rejects a file value carrying the placeholder sentinel (`urn:dasch:placeholder`) in a string-valued legal-metadata
-   * field (`hasCopyrightHolder` / `hasAuthorship`) when the `allow-placeholder` switch is off, mirroring the create
-   * path's [[FileValueV2.placeholderFields]] gate. When the switch is on it is a no-op — the legal metadata passes
-   * through untouched, exactly as on the create path. A placeholder `hasLicense` is an IRI object, so it is already
-   * rejected earlier by stage 1's IRI rewrite ("Couldn't parse IRI") in every environment; it is listed here too so
-   * a malformed literal-valued license sentinel is still caught.
+   * Rejects a file value carrying the placeholder sentinel (`urn:dasch:placeholder`) in its legal metadata
+   * (`hasCopyrightHolder` / `hasAuthorship` as a string, `hasLicense` as an IRI object or a literal) when the
+   * `allow-placeholder` switch is off, mirroring the create path's [[FileValueV2.placeholderFields]] gate. When the
+   * switch is on it is a no-op — the legal metadata passes through untouched, exactly as on the create path. Stage 1
+   * keeps a placeholder `hasLicense` object as it is, so this gate is the only check that rejects it.
    */
   private def rejectPlaceholderLegalMetadata(model: Model, v: Resource, allowPlaceholder: Boolean): Task[Unit] =
     if (allowPlaceholder) ZIO.unit
@@ -1232,21 +1232,30 @@ final class OntologyTransformer(
     def rewriteNode(n: Node): Node =
       if (n != null && n.isURI) NodeFactory.createURI(rewriteUri(n.getURI)) else n
 
+    // The placeholder license is not an http(s) IRI, so it cannot become a SmartIri. It is kept as it is, but only
+    // as the object of hasLicense.
+    def isPlaceholderLicense(predicate: Node, obj: Node): Boolean =
+      predicate.isURI && predicate.getURI == KnoraApiV2Complex.HasLicense &&
+        obj.isURI && obj.getURI == PlaceholderIri.instance.value
+
+    def rewriteTriple(subject: Node, predicate: Node, obj: Node): Triple =
+      Triple.create(
+        rewriteNode(subject),
+        rewriteNode(predicate),
+        if (isPlaceholderLicense(predicate, obj)) obj else rewriteNode(obj),
+      )
+
     new StreamRDFBase {
       override def start(): Unit                             = downstream.start()
       override def finish(): Unit                            = downstream.finish()
       override def base(base: String): Unit                  = downstream.base(base)
       override def prefix(prefix: String, iri: String): Unit = downstream.prefix(prefix, rewriteUri(iri))
       override def triple(t: Triple): Unit                   =
-        downstream.triple(
-          Triple.create(rewriteNode(t.getSubject), rewriteNode(t.getPredicate), rewriteNode(t.getObject)),
-        )
+        downstream.triple(rewriteTriple(t.getSubject, t.getPredicate, t.getObject))
       // The output graph is derived solely from the project; `@graph` declarations in the payload are ignored,
       // so quads are flattened to triples here.
       override def quad(q: Quad): Unit =
-        downstream.triple(
-          Triple.create(rewriteNode(q.getSubject), rewriteNode(q.getPredicate), rewriteNode(q.getObject)),
-        )
+        downstream.triple(rewriteTriple(q.getSubject, q.getPredicate, q.getObject))
     }
   }
 }
