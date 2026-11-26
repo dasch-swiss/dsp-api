@@ -1,0 +1,31 @@
+# Target platforms: the image's two architectures and the developer Mac. `linux_x86_64` is also
+# the NativeLink worker's; its exec_properties match `--remote_default_exec_properties` in the
+# `bazel-rbe` action.
+package(default_visibility = ["//visibility:public"])
+
+platform(
+    name = "linux_x86_64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+    exec_properties = {
+        "cpu_arch": "x86_64",
+    },
+)
+
+platform(
+    name = "linux_aarch64",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+)
+
+platform(
+    name = "darwin_aarch64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:aarch64",
+    ],
+)
