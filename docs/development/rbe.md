@@ -40,7 +40,9 @@ runtime. So they are **not** committed to `.bazelrc` and **no** `ci.bazelrc` is 
 
 1. The `bazel-rbe` composite action (`.github/actions/bazel-rbe`) writes the mTLS material to
    `$RUNNER_TEMP/.nl/` (outside the checkout) and emits a `flags` step-output string enabling the
-   remote cache and executor.
+   remote cache and executor. Every ref reads the cache, but only `main` and `v*` tags upload locally
+   executed results; execution and target platform are pinned to `//platforms:linux_x86_64`, the
+   worker's platform.
 2. Each CI step runs a `just` recipe with the flags appended:
    `nix develop --command just <recipe> ${{ steps.rbe.outputs.flags }}`.
 3. Each bazel-invoking `just` recipe takes `*FLAGS=''` and appends `{{FLAGS}}` to its `bazel` command.

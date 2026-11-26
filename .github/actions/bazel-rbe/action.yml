@@ -7,9 +7,10 @@ description: >
   --repository_cache, …) are in .bazelrc. The flags enable the remote cache (AC+CAS) and the remote
   executor. Flags are empty when mTLS material is absent (fork PR → cold local build).
   It also writes `user.bazelrc` to turn off the developer disk cache set in .bazelrc.
-  dsp-api is single-arch (all runners are x86_64 = the worker arch), so there is no cross-compile /
-  target-platform machinery. External archives are cached via --repository_cache + the actions/cache
-  step, not a remote downloader.
+  Only main and v* tags upload locally executed results to the shared cache; every ref reads it.
+  Execution and target platform are pinned to //platforms:linux_x86_64, the worker's platform (all
+  runners are x86_64 too, so nothing cross-compiles). External archives are cached via
+  --repository_cache + the actions/cache step, not a remote downloader.
 
 inputs:
   runner-endpoint:
@@ -64,11 +65,19 @@ runs:
         # advertise wire compression, so enabling it fails the capabilities query.
         FLAGS="--remote_cache=$RBE_RUNNER_ENDPOINT --remote_instance_name=main"
         FLAGS="$FLAGS --tls_certificate=$CERT_DIR/ca.crt --tls_client_certificate=$CERT_DIR/client.crt --tls_client_key=$CERT_DIR/client.key"
-        FLAGS="$FLAGS --noremote_cache_compression --remote_upload_local_results=true --experimental_remote_cache_eviction_retries=5"
+        # Only main and release tags upload locally executed results; a branch still reads them.
+        # Remotely executed results are stored by NativeLink itself, whatever the ref.
+        case "$GITHUB_REF" in
+          refs/heads/main | refs/tags/v*) UPLOAD=true ;;
+          *) UPLOAD=false ;;
+        esac
+        FLAGS="$FLAGS --noremote_cache_compression --remote_upload_local_results=$UPLOAD --experimental_remote_cache_eviction_retries=5"
         # Remote executor: build/compile actions run on the x86_64 worker; the scheduler matches it on
         # cpu_arch. Docker-dependent test targets opt out locally via a `no-remote` BUILD tag (they need
         # the local Docker daemon); unit tests run remotely + result-cache. --jobs raises the client
         # fan-out far above the runner core count (actions run on the worker, not locally) — start at
         # 128, retune with ops as more repos onboard.
         FLAGS="$FLAGS --remote_executor=$RBE_RUNNER_ENDPOINT --remote_default_exec_properties=cpu_arch=x86_64 --jobs=128"
+        # Pin exec and target platform to the worker so exec-config tools resolve there.
+        FLAGS="$FLAGS --extra_execution_platforms=//platforms:linux_x86_64 --platforms=//platforms:linux_x86_64"
         echo "flags=$FLAGS" >> "$GITHUB_OUTPUT"

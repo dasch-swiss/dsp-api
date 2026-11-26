@@ -1835,6 +1835,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     - `justfile`
     - `tools/**`
     - `bazel/**`
+    - `platforms/**`
     - `.github/**`
     - `.scalafmt.conf`
     - `.editorconfig`
