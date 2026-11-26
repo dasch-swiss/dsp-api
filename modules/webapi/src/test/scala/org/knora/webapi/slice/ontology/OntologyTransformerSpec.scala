@@ -1645,6 +1645,24 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
                             |""".stripMargin,
       )
     },
+    test("keeps a placeholder-sentinel license inside a @graph declaration") {
+      val sentinel = PlaceholderIri.instance.value
+      runTransform(
+        jsonLd = s"""
+                    |{
+                    |  "@id": "http://example.org/ignored-graph",
+                    |  "@graph": [{
+                    |      "@id": "$resourceIri",
+                    |      "${knoraApi}hasLicense": { "@id": "$sentinel" }
+                    |  }]
+                    |}""".stripMargin,
+        expectedTurtle = s"""
+                            | PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                            |
+                            | <$resourceIri> knora-base:hasLicense <$sentinel> .
+                            |""".stripMargin,
+      )
+    },
   )
 
   // ---- Cross-emitter standoff equivalence ----
@@ -2496,6 +2514,81 @@ class OntologyTransformerSpec extends ZIOSpecDefault {
           "testasset.jp2",
         ),
       )
+    },
+    test("a placeholder-sentinel license passes through as an IRI when allow-placeholder is on") {
+      val sentinel = PlaceholderIri.instance.value
+      runTransformStage2(
+        fileValueJsonLd(
+          "StillImageFileValue",
+          s"""${filenameInner("testasset.jp2")},
+             |    "${knoraApi}hasLicense": { "@id": "$sentinel" }""".stripMargin,
+        ),
+        expectedStage2SingleValue(
+          "testFile",
+          "StillImageFileValue",
+          s"""knora-base:internalFilename "testasset.jp2" ;
+             |     knora-base:internalMimeType "image/jp2" ;
+             |     knora-base:originalFilename "test2.tiff" ;
+             |     knora-base:originalMimeType "image/tiff" ;
+             |     knora-base:dimX             512 ;
+             |     knora-base:dimY             256 ;
+             |     knora-base:hasLicense       <$sentinel>""".stripMargin,
+          "testasset.jp2",
+        ),
+      )
+    },
+    test("a file value with the sentinel in every field is emitted without ingest when allow-placeholder is on") {
+      val sentinel = PlaceholderIri.instance.value
+      for {
+        _   <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+        res <- runTransformStage2(
+                 fileValueJsonLd(
+                   "StillImageFileValue",
+                   s"""${filenameInner(sentinel)},
+                      |    "${knoraApi}hasCopyrightHolder": "$sentinel",
+                      |    "${knoraApi}hasAuthorship": "$sentinel",
+                      |    "${knoraApi}hasLicense": { "@id": "$sentinel" }""".stripMargin,
+                 ),
+                 expectedStage2SingleValue(
+                   "testFile",
+                   "StillImageFileValue",
+                   s"""knora-base:internalFilename   "$sentinel" ;
+                      |     knora-base:internalMimeType   "$sentinel" ;
+                      |     knora-base:dimX               0 ;
+                      |     knora-base:dimY               0 ;
+                      |     knora-base:hasCopyrightHolder "$sentinel" ;
+                      |     knora-base:hasAuthorship      "$sentinel" ;
+                      |     knora-base:hasLicense         <$sentinel>""".stripMargin,
+                   sentinel,
+                 ),
+               )
+      } yield res
+    },
+    test("a placeholder-sentinel license is rejected by the legal-metadata gate when allow-placeholder is off") {
+      ZIO.withConfigProvider(TestAppConfig.provider("app.features.allow-placeholder" -> false)) {
+        for {
+          _    <- ZIO.serviceWithZIO[SipiServiceMock](_.assertNoInteraction)
+          exit <- runTransformStage2Failure(
+                    fileValueJsonLd(
+                      "StillImageFileValue",
+                      s"""${filenameInner("testasset.jp2")},
+                         |    "${knoraApi}hasLicense": { "@id": "${PlaceholderIri.instance.value}" }""".stripMargin,
+                    ),
+                  )
+          msg = messageOf(exit)
+        } yield assertTrue(msg.contains("legal metadata"), !msg.contains("Couldn't parse IRI"))
+      }
+    },
+    test("the placeholder sentinel as an object of any predicate other than hasLicense still fails in stage 1") {
+      for {
+        exit <- runTransformStage2Failure(
+                  resourceWithValueJsonLd(
+                    valueProp = s"${onto}testHasLinkToValue",
+                    valueClass = s"${knoraApi}LinkValue",
+                    inner = s""""${knoraApi}linkValueHasTargetIri": { "@id": "${PlaceholderIri.instance.value}" }""",
+                  ),
+                )
+      } yield assertTrue(messageOf(exit).contains("Couldn't parse IRI"))
     },
     test("a DDDFileValue rejects the whole batch before any other file value is fetched") {
       // Hermetic rejection: assertNoInteraction fails on any ingest call, so a message of "not yet implemented"
