@@ -406,6 +406,58 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
       },
     )
 
+  private val assetIngestFailureSuite = {
+    def postAsset(filename: String, body: Body) =
+      executeRequest(
+        Request
+          .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / filename), body)
+          .addHeader("Authorization", "Bearer fakeToken"),
+      )
+
+    suite("/projects/<shortcode>/asset/ingest/<filename> when ingest fails")(
+      testWithScope("answer 500 with a correlation_id and error_code, without the exception message") {
+        for {
+          response <- postAsset("sample.mp3", Body.fromString("tegxd"))
+          body     <- response.body.asString
+          problem   = body.fromJson[ApiProblem.InternalServerError]
+        } yield assertTrue(
+          response.status == Status.InternalServerError,
+          problem.exists(_.correlationId.matches("[0-9a-f]{32}")),
+          problem.exists(_.errorCode == "internal"),
+          !body.contains("/tmp/"),
+          !body.contains("Command failed"),
+        )
+      },
+      testWithScope("answer a JSON 500 and log the cause when the uploaded file is gone before its size is read") {
+        val filename = "gone-before-size.mp3"
+        for {
+          tempFolder  <- ZIO.serviceWithZIO[StorageService](_.getTempFolder())
+          deleteUpload = Files
+                           .walk(tempFolder)
+                           .filter(_.filename.toString == filename)
+                           .runForeach(Files.delete(_))
+                           .orDie
+          stream = zio.stream.ZStream.fromChunk(Chunk.fromArray("tegxd".getBytes)) ++
+                     zio.stream.ZStream.fromZIO(deleteUpload).drain
+          response <- postAsset(filename, Body.fromStreamChunked(stream))
+          body     <- response.body.asString
+          logs     <- zio.test.ZTestLogger.logOutput
+        } yield assertTrue(
+          response.status == Status.InternalServerError,
+          body.fromJson[ApiProblem.InternalServerError].isRight,
+          logs.exists(_.cause.prettyPrint.contains("NoSuchFileException")),
+        )
+      },
+    )
+  }
+
+  private val failingIngestService: ZLayer[Any, Nothing, IngestService] = ZLayer.succeed(
+    new IngestService {
+      def ingestFile(fileToIngest: zio.nio.file.Path, project: ProjectShortcode): zio.Task[Asset] =
+        ZIO.fail(new java.io.IOException("Command failed: '/sbin/sipi convert /tmp/x/y.orig' ProcessOutput(...)"))
+    },
+  )
+
   private val projectsSuite = suite("/admin/projects/{shortcode}")(
     testWithScope("DELETE ./erase should delete the project folder") {
       val shortcode = ProjectShortcode.unsafeFrom("1111")
@@ -508,5 +560,29 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     StorageServiceLive.layer,
     ZLayer.succeed(Features(allowEraseProjects = true)),
     FetchAssetPermissionsMock.layer(false),
+  ) + suite("ProjectsEndpoint with a failing ingest")(
+    assetIngestFailureSuite,
+  ).provide(
+    AssetInfoServiceLive.layer,
+    AuthServiceLive.layer,
+    AuthorizationHandlerLive.layer,
+    BaseEndpoints.layer,
+    BulkIngestService.layer,
+    CsvService.layer,
+    FileChecksumServiceLive.layer,
+    ImportServiceLive.layer,
+    failingIngestService,
+    MimeTypeGuesser.layer,
+    ProjectService.layer,
+    ProjectsEndpoints.layer,
+    ProjectsEndpointsHandler.layer,
+    ReportService.layer,
+    SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.jwtConfigDisableAuthLayer,
+    SpecConfigurations.storageConfigLayer,
+    StorageServiceLive.layer,
+    ZLayer.succeed(Features(allowEraseProjects = true)),
+    FetchAssetPermissionsMock.layer(true),
   )
 }
