@@ -32,7 +32,11 @@ class ConfigurationSpec extends ZIOSpecDefault {
         env <- Configuration.layer.build
       } yield assertTrue(
         env.get[StorageConfig] == StorageConfig("/opt/images", "/opt/temp"),
-        env.get[SipiConfig] == SipiConfig(useLocalDev = false, localDevImage = "daschswiss/knora-sipi:latest"),
+        env.get[SipiConfig] == SipiConfig(
+          useLocalDev = false,
+          localDevImage = "daschswiss/knora-sipi:latest",
+          maxImagePixels = None,
+        ),
         env.get[IngestConfig] == IngestConfig(8),
         env.get[Features] == Features(allowEraseProjects = false),
         env.get[ExecutorConfig] == ExecutorConfig(0.5),
@@ -42,15 +46,17 @@ class ConfigurationSpec extends ZIOSpecDefault {
       for {
         env <- loadWith(
                  Map(
-                   "INGEST_STORAGE_ASSET_DIR"    -> "/data/images",
-                   "INGEST_SIPI_USE_LOCAL_DEV"   -> "true",
-                   "INGEST_ALLOW_ERASE_PROJECTS" -> "true",
-                   "INGEST_EXECUTOR_CPU_SHARE"   -> "1",
+                   "INGEST_STORAGE_ASSET_DIR"     -> "/data/images",
+                   "INGEST_SIPI_USE_LOCAL_DEV"    -> "true",
+                   "INGEST_ALLOW_ERASE_PROJECTS"  -> "true",
+                   "INGEST_EXECUTOR_CPU_SHARE"    -> "1",
+                   "INGEST_SIPI_MAX_IMAGE_PIXELS" -> "500000000",
                  ),
                )
       } yield assertTrue(
         env.get[StorageConfig].assetDir == "/data/images",
         env.get[SipiConfig].useLocalDev,
+        env.get[SipiConfig].maxImagePixels.contains(500_000_000L),
         env.get[Features].allowEraseProjects,
         env.get[ExecutorConfig] == ExecutorConfig(1.0),
       )
