@@ -22,6 +22,7 @@ final class V3ProjectsServerEndpoints(endpoints: V3ProjectsEndpoints, restServic
     endpoints.postProjectIriDataImports.serverLogic(restService.triggerProjectDataImportCreate),
     endpoints.getProjectIriDataImportsImportId.serverLogic(_ => restService.getProjectDataImportStatus),
     endpoints.deleteProjectIriDataImportsImportId.serverLogic(_ => restService.deleteProjectDataImport),
+    endpoints.getProjectShortcodeAssetsUnreferenced.serverLogic(_ => restService.getUnreferencedAssets),
   )
 }
 

@@ -16,6 +16,7 @@ import org.knora.webapi.slice.admin.domain.service.*
 import org.knora.webapi.slice.admin.domain.service.maintenance.MaintenanceService
 import org.knora.webapi.slice.admin.domain.service.maintenance.ReplaceUserIriAction
 import org.knora.webapi.slice.admin.domain.service.maintenance.ReplaceUserIriInProjectAction
+import org.knora.webapi.slice.admin.repo.AssetReferencesRepo
 import org.knora.webapi.slice.admin.repo.LicenseRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsByPropertyRepo
 import org.knora.webapi.slice.admin.repo.ViewRestrictionsRepo
@@ -55,6 +56,7 @@ object AdminDomainModule { self =>
       PasswordService &
       ProjectEraseService &
       ProjectService &
+      UnreferencedAssetsService &
       UserService &
       ViewRestrictionsService &
       ViewRestrictionsByPropertyService
@@ -70,5 +72,6 @@ object AdminDomainModule { self =>
       KnoraUserToUserConverter.layer >+>
       (ViewRestrictionsRepo.layer >+> ViewRestrictionsRowCache.layer >+> ViewRestrictionsService.layer) >+>
       (ViewRestrictionsByPropertyRepo.layer >+> ViewRestrictionsByPropertyService.layer) >+>
+      (AssetReferencesRepo.layer >+> UnreferencedAssetsService.layer) >+>
       UserService.layer
 }

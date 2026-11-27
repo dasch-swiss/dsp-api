@@ -57,6 +57,8 @@ class ProjectMigrationExportServiceSpec extends ZIOSpecDefault {
   private def stubDspIngestClient(exportProjectCalled: Ref[Boolean]): DspIngestClient = new DspIngestClient {
     override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
       ZIO.die(new UnsupportedOperationException("not used in export tests"))
+    override def listAssets(shortcode: Shortcode): Task[Chunk[IngestAsset]] =
+      ZIO.die(new UnsupportedOperationException("not used in export tests"))
     override def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
       // A sizeable, highly-compressible stand-in for the inner assets.zip (1 MB of zeros). This makes the
       // outer-bag compression-policy assertions non-vacuous: were it re-compressed, its size would collapse.

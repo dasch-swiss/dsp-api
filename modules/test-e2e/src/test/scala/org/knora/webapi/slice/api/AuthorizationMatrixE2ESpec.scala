@@ -1058,6 +1058,13 @@ class AuthorizationMatrixE2ESpec extends E2EZSpec {
     groupMembershipRow("DELETE /admin/users/iri/{userIri}/group-memberships/{groupIri}", joined = true)(fixture =>
       delete(groupMembershipUri(fixture)),
     ),
+    Row[Unit](
+      "GET /v3/projects/{shortcode}/assets/unreferenced",
+      systemAdminOutcomes,
+      prepare = ZIO.unit,
+      send = (_, user) => get(uri"/v3/projects/$anythingShortcode/assets/unreferenced")(user),
+      readBack = None,
+    ),
     anythingMemberRead(
       "GET /admin/projects/shortcode/{projectShortcode}/legal-info/authorships",
       legalInfo.addPath("authorships"),
