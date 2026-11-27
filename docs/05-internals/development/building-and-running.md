@@ -21,6 +21,33 @@
    The error names only the mount, not the service. Recipes that exclude `app`, such as
    `just stack-without-app`, never touch that mount and therefore need no allowlist entry.
 
+### Bazel cannot pull a base image: "credentials not found in native keychain"
+
+Bazel pulls the base images (for example `sipi_base_amd64` from `index.docker.io`) with rules_oci, which reads
+`~/.docker/config.json`. It needs no Docker daemon, so this also applies without Docker Desktop. A build, test or
+`just check` then fails with:
+
+```text
+ERROR: .../rules_oci+/oci/private/authn.bzl:133:17: An error occurred during the fetch of repository
+'rules_oci++oci+sipi_base_amd64': ... credential helper failed: STDOUT: credentials not found in native keychain
+```
+
+Cause: `auths` in `~/.docker/config.json` has an entry for `https://index.docker.io/v1/`, and the `credsStore`
+helper (for example `osxkeychain`) has no matching credential. rules_oci asks the helper for that registry and
+stops at the helper's "not found"; it does not fall back to an anonymous pull. Such an entry is often left over
+from an uninstalled Docker Desktop.
+
+Workaround for one command: point `DOCKER_CONFIG` at an empty directory, so rules_oci pulls the public images
+anonymously.
+
+```bash
+DOCKER_CONFIG="$(mktemp -d)" just check
+```
+
+Fix for good: remove the `"https://index.docker.io/v1/"` entry from `auths` in `~/.docker/config.json`, or run
+`docker login` so that the helper has the credential. Do not use the workaround for a command that pushes images:
+a push needs your registry credentials.
+
 ## Running the stack
 
 With Docker installed and configured,
