@@ -146,6 +146,8 @@ boundary questions, never import it here. Domain vocabulary: `CONTEXT.md` (index
   the dev shell it loads provides `bazel`, JDK Temurin 25, `just`, and `crane` (see "Bazel & the Nix
   dev shell" above)
 - Docker Desktop
+- If a Bazel command fails with "credentials not found in native keychain" while it pulls a base image, run it
+  with `DOCKER_CONFIG="$(mktemp -d)"`. Cause and fix: `docs/05-internals/development/building-and-running.md`.
 
 Bazel (via the Nix dev shell) is the only build tool — sbt has been removed. Scala 3.8.4 is pinned in
 `MODULE.bazel` (`scala_config`).
