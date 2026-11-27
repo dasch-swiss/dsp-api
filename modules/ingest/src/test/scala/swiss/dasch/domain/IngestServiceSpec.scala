@@ -19,10 +19,12 @@ import zio.nio.file.Path
 import zio.stream.ZStream
 import zio.test.Spec
 import zio.test.TestAspect
+import zio.test.TestClock
 import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 
 import java.io.IOException
+import java.time.Instant
 
 import org.knora.testrunner.DspZTestJUnitRunner
 
@@ -81,6 +83,33 @@ class IngestServiceSpec extends ZIOSpecDefault {
   )
 
   val spec: Spec[Any, Any] = onePermitSuite + suite("IngestService")(
+    test("two uploads of the same file name to one project in the same second both succeed") {
+      val shortcode = ProjectShortcode.unsafeFrom("0001")
+      for {
+        _             <- TestClock.setTime(Instant.parse("2026-11-27T10:00:00Z"))
+        secondWritten <- Promise.make[Nothing, Unit]
+        firstClosed   <- Promise.make[Nothing, Unit]
+        second        <- ZIO.scoped {
+                    for {
+                      dir   <- StorageService.createTempDirectoryScoped(s"$shortcode-ingest")
+                      file  <- writeFile(dir, "data.csv")
+                      _     <- secondWritten.succeed(())
+                      _     <- firstClosed.await
+                      asset <- IngestService.ingestFile(file, shortcode)
+                    } yield asset
+                  }.fork
+        _     <- secondWritten.await
+        first <- ZIO.scoped {
+                   for {
+                     dir   <- StorageService.createTempDirectoryScoped(s"$shortcode-ingest")
+                     file  <- writeFile(dir, "data.csv")
+                     asset <- IngestService.ingestFile(file, shortcode)
+                   } yield asset
+                 }
+        _           <- firstClosed.succeed(())
+        secondAsset <- second.join
+      } yield assertTrue(first.ref != secondAsset.ref)
+    } @@ TestAspect.timeout(30.seconds),
     test("should ingest a simple csv file") {
       val shortcode = ProjectShortcode.unsafeFrom("0001")
       ZIO.scoped {
