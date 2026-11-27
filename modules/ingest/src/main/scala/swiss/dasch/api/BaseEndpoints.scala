@@ -54,6 +54,7 @@ object BaseEndpoints {
   val defaultErrorOutputs: EndpointOutput.OneOf[ApiProblem, ApiProblem] =
     oneOf[ApiProblem](
       oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[ApiProblem.BadRequest])),
+      oneOfVariant(statusCode(StatusCode.UnprocessableEntity).and(jsonBody[ApiProblem.UnprocessableContent])),
       oneOfVariant(statusCode(StatusCode.InternalServerError).and(jsonBody[ApiProblem.InternalServerError])),
       oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[ApiProblem.NotFound])),
       oneOfVariant(statusCode(StatusCode.ServiceUnavailable).and(jsonBody[ApiProblem.Unhealthy])),

@@ -5,6 +5,7 @@
 
 package swiss.dasch.api
 
+import sttp.tapir.Schema.annotations.encodedName
 import swiss.dasch.api.ApiProblem.BadRequest.Argument
 import swiss.dasch.domain.ProjectShortcode
 import swiss.dasch.infrastructure.AggregatedHealth
@@ -12,6 +13,7 @@ import swiss.dasch.infrastructure.Health
 import swiss.dasch.infrastructure.Health.Status
 import zio.json.DeriveJsonCodec
 import zio.json.JsonCodec
+import zio.json.jsonField
 import zio.schema.DeriveSchema
 import zio.schema.Schema
 
@@ -64,15 +66,26 @@ object ApiProblem {
     ): BadRequest = BadRequest(s"Path variable: '$key''", s"'$value' is invalid: $reason")
   }
 
-  case class InternalServerError(errorMessage: String) extends ApiProblem
+  /** A well-formed request whose file content cannot be ingested. */
+  case class UnprocessableContent(
+    @jsonField("correlation_id") @encodedName("correlation_id") correlationId: String,
+    @jsonField("error_code") @encodedName("error_code") errorCode: String,
+    message: String,
+  ) extends ApiProblem
+  object UnprocessableContent {
+    given codec: JsonCodec[UnprocessableContent] = DeriveJsonCodec.gen[UnprocessableContent]
+    given schema: Schema[UnprocessableContent]   = DeriveSchema.gen[UnprocessableContent]
+  }
+
+  /** The message is fixed text; it must never come from a `Throwable`, which can hold paths and process output. */
+  case class InternalServerError(
+    @jsonField("correlation_id") @encodedName("correlation_id") correlationId: String,
+    @jsonField("error_code") @encodedName("error_code") errorCode: String,
+    message: String,
+  ) extends ApiProblem
   object InternalServerError {
     given codec: JsonCodec[InternalServerError] = DeriveJsonCodec.gen[InternalServerError]
-
-    given schema: Schema[InternalServerError] = DeriveSchema.gen[InternalServerError]
-
-    def apply(t: Throwable): InternalServerError = InternalServerError(t.getMessage)
-
-    def apply(msg: String, t: Throwable): InternalServerError = InternalServerError(s"$msg: ${t.getMessage}")
+    given schema: Schema[InternalServerError]   = DeriveSchema.gen[InternalServerError]
   }
 
   case class Unhealthy(status: Status, components: Option[Map[String, Health]]) extends ApiProblem
