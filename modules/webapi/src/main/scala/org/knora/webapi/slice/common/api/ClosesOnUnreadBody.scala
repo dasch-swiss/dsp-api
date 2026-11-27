@@ -18,7 +18,8 @@ case object ClosesOnUnreadBodyRoute
  * A body declaring a length above the aggregation threshold is streamed, and zio-http leaves such a connection with
  * `autoRead=false` when the handler answers without consuming the body; the next keep-alive request on it is silently
  * dropped and the client hangs until its own timeout. Closing takes the connection out of the client's pool. See
- * `DspApiServer` (`closeConnectionIfBodyUnread`) for when it applies.
+ * `DspApiServer` (`closeConnectionIfBodyUnread` for endpoint responses, `closesOnUnreadBodyExceptionHandler` for a failed
+ * server logic) for when it applies.
  *
  * The SPARQL passthrough carries its own marker, [[org.knora.webapi.slice.api.admin.SparqlPassthroughEndpoints.routeMarker]].
  * A route whose server logic can reject a streamed body without reading it must carry one of the two;

@@ -18,9 +18,11 @@ import sttp.capabilities.StreamMaxLengthExceededException
 import sttp.model.Header
 import sttp.model.HeaderNames
 import sttp.model.Method.*
+import sttp.model.StatusCode as SttpStatusCode
 import sttp.monad.MonadError
 import sttp.tapir.AnyEndpoint
 import sttp.tapir.DecodeResult
+import sttp.tapir.header
 import sttp.tapir.model.ServerRequest
 import sttp.tapir.server.interceptor.DecodeFailureContext
 import sttp.tapir.server.interceptor.DecodeSuccessContext
@@ -31,10 +33,16 @@ import sttp.tapir.server.interceptor.SecurityFailureContext
 import sttp.tapir.server.interceptor.content.NotAcceptableInterceptor
 import sttp.tapir.server.interceptor.cors.CORSConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
+import sttp.tapir.server.interceptor.exception.DefaultExceptionHandler
+import sttp.tapir.server.interceptor.exception.ExceptionContext
+import sttp.tapir.server.interceptor.exception.ExceptionHandler
 import sttp.tapir.server.interpreter.BodyListener
 import sttp.tapir.server.model.ServerResponse
+import sttp.tapir.server.model.ValuedEndpointOutput
 import sttp.tapir.server.ziohttp.ZioHttpInterpreter
 import sttp.tapir.server.ziohttp.ZioHttpServerOptions
+import sttp.tapir.statusCode
+import sttp.tapir.stringBody
 import zio.*
 import zio.http.*
 import zio.http.Server.Config.ResponseCompressionConfig
@@ -188,6 +196,7 @@ object DspApiServer {
         ),
       )
       .metricsInterceptor(RequestMetrics.interceptor)
+      .exceptionHandler(closesOnUnreadBodyExceptionHandler)
       .notAcceptableInterceptor(new PassthroughAwareNotAcceptableInterceptor)
       .addInterceptor(spanNameInterceptor(ctxStore))
       .options
@@ -238,6 +247,49 @@ object DspApiServer {
     private def negotiatesItsOwnAccept(ep: AnyEndpoint): Boolean = NegotiatesOwnAccept.isSet(ep)
   }
 
+  private def streamsUnreadBody(ep: AnyEndpoint): Boolean =
+    SparqlPassthroughEndpoints.isPassthroughRoute(ep) || ClosesOnUnreadBody.isMarked(ep)
+
+  /**
+   * True when this request's body may still be sitting unread in the channel.
+   *
+   * The server runs `RequestStreaming.Hybrid(maxAggregatedRequestBodySize)`, and zio-http's
+   * `HybridContentLengthHandler` decides from the *declared* `Content-Length` alone: only a value above the
+   * threshold swaps Netty's `HttpObjectAggregator` out for streaming. Everything else keeps the aggregator, which
+   * reads the whole body before any handler runs. An absent `Content-Length` -- a chunked body -- reads there as
+   * `-1`, which is not above the threshold, so it takes the aggregating branch and is fully read as well. (A
+   * chunked body that then exceeds the aggregator's own `maxContentLength` never reaches this API at all: Netty
+   * answers it with a bare `413` below us.)
+   *
+   * A declared `Content-Length` above the threshold is therefore the only case where bytes can still be in the
+   * channel. An absent one must not count as unread: that would close connections that are fine, and give an
+   * unauthenticated caller one upstream-connection churn per `POST` sent with `Transfer-Encoding: chunked` -- an
+   * empty body being enough.
+   */
+  private def bodyPlausiblyUnread(request: ServerRequest): Boolean =
+    request.contentLength.exists(_ > DspApiServer.maxAggregatedRequestBodySize)
+
+  /**
+   * Tapir's default exception handler, answering with `Connection: close` under the same rule as
+   * `closeConnectionIfBodyUnread`.
+   *
+   * A failure of the server logic, a defect included (ztapir resurrects it), is answered by the exception interceptor,
+   * which sits outside the endpoint interceptors. That response never passes through `spanNameInterceptor`, so the
+   * close must be added here, or a client still streaming a large upload hangs on the connection.
+   */
+  private val closesOnUnreadBodyExceptionHandler: ExceptionHandler[Task] = new ExceptionHandler[Task] {
+    override def apply(ctx: ExceptionContext)(implicit monad: MonadError[Task]): Task[Option[ValuedEndpointOutput[?]]] =
+      val closes = streamsUnreadBody(ctx.endpoint) && bodyPlausiblyUnread(ctx.request)
+      DefaultExceptionHandler[Task]((code: SttpStatusCode, body: String) =>
+        if (closes)
+          ValuedEndpointOutput(
+            statusCode.and(header[String](HeaderNames.Connection)).and(stringBody),
+            (code, "close", body),
+          )
+        else ValuedEndpointOutput(statusCode.and(stringBody), (code, body)),
+      ).apply(ctx)
+  }
+
   // Renames the active HTTP server span to the matched Tapir endpoint's path template
   // (e.g. "HTTP GET /admin/lists/{listIri}") once routing has succeeded, and records
   // http.route. Keeps span names low-cardinality per OTel HTTP semantic conventions:
@@ -276,7 +328,8 @@ object DspApiServer {
      * above the aggregation threshold are streamed, and zio-http leaves a connection with `autoRead=false` when the
      * handler answers without consuming such a body; the next keep-alive request on it is dropped and the client
      * hangs. The close applies only if the body plausibly went unread, a property of the *request*:
-     * see [[bodyPlausiblyUnread]].
+     * see [[bodyPlausiblyUnread]]. A failed server logic never reaches this method; the same rule must hold in
+     * [[closesOnUnreadBodyExceptionHandler]].
      */
     private def closeConnectionIfBodyUnread[B](
       applies: Boolean,
@@ -286,28 +339,6 @@ object DspApiServer {
       if (applies && bodyPlausiblyUnread(request) && !response.headers.exists(closesConnection))
         response.addHeaders(Seq(Header(HeaderNames.Connection, "close")))
       else response
-
-    private def streamsUnreadBody(ep: AnyEndpoint): Boolean =
-      SparqlPassthroughEndpoints.isPassthroughRoute(ep) || ClosesOnUnreadBody.isMarked(ep)
-
-    /**
-     * True when this request's body may still be sitting unread in the channel.
-     *
-     * The server runs `RequestStreaming.Hybrid(maxAggregatedRequestBodySize)`, and zio-http's
-     * `HybridContentLengthHandler` decides from the *declared* `Content-Length` alone: only a value above the
-     * threshold swaps Netty's `HttpObjectAggregator` out for streaming. Everything else keeps the aggregator, which
-     * reads the whole body before any handler runs. An absent `Content-Length` -- a chunked body -- reads there as
-     * `-1`, which is not above the threshold, so it takes the aggregating branch and is fully read as well. (A
-     * chunked body that then exceeds the aggregator's own `maxContentLength` never reaches this API at all: Netty
-     * answers it with a bare `413` below us.)
-     *
-     * A declared `Content-Length` above the threshold is therefore the only case where bytes can still be in the
-     * channel. Counting an absent one as unread instead was wrong in the expensive direction: it closed connections
-     * that were fine, and gave an unauthenticated caller one upstream-connection churn per `POST` sent with
-     * `Transfer-Encoding: chunked` -- an empty body being enough.
-     */
-    private def bodyPlausiblyUnread(request: ServerRequest): Boolean =
-      request.contentLength.exists(_ > DspApiServer.maxAggregatedRequestBodySize)
 
     private def closesConnection(header: Header): Boolean =
       header.name.equalsIgnoreCase(HeaderNames.Connection) && header.value.equalsIgnoreCase("close")
