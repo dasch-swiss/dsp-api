@@ -47,8 +47,16 @@ class ClosesOnUnreadBodyInterceptorSpec extends ZIOSpecDefault {
       .attribute(ClosesOnUnreadBody.key, ClosesOnUnreadBodyRoute)
       .zServerLogic[Any](_ => ZIO.unit)
 
+  private def dying(path: String, marked: Boolean): ZServerEndpoint[Any, Any] = {
+    val base = endpoint.post.in(path)
+    (if (marked) base.attribute(ClosesOnUnreadBody.key, ClosesOnUnreadBodyRoute) else base)
+      .zServerLogic[Any](_ => ZIO.die(new RuntimeException("died")))
+  }
+
   private val endpoints = List(
     markedUnauthorized,
+    dying("marked-dies", marked = true),
+    dying("unmarked-dies", marked = false),
     markedRequiringQuery,
     rejecting("marked-rejects", marked = true, SttpStatusCode.Conflict),
     rejecting("marked-accepts", marked = true, SttpStatusCode.Accepted),
@@ -78,6 +86,15 @@ class ClosesOnUnreadBodyInterceptorSpec extends ZIOSpecDefault {
     },
     test("a decode failure with a declared length above the aggregation threshold closes the connection") {
       connectionHeader("/marked-bad-query", aboveThreshold).map(h => assertTrue(h.contains("close")))
+    },
+    test("a defect in the logic with a declared length above the aggregation threshold closes the connection") {
+      connectionHeader("/marked-dies", aboveThreshold).map(h => assertTrue(h.contains("close")))
+    },
+    test("a defect in the logic with a declared length at the aggregation threshold keeps the connection") {
+      connectionHeader("/marked-dies", DspApiServer.maxAggregatedRequestBodySize.toLong).map(h => assertTrue(h.isEmpty))
+    },
+    test("an unmarked route keeps the connection on a defect in the logic") {
+      connectionHeader("/unmarked-dies", aboveThreshold).map(h => assertTrue(h.isEmpty))
     },
     test("a rejection with a declared length at the aggregation threshold keeps the connection") {
       connectionHeader("/marked-rejects", DspApiServer.maxAggregatedRequestBodySize.toLong)
