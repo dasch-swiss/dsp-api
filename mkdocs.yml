@@ -79,6 +79,7 @@ nav:
       - 0012 Graph-scoped Lucene text lookups: adr/0012-graph-scoped-lucene-text-lookups.md
       - 0013 Authorization policy enforcement: adr/0013-authorization-policy-enforcement.md
       - 0014 Service identity for exports: adr/0014-service-identity-for-exports.md
+      - 0015 Move dsp-app into dsp-api under frontend/: adr/0015-move-dsp-app-into-frontend.md
   - DSP Internals:
       - Design:
           - DSP-API Design Principles:
