@@ -428,6 +428,30 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
           !body.contains("Command failed"),
         )
       },
+      testWithScope("answer 422 with sipi's error_code when sipi cannot read the upload") {
+        for {
+          response <- postAsset("unreadable.jpg", Body.fromString("tegxd"))
+          body     <- response.body.asString
+          problem   = body.fromJson[ApiProblem.UnprocessableContent]
+        } yield assertTrue(
+          response.status == Status.UnprocessableEntity,
+          problem.exists(_.correlationId == "0af7651916cd43dd8448eb211c80319c"),
+          problem.exists(_.errorCode == "decode_failed"),
+          problem.exists(_.message == "unreadable.jpg: not a JPEG"),
+          !body.contains("/data/"),
+        )
+      },
+      testWithScope("answer 500 with sipi_killed when sipi is killed") {
+        for {
+          response <- postAsset("killed.jpg", Body.fromString("tegxd"))
+          body     <- response.body.asString
+          problem   = body.fromJson[ApiProblem.InternalServerError]
+        } yield assertTrue(
+          response.status == Status.InternalServerError,
+          problem.exists(_.errorCode == "sipi_killed"),
+          !body.contains("/data/"),
+        )
+      },
       testWithScope("answer a JSON 500 and log the cause when the uploaded file is gone before its size is read") {
         val filename = "gone-before-size.mp3"
         for {
@@ -454,7 +478,26 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
   private val failingIngestService: ZLayer[Any, Nothing, IngestService] = ZLayer.succeed(
     new IngestService {
       def ingestFile(fileToIngest: zio.nio.file.Path, project: ProjectShortcode): zio.Task[Asset] =
-        ZIO.fail(new java.io.IOException("Command failed: '/sbin/sipi convert /tmp/x/y.orig' ProcessOutput(...)"))
+        fileToIngest.filename.toString match {
+          case name @ ("unreadable.jpg" | "killed.jpg") =>
+            val code = if (name == "killed.jpg") SipiCliError.killed else "decode_failed"
+            val path = "/data/0666/ab/1234.jpg.orig"
+            ZIO.fail(
+              SipiCliError(
+                phase = if (name == "killed.jpg") SipiReport.Phase.Internal else SipiReport.Phase.Read,
+                errorCode = code,
+                correlationId = "0af7651916cd43dd8448eb211c80319c",
+                target = SipiTarget.Upload,
+                message = s"$path: not a JPEG",
+                reportedPaths = List(path),
+                imageMeta = None,
+                exitCode = if (name == "killed.jpg") 137 else 1,
+                uploadFilename = Some(name),
+              ),
+            )
+          case _ =>
+            ZIO.fail(new java.io.IOException("Command failed: '/sbin/sipi convert /tmp/x/y.orig' ProcessOutput(...)"))
+        }
     },
   )
 

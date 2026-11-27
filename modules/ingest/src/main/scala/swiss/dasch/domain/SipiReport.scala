@@ -21,7 +21,7 @@ sealed trait SipiReport
 object SipiReport {
 
   enum Phase {
-    case CliArgs, Read, Convert, Write
+    case CliArgs, Read, Convert, Write, Unknown, Internal
   }
   object Phase {
     given JsonDecoder[Phase] = JsonDecoder[String].mapOrFail {
@@ -29,6 +29,8 @@ object SipiReport {
       case "read"     => Right(Phase.Read)
       case "convert"  => Right(Phase.Convert)
       case "write"    => Right(Phase.Write)
+      case "unknown"  => Right(Phase.Unknown)
+      case "internal" => Right(Phase.Internal)
       case other      => Left(s"Unknown sipi phase: $other")
     }
   }
@@ -52,18 +54,22 @@ object SipiReport {
     @jsonField("output_format") outputFormat: String,
     @jsonField("file_size_bytes") fileSizeBytes: Long,
     image: Option[ImageMeta],
+    @jsonField("correlation_id") correlationId: Option[String] = None,
   ) extends SipiReport
   object Ok {
     given JsonDecoder[Ok] = DeriveJsonDecoder.gen[Ok]
   }
 
+  /** The four file fields are optional: sipi's fallback document, for a message that is not valid UTF-8, omits them. */
   final case class Err(
     phase: Phase,
+    @jsonField("error_code") errorCode: String,
     @jsonField("error_message") errorMessage: String,
-    @jsonField("input_file") inputFile: String,
-    @jsonField("output_file") outputFile: String,
-    @jsonField("output_format") outputFormat: String,
-    @jsonField("file_size_bytes") fileSizeBytes: Long,
+    @jsonField("correlation_id") correlationId: Option[String],
+    @jsonField("input_file") inputFile: Option[String],
+    @jsonField("output_file") outputFile: Option[String],
+    @jsonField("output_format") outputFormat: Option[String],
+    @jsonField("file_size_bytes") fileSizeBytes: Option[Long],
     image: Option[ImageMeta],
   ) extends SipiReport
   object Err {
@@ -80,14 +86,49 @@ object SipiReport {
   }
 }
 
+/** The file a sipi command reads: the user's upload, or a file ingest already stored or created. */
+enum SipiTarget {
+  case Upload, Derivative
+}
+
 /**
- * Typed error raised when a sipi CLI invocation fails with a structured
- * `--json` report on stdout.
+ * A failed sipi run, from its `--json` error report or, without a report, from its exit code.
+ *
+ * `message` is sipi's diagnostic and holds server paths; only [[clientMessage]] may reach a client.
  */
 final case class SipiCliError(
   phase: SipiReport.Phase,
+  errorCode: String,
+  correlationId: String,
+  target: SipiTarget,
   message: String,
-  inputFile: Option[String],
+  reportedPaths: List[String],
   imageMeta: Option[SipiReport.ImageMeta],
   exitCode: Int,
-) extends IOException(s"Sipi [$phase] $message")
+  uploadFilename: Option[String] = None,
+) extends IOException(s"Sipi [$phase/$errorCode] $message") {
+
+  /**
+   * `message` with every path from the report replaced by the upload filename. A report without paths (sipi's
+   * fallback document), or a message that still holds an absolute path after the replacement, gives a fixed
+   * message, since nothing says which other part of `message` is a server path.
+   */
+  def clientMessage: String = {
+    val replacement = uploadFilename.getOrElse("the file")
+    val fixed       = s"$replacement cannot be read: $errorCode"
+    val paths       = reportedPaths.filter(_.nonEmpty)
+    if (paths.isEmpty) fixed
+    else {
+      val redacted = paths.sortBy(-_.length).foldLeft(message)(_.replace(_, replacement))
+      if (SipiCliError.absolutePath.findFirstIn(redacted).isDefined) fixed else redacted
+    }
+  }
+}
+
+object SipiCliError {
+  val killed: String   = "sipi_killed"
+  val crashed: String  = "sipi_crashed"
+  val noReport: String = "sipi_no_report"
+
+  private val absolutePath = """(?:^|[\s'"(=:])/[^\s'"]""".r
+}

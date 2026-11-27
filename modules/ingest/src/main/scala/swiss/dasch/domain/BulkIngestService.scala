@@ -136,10 +136,10 @@ final case class BulkIngestService(
         .catchAllCause { cause =>
           val relative = importDir.relativize(file)
           cause.failureOrCause match {
-            case _ if cause.isInterruptedOnly  => ZIO.interrupt
-            case Left(IngestRejected(code, _)) =>
+            case _ if cause.isInterruptedOnly              => ZIO.interrupt
+            case Left(e) if IngestFailure.isClientError(e) =>
               ZIO
-                .logAnnotate("error_code", code)(ZIO.logWarning(s"Rejected file $relative"))
+                .logAnnotate("error_code", IngestFailure.errorCode(e))(ZIO.logWarning(s"Rejected file $relative"))
                 .as(IngestResult.failed)
             case _ =>
               ZIO

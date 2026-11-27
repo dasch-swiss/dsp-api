@@ -6,12 +6,16 @@
 package swiss.dasch.domain
 
 import org.junit.runner.RunWith
+import swiss.dasch.api.ApiProblem.UnprocessableContent
+import swiss.dasch.api.IngestFailure
 import swiss.dasch.api.SipiClientMock
 import swiss.dasch.api.SipiClientMockMethodInvocation.TranscodeImageFile
 import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.infrastructure.CommandExecutorLive
+import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.infrastructure.IngestExecutor
+import swiss.dasch.infrastructure.ProcessOutput
 import swiss.dasch.test.ImageFixtures
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Projects.existingProject
@@ -144,7 +148,44 @@ class IngestServiceSpec extends ZIOSpecDefault {
     ZLayer.scoped(IngestExecutor.make(1)),
   )
 
-  val spec: Spec[Any, Any] = pixelLimitSuite + onePermitSuite + suite("IngestService")(
+  private val sipiReportSuite = suite("IngestService with sipi's JSON error report")(
+    test("an unparseable IPTC block answers 422 whose message names the upload and no server path") {
+      val report =
+        """{"status":"error","phase":"read","error_code":"metadata_parse_failed","correlation_id":"sipi-id",""" +
+          """"error_message":"/data/x/1234.jpg.orig: IPTC block does not parse","input_file":"/data/x/1234.jpg.orig",""" +
+          """"output_file":"/data/x/1234.jpx","output_format":"jpx","file_size_bytes":4}"""
+      ZIO.scoped {
+        for {
+          _       <- CommandExecutorMock.setOutput(ProcessOutput(report, "", 1))
+          tempDir <- StorageService.createTempDirectoryScoped("test", None)
+          image   <- writeFile(tempDir, "photo.jpg")
+          error   <- IngestService.ingestFile(image, existingProject).flip
+          problem <- IngestFailure.toApiProblem(error)
+        } yield assertTrue(problem match {
+          case UnprocessableContent("sipi-id", "metadata_parse_failed", message) =>
+            message == "photo.jpg: IPTC block does not parse"
+          case _ => false
+        })
+      }
+    },
+  ).provide(
+    AssetInfoServiceLive.layer,
+    CommandExecutorMock.layer,
+    FileChecksumServiceLive.layer,
+    IngestService.layer,
+    MimeTypeGuesser.layer,
+    MovingImageService.layer,
+    OtherFilesService.layer,
+    ProjectService.layer,
+    SipiClientLive.layer,
+    SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.sipiConfigLayer,
+    SpecConfigurations.storageConfigLayer,
+    StillImageService.layer,
+    StorageServiceLive.layer,
+  )
+
+  val spec: Spec[Any, Any] = pixelLimitSuite + onePermitSuite + sipiReportSuite + suite("IngestService")(
     test("two uploads of the same file name to one project in the same second both succeed") {
       val shortcode = ProjectShortcode.unsafeFrom("0001")
       for {

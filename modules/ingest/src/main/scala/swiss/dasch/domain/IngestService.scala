@@ -56,8 +56,13 @@ class IngestServiceLive(
       ref      <- AssetRef.makeNew(project)
       _        <- projectService.findOrCreateProject(ref.belongsToProject)
       assetDir <- ensureAssetDirectoryExists(ref)
-      asset    <- ingestAsset(fileToIngest, assetDir).tapError(_ => tryCleanup(assetDir).logError.ignore)
-      _        <- ZIO.logInfo(s"Successfully ingesting file $fileToIngest as ${asset.ref}")
+      asset    <- ingestAsset(fileToIngest, assetDir)
+                 .tapError(_ => tryCleanup(assetDir).logError.ignore)
+                 .mapError {
+                   case e: SipiCliError => e.copy(uploadFilename = Some(fileToIngest.filename.toString))
+                   case e               => e
+                 }
+      _ <- ZIO.logInfo(s"Successfully ingesting file $fileToIngest as ${asset.ref}")
     } yield asset
 
   private def ingestAsset(fileToIngest: Path, assetDir: AssetFolder): ZIO[Any, Throwable, Asset] =

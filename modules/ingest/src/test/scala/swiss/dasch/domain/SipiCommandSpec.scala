@@ -37,21 +37,21 @@ class SipiCommandSpec extends ZIOSpecDefault {
           )
         }
       },
-      test("should render query subcommand without --json") {
+      test("should render query subcommand with --json") {
         for {
           cmd <- Query(Path("/tmp/example")).render()
-        } yield assertTrue(cmd == List("query", "/tmp/example"))
+        } yield assertTrue(cmd == List("query", "/tmp/example", "--json"))
       },
       test("should render convert subcommand with --json --topleft for ApplyTopLeft") {
         for {
           cmd <- ApplyTopLeft(Path("/tmp/example"), Path("/tmp/example2")).render()
         } yield assertTrue(cmd == List("convert", "/tmp/example", "/tmp/example2", "--json", "--topleft"))
       },
-      test("emitsJson matches the commands that include --json in their argv") {
+      test("only the convert of the upload targets the upload; topleft and query target stored files") {
         assertTrue(
-          Transcode(SipiImageFormat.Jpx, Path("/a"), Path("/b")).emitsJson,
-          ApplyTopLeft(Path("/a"), Path("/b")).emitsJson,
-          !Query(Path("/a")).emitsJson,
+          Transcode(SipiImageFormat.Jpx, Path("/a"), Path("/b")).target == SipiTarget.Upload,
+          ApplyTopLeft(Path("/a"), Path("/b")).target == SipiTarget.Derivative,
+          Query(Path("/a")).target == SipiTarget.Derivative,
         )
       },
     )
