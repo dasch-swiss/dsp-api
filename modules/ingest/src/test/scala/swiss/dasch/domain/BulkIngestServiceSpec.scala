@@ -14,6 +14,7 @@ import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
 import swiss.dasch.domain.AugmentedPath.OrigFile
 import swiss.dasch.infrastructure.CommandExecutorMock
 import swiss.dasch.infrastructure.CorrelationId
+import swiss.dasch.infrastructure.ProcessOutput
 import swiss.dasch.test.SpecConfigurations
 import zio.*
 import zio.nio.file.Files
@@ -230,6 +231,42 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     StorageServiceLive.layer,
   )
 
+  private val sipiErrorLogSuite = suite("bulk ingest with a sipi error report")(
+    test("log a file whose content sipi rejects once as a warning with sipi's error_code") {
+      val report = """{"status":"error","phase":"read","error_code":"decode_failed","error_message":"x"}"""
+      for {
+        _         <- CommandExecutorMock.setOutput(ProcessOutput(report, "", 1))
+        importDir <- storageService(_.getImportFolder(shortcode).tap(Files.createDirectories(_)))
+        _         <- Files.writeBytes(importDir / "broken.tif", Chunk.fromArray("broken".getBytes))
+        fiber     <- bulkIngestService(_.startBulkIngest(shortcode))
+        result    <- fiber.join
+        logs      <- ZTestLogger.logOutput.map(_.filter(_.logLevel == LogLevel.Warning))
+        failed     = logs.filter(_.message().contains("broken.tif"))
+      } yield assertTrue(
+        result == IngestResult(success = 0, failed = 1),
+        failed.size == 1,
+        failed.forall(_.annotations.get("error_code").contains("decode_failed")),
+      )
+    },
+  ).provide(
+    AssetInfoServiceLive.layer,
+    BulkIngestService.layer,
+    CommandExecutorMock.layer,
+    FileChecksumServiceLive.layer,
+    IngestService.layer,
+    MimeTypeGuesser.layer,
+    MovingImageService.layer,
+    OtherFilesService.layer,
+    ProjectService.layer,
+    SipiClientLive.layer,
+    SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.sipiConfigLayer,
+    SpecConfigurations.storageConfigLayer,
+    StillImageService.layer,
+    StorageServiceLive.layer,
+  )
+
   private val deleteProjectFolder =
     storageService(_.getProjectFolder(shortcode)).tap(p => Files.deleteRecursive(p).whenZIO(Files.exists(p)))
 
@@ -250,5 +287,5 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     SpecConfigurations.ingestExecutorLayer,
     SpecConfigurations.storageConfigLayer,
     StorageServiceLive.layer,
-  ) + failingSipiSuite + failedFileLogSuite) @@ TestAspect.timeout(10.seconds)
+  ) + failingSipiSuite + failedFileLogSuite + sipiErrorLogSuite) @@ TestAspect.timeout(10.seconds)
 }
