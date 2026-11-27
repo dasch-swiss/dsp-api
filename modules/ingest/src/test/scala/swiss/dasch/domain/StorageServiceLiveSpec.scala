@@ -19,6 +19,7 @@ import zio.test.Assertion.failsWithA
 
 import java.nio.file.NoSuchFileException
 import java.text.ParseException
+import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -75,6 +76,7 @@ class StorageServiceLiveSpec extends ZIOSpecDefault {
             containsName        = tempDir.filename.toString == testDirName
             parentNameIsCorrect =
               tempDir.parent
+                .flatMap(_.parent)
                 .exists(
                   _.filename.toString == DateTimeFormatter
                     .ofPattern("yyyyMMdd_HHmmss")
@@ -93,6 +95,21 @@ class StorageServiceLiveSpec extends ZIOSpecDefault {
             )
           isRemoved <- Files.notExists(tempDir)
         } yield assertTrue(isRemoved)
+      },
+      test("two scopes with the same name at the same instant get separate directories") {
+        for {
+          _              <- TestClock.setTime(Instant.parse("2026-11-27T10:00:00Z"))
+          firstScope     <- Scope.make
+          secondScope    <- Scope.make
+          first          <- firstScope.extend[StorageService](StorageService.createTempDirectoryScoped("0001-ingest"))
+          second         <- secondScope.extend[StorageService](StorageService.createTempDirectoryScoped("0001-ingest"))
+          _              <- Files.createFile(first / "image.jpg") *> Files.createFile(second / "image.jpg")
+          _              <- firstScope.close(Exit.unit)
+          secondFileKept <- Files.exists(second / "image.jpg")
+          _              <- secondScope.close(Exit.unit)
+          scopeFolders    = List(first, second).flatMap(_.parent)
+          leftOver       <- ZIO.filter(scopeFolders)(Files.exists(_))
+        } yield assertTrue(first != second, scopeFolders.size == 2, secondFileKept, leftOver.isEmpty)
       },
     ),
     suite("load and save json files")(

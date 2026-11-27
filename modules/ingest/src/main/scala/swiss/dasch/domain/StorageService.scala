@@ -31,6 +31,7 @@ import java.text.ParseException
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 import scala.language.implicitConversions
 
 trait StorageService {
@@ -42,6 +43,11 @@ trait StorageService {
   def getImportFolder(shortcode: ProjectShortcode): UIO[Path] =
     getTempFolder().map(_ / "import" / shortcode.value)
   def fileExists(path: Path): IO[IOException, Boolean]
+
+  /**
+   * Creates `<temp>[/<prefix>]/<yyyyMMdd_HHmmss>/<uuid>/<directoryName>` and deletes its `<uuid>` folder when the
+   * scope closes. Every call gets its own folder, so concurrent callers may pass the same name.
+   */
   def createTempDirectoryScoped(directoryName: String, prefix: Option[String] = None): ZIO[Scope, IOException, Path]
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): Task[A]
 
@@ -140,13 +146,17 @@ final case class StorageServiceLive(config: StorageConfig) extends StorageServic
     prefix: Option[String],
   ): ZIO[Scope, IOException, Path] = {
     val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss") `withZone` ZoneId.from(ZoneOffset.UTC)
-    Clock.instant.flatMap { now =>
-      val basePath      = prefix.map(config.tempPath / _).getOrElse(config.tempPath)
-      val directoryPath = basePath / s"${formatter.format(now)}" / directoryName
-      ZIO.acquireRelease(Files.createDirectories(directoryPath).as(directoryPath))(path =>
-        ZIO.attemptBlockingIO(FileUtils.deleteDirectory(path.toFile)).logError.ignore,
-      )
-    }
+    val basePath  = prefix.map(config.tempPath / _).getOrElse(config.tempPath)
+    for {
+      now <- Clock.instant
+      // Not ZIO's Random: TestRandom's fixed seed would give parallel tests the same folder.
+      uuid         <- ZIO.succeed(UUID.randomUUID())
+      scopeFolder   = basePath / formatter.format(now) / uuid.toString
+      directoryPath = scopeFolder / directoryName
+      _            <- ZIO.acquireRelease(Files.createDirectories(directoryPath))(_ =>
+             ZIO.attemptBlockingIO(FileUtils.deleteDirectory(scopeFolder.toFile)).logError.ignore,
+           )
+    } yield directoryPath
   }
 
   def loadJsonFile[A](file: Path)(implicit decoder: JsonDecoder[A]): Task[A] =
