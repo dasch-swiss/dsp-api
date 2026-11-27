@@ -1,5 +1,23 @@
 # Changelog
 
+## [41.1.0](https://github.com/dasch-swiss/dsp-api/compare/v41.0.0...v41.1.0) (2026-11-27)
+
+
+### Documentation
+
+* **build-toolchain:** Document the rules_oci "credentials not found" pull failure ([e476a8a](https://github.com/dasch-swiss/dsp-api/commit/e476a8a4a101f83ce4020ab32451389fe6db7044))
+
+
+### Enhancements
+
+* **export:** Export a chosen set of resources (DEV-8047) ([65c87b7](https://github.com/dasch-swiss/dsp-api/commit/65c87b76474c7e27897d3869d87f6f92b0427548))
+* **resources:** Apply a bulk edit in one request with a batch route (DEV-8048) ([3d4a075](https://github.com/dasch-swiss/dsp-api/commit/3d4a075794cb27e16aaae1f3a5c68353b709775c))
+
+
+### Bug Fixes
+
+* Treat a property whose values were all deleted as empty in batch edits (DEV-8048) ([0c8159e](https://github.com/dasch-swiss/dsp-api/commit/0c8159eb8032035bbc1d05aa9e872afd2ef4beca))
+
 ## [41.0.0](https://github.com/dasch-swiss/dsp-api/compare/v40.7.0...v41.0.0) (2026-11-23)
 
 
