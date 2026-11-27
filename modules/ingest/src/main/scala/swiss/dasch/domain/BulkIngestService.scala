@@ -7,9 +7,11 @@ package swiss.dasch.domain
 
 import swiss.dasch.api.ApiProblem
 import swiss.dasch.api.ApiProblem.BadRequest
+import swiss.dasch.api.IngestFailure
 import swiss.dasch.api.ProjectsEndpointsResponses.UploadResponse
 import swiss.dasch.config.Configuration.IngestConfig
 import swiss.dasch.domain.BulkIngestError.*
+import swiss.dasch.infrastructure.CorrelationId
 import zio.*
 import zio.nio.file.Files
 import zio.nio.file.Path
@@ -126,13 +128,28 @@ final case class BulkIngestService(
     mappingFile: Path,
     file: Path,
   ): UIO[IngestResult] =
-    ingestService
-      .ingestFile(file, project)
-      .flatMap(asset => updateMappingCsv(asset, file, importDir, mappingFile))
-      .as(IngestResult.success)
-      .catchAll(e =>
-        ZIO.logErrorCause(s"Error ingesting file $file: ${e.getMessage}", Cause.fail(e)).as(IngestResult.failed),
-      )
+    CorrelationId.withNew {
+      ingestService
+        .ingestFile(file, project)
+        .flatMap(asset => updateMappingCsv(asset, file, importDir, mappingFile))
+        .as(IngestResult.success)
+        .catchAllCause { cause =>
+          val relative = importDir.relativize(file)
+          cause.failureOrCause match {
+            case _ if cause.isInterruptedOnly  => ZIO.interrupt
+            case Left(IngestRejected(code, _)) =>
+              ZIO
+                .logAnnotate("error_code", code)(ZIO.logWarning(s"Rejected file $relative"))
+                .as(IngestResult.failed)
+            case _ =>
+              ZIO
+                .logAnnotate("error_code", IngestFailure.errorCode(cause.squash))(
+                  ZIO.logErrorCause(s"Error ingesting file $relative", cause),
+                )
+                .as(IngestResult.failed)
+          }
+        }
+    }
 
   private def updateMappingCsv(asset: Asset, fileToIngest: Path, importDir: Path, csv: Path) =
     ZIO.logInfo(s"Updating mapping file $csv, $asset") *> {

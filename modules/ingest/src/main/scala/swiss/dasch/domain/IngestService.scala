@@ -49,7 +49,7 @@ class IngestServiceLive(
     for {
       _ <- ZIO.logInfo(s"Ingesting file $fileToIngest")
       _ <- ZIO.unlessZIO(FileFilters.isSupported(fileToIngest))(
-             ZIO.fail(new IllegalArgumentException(s"File $fileToIngest is not a supported file.")),
+             ZIO.fail(IngestRejected("unsupported_format", s"File ${fileToIngest.filename} is not a supported file.")),
            )
       ref      <- AssetRef.makeNew(project)
       _        <- projectService.findOrCreateProject(ref.belongsToProject)
@@ -63,7 +63,9 @@ class IngestServiceLive(
       original <- createOriginalFileInAssetDir(fileToIngest, assetDir)
       asset    <- ZIO
                  .fromOption(SupportedFileType.fromPath(fileToIngest))
-                 .orElseFail(new IllegalArgumentException("Unsupported file type."))
+                 .orElseFail(
+                   IngestRejected("unsupported_format", s"File ${fileToIngest.filename} has an unsupported file type."),
+                 )
                  .flatMap {
                    case StillImage  => handleImageFile(original, assetDir)
                    case MovingImage => handleMovingImageFile(original, assetDir)

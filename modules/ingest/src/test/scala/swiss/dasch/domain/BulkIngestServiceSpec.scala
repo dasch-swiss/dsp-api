@@ -13,6 +13,7 @@ import swiss.dasch.domain.AugmentedPath.Conversions.given_Conversion_AugmentedPa
 import swiss.dasch.domain.AugmentedPath.JpxDerivativeFile
 import swiss.dasch.domain.AugmentedPath.OrigFile
 import swiss.dasch.infrastructure.CommandExecutorMock
+import swiss.dasch.infrastructure.CorrelationId
 import swiss.dasch.test.SpecConfigurations
 import zio.*
 import zio.nio.file.Files
@@ -21,6 +22,7 @@ import zio.stream.ZStream
 import zio.test.TestAspect
 import zio.test.TestClock
 import zio.test.ZIOSpecDefault
+import zio.test.ZTestLogger
 import zio.test.assertCompletes
 import zio.test.assertTrue
 
@@ -185,6 +187,48 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     StorageServiceLive.layer,
   )
 
+  private val rejectingIngestServiceLayer: ULayer[IngestService] = ZLayer.succeed {
+    new IngestService {
+      override def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset] =
+        ZIO.fail(IngestRejected("unsupported_format", s"File ${fileToIngest.filename} is not a supported file."))
+    }
+  }
+
+  private val failedFileLogSuite = suite("bulk ingest with a rejected file")(
+    test("log each rejected file once as a warning with its name, its own correlation_id and its error_code") {
+      for {
+        importDir <- storageService(_.getImportFolder(shortcode).tap(Files.createDirectories(_)))
+        _         <- ZIO.foreachDiscard(List("first.tif", "second.tif"))(name =>
+               Files.writeBytes(importDir / name, Chunk.fromArray(name.getBytes)),
+             )
+        fiber  <- bulkIngestService(_.startBulkIngest(shortcode))
+        result <- fiber.join
+        logs   <- ZTestLogger.logOutput.map(_.filter(_.logLevel == LogLevel.Warning))
+        first   = logs.filter(_.message().contains("first.tif"))
+        second  = logs.filter(_.message().contains("second.tif"))
+        ids     = (first ++ second).flatMap(_.annotations.get(CorrelationId.annotationKey))
+      } yield assertTrue(
+        result == IngestResult(success = 0, failed = 2),
+        first.size == 1,
+        second.size == 1,
+        (first ++ second).forall(_.annotations.get("error_code").contains("unsupported_format")),
+        ids.size == 2,
+        ids.distinct.size == 2,
+      )
+    },
+  ).provide(
+    AssetInfoServiceLive.layer,
+    BulkIngestService.layer,
+    FileChecksumServiceLive.layer,
+    MimeTypeGuesser.layer,
+    ProjectService.layer,
+    rejectingIngestServiceLayer,
+    SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.storageConfigLayer,
+    StorageServiceLive.layer,
+  )
+
   private val deleteProjectFolder =
     storageService(_.getProjectFolder(shortcode)).tap(p => Files.deleteRecursive(p).whenZIO(Files.exists(p)))
 
@@ -205,5 +249,5 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     SpecConfigurations.ingestExecutorLayer,
     SpecConfigurations.storageConfigLayer,
     StorageServiceLive.layer,
-  ) + failingSipiSuite) @@ TestAspect.timeout(10.seconds)
+  ) + failingSipiSuite + failedFileLogSuite) @@ TestAspect.timeout(10.seconds)
 }
