@@ -8,6 +8,7 @@ package swiss.dasch.domain
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.types.string.NonEmptyString
 import org.apache.commons.io.FilenameUtils
+import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.domain.Asset.MovingImageAsset
 import swiss.dasch.domain.Asset.StillImageAsset
 import swiss.dasch.domain.AugmentedPath.AssetFolder
@@ -43,6 +44,7 @@ class IngestServiceLive(
   stillImageService: StillImageService,
   projectService: ProjectService,
   storage: StorageService,
+  sipiConfig: SipiConfig,
 ) extends IngestService {
 
   def ingestFile(fileToIngest: Path, project: ProjectShortcode): Task[Asset] =
@@ -90,9 +92,27 @@ class IngestServiceLive(
   private def handleImageFile(original: Original, assetDir: AssetFolder): Task[StillImageAsset] =
     ZIO.logInfo(s"Creating derivative for image $original, ${assetDir.assetRef}") *> {
       for {
+        _          <- checkPixelLimit(original)
         derivative <- stillImageService.createDerivative(original.file)
         metadata   <- stillImageService.extractMetadata(original, derivative)
       } yield Asset.makeStillImage(assetDir.assetRef, original, derivative, metadata)
+    }
+
+  private def checkPixelLimit(original: Original): Task[Unit] =
+    ImageHeaderReader.read(original.file).flatMap {
+      case None =>
+        ZIO.logInfo(s"Image ${original.originalFilename}: no dimensions in the header, Sipi decides")
+      case Some(dim) =>
+        val pixels = dim.width.value.toLong * dim.height.value.toLong
+        ZIO.logInfo(s"Image ${original.originalFilename} has ${dim.width} x ${dim.height} pixels") *>
+          ZIO.foreachDiscard(sipiConfig.maxImagePixels.filter(pixels > _)) { limit =>
+            ZIO.fail(
+              IngestRejected(
+                "image_too_large",
+                s"${original.originalFilename} has ${dim.width} x ${dim.height} = $pixels pixels; the limit is $limit",
+              ),
+            )
+          }
     }
 
   private def handleAudioFile(original: Original, assetDir: AssetFolder) =

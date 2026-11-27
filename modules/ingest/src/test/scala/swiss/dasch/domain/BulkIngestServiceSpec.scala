@@ -182,6 +182,7 @@ class BulkIngestServiceSpec extends ZIOSpecDefault {
     SipiClientMock.layer,
     SpecConfigurations.ingestConfigLayer,
     SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.sipiConfigLayer,
     SpecConfigurations.storageConfigLayer,
     StillImageService.layer,
     StorageServiceLive.layer,

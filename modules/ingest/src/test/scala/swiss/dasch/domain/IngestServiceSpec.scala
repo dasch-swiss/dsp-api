@@ -7,9 +7,12 @@ package swiss.dasch.domain
 
 import org.junit.runner.RunWith
 import swiss.dasch.api.SipiClientMock
+import swiss.dasch.api.SipiClientMockMethodInvocation.TranscodeImageFile
+import swiss.dasch.config.Configuration.SipiConfig
 import swiss.dasch.config.Configuration.StorageConfig
 import swiss.dasch.infrastructure.CommandExecutorLive
 import swiss.dasch.infrastructure.IngestExecutor
+import swiss.dasch.test.ImageFixtures
 import swiss.dasch.test.SpecConfigurations
 import swiss.dasch.test.SpecConstants.Projects.existingProject
 import swiss.dasch.test.SpecConstants.Projects.nonExistentProject
@@ -33,6 +36,65 @@ class IngestServiceSpec extends ZIOSpecDefault {
 
   private def writeFile(dir: Path, name: String): IO[IOException, Path] =
     Files.writeBytes(dir / name, Chunk.fromArray(name.getBytes)).as(dir / name)
+
+  private def writeBytes(dir: Path, name: String, bytes: Array[Byte]): IO[IOException, Path] =
+    Files.writeBytes(dir / name, Chunk.fromArray(bytes)).as(dir / name)
+
+  private def ingestImage(name: String, bytes: Array[Byte]) =
+    ZIO.scoped {
+      for {
+        _       <- SipiClientMock.setQueryImageDimensions(Dimensions.unsafeFrom(6, 6))
+        tempDir <- StorageService.createTempDirectoryScoped("test", None)
+        file    <- writeBytes(tempDir, name, bytes)
+        exit    <- IngestService.ingestFile(file, existingProject).exit
+        calls   <- SipiClientMock.getInvocations()
+      } yield (exit, calls.exists(_.isInstanceOf[TranscodeImageFile]))
+    }
+
+  private def withPixelLimit(limit: Option[Long]) = ZLayer.make[IngestService & SipiClientMock & StorageService](
+    ZLayer.succeed(SipiConfig(useLocalDev = true, localDevImage = "daschswiss/knora-sipi:latest", limit)),
+    AssetInfoServiceLive.layer,
+    CommandExecutorLive.layer,
+    FileChecksumServiceLive.layer,
+    IngestService.layer,
+    MimeTypeGuesser.layer,
+    MovingImageService.layer,
+    OtherFilesService.layer,
+    ProjectService.layer,
+    SipiClientMock.layer,
+    SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.storageConfigLayer,
+    StillImageService.layer,
+    StorageServiceLive.layer,
+  )
+
+  private val hugeTiff = ImageFixtures.stripTiff(100000, 100000)
+
+  private val pixelLimitSuite = suite("IngestService with max-image-pixels")(
+    test("rejects an image whose header declares more pixels than the limit, without running Sipi") {
+      ingestImage("huge.tif", hugeTiff).map { case (exit, transcoded) =>
+        val rejected = exit.causeOption.flatMap(_.failureOption).collect { case r: IngestRejected => r }
+        assertTrue(
+          rejected.exists(_.errorCode == "image_too_large"),
+          rejected.exists(
+            _.message == "huge.tif has 100000 x 100000 = 10000000000 pixels; the limit is 1000000",
+          ),
+          !transcoded,
+        )
+      }
+    }.provide(withPixelLimit(Some(1_000_000L))),
+    test("passes an image within the limit to Sipi") {
+      ingestImage("small.tif", ImageFixtures.stripTiff(1000, 1000)).map { case (exit, transcoded) =>
+        assertTrue(exit.isSuccess, transcoded)
+      }
+    }.provide(withPixelLimit(Some(1_000_000L))),
+    test("passes the image to Sipi when no limit is set") {
+      ingestImage("huge.tif", hugeTiff).map { case (_, transcoded) => assertTrue(transcoded) }
+    }.provide(withPixelLimit(None)),
+    test("passes an image with an unreadable header to Sipi") {
+      ingestImage("broken.jpg", "not an image".getBytes).map { case (_, transcoded) => assertTrue(transcoded) }
+    }.provide(withPixelLimit(Some(1L))),
+  ) @@ TestAspect.timeout(30.seconds)
 
   private val onePermitSuite = suite("IngestService with an IngestExecutor of one permit")(
     test("a project export and import, and an image ingest with Sipi mocked, complete under one permit") {
@@ -82,7 +144,7 @@ class IngestServiceSpec extends ZIOSpecDefault {
     ZLayer.scoped(IngestExecutor.make(1)),
   )
 
-  val spec: Spec[Any, Any] = onePermitSuite + suite("IngestService")(
+  val spec: Spec[Any, Any] = pixelLimitSuite + onePermitSuite + suite("IngestService")(
     test("two uploads of the same file name to one project in the same second both succeed") {
       val shortcode = ProjectShortcode.unsafeFrom("0001")
       for {

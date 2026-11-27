@@ -24,12 +24,13 @@ The layout in these folders is explained in detail in the chapter ["Filesystem S
 
 ## Processing
 
-| Variable                      | Default                        | Description                                                                                                                                           |
-|-------------------------------|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `INGEST_SIPI_USE_LOCAL_DEV`   | `false`                        | `false` runs the Sipi CLI of the API image; `true` runs it through `docker run`, for local development                                                |
-| `INGEST_SIPI_LOCAL_DEV_IMAGE` | `daschswiss/knora-sipi:latest` | The Sipi image `docker run` starts, read only when `INGEST_SIPI_USE_LOCAL_DEV` is `true`                                                              |
-| `INGEST_BULK_MAX_PARALLEL`    | `8`                            | Number of files a _Bulk Ingest_ processes in parallel                                                                                                 |
-| `INGEST_EXECUTOR_CPU_SHARE`   | `0.5`                          | Share of the available processors, in `(0, 1]`, that sizes the ingest thread pool and the number of concurrent Sipi, `ffmpeg` and `ffprobe` processes |
+| Variable                       | Default                        | Description                                                                                                                                                           |
+|--------------------------------|--------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `INGEST_SIPI_USE_LOCAL_DEV`    | `false`                        | `false` runs the Sipi CLI of the API image; `true` runs it through `docker run`, for local development                                                                |
+| `INGEST_SIPI_LOCAL_DEV_IMAGE`  | `daschswiss/knora-sipi:latest` | The Sipi image `docker run` starts, read only when `INGEST_SIPI_USE_LOCAL_DEV` is `true`                                                                              |
+| `INGEST_SIPI_MAX_IMAGE_PIXELS` | unset                          | Largest pixel count (width x height) a still image header may declare; a larger image is rejected with `422` `image_too_large` before Sipi runs. Unset means no limit |
+| `INGEST_BULK_MAX_PARALLEL`     | `8`                            | Number of files a _Bulk Ingest_ processes in parallel                                                                                                                 |
+| `INGEST_EXECUTOR_CPU_SHARE`    | `0.5`                          | Share of the available processors, in `(0, 1]`, that sizes the ingest thread pool and the number of concurrent Sipi, `ffmpeg` and `ffprobe` processes                 |
 
 ## Features
 
