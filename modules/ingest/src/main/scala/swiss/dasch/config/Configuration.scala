@@ -29,7 +29,8 @@ object Configuration {
     disableAuth: Boolean = false,
   )
 
-  final case class SipiConfig(useLocalDev: Boolean, localDevImage: String)
+  /** `maxImagePixels`: a still image whose header declares more pixels is rejected before Sipi runs; `None` is no limit. */
+  final case class SipiConfig(useLocalDev: Boolean, localDevImage: String, maxImagePixels: Option[Long] = None)
 
   final case class StorageConfig(assetDir: String, tempDir: String) {
     val assetPath: Path = Path(assetDir)

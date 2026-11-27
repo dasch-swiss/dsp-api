@@ -118,20 +118,24 @@ configuration file, `ingest.conf` in the ingest module, set through `INGEST_*` e
 variable is read by both the API's `application.conf` and `ingest.conf`. Ingest takes the token secret and issuer from
 `app.jwt` and the audience from `app.dsp-ingest.audience`.
 
-| key in ingest.conf                    | environment variable          | default value                  |
-|---------------------------------------|-------------------------------|--------------------------------|
-| ingest.storage.asset-dir              | INGEST_STORAGE_ASSET_DIR      | /opt/images                    |
-| ingest.storage.temp-dir               | INGEST_STORAGE_TEMP_DIR       | /opt/temp                      |
-| ingest.sipi.use-local-dev             | INGEST_SIPI_USE_LOCAL_DEV     | false                          |
-| ingest.sipi.local-dev-image           | INGEST_SIPI_LOCAL_DEV_IMAGE   | daschswiss/knora-sipi:latest   |
-| ingest.bulk-max-parallel              | INGEST_BULK_MAX_PARALLEL      | 8                              |
-| ingest.features.allow-erase-projects  | INGEST_ALLOW_ERASE_PROJECTS   | false                          |
-| ingest.executor.cpu-share             | INGEST_EXECUTOR_CPU_SHARE     | 0.5                            |
+| key in ingest.conf                   | environment variable         | default value                |
+|--------------------------------------|------------------------------|------------------------------|
+| ingest.storage.asset-dir             | INGEST_STORAGE_ASSET_DIR     | /opt/images                  |
+| ingest.storage.temp-dir              | INGEST_STORAGE_TEMP_DIR      | /opt/temp                    |
+| ingest.sipi.use-local-dev            | INGEST_SIPI_USE_LOCAL_DEV    | false                        |
+| ingest.sipi.local-dev-image          | INGEST_SIPI_LOCAL_DEV_IMAGE  | daschswiss/knora-sipi:latest |
+| ingest.sipi.max-image-pixels         | INGEST_SIPI_MAX_IMAGE_PIXELS | unset (no limit)             |
+| ingest.bulk-max-parallel             | INGEST_BULK_MAX_PARALLEL     | 8                            |
+| ingest.features.allow-erase-projects | INGEST_ALLOW_ERASE_PROJECTS  | false                        |
+| ingest.executor.cpu-share            | INGEST_EXECUTOR_CPU_SHARE    | 0.5                          |
 
 - `asset-dir` and `temp-dir` must be mounted read-write into the API container; ingest writes the asset files there.
   `/ingest/health` answers `503` when either directory is missing.
 - `use-local-dev` must stay `false` in a container: ingest then runs the Sipi CLI, `ffmpeg` and `ffprobe` shipped in
   the API image. `true` runs Sipi through `docker run` of `local-dev-image`, for a local API outside a container.
+- `max-image-pixels` caps width x height of a TIFF, PNG, JPEG, JP2 or JPX upload, read from the file header before
+  Sipi runs; a larger image is answered with `422` `image_too_large`. Size it to the memory Sipi has on the host.
+  A header ingest cannot read leaves the decision to Sipi.
 - `allow-erase-projects` enables `DELETE /ingest/projects/{shortcode}/erase` and lets the API's project erasure delete
   the project's asset folder. It is separate from the API's `ALLOW_ERASE_PROJECTS` feature flag below.
 - `cpu-share` sizes the ingest thread pool and the number of concurrent child processes (Sipi, `ffmpeg`, `ffprobe`)
