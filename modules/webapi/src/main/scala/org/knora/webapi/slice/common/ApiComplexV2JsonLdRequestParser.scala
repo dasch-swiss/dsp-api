@@ -575,9 +575,10 @@ final case class ApiComplexV2JsonLdRequestParser(
         newValueVersionIri    <- newValueVersionIri(v, valueIri)
         newValueVersionSmtIri <-
           ZIO.foreach(newValueVersionIri)(vi => converter.asSmartIri(vi.value).mapError(_.getMessage))
-        valueContent <- getValueContent(v, resourceIri.shortcode).map(Some(_)).orElse(ZIO.none)
-        _            <- ensurePlaceholderAllowed(valueContent.toSeq)
-        updateValue  <- (valueContent, valuePermissions) match
+        contentResult <- getValueContent(v, resourceIri.shortcode).either
+        valueContent   = contentResult.toOption
+        _             <- ensurePlaceholderAllowed(valueContent.toSeq)
+        updateValue   <- (valueContent, valuePermissions) match
                          case (Some(valueContentV2), _) =>
                            ZIO.succeed(
                              UpdateValueContentV2(
@@ -604,7 +605,7 @@ final case class ApiComplexV2JsonLdRequestParser(
                                newValueVersionSmtIri,
                              ),
                            )
-                         case _ => ZIO.fail("No value content or permissions provided")
+                         case _ => ZIO.fail(contentResult.left.getOrElse("No value content or permissions provided"))
       } yield updateValue
     }
 
