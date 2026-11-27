@@ -20,6 +20,9 @@ import org.knora.testrunner.DspZTestJUnitRunner
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.api.admin.model.MaintenanceRequests.AssetId
+import org.knora.webapi.slice.common.jena.ModelOps
+import org.knora.webapi.slice.common.jena.ModelOps.*
+import org.knora.webapi.slice.standoff.service.StandoffMappingServiceFake
 import org.knora.webapi.store.iiif.api.FileMetadataSipiResponse
 import org.knora.webapi.store.iiif.api.SipiService
 
@@ -34,6 +37,22 @@ class ValueContentV2Spec extends ZIOSpecDefault {
 
   private val expected      = FileMetadataSipiResponse(Some("origName"), None, "text/plain", None, None, None, None, None)
   private val shortcode0001 = KnoraProject.Shortcode.unsafeFrom("0001")
+
+  private val invalidCombination =
+    "Invalid combination of knora-api:valueHasString, knora-api:textValueAsXml, and/or knora-api:textValueHasMapping"
+
+  private def textValueFrom(valueAsString: Option[String]) = ZIO.scoped {
+    val property = valueAsString.fold("")(s => s"knora-api:valueAsString \"$s\" ;")
+    val turtle   =
+      s"""@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
+         |<http://example.com/value> a knora-api:TextValue ; $property .
+         |""".stripMargin
+    for {
+      model  <- ModelOps.fromTurtle(turtle).orDieWith(RuntimeException(_))
+      r      <- ZIO.fromEither(model.resource("http://example.com/value")).orDieWith(RuntimeException(_))
+      result <- TextValueContentV2.from(r).either
+    } yield result.left.toOption
+  }.provide(StandoffMappingServiceFake.layer)
 
   override def spec: Spec[Any, Option[Throwable]] =
     suite("ValueContentV2")(
@@ -53,6 +72,21 @@ class ValueContentV2Spec extends ZIOSpecDefault {
             } yield assert(exit)(failsWithA[NotFoundException]) && assertTrue(msg.contains("not found in dsp-ingest"))
           },
         ).provide(mockSipiNotFound()),
+      ),
+      suite("TextValueContentV2.from")(
+        test("fails with 'must not be empty' when valueAsString is empty and there is no XML") {
+          textValueFrom(Some("")).map(error =>
+            assertTrue(error.contains("Text value must not be empty: knora-api:valueAsString is blank")),
+          )
+        },
+        test("fails with 'must not be empty' when valueAsString is whitespace and there is no XML") {
+          textValueFrom(Some("  ")).map(error =>
+            assertTrue(error.contains("Text value must not be empty: knora-api:valueAsString is blank")),
+          )
+        },
+        test("fails with the invalid-combination message when valueAsString is missing and there is no XML") {
+          textValueFrom(None).map(error => assertTrue(error.contains(invalidCombination)))
+        },
       ),
       suite("GeomValueContentV2.parsePoints")(
         test("parses a rectangle geometry into its list of points") {

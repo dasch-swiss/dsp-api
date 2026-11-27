@@ -1324,7 +1324,8 @@ object TextValueContentV2 {
 
   def from(r: Resource): ZIO[StandoffMappingService, IRI, TextValueContentV2] = for {
     standoffMappingService <- ZIO.service[StandoffMappingService]
-    maybeValueAsString     <- ZIO.fromEither(objectSparqlStringOption(r, ValueAsString))
+    rawValueAsString       <- ZIO.fromEither(r.objectStringOption(ValueAsString))
+    maybeValueAsString      = rawValueAsString.filterNot(_.isBlank)
     maybeValueHasLanguage  <- ZIO.fromEither(objectSparqlStringOption(r, TextValueHasLanguage))
     maybeTextValueAsXml    <- ZIO.fromEither(r.objectStringOption(TextValueAsXml))
     comment                <- ZIO.fromEither(objectCommentOption(r))
@@ -1333,6 +1334,9 @@ object TextValueContentV2 {
     maybeMappingResponse   <- ZIO
                               .foreach(maybeMappingIri)(standoffMappingService.getMappingV2)
                               .mapError(_.getMessage)
+    _ <- ZIO
+           .fail("Text value must not be empty: knora-api:valueAsString is blank")
+           .when(rawValueAsString.exists(_.isBlank) && maybeTextValueAsXml.isEmpty)
     textValue <-
       getTextValue(maybeValueAsString, maybeTextValueAsXml, maybeValueHasLanguage, maybeMappingResponse, comment)
         .mapError(_.getMessage)

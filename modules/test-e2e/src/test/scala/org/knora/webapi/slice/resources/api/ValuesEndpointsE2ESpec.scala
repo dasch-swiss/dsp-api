@@ -1044,7 +1044,10 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         valueIri = textValueWithoutStandoffIri.get,
         valueAsString = "",
       )
-      TestApiClient.putJsonLd(uri"/v2/values", jsonLd, anythingUser1).flatMap(_.assert400).as(assertCompletes)
+      TestApiClient
+        .putJsonLd(uri"/v2/values", jsonLd, anythingUser1)
+        .flatMap(_.assert400)
+        .map(errorMessage => assertTrue(errorMessage.contains("must not be empty")))
     },
     test("update a text value without standoff") {
       val resourceIri: IRI      = AThing.iri
