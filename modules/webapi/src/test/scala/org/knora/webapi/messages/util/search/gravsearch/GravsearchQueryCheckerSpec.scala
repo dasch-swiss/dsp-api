@@ -6,11 +6,17 @@
 package org.knora.webapi.messages.util.search.gravsearch
 
 import org.junit.runner.RunWith
+import zio.ZIO
 import zio.test.*
 
+import dsp.errors.GravsearchException
 import org.knora.testrunner.DspZTestJUnitRunner
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.messages.IriConversions.*
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search.*
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 
 @RunWith(classOf[DspZTestJUnitRunner])
 class GravsearchQueryCheckerSpec extends ZIOSpecDefault {
@@ -38,7 +44,40 @@ class GravsearchQueryCheckerSpec extends ZIOSpecDefault {
   private def rejection(construct: String, where: String): Either[String, ConstructQuery] =
     removed(construct, where).left.map(_.getMessage)
 
+  private implicit val sf: StringFormatter = StringFormatter.getInitializedTestInstance
+
+  private def check(predicate: String, inConstructClause: Boolean) =
+    ZIO
+      .attempt(
+        GravsearchQueryChecker.checkStatement(
+          StatementPattern(QueryVariable("v"), IriRef(predicate.toSmartIri), QueryVariable("o")),
+          ApiV2Complex,
+          GravsearchTypeInspectionResult(Map.empty),
+          inConstructClause,
+        ),
+      )
+      .exit
+
+  private val forbidden = Seq(
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFImageService,
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl,
+  )
+
   override def spec: Spec[TestEnvironment, Any] = suite("GravsearchQueryChecker")(
+    suite("checkStatement rejects forbidden predicates")(
+      for {
+        predicate         <- forbidden
+        inConstructClause <- Seq(false, true)
+      } yield test(s"$predicate is rejected (inConstructClause = $inConstructClause)") {
+        for {
+          exit <- check(predicate, inConstructClause)
+          err   = exit.causeOption.flatMap(_.failureOption)
+        } yield assertTrue(
+          err.exists(_.isInstanceOf[GravsearchException]),
+          err.exists(_.getMessage.contains("cannot be used in a Gravsearch query")),
+        )
+      },
+    ),
     suite("removeMainResourceStatementsFromWhereClause")(
       test("removes a top-level statement that marks the CONSTRUCT clause's main resource") {
         val expected = parse(mainThing, "")
