@@ -15,8 +15,8 @@ import zio.json.*
 import zio.json.ast.Json
 
 import java.io.IOException
+import scala.sys.process.Process
 import scala.sys.process.ProcessLogger
-import scala.sys.process.stringSeqToProcess
 
 final case class ProcessOutput(stdout: String, stderr: String, exitCode: Int)
 final case class Command private[infrastructure] (cmd: List[String])
@@ -92,12 +92,14 @@ final case class CommandExecutorLive(
   override def buildCommand(command: String, params: String*): UIO[Command] =
     if (sipiConfig.useLocalDev) {
       for {
-        assetDir <- storageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath).orDie
+        assetDir      <- storageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath).orDie
+        correlationId <- CorrelationId.current
       } yield {
         Command(
           List(
             List("docker", "run", "--entrypoint", command),
             List("-v", s"$assetDir:$assetDir"),
+            List("-e", s"${CommandExecutorLive.correlationIdEnv}=${correlationId.value}"),
             List(sipiConfig.localDevImage),
             params,
           ).flatten,
@@ -124,15 +126,19 @@ final case class CommandExecutorLive(
   override def execute(command: Command): IO[IOException, ProcessOutput] = {
     val logger = new InMemoryProcessLogger()
     for {
-      _   <- ZIO.logInfo(s"Executing command: ${command.cmd}")
-      out <- ingestExecutor.withPermit(ZIO.attemptBlockingIO(command.cmd !< logger)).map(logger.buildOutput)
-      _   <- ZIO.foreachDiscard(parseSipiLogs(out.stdout ++ out.stderr))(ZIO.logInfo(_))
-      _   <- ZIO.logWarning(s"Command '${command.cmd}' has err output: '$out'").when(out.stderr.nonEmpty)
+      correlationId <- CorrelationId.current
+      process        = Process(command.cmd, None, CommandExecutorLive.correlationIdEnv -> correlationId.value)
+      _             <- ZIO.logInfo(s"Executing command: ${command.cmd}")
+      out           <- ingestExecutor.withPermit(ZIO.attemptBlockingIO(process !< logger)).map(logger.buildOutput)
+      _             <- ZIO.foreachDiscard(parseSipiLogs(out.stderr))(ZIO.logInfo(_))
     } yield out
   }
 }
 
 object CommandExecutorLive {
+
+  /** sipi prefixes its log lines and its report with this ID; allowed: `[A-Za-z0-9._:-]{1,128}`. */
+  val correlationIdEnv: String = "SIPI_CORRELATION_ID"
 
   /** `sh -c` binds the arguments after the script to `$0`, `$@`, so `exec` replaces the shell with the command. */
   private[infrastructure] val oomExpendable: List[String] =

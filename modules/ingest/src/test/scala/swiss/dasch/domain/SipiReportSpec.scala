@@ -51,6 +51,8 @@ class SipiReportSpec extends ZIOSpecDefault {
        |  "status": "error",
        |  "mode": "cli",
        |  "phase": "$phase",
+       |  "error_code": "decode_failed",
+       |  "correlation_id": "abc123",
        |  "error_message": "boom",
        |  "input_file": "/tmp/in",
        |  "output_file": "/tmp/out",
@@ -90,6 +92,8 @@ class SipiReportSpec extends ZIOSpecDefault {
         "read"     -> SipiReport.Phase.Read,
         "convert"  -> SipiReport.Phase.Convert,
         "write"    -> SipiReport.Phase.Write,
+        "unknown"  -> SipiReport.Phase.Unknown,
+        "internal" -> SipiReport.Phase.Internal,
       )
       val results = phases.map { case (raw, expected) =>
         errorPayload(raw).fromJson[SipiReport] match {
@@ -98,6 +102,23 @@ class SipiReportSpec extends ZIOSpecDefault {
         }
       }
       assertTrue(results.forall(identity))
+    },
+    test("decodes error_code and correlation_id of an error payload") {
+      assertTrue(errorPayload("read").fromJson[SipiReport].exists {
+        case err: SipiReport.Err => err.errorCode == "decode_failed" && err.correlationId.contains("abc123")
+        case _                   => false
+      })
+    },
+    test("decodes sipi's fallback error document, which has no file fields") {
+      val payload =
+        """{"status": "error", "mode": "cli", "phase": "internal", "error_code": "internal",
+          |"correlation_id": "abc123", "error_message": "message was not valid UTF-8"}""".stripMargin
+      assertTrue(payload.fromJson[SipiReport].exists {
+        case err: SipiReport.Err =>
+          err.phase == SipiReport.Phase.Internal && err.inputFile.isEmpty && err.outputFile.isEmpty &&
+          err.outputFormat.isEmpty && err.fileSizeBytes.isEmpty
+        case _ => false
+      })
     },
     test("accepts an error payload without the image field (cli_args)") {
       val decoded = errorPayload("cli_args", includeImage = false).fromJson[SipiReport]
@@ -133,7 +154,7 @@ class SipiReportSpec extends ZIOSpecDefault {
     },
     test("rejects a payload with an unknown phase value") {
       val payload =
-        """{"status": "error", "phase": "brand_new_phase", "error_message": "?",
+        """{"status": "error", "phase": "brand_new_phase", "error_code": "internal", "error_message": "?",
           |"input_file": "", "output_file": "", "output_format": "", "file_size_bytes": 0}""".stripMargin
       assertTrue(payload.fromJson[SipiReport].isLeft)
     },
