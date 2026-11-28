@@ -2,8 +2,8 @@ Fixes DEV-
 
 <!--
 This repo rebase-merges: every commit on the branch lands on main verbatim, and there is no squash
-safety net. Curate the branch before merge. A PR lands as ONE commit unless the many-commits box
-below is ticked. Every commit is `type(scope): subject`. Check with `just commit-lint`.
+safety net. Curate the branch before merge: one commit per scope per slice, at most 100. Every
+commit is `type(scope): subject`. Check with `just commit-lint`.
 Conventions: docs/development/commit-conventions.md
 -->
 
@@ -21,6 +21,17 @@ Conventions: docs/development/commit-conventions.md
 
 -
 
+## Review guide
+
+<!-- Only when the PR has several phases; delete otherwise. One sub-section per phase, in history
+     order. -->
+
+### Phase N: [name]
+
+- **Review:** <!-- the files and seams to look at -->
+- **Verified:** <!-- what the tests, the browser check and the reviewers covered -->
+- **Decision:** <!-- what was settled here and why -->
+
 ## Challenges and Decisions
 
 <!-- What was tried, what failed, and key architecture decisions. Record hard-to-reverse
@@ -36,24 +47,18 @@ Conventions: docs/development/commit-conventions.md
 
 <!-- Actionable: "do X instead of Y", not "this is hard". -->
 
+## Learnings
+
+<!-- The files added to docs/learnings/, or why there are none. -->
+
 ## Test Plan
+
+<!-- Say how each line of "Before a merge" in docs/development/commit-conventions.md was met, or why
+     it does not apply. -->
 
 - [ ] verification steps
 
 ## Commit hygiene
 
-- [ ] I have reviewed and cleaned up the branch history (working commits squashed, clear messages)
-      so it reads well on `main`
-- [ ] allow-many-commits — tick only if this PR is genuinely several independent, self-contained
-      changes that each deserve their own line in `main`'s history
-
-## Review guide
-
-<!-- Only when the many-commits box is ticked; delete otherwise. One sub-section per commit,
-     in history order. -->
-
-### `type(scope): subject`
-
-- **Review:** <!-- the files and seams to look at -->
-- **Verified:** <!-- what tests / checks cover it -->
-- **Decision:** <!-- what was settled here and why -->
+- [ ] I have curated the branch history (fixups folded, bodies written for the agent that reads them,
+      comments cleaned) so it reads well on `main`
