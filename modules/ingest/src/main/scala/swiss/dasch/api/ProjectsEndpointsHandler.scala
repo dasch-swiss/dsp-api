@@ -140,11 +140,12 @@ final case class ProjectsEndpointsHandler(
         authorizationHandler.ensureProjectWritable(principal, shortcode) *>
           ZIO.scoped {
             for {
-              prj    <- projectService.findOrCreateProject(shortcode).flatMapError(IngestFailure.toApiProblem)
-              tmpDir <- storageService
+              assetName <- ZIO.fromEither(AssetFilename.from(filename)).mapError(BadRequest("filename", _))
+              prj       <- projectService.findOrCreateProject(shortcode).flatMapError(IngestFailure.toApiProblem)
+              tmpDir    <- storageService
                           .createTempDirectoryScoped(s"${prj.shortcode}-ingest")
                           .flatMapError(IngestFailure.toApiProblem)
-              tmpFile = tmpDir / filename.value
+              tmpFile = tmpDir / assetName.value
               _      <- stream
                      .rechunk(ChunkSize)
                      .run(ZSink.fromFile(tmpFile.toFile))

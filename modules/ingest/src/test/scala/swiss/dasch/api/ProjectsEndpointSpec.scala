@@ -389,6 +389,34 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
           info.originalFilename == "\u0101.mp3", // NFC "\u0101" = LATIN SMALL LETTER A WITH MACRON ("a" + U+0304)
         )
       },
+      testWithScope("should answer 400 naming the unsupported extension and the supported ones") {
+        val req = Request
+          .post(
+            URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "m-ds-kirche-18_1.gif"),
+            Body.fromString("x"),
+          )
+          .addHeader("Authorization", "Bearer fakeToken")
+        for {
+          response <- executeRequest(req)
+          body     <- response.body.asString
+          problem   = body.fromJson[ApiProblem.BadRequest]
+        } yield assertTrue(
+          response.status == Status.BadRequest,
+          problem.exists(_.errors.map(_.argument) == List("filename")),
+          problem.exists(_.errors.exists(e => e.reason.contains("'.gif'") && e.reason.contains("tif"))),
+        )
+      },
+      testWithScope("should answer 400 with the path reason for a filename with an encoded slash") {
+        val url = URL.decode("/projects/0666/assets/ingest/a%2Fb.tif").getOrElse(throw new Exception("Invalid URL"))
+        val req = Request.post(url, Body.fromString("x")).addHeader("Authorization", "Bearer fakeToken")
+        for {
+          response <- executeRequest(req)
+          body     <- response.body.asString
+        } yield assertTrue(
+          response.status == Status.BadRequest,
+          body.contains("Filename must not contain any path information"),
+        )
+      },
       testWithScope("should refuse ingesting without content") {
         val req = Request
           .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.empty)

@@ -5,6 +5,7 @@
 
 package swiss.dasch.domain
 
+import swiss.dasch.domain.PathOps.fileExtension
 import zio.nio.file.*
 
 import java.text.Normalizer
@@ -25,9 +26,15 @@ object AssetFilename {
       _ <- if (valueAsPath.normalize.filename.toString != value) {
              Left("Filename must not contain any path information")
            } else { Right(()) }
-      _        <- SupportedFileType.fromPath(valueAsPath).toRight("Filename must have a valid file extension")
+      _        <- SupportedFileType.fromPath(valueAsPath).toRight(unsupportedExtension(valueAsPath.fileExtension))
       filename <- if (regex.matches(value)) { Right(new AssetFilename(value)) }
                   else { Left("Filename contains invalid characters") }
     } yield filename
+  }
+
+  private def unsupportedExtension(extension: String): String = {
+    val supported = SupportedFileType.allExtensions.mkString(", ")
+    if (extension.isEmpty) s"Filename has no file extension. Supported: $supported"
+    else s"File type '.$extension' is not supported. Supported: $supported"
   }
 }

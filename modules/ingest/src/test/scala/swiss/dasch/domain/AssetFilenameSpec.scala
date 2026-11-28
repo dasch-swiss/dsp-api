@@ -46,16 +46,19 @@ class AssetFilenameSpec extends ZIOSpecDefault {
         assertTrue(actual == Right(str))
       }
     },
-    test("should not allow invalid filenames missing a valid extension") {
-      val filenamesWithoutValidExtension = Seq(
-        "Foo",
-        "Foo.",
-        "Foo.bar",
-        "Foo.png.bar",
-      )
-      check(Gen.fromIterable(filenamesWithoutValidExtension)) { str =>
+    test("should name the missing extension and the supported extensions") {
+      val supported = SupportedFileType.allExtensions.mkString(", ")
+      check(Gen.fromIterable(Seq("Foo", "Foo."))) { str =>
         val actual: Either[String, String] = AssetFilename.from(str).map(_.value)
-        assertTrue(actual == Left("Filename must have a valid file extension"))
+        assertTrue(actual == Left(s"Filename has no file extension. Supported: $supported"))
+      }
+    },
+    test("should name the unsupported extension and the supported extensions") {
+      val supported = SupportedFileType.allExtensions.mkString(", ")
+      check(Gen.fromIterable(Seq("Foo.bar" -> "bar", "Foo.png.bar" -> "bar", "m-ds-kirche-18_1.gif" -> "gif"))) {
+        case (str, ext) =>
+          val actual: Either[String, String] = AssetFilename.from(str).map(_.value)
+          assertTrue(actual == Left(s"File type '.$ext' is not supported. Supported: $supported"))
       }
     },
     test("should not allow invalid filenames containing path traversals") {

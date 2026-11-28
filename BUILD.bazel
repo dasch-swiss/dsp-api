@@ -5,4 +5,6 @@ exports_files([
     # Default scalafmt config for the rules_scala scalafmt toolchain
     # (referenced as //:.scalafmt.conf by scala_deps.scalafmt in MODULE.bazel).
     ".scalafmt.conf",
+    # Read by //modules/ingest:test (SupportedFileTypeSpec) to keep the documented extensions in sync.
+    "docs/03-endpoints/ingest.md",
 ])
