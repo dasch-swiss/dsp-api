@@ -1,7 +1,7 @@
 ---
 dune_map: true
 schema_version: 2
-date: 2026-10-28
+date: 2026-11-28
 ---
 
 # dsp-api architecture map
@@ -591,12 +591,12 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     `DspIngestClient`, `AbstractEntityRepo`, `CachingEntityRepo`, `EntityCache`, `ListsResponder`,
     `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`, `FairProjectsLive`,
     `ProjectDataGraphsLive`, `ViewRestrictionsRowCache`, `ViewRestrictionsAudience`, `ValueCountFold`,
-    `ViewRestrictionsClassification`
+    `ViewRestrictionsClassification`, `UnreferencedAssetsService`, `AssetReferencesRepo`
 - **Public interface**: `AdminModule.layer`, providing `AdminDomainModule.Provided` (`KnoraProjectService`,
     `KnoraUserService`, `KnoraGroupService`, `UserService`, `GroupService`, `ProjectService`,
     `ProjectEraseService`, `LegalInfoService`, `PasswordService`, `MaintenanceService`,
     `AdministrativePermissionService`, `DefaultObjectAccessPermissionService`, `ViewRestrictionsService`,
-    `ViewRestrictionsByPropertyService`, `KnoraUserToUserConverter`); the repo traits `KnoraProjectRepo`,
+    `ViewRestrictionsByPropertyService`, `KnoraUserToUserConverter`, `UnreferencedAssetsService`); the repo traits `KnoraProjectRepo`,
     `KnoraUserRepo`, `KnoraGroupRepo` with their `builtIn` sets; the domain value types `ProjectIri`,
     `Shortcode`, `Shortname`, `UserIri`, `GroupIri`, `Email`, `Username`, `Permission`, `PermissionIri`,
     `RestrictedView`, `InternalFilename`, `User`; `DspIngestClient`; the three responders as ZIO services.
@@ -1318,10 +1318,12 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     `StillImageService`, `MovingImageService`, `SipiClient`, `SipiClientLive`, `CommandExecutorLive`,
     `IngestExecutor`, `ReportService`, `MaintenanceActionsLive`, `CsvService`, `FileChecksumServiceLive`,
     `AuthService`, `AuthorizationHandler`, `FetchAssetPermissions`, `Configuration`, `IngestModule`,
-    `IngestServerEndpoints`, `MigrateSizes`, `MigrateMimeTypes`
+    `IngestServerEndpoints`, `MigrateSizes`, `MigrateMimeTypes`, `ApiProblem`, `IngestFailure`,
+    `HandlerFunctions`, `CorrelationId`, `SipiReport`, `ImageHeaderReader`
 - **Public interface**: HTTP on the API port under `/ingest/`: `/ingest/projects/{shortcode}/...` (assets,
     bulk-ingest, export, import, erase), `/ingest/maintenance/...`, `/ingest/report/...` and
-    `/ingest/{info,health,metrics}`, with ingest's own token check and error bodies. In process:
+    `/ingest/{info,health,metrics}`, with ingest's own token check and error bodies (a 500 or 422 body holds
+    `correlation_id`, `error_code` and `message`, documented in `docs/03-endpoints/ingest.md`). In process:
     `IngestModule.layer` provides `AssetInfoService` and webapi-admin's `DspIngestClient`;
     `IngestModule.endpointsLayer` provides `IngestServerEndpoints`; ingest's `FetchAssetPermissions` port is
     implemented in webapi-admin. The backfills `swiss.dasch.MigrateSizes` and `MigrateMimeTypes` are main
@@ -1358,6 +1360,10 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         every non-monitoring route runs on `IngestExecutor.run` - enforcement: review.
     - The knora-api image keeps no `USER` directive, because ingest writes NFS-owned assets as root -
         enforcement: docs-only.
+    - The server logic of every route except `/info`, `/health` and `/metrics` runs inside
+        `HandlerFunctions.guarded`, and every failure reaches the client only through
+        `IngestFailure.toApiProblem`, so no error body holds a server path, a command line or process
+        output - enforcement: review (`HandlerFunctionsSpec`, `IngestFailureSpec`).
     - Wiring: shared inventory. New services go in `IngestModule`'s layer list and, for HTTP-exposed ones,
         the handler list of `IngestServerEndpoints`.
 - **Durable state**:
@@ -1367,7 +1373,7 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
         `saveJsonFile`, also rewritten in bulk by the one-off `AssetSizeMigrationService` and
         `AssetMimeTypeMigrationService`, which are in-component and not concurrent with normal ingest.
     - Colocated docs: `modules/ingest/README.md`, `CLAUDE.md`, `CHANGELOG.md` and `modules/ingest/docs/`.
-- **Fingerprint**: `0bd96d0a73c1`
+- **Fingerprint**: `0767ff2acd7c`
 
 ### sipi
 

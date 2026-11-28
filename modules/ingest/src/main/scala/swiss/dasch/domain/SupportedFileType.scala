@@ -88,6 +88,8 @@ enum SupportedFileType(val mappings: Map[String, MimeType]) derives JsonCodec {
 
 object SupportedFileType {
 
+  val allExtensions: Seq[String] = SupportedFileType.values.toSeq.flatMap(_.extensions).sorted
+
   def fromPath(path: Path): Option[SupportedFileType] =
     SupportedFileType.values.find(_.acceptsExtension(path.fileExtension))
 }
