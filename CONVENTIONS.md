@@ -184,9 +184,10 @@ Do **not** use "Knora" in free-form human-readable text — commit messages, PR 
 
 ## Commit Conventions
 
-PRs are rebase-merged: curate the branch, and land one `type(scope): subject` commit per PR unless the PR ticks
-`allow-many-commits`; the `Commit hygiene` check and `just commit-lint` enforce the types and the mandatory scope.
-Types, scopes, commit bodies, stacks and the PR description: `docs/development/commit-conventions.md`.
+PRs are rebase-merged: curate the branch into one `type(scope): subject` commit per scope per slice (a plan phase,
+or a feature within it, inside one `ARCH-MAP.md` component); the `Commit hygiene` check and `just commit-lint`
+enforce the types, the mandatory scope, the 100-commit limit and a linear branch. Types, scopes, granularity, commit
+bodies, stacks, the PR description and the checks before a merge: `docs/development/commit-conventions.md`.
 Before writing a commit or PR title, read `git log origin/main` to match the current style. To pick reviewers, take
 the recent authors of the touched files: `git log origin/main --format='%an' -n 20 -- <paths> | sort | uniq -c`.
 
