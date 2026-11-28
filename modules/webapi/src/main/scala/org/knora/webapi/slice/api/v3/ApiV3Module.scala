@@ -18,6 +18,7 @@ import org.knora.webapi.slice.`export`.domain.ProjectMigrationExportService
 import org.knora.webapi.slice.`export`.domain.ProjectMigrationImportService
 import org.knora.webapi.slice.admin.domain.model.KnoraProject
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.UnreferencedAssetsService
 import org.knora.webapi.slice.admin.domain.service.UserService
 import org.knora.webapi.slice.api.admin.AdminPathVariables.projectIri
 import org.knora.webapi.slice.api.v3.`export`.ExportServerEndpoints
@@ -64,6 +65,7 @@ object ApiV3Module {
     StringFormatter &
     Tracing &
     TriplestoreService &
+    UnreferencedAssetsService &
     UserService &
     ValuesResponderV2
     // format: on

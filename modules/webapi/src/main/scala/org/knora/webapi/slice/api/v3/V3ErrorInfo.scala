@@ -9,6 +9,7 @@ import zio.Chunk
 import zio.json.*
 
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.api.v3.V3ErrorCode.NotFounds
 import org.knora.webapi.slice.common.KnoraIris.OntologyIri
 import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
@@ -49,6 +50,11 @@ object NotFound:
   def from(projectIri: ProjectIri): NotFound = {
     val code: NotFounds = V3ErrorCode.project_not_found
     apply(code, code.template.replace("{id}", projectIri.value), Map("id" -> projectIri.value))
+  }
+
+  def from(shortcode: Shortcode): NotFound = {
+    val code: NotFounds = V3ErrorCode.project_not_found
+    apply(code, code.template.replace("{id}", shortcode.value), Map("id" -> shortcode.value))
   }
 
   def featureMissing(featureName: String): NotFound = {
