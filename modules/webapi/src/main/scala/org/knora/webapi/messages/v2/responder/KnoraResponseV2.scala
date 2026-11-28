@@ -5,8 +5,12 @@
 
 package org.knora.webapi.messages.v2.responder
 
+import zio.Task
+import zio.ZIO
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
+import dsp.errors.RequestRejectedException
 import org.knora.webapi.*
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.OntologyConstants
@@ -229,6 +233,13 @@ object CanDoResponseV2 {
       cannotDoReason = Some(JsonLDString(reason)),
       cannotDoReasonContext = Some(context),
     )
+
+  /**
+   * `canDo: true` when `check` succeeds, `canDo: false` with the message of a [[RequestRejectedException]].
+   * Any other failure propagates, so an internal error answers 500 and its message never reaches the client.
+   */
+  def unlessRejected(check: Task[Any]): Task[CanDoResponseV2] =
+    check.as(yes).catchSome { case rejected: RequestRejectedException => ZIO.succeed(no(rejected.getMessage)) }
 }
 
 /**

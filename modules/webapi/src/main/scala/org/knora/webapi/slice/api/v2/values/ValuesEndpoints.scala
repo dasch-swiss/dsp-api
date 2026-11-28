@@ -17,15 +17,17 @@ import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.Policy
 
 final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
-  private val readResources     = "ReadResourcesService, per resource and value"
-  private val valuesResponder   = "ValuesResponderV2, per resource and value"
-  private val valuesRestService = "ValuesRestService, on the resource"
+  private val readResources = "ReadResourcesService, per resource and value"
+  private val objectAccess  = "ObjectAccess, per resource and value"
 
   private val base: EndpointInput[Unit] = "v2" / "values"
 
   private val resourceIri = path[String].name("resourceIri").description("The IRI of a Resource.")
   private val valueUuid   = path[ValueUuid].name("valueUuid").description("The UUID of a Value.")
   private val version     = query[Option[VersionDate]]("version")
+
+  private val eraseRequirement =
+    s"${Policy.SystemAdmin.requirement} The resource must belong to the project its IRI's shortcode names."
 
   private val linkToValuesDocumentation =
     """Find detailed documentation on <a href="https://docs.dasch.swiss/DSP-API/03-endpoints/api-v2/editing-values/">docs.dasch.swiss</a>."""
@@ -43,7 +45,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     )
 
   val postValues = baseEndpoint
-    .authenticatedObjectAccessPolicyEndpoint(valuesResponder)
+    .authenticatedObjectAccessPolicyEndpoint(objectAccess)
     .post
     .in(base)
     .in(
@@ -54,11 +56,11 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Create a new value for a resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
+      s"Create a new value for a resource. Requires view and modify permission on the resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
   val putValuesOrder = baseEndpoint
-    .authenticatedObjectAccessPolicyEndpoint(valuesRestService)
+    .authenticatedObjectAccessPolicyEndpoint(objectAccess)
     .put
     .in(base / "order")
     .in(
@@ -73,11 +75,11 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     )
     .out(jsonBody[ReorderValuesResponse])
     .description(
-      s"Reorder values of a property on a resource. Requires modify permission on the resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
+      s"Reorder the values of a property of a resource. Requires view and modify permission on the resource. The request lists the values the caller can see, in their new order; they are permuted among their own valueHasOrder slots, a value without a slot gets a new one after the highest, and values hidden from the caller keep their slots. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
   val putValues = baseEndpoint
-    .authenticatedObjectAccessPolicyEndpoint(valuesResponder)
+    .authenticatedObjectAccessPolicyEndpoint(objectAccess)
     .put
     .in(base)
     .in(
@@ -88,11 +90,11 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Update a value of a resource. Requires view permission on the resource and modify permission on the value, or change rights permission to change its permissions; a link update also requires modify permission on the resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
+      s"Update a value of a resource. Requires view permission on the resource and modify permission on the value, or change rights permission on the value to change its permissions, alone or together with its content; a link update also requires modify permission on the resource. ${Policy.objectWriteRequirement} $linkToValuesDocumentation",
     )
 
   val deleteValues = baseEndpoint
-    .authenticatedObjectAccessPolicyEndpoint(valuesResponder)
+    .authenticatedObjectAccessPolicyEndpoint(objectAccess)
     .post
     .in(base / "delete")
     .in(stringJsonBody.example(ValuesEndpoints.Examples.deleteValue))
@@ -108,7 +110,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Erase a Value and all of its old versions from the database completely. ${Policy.SystemAdmin.requirement} $linkToValuesDocumentation",
+      s"Erase a Value and all of its old versions from the database completely. $eraseRequirement $linkToValuesDocumentation",
     )
 
   val postValuesErasehistory = baseEndpoint.systemAdminPolicyEndpoint.post
@@ -117,7 +119,7 @@ final class ValuesEndpoints(baseEndpoint: BaseEndpoints) {
     .out(stringJsonBody)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Erase all old versions of a Value from the database completely and keep only the latest version. ${Policy.SystemAdmin.requirement} $linkToValuesDocumentation",
+      s"Erase all old versions of a Value from the database completely and keep only the latest version. $eraseRequirement $linkToValuesDocumentation",
     )
 }
 

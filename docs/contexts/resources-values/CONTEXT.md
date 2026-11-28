@@ -56,6 +56,20 @@ _Avoid_: Standoff definition
 Fine-grained access carried by a Resource or Value and evaluated against a Permission profile.
 _Avoid_: Scope, administrative permission
 
+**Access request**:
+What a Resource or Value write asks the object-access gate (`slice/resources/access/ObjectAccess`) for: one
+case per kind of write (create, update, change rights, delete, erase or reorder a Value; create, update or
+delete a Resource), naming the Resource and, where it applies, the Property and Value. The case fixes the
+Object-access permission level the gate requires.
+_Avoid_: Permission check, command
+
+**Grant**:
+The gate's proof that it decided an Access request for one caller: the caller, the Project, and the target,
+the caller's view of the Resource with Values hidden from the caller left out. A write takes what it writes
+from the Grant, and the Grant is valid only inside the write it was handed to, under the Resource's write
+lock.
+_Avoid_: Token, permission, ProjectAdminGrant (the proof of the project-admin role, a separate thing)
+
 **Prequery / main query**:
 The two-phase internal query process behind the **ResourceSearch port** that first identifies paged
 Resource IRIs and then retrieves complete Resources.
@@ -71,6 +85,9 @@ _Avoid_: Two public searches
   defined by **Data Model**.
 - An **Object-access permission** on a **Resource** or **Value** is evaluated against a
   **Permission profile** from **Identity & Access** using the shared **Permission policy**.
+- Every **Resource** and **Value** write states an **Access request** and runs only with the
+  **Grant** the gate answers it with; the gate decides visibility before the level, so a write
+  never answers about an object the caller cannot see.
 - **Resources & Values** implements the **InstanceUsage** port for **Data Model**, so the
   compile-time edge runs from Resources & Values to Data Model and the graph stays acyclic.
 - **Resources & Values** implements the **ResourceSearch port** for **Search**, so the compile-time

@@ -43,6 +43,9 @@ import org.knora.webapi.slice.common.KnoraIris.PropertyIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.search.repo.GetResourceWithSpecifiedPropertiesGravsearchQuery
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Select
+import org.knora.webapi.store.triplestore.api.TriplestoreService.Queries.Update
 import org.knora.webapi.testservices.RequestsUpdates.addVersionQueryParam
 import org.knora.webapi.testservices.ResponseOps.assert200
 import org.knora.webapi.testservices.ResponseOps.assert400
@@ -4736,6 +4739,140 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
                                .flatMap(_.assert200)
         } yield assertTrue(reorderResponse.valuesReordered == 1)
       },
+      test("reorders the values of a link value property") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          (target1, _)     <- createThingWithInteger(None)
+          (target2, _)     <- createThingWithInteger(None)
+          link1            <- createLinkValue(resourceIri, target1, "CR knora-admin:Creator|V knora-admin:KnownUser")
+          link2            <- createLinkValue(resourceIri, target2, "CR knora-admin:Creator|V knora-admin:KnownUser")
+          before           <- valueIrisOf(resourceIri, hasOtherThingValueProperty, anythingUser1)
+          response         <-
+            reorder(resourceIri, hasOtherThingValueProperty, before.reverse, anythingUser1).flatMap(_.assert200)
+          after <- valueIrisOf(resourceIri, hasOtherThingValueProperty, anythingUser1)
+        } yield assertTrue(
+          before.toSet == Set(link1, link2),
+          response.valuesReordered == 2,
+          after == before.reverse,
+        )
+      },
+      test("a link property, not its link value property, answers 400") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          (target, _)      <- createThingWithInteger(None)
+          link             <- createLinkValue(resourceIri, target, "CR knora-admin:Creator|V knora-admin:KnownUser")
+          _                <- reorder(resourceIri, s"$anythingV2#hasOtherThing", List(link), anythingUser1)
+                 .flatMap(_.assert400)
+        } yield assertCompletes
+      },
+      test("values with equal valueHasOrder read in the order of their IRIs") {
+        for {
+          (resourceIri, first) <- createThingWithInteger(None)
+          others               <- ZIO.foreach(List(30, 4, 17))(addInteger(resourceIri, _, defaultIntPermissions))
+          _                    <- ZIO.foreachDiscard(first :: others)(setOrder(_, Some(3)))
+          read                 <- valueIrisOf(resourceIri, hasIntegerProperty, anythingUser1)
+        } yield assertTrue(read == (first :: others).sorted)
+      },
+    ),
+    suite("PUT /v2/values/order through the object-access gate")(
+      test("permutes the visible values among their own slots; hidden values keep theirs") {
+        for {
+          fixture      <- reorderFixture
+          hiddenBefore <- ZIO.foreach(fixture.hidden)(orderOf)
+          visible      <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser2)
+          slotsBefore  <- ZIO.foreach(visible)(orderOf)
+          requested     = visible.reverse
+          response     <- reorder(fixture.resource, hasIntegerProperty, requested, anythingUser2).flatMap(_.assert200)
+          hiddenAfter  <- ZIO.foreach(fixture.hidden)(orderOf)
+          slotsAfter   <- ZIO.foreach(requested)(orderOf)
+          asCaller     <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser2)
+          asCreator    <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser1)
+        } yield assertTrue(
+          visible.size == 7,
+          response.valuesReordered == 7,
+          hiddenAfter == hiddenBefore,
+          slotsAfter == slotsBefore.sorted,
+          asCaller == requested,
+          asCreator.filterNot(fixture.hidden.contains) == requested,
+        )
+      },
+      test("answers the same 400 for a hidden value and a nonexistent value, naming no other hidden value") {
+        for {
+          fixture    <- reorderFixture
+          visible    <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser2)
+          nonexistent = s"${fixture.resource}/values/AAAAAAAAAAAAAAAAAAAAAA"
+          withHidden <- reorder(fixture.resource, hasIntegerProperty, visible :+ fixture.hidden.head, anythingUser2)
+                          .flatMap(_.assert400)
+          withMissing <- reorder(fixture.resource, hasIntegerProperty, visible :+ nonexistent, anythingUser2)
+                           .flatMap(_.assert400)
+        } yield assertTrue(
+          withHidden.replace(fixture.hidden.head, "<value>") == withMissing.replace(nonexistent, "<value>"),
+          fixture.hidden.tail.forall(iri => !withHidden.contains(iri)),
+        )
+      },
+      test("gives a visible value without valueHasOrder a slot after the highest order and reads it where requested") {
+        for {
+          fixture  <- reorderFixture
+          visible  <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser2)
+          unslotted = visible(2)
+          _        <- setOrder(unslotted, None)
+          all      <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser1)
+          highest  <- ZIO.foreach(all.filterNot(_ == unslotted))(orderOf).map(_.flatten.max)
+          requested = visible.filterNot(_ == unslotted).reverse :+ unslotted
+          _        <- reorder(fixture.resource, hasIntegerProperty, requested, anythingUser2).flatMap(_.assert200)
+          slot     <- orderOf(unslotted)
+          asCaller <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser2)
+        } yield assertTrue(slot.exists(_ > highest), asCaller == requested)
+      },
+      test("keeps duplicate slots, which read back in the order of their IRIs") {
+        for {
+          fixture   <- reorderFixture
+          visible   <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser2)
+          shared    <- orderOf(visible.head)
+          _         <- ZIO.foreachDiscard(visible.take(3))(setOrder(_, shared))
+          before    <- ZIO.foreach(visible)(orderOf)
+          _         <- reorder(fixture.resource, hasIntegerProperty, visible.reverse, anythingUser2).flatMap(_.assert200)
+          after     <- ZIO.foreach(visible)(v => orderOf(v).map(v -> _))
+          asCaller  <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser2)
+          readTwice <- valueIrisOf(fixture.resource, hasIntegerProperty, anythingUser2)
+        } yield assertTrue(
+          after.map(_._2).sorted == before.sorted,
+          after.map(_._2).count(_ == shared) == 3,
+          asCaller == after.sortBy((iri, order) => (order.getOrElse(0), iri)).map(_._1),
+          readTwice == asCaller,
+        )
+      },
+      test("a caller who sees no value of the property gets the 400 without loaded IRIs") {
+        for {
+          (resourceIri, first) <- createThingWithInteger(None)
+          hidden               <- ZIO.foreach(List(64, 9))(addInteger(resourceIri, _, "CR knora-admin:Creator"))
+          _                    <- removeIntValue("delete", resourceIri, first, anythingUser1).flatMap(_.assert200)
+          msg                  <- reorder(resourceIri, hasIntegerProperty, List(hidden.head), anythingUser2).flatMap(_.assert400)
+        } yield assertTrue(msg.contains("Expected 0 value(s)"), !msg.contains(hidden(1)), !msg.contains(first))
+      },
+      test("an unknown property answers 404, a link or hasStandoffLinkToValue property 400") {
+        for {
+          (resourceIri, value) <- createThingWithInteger(None)
+          _                    <- reorder(resourceIri, s"$anythingV2#hasNothingLikeThis", List(value), anythingUser1)
+                 .flatMap(_.assert404)
+          _ <- reorder(resourceIri, s"$anythingV2#hasOtherThing", List(value), anythingUser1).flatMap(_.assert400)
+          _ <- reorder(resourceIri, KA.HasStandoffLinkToValue, List(value), anythingUser1).flatMap(_.assert400)
+        } yield assertCompletes
+      },
+      test("a hidden resource answers 403 see resource; an RV-only or no-Modify caller gets the level message") {
+        for {
+          (hiddenIri, hiddenValue) <- createThingWithInteger(Some("CR knora-admin:Creator"))
+          hidden                   <- reorder(hiddenIri, hasIntegerProperty, List(hiddenValue), anythingUser2).flatMap(_.assert403)
+          (rvIri, rvValue)         <- createThingWithInteger(Some("CR knora-admin:Creator|RV knora-admin:KnownUser"))
+          rv                       <- reorder(rvIri, hasIntegerProperty, List(rvValue), normalUser).flatMap(_.assert403)
+          (vIri, vValue)           <- createThingWithInteger(Some("CR knora-admin:Creator|V knora-admin:KnownUser"))
+          viewOnly                 <- reorder(vIri, hasIntegerProperty, List(vValue), normalUser).flatMap(_.assert403)
+        } yield assertTrue(
+          hidden.contains(s"permission to see resource <$hiddenIri>"),
+          rv.contains(s"the M permission on resource <$rvIri>"),
+          viewOnly.contains(s"the M permission on resource <$vIri>"),
+        )
+      },
     ),
     suite("POST /v2/values/delete checks permissions before revealing value details (DEV-7723)")(
       test("a hidden resource answers the same 403 for every variant of the request") {
@@ -4945,5 +5082,513 @@ class ValuesEndpointsE2ESpec extends E2EZSpec { self =>
         } yield assertCompletes
       },
     ),
+    suite("POST /v2/values/delete through the object-access gate")(
+      test("a view-only caller gets the same 403 before the class and type checks") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(Some("CR knora-admin:Creator|V knora-admin:KnownUser"))
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator|V knora-admin:KnownUser")
+          msgs             <- ZIO.foreach(
+                    List(
+                      ("anything:Thing", "knora-api:IntValue"),
+                      ("anything:BlueThing", "knora-api:IntValue"),
+                      ("anything:Thing", "knora-api:TextValue"),
+                    ),
+                  ) { case (cls, tpe) =>
+                    TestApiClient
+                      .postJsonLd(
+                        uri"/v2/values/delete",
+                        deleteValueRequest(resourceIri, cls, "anything:hasInteger", valueIri, tpe),
+                        normalUser,
+                      )
+                      .flatMap(_.assert403)
+                  }
+        } yield assertTrue(msgs.distinct.size == 1, msgs.head.contains(valueIri))
+      },
+      test("a caller with restricted view on the resource gets the level message") {
+        for {
+          (resourceIri, valueIri) <- createThingWithInteger(Some("CR knora-admin:Creator|RV knora-admin:KnownUser"))
+          msg                     <- removeIntValue("delete", resourceIri, valueIri, normalUser).flatMap(_.assert403)
+        } yield assertTrue(msg.contains(s"permission on resource <$resourceIri>"))
+      },
+      test("a caller with restricted view on the value gets the level message, not 404") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(Some("CR knora-admin:Creator|V knora-admin:KnownUser"))
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator|RV knora-admin:KnownUser")
+          msg              <- removeIntValue("delete", resourceIri, valueIri, normalUser).flatMap(_.assert403)
+        } yield assertTrue(msg.contains(s"permission on value <$valueIri>"))
+      },
+      test("the creator deletes a value only the creator may delete") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator|V knora-admin:ProjectMember")
+          _                <- removeIntValue("delete", resourceIri, valueIri, anythingUser2).flatMap(_.assert403)
+          _                <- removeIntValue("delete", resourceIri, valueIri, anythingUser1).flatMap(_.assert200)
+        } yield assertCompletes
+      },
+      test("a ProjectAdmin deletes a value only its creator may delete") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator")
+          _                <- removeIntValue("delete", resourceIri, valueIri, anythingAdminUser).flatMap(_.assert200)
+        } yield assertCompletes
+      },
+    ),
+    suite("POST /v2/values/erase through the object-access gate")(
+      test("a SystemAdmin erases a value") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator")
+          _                <- removeIntValue("erase", resourceIri, valueIri, rootUser).flatMap(_.assert200)
+          resource         <- TestResourcesApiClient.getResource(ResourceIri.unsafeFrom(resourceIri), rootUser)
+          body             <- resource.assert200
+        } yield assertTrue(!body.toCompactString().contains(valueIri))
+      },
+      test("a resource outside the project its IRI's shortcode names answers 400 and erases nothing") {
+        for {
+          _        <- insertThingOutsideItsShortcodeProject
+          msg      <- removeIntValue("erase", MisfiledThing.iri, MisfiledThing.intValueIri, rootUser).flatMap(_.assert400)
+          resource <- TestResourcesApiClient.getResource(ResourceIri.unsafeFrom(MisfiledThing.iri), rootUser)
+          body     <- resource.assert200
+        } yield assertTrue(msg.contains(MisfiledThing.iri), body.toCompactString().contains(MisfiledThing.intValueIri))
+      },
+    ),
+    suite("value delete and erase on deleted objects")(
+      test("a soft-deleted value can be deleted again and erased") {
+        for {
+          (resourceIri, valueIri) <- createThingWithInteger(None)
+          _                       <- removeIntValue("delete", resourceIri, valueIri, anythingUser1).flatMap(_.assert200)
+          again                   <- removeIntValue("delete", resourceIri, valueIri, anythingUser1)
+          erased                  <- removeIntValue("erase", resourceIri, valueIri, rootUser)
+        } yield assertTrue(again.code == StatusCode.Ok, erased.code == StatusCode.Ok)
+      },
+      test("a value of a deleted resource can be deleted and erased") {
+        for {
+          (resourceIri, valueIri) <- createThingWithInteger(None)
+          lastModified            <- getResourceLastModificationDate(resourceIri)
+          _                       <- deleteThing(resourceIri, lastModified).flatMap(_.assert200)
+          deleted                 <- removeIntValue("delete", resourceIri, valueIri, anythingUser1)
+          erased                  <- removeIntValue("erase", resourceIri, valueIri, rootUser)
+        } yield assertTrue(deleted.code == StatusCode.Ok, erased.code == StatusCode.Ok)
+      },
+    ),
+    suite("PUT /v2/values through the object-access gate")(
+      test("a Modify-only caller who submits different permissions gets 403") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator|M knora-admin:ProjectMember")
+          msg              <- putIntValue(resourceIri, valueIri, anythingUser2, permissionsOnly("CR knora-admin:ProjectMember"))
+                   .flatMap(_.assert403)
+        } yield assertTrue(msg.contains(s"permission on value <$valueIri>"))
+      },
+      test("a Modify-only caller who changes content and permissions together gets 403 and the value is unchanged") {
+        val contentAndPermissions =
+          """"knora-api:intValueAsInt" : 7730, "knora-api:hasPermissions" : "CR knora-admin:ProjectMember""""
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator|M knora-admin:ProjectMember")
+          _                <- putIntValue(resourceIri, valueIri, anythingUser2, Some(contentAndPermissions)).flatMap(_.assert403)
+          body             <- resourceAs(resourceIri, anythingUser1)
+        } yield assertTrue(body.contains(valueIri), !body.contains("7730"))
+      },
+      test("a caller with ChangeRights changes the permissions") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:ProjectMember")
+          before           <- resourceAs(resourceIri, anythingUser2)
+          _                <- putIntValue(resourceIri, valueIri, anythingUser2, permissionsOnly("CR knora-admin:Creator"))
+                 .flatMap(_.assert200)
+          after <- resourceAs(resourceIri, anythingUser2)
+        } yield assertTrue(before.contains(valueIri), !after.contains(valueIri))
+      },
+      test("a Modify-only caller who resubmits the current permissions, written differently, updates the content") {
+        val samePermissions =
+          """"knora-api:intValueAsInt" : 7731, "knora-api:hasPermissions" : "M knora-admin:ProjectMember|CR knora-admin:Creator""""
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator|M knora-admin:ProjectMember")
+          _                <- putIntValue(resourceIri, valueIri, anythingUser2, Some(samePermissions)).flatMap(_.assert200)
+          body             <- resourceAs(resourceIri, anythingUser1)
+        } yield assertTrue(body.contains("7731"))
+      },
+      test("the creator updates a value only the creator may change") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator|V knora-admin:ProjectMember")
+          _                <- putIntValue(resourceIri, valueIri, anythingUser2).flatMap(_.assert403)
+          _                <- putIntValue(resourceIri, valueIri, anythingUser1).flatMap(_.assert200)
+          body             <- resourceAs(resourceIri, anythingUser1)
+        } yield assertTrue(body.contains("7723"))
+      },
+      test("an RV-only caller gets 403 with the level message") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(Some("CR knora-admin:Creator|V knora-admin:KnownUser"))
+          valueIri         <- createIntValue(resourceIri, "CR knora-admin:Creator|RV knora-admin:KnownUser")
+          msg              <- putIntValue(resourceIri, valueIri, normalUser).flatMap(_.assert403)
+        } yield assertTrue(msg.contains(s"permission on value <$valueIri>"))
+      },
+      test("a caller without Modify who sends a cross-project link gets 403, not 400") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(Some("CR knora-admin:Creator|V knora-admin:KnownUser"))
+          linkIri          <- createLinkValue(resourceIri, AThing.iri, "CR knora-admin:Creator|V knora-admin:KnownUser")
+          msg              <- putLinkValue(resourceIri, linkIri, "http://rdfh.ch/0803/c5058f3a", normalUser).flatMap(_.assert403)
+        } yield assertTrue(msg.contains(s"permission on value <$linkIri>"))
+      },
+      test("a link update by a caller without Modify on the resource gets 403") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(Some("CR knora-admin:Creator|V knora-admin:KnownUser"))
+          linkIri          <- createLinkValue(resourceIri, AThing.iri, "CR knora-admin:Creator|M knora-admin:KnownUser")
+          msg              <- putLinkValue(resourceIri, linkIri, TestDing.iri, normalUser).flatMap(_.assert403)
+        } yield assertTrue(msg.contains(s"permission on resource <$resourceIri>"))
+      },
+      test("a link update to a target the resource already links to answers 400 for a permitted caller") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          linkIri          <- createLinkValue(resourceIri, AThing.iri, "CR knora-admin:Creator")
+          _                <- createLinkValue(resourceIri, TestDing.iri, "CR knora-admin:Creator")
+          msg              <- putLinkValue(resourceIri, linkIri, TestDing.iri, anythingUser1).flatMap(_.assert400)
+        } yield assertTrue(msg.contains("already has a link"))
+      },
+    ),
+    suite("POST /v2/values checks permissions before revealing details")(
+      test("a hidden resource answers the same 403 for a valid body, a wrong class and an invalid value") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(Some("CR knora-admin:Creator"))
+          variants          = List(
+                       createValueRequest(resourceIri, "anything:Thing", "anything:hasInteger", newInteger),
+                       createValueRequest(resourceIri, "anything:BlueThing", "anything:hasInteger", newInteger),
+                       createValueRequest(
+                         resourceIri,
+                         "anything:Thing",
+                         "anything:hasOtherThingValue",
+                         crossProjectLink,
+                       ),
+                     )
+          messages =
+            (user: User) => ZIO.foreach(variants)(body => postValue(body, user).flatMap(_.assert403))
+          asMember <- messages(anythingUser2)
+          asOther  <- messages(normalUser)
+        } yield assertTrue(
+          asMember.distinct.size == 1,
+          asOther.distinct.size == 1,
+          asMember.forall(_.contains(s"permission to see resource <$resourceIri>")),
+          (asMember ++ asOther).forall(m => !m.contains("Thing") && !m.contains("IntValue")),
+        )
+      },
+      test("an RV-only caller gets 403 with the Modify message") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(Some("CR knora-admin:Creator|RV knora-admin:KnownUser"))
+          msg              <-
+            postValue(createValueRequest(resourceIri, "anything:Thing", "anything:hasInteger", newInteger), normalUser)
+              .flatMap(_.assert403)
+        } yield assertTrue(msg.contains(s"the M permission on resource <$resourceIri>"))
+      },
+      test("a caller without Modify who sends a cross-project link gets 403, not 400") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(Some("CR knora-admin:Creator|V knora-admin:KnownUser"))
+          msg              <-
+            postValue(
+              createValueRequest(resourceIri, "anything:Thing", "anything:hasOtherThingValue", crossProjectLink),
+              normalUser,
+            ).flatMap(_.assert403)
+        } yield assertTrue(msg.contains(s"the M permission on resource <$resourceIri>"))
+      },
+      test("a permitted caller gets 400 for a cardinality violation, counting a value hidden from the caller") {
+        def booleanValue(permissions: String) =
+          s""""@type" : "knora-api:BooleanValue", "knora-api:booleanValueAsBoolean" : true, "knora-api:hasPermissions" : "$permissions""""
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          _                <- postValue(
+                 createValueRequest(
+                   resourceIri,
+                   "anything:Thing",
+                   "anything:hasBoolean",
+                   booleanValue("CR knora-admin:Creator"),
+                 ),
+                 anythingUser1,
+               ).flatMap(_.assert200)
+          msg <- postValue(
+                   createValueRequest(
+                     resourceIri,
+                     "anything:Thing",
+                     "anything:hasBoolean",
+                     booleanValue("CR knora-admin:ProjectMember"),
+                   ),
+                   anythingUser2,
+                 ).flatMap(_.assert400)
+        } yield assertTrue(msg.contains("cardinality"))
+      },
+      test("a permitted caller gets 400 for a link the resource already has, counting a link hidden from the caller") {
+        for {
+          (resourceIri, _) <- createThingWithInteger(None)
+          _                <- createLinkValue(resourceIri, AThing.iri, "CR knora-admin:Creator")
+          msg              <- postValue(
+                   createValueRequest(resourceIri, "anything:Thing", "anything:hasOtherThingValue", linkTo(AThing.iri)),
+                   anythingUser2,
+                 ).flatMap(_.assert400)
+        } yield assertTrue(msg.contains("already has a link"))
+      },
+    ),
+    suite("value update on deleted objects")(
+      test("a soft-deleted value answers 404") {
+        for {
+          (resourceIri, valueIri) <- createThingWithInteger(None)
+          _                       <- removeIntValue("delete", resourceIri, valueIri, anythingUser1).flatMap(_.assert200)
+          _                       <- putIntValue(resourceIri, valueIri, anythingUser1).flatMap(_.assert404)
+        } yield assertCompletes
+      },
+      test("a value of a deleted resource answers 404") {
+        for {
+          (resourceIri, valueIri) <- createThingWithInteger(None)
+          lastModified            <- getResourceLastModificationDate(resourceIri)
+          _                       <- deleteThing(resourceIri, lastModified).flatMap(_.assert200)
+          _                       <- putIntValue(resourceIri, valueIri, anythingUser1).flatMap(_.assert404)
+        } yield assertCompletes
+      },
+    ),
   )
+
+  /** A create request for a value of `property`; `value` is the content of the value's JSON-LD object. */
+  private def createValueRequest(resourceIri: IRI, resourceClass: String, property: String, value: String) =
+    s"""{
+       |  "@id" : "$resourceIri",
+       |  "@type" : "$resourceClass",
+       |  "$property" : { $value },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
+
+  private val newInteger = """"@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : 7730"""
+
+  private def linkTo(target: IRI) =
+    s""""@type" : "knora-api:LinkValue", "knora-api:linkValueHasTargetIri" : { "@id" : "$target" }"""
+
+  /** A link to a resource of the incunabula project, which the value validator refuses for an anything resource. */
+  private val crossProjectLink = linkTo("http://rdfh.ch/0803/c5058f3a")
+
+  private def postValue(body: String, user: User) = TestApiClient.postJsonLd(uri"/v2/values", body, user)
+
+  private def resourceAs(resourceIri: IRI, user: User) =
+    TestResourcesApiClient
+      .getResource(ResourceIri.unsafeFrom(resourceIri), user)
+      .flatMap(_.assert200)
+      .map(_.toCompactString())
+
+  /** Puts an update of an integer value of a Thing; `content` replaces the default new integer. */
+  private def putIntValue(resourceIri: IRI, valueIri: IRI, user: User, content: Option[String] = None) =
+    TestApiClient.putJsonLd(
+      uri"/v2/values",
+      updateValueRequest(resourceIri, "anything:Thing", "anything:hasInteger", valueIri, valueContent = content),
+      user,
+    )
+
+  private def permissionsOnly(permissions: String) = Some(s""""knora-api:hasPermissions" : "$permissions"""")
+
+  /** Puts an update of a hasOtherThing link of a Thing to a new target. */
+  private def putLinkValue(resourceIri: IRI, linkValueIri: IRI, target: IRI, user: User) =
+    TestApiClient.putJsonLd(
+      uri"/v2/values",
+      updateValueRequest(
+        resourceIri,
+        "anything:Thing",
+        "anything:hasOtherThingValue",
+        linkValueIri,
+        "knora-api:LinkValue",
+        Some(s""""knora-api:linkValueHasTargetIri" : { "@id" : "$target" }"""),
+      ),
+      user,
+    )
+
+  /** Adds a hasOtherThing link with the given permissions to a Thing as anythingUser1; returns the link value's IRI. */
+  private def createLinkValue(resourceIri: IRI, target: IRI, permissions: String) = {
+    val body =
+      s"""{
+         |  "@id" : "$resourceIri",
+         |  "@type" : "anything:Thing",
+         |  "anything:hasOtherThingValue" : {
+         |    "@type" : "knora-api:LinkValue",
+         |    "knora-api:linkValueHasTargetIri" : { "@id" : "$target" },
+         |    "knora-api:hasPermissions" : "$permissions"
+         |  },
+         |  "@context" : {
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         |  }
+         |}""".stripMargin
+    TestApiClient
+      .postJsonLdDocument(uri"/v2/values", body, anythingUser1)
+      .flatMap(_.assert200)
+      .flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+  }
+
+  /** Adds an integer value with the given permissions to a Thing as anythingUser1; returns the value's IRI. */
+  private def createIntValue(resourceIri: IRI, permissions: String) = {
+    val body =
+      s"""{
+         |  "@id" : "$resourceIri",
+         |  "@type" : "anything:Thing",
+         |  "anything:hasInteger" : {
+         |    "@type" : "knora-api:IntValue",
+         |    "knora-api:intValueAsInt" : 2,
+         |    "knora-api:hasPermissions" : "$permissions"
+         |  },
+         |  "@context" : {
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         |  }
+         |}""".stripMargin
+    TestApiClient
+      .postJsonLdDocument(uri"/v2/values", body, anythingUser1)
+      .flatMap(_.assert200)
+      .flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+  }
+
+  /** A Thing of the anything project whose IRI names the incunabula project's shortcode. */
+  private object MisfiledThing {
+    val iri: IRI         = "http://rdfh.ch/0803/misfiled-thing-of-0001"
+    val intValueIri: IRI = s"$iri/values/misfiled-int"
+  }
+
+  private val insertThingOutsideItsShortcodeProject =
+    ZIO.serviceWithZIO[TriplestoreService](
+      _.query(Update(s"""PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                        |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+                        |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                        |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                        |INSERT DATA {
+                        |  GRAPH <http://www.knora.org/data/0001/anything> {
+                        |    <${MisfiledThing.iri}> a anything:Thing ;
+                        |      rdfs:label "misfiled thing" ;
+                        |      knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+                        |      knora-base:attachedToUser <${anythingUser1.id}> ;
+                        |      knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:KnownUser" ;
+                        |      knora-base:creationDate "2026-01-01T00:00:00Z"^^xsd:dateTime ;
+                        |      knora-base:isDeleted false ;
+                        |      anything:hasInteger <${MisfiledThing.intValueIri}> .
+                        |    <${MisfiledThing.intValueIri}> a knora-base:IntValue ;
+                        |      knora-base:valueHasInteger 1 ;
+                        |      knora-base:valueHasString "1" ;
+                        |      knora-base:valueHasOrder 0 ;
+                        |      knora-base:valueHasUUID "nzqhRsCMSpWuZ7cJ3H0sHw" ;
+                        |      knora-base:attachedToUser <${anythingUser1.id}> ;
+                        |      knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:KnownUser" ;
+                        |      knora-base:valueCreationDate "2026-01-01T00:00:00Z"^^xsd:dateTime ;
+                        |      knora-base:isDeleted false .
+                        |  }
+                        |}""".stripMargin)),
+    )
+
+  /** Posts a delete or erase request for an integer value of a Thing. */
+  private def removeIntValue(route: String, resourceIri: IRI, valueIri: IRI, user: User) =
+    TestApiClient.postJsonLd(
+      uri"/v2/values/$route",
+      deleteValueRequest(resourceIri, "anything:Thing", "anything:hasInteger", valueIri),
+      user,
+    )
+
+  private def deleteThing(resourceIri: IRI, lastModificationDate: Option[Instant]) =
+    TestApiClient.postJsonLd(
+      uri"/v2/resources/delete",
+      s"""{
+         |  "@id" : "$resourceIri",
+         |  "@type" : "anything:Thing",
+         |  ${lastModificationDate.fold("")(date =>
+          s""""knora-api:lastModificationDate" : { "@type" : "xsd:dateTimeStamp", "@value" : "$date" },""",
+        )}
+         |  "@context" : {
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+         |  }
+         |}""".stripMargin,
+      anythingUser1,
+    )
+
+  private val anythingV2                 = "http://0.0.0.0:3333/ontology/0001/anything/v2"
+  private val hasIntegerProperty         = s"$anythingV2#hasInteger"
+  private val hasOtherThingValueProperty = s"$anythingV2#hasOtherThingValue"
+  private val defaultIntPermissions      = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser"
+
+  private def reorder(resourceIri: IRI, property: IRI, values: Seq[IRI], user: User) =
+    TestApiClient.putJson[ReorderValuesResponse, ReorderValuesRequest](
+      uri"/v2/values/order",
+      ReorderValuesRequest(resourceIri, property, values.toList),
+      user,
+    )
+
+  /** The IRIs of the resource's values of `property` (complex schema), in the order a read returns them. */
+  private def valueIrisOf(resourceIri: IRI, property: IRI, user: User) =
+    for {
+      resource <- TestResourcesApiClient.getResource(ResourceIri.unsafeFrom(resourceIri), user).flatMap(_.assert200)
+      values    = resource.body.getArray(property).fold(List.empty[JsonLDValue])(_.value.toList)
+      iris     <- ZIO.foreach(values.collect { case obj: JsonLDObject => obj })(obj =>
+                ZIO.fromEither(obj.getRequiredString(JsonLDKeywords.ID)),
+              )
+    } yield iris
+
+  /** Adds an integer value with the given permissions to a Thing as anythingUser1; returns the value's IRI. */
+  private def addInteger(resourceIri: IRI, int: Int, permissions: String) =
+    TestApiClient
+      .postJsonLdDocument(
+        uri"/v2/values",
+        createValueRequest(
+          resourceIri,
+          "anything:Thing",
+          "anything:hasInteger",
+          s""""@type" : "knora-api:IntValue", "knora-api:intValueAsInt" : $int, "knora-api:hasPermissions" : "$permissions"""",
+        ),
+        anythingUser1,
+      )
+      .flatMap(_.assert200)
+      .flatMap(doc => ZIO.fromEither(doc.body.getRequiredString(JsonLDKeywords.ID)))
+
+  /** Sets or removes a value's knora-base:valueHasOrder directly in the store. */
+  private def setOrder(valueIri: IRI, order: Option[Int]) =
+    ZIO.serviceWithZIO[TriplestoreService](
+      _.query(
+        Update(
+          s"""PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+             |DELETE { GRAPH <http://www.knora.org/data/0001/anything> { <$valueIri> knora-base:valueHasOrder ?old } }
+             |INSERT { GRAPH <http://www.knora.org/data/0001/anything> { ${order.fold("")(o =>
+              s"<$valueIri> knora-base:valueHasOrder $o",
+            )} } }
+             |WHERE { OPTIONAL { GRAPH <http://www.knora.org/data/0001/anything> { <$valueIri> knora-base:valueHasOrder ?old } } }""".stripMargin,
+        ),
+      ),
+    )
+
+  /** The fixture of a gated reorder: a Thing and those of its integer values that anythingUser2 cannot see. */
+  private final case class ReorderFixture(resource: IRI, hidden: List[IRI])
+
+  /** A Thing with ten integer values in non-alphabetical order, three of them hidden from anythingUser2. */
+  private val reorderFixture =
+    for {
+      (resource, _) <- createThingWithInteger(None)
+      hiddenFrom2    = "CR knora-admin:Creator"
+      added         <- ZIO.foreach(
+                 List(
+                   42 -> false,
+                   93 -> true,
+                   7  -> false,
+                   15 -> false,
+                   28 -> true,
+                   61 -> false,
+                   84 -> false,
+                   3  -> true,
+                   50 -> false,
+                 ),
+               ) { case (int, hidden) =>
+                 addInteger(resource, int, if (hidden) hiddenFrom2 else defaultIntPermissions).map(_ -> hidden)
+               }
+    } yield ReorderFixture(resource, added.collect { case (iri, true) => iri })
+
+  /** A value's knora-base:valueHasOrder as stored. */
+  private def orderOf(valueIri: IRI) =
+    ZIO
+      .serviceWithZIO[TriplestoreService](
+        _.query(Select(s"""PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+                          |SELECT ?order WHERE { <$valueIri> knora-base:valueHasOrder ?order }""".stripMargin)),
+      )
+      .map(_.getFirstRow.flatMap(_.rowMap.get("order")).map(_.toInt))
 }

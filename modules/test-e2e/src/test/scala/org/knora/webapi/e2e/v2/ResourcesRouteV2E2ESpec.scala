@@ -16,6 +16,7 @@ import zio.json.*
 import zio.json.ast.Json
 import zio.test.*
 
+import java.nio.file.Paths
 import java.time.Instant
 
 import dsp.errors.AssertionException
@@ -37,9 +38,12 @@ import org.knora.webapi.messages.ValuesValidator
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.util.rdf.*
+import org.knora.webapi.models.filemodels.FileType
+import org.knora.webapi.models.filemodels.UploadFileRequest
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.*
+import org.knora.webapi.slice.admin.domain.model.LicenseIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.testservices.RequestsUpdates.addSimpleSchemaQueryParam
@@ -50,6 +54,7 @@ import org.knora.webapi.testservices.ResponseOps.assert401
 import org.knora.webapi.testservices.ResponseOps.assert403
 import org.knora.webapi.testservices.ResponseOps.assert404
 import org.knora.webapi.testservices.TestApiClient
+import org.knora.webapi.testservices.TestDspIngestClient
 import org.knora.webapi.testservices.TestResourcesApiClient
 import org.knora.webapi.util.*
 
@@ -61,6 +66,8 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
   private var aThingLastModificationDate = Instant.now
   private val hamletResourceIri          = new MutableTestIri
   private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
+  private val defaultPermissions         =
+    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
 
   override val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(
@@ -153,6 +160,79 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
        |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
        |  }
        |}""".stripMargin
+
+  private def thingRequest(iri: String, fields: String*): String =
+    (Seq(s""""@id" : "$iri"""", """"@type" : "anything:Thing"""") ++ fields :+
+      """|"@context" : {
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+         |  }""".stripMargin).mkString("{\n  ", ",\n  ", "\n}")
+
+  private def dateField(key: String, date: Any) =
+    s""""$key" : { "@type" : "xsd:dateTimeStamp", "@value" : "$date" }"""
+
+  private def lastModified(date: Any) = dateField("knora-api:lastModificationDate", date)
+
+  /** A Thing created by anythingUser1 with `permissions`; returns its IRI and creation date. */
+  private def createThing(permissions: String) = {
+    val iri  = "http://rdfh.ch/0001/" + UuidUtil.makeRandomBase64EncodedUuid
+    val body = createResourceWithCustomIRI(iri).replace(
+      "\"rdfs:label\"",
+      s"\"knora-api:hasPermissions\" : \"$permissions\",\n  \"rdfs:label\"",
+    )
+    for {
+      created <- TestApiClient.postJsonLdDocument(uri"/v2/resources", body, anythingUser1).flatMap(_.assert200)
+      date    <-
+        created.body
+          .getDataTypeValueInObject(KnoraApiV2Complex.CreationDate, OntologyConstants.Xsd.DateTimeStamp.toSmartIri)
+          .someOrFail("Creation date not found")
+    } yield (iri, date)
+  }
+
+  /** A resource write behind the object-access gate, and the level it requires. */
+  private enum GatedWrite(val level: String) {
+    case Update     extends GatedWrite("M")
+    case Authorship extends GatedWrite("M")
+    case Delete     extends GatedWrite("D")
+
+    def send(iri: String, user: User, fields: String*) = request(iri, user, wrongClass = false, fields*)
+
+    def sendWithWrongClass(iri: String, user: User, fields: String*) = request(iri, user, wrongClass = true, fields*)
+
+    private def request(iri: String, user: User, wrongClass: Boolean, fields: String*) = {
+      def body(own: String*) = {
+        val json = thingRequest(iri, own ++ fields*)
+        if (wrongClass) json.replace("\"anything:Thing\"", "\"anything:BlueThing\"") else json
+      }
+      this match {
+        case Update     => TestApiClient.putJsonLd(uri"/v2/resources", body(""""rdfs:label" : "gated label""""), user)
+        case Authorship =>
+          TestApiClient.putJsonLd(
+            uri"/v2/resources/authorship",
+            body(""""knora-api:hasResourceAuthorship" : [ "Gate Author" ]"""),
+            user,
+          )
+        case Delete => TestApiClient.postJsonLd(uri"/v2/resources/delete", body(), user)
+      }
+    }
+  }
+
+  private def canDelete(iri: String, user: User, fields: String*) =
+    TestApiClient
+      .getJsonLdDocument(uri"/v2/resources/candelete?jsonLd=${thingRequest(iri, fields*)}", user)
+      .flatMap(_.assert200)
+      .flatMap(doc =>
+        ZIO
+          .fromEither(
+            for {
+              canDo  <- doc.body.getRequiredBoolean(KnoraApiV2Complex.CanDo)
+              reason <- doc.body.getString(KnoraApiV2Complex.CannotDoReason)
+            } yield (canDo, reason.getOrElse("")),
+          )
+          .mapError(Exception(_)),
+      )
 
   private def createResourceWithCustomValueIRI(valueIRI: IRI): String =
     s"""{
@@ -1744,6 +1824,207 @@ class ResourcesRouteV2E2ESpec extends E2EZSpec {
                             .flatMap(_.getRequiredString(KnoraApiV2Complex.ValueHasComment)),
                         )
       } yield assertTrue(savedComment == commentWithLinebreaks)
+    },
+    suite("resource creation decides on the project's create permission before it validates the request")(
+      test("a caller without create permission who sends a disallowed license gets 403, a permitted caller 400") {
+        for {
+          file <- TestDspIngestClient.uploadFile(Paths.get("test_data/test_route/files/eggs.csv"), anythingShortcode)
+          body  = UploadFileRequest
+                   .make(FileType.TextFile, file.internalFilename, licenseIri = Some(LicenseIri.AI_GENERATED))
+                   .toJsonLd()
+          denied  <- TestApiClient.postJsonLd(uri"/v2/resources", body, normalUser).flatMap(_.assert403)
+          invalid <- TestApiClient.postJsonLd(uri"/v2/resources", body, anythingUser1).flatMap(_.assert400)
+        } yield assertTrue(
+          denied.contains("You do not have permission to create a resource of class"),
+          invalid.contains("is not allowed in project 0001"),
+        )
+      },
+      test("a caller without create permission who sends an existing custom IRI gets 403, a permitted caller 400") {
+        val body = createResourceWithCustomIRI(aThingIri)
+        for {
+          denied    <- TestApiClient.postJsonLd(uri"/v2/resources", body, normalUser).flatMap(_.assert403)
+          duplicate <- TestApiClient.postJsonLd(uri"/v2/resources", body, anythingUser1).flatMap(_.assert400)
+        } yield assertTrue(
+          denied.contains("You do not have permission to create a resource of class"),
+          duplicate.contains(s"IRI: '$aThingIri' already exists"),
+        )
+      },
+      test("a caller without create permission who links across projects gets 403, a permitted caller 400") {
+        val body = createResourceReqPayload().replace(
+          "\"rdfs:label\"",
+          s""""anything:hasOtherThingValue" : {
+             |    "@type" : "knora-api:LinkValue",
+             |    "knora-api:linkValueHasTargetIri" : { "@id" : "$reiseInsHeiligeLandIri" }
+             |  },
+             |  "rdfs:label"""".stripMargin,
+        )
+        for {
+          denied  <- TestApiClient.postJsonLd(uri"/v2/resources", body, normalUser).flatMap(_.assert403)
+          invalid <- TestApiClient.postJsonLd(uri"/v2/resources", body, anythingUser1).flatMap(_.assert400)
+        } yield assertTrue(
+          denied.contains("You do not have permission to create a resource of class"),
+          invalid.contains("Cannot create a link between resources cross projects 0001 and 0803"),
+        )
+      },
+    ),
+    suite("resource writes decide on the caller's permission before they answer about the resource")(
+      GatedWrite.values.toList.map { write =>
+        suite(write.toString)(
+          test("a hidden resource answers 403 with one message, for a valid and an invalid request") {
+            for {
+              (iri, created) <- createThing("CR knora-admin:Creator")
+              valid          <- write.send(iri, anythingUser2, lastModified(created)).flatMap(_.assert403)
+              invalid        <- write.sendWithWrongClass(iri, anythingUser2).flatMap(_.assert403)
+            } yield assertTrue(valid.contains(s"You do not have permission to see resource <$iri>"), valid == invalid)
+          },
+          test("restricted view answers 403 with the level message") {
+            for {
+              (iri, created) <- createThing("CR knora-admin:Creator|RV knora-admin:ProjectMember")
+              body           <- write.send(iri, anythingUser2, lastModified(created)).flatMap(_.assert403)
+            } yield assertTrue(body.contains(s"You do not have the ${write.level} permission on resource <$iri>"))
+          },
+          test("view without the level answers 403 before the class and date checks") {
+            for {
+              (iri, _) <- createThing("CR knora-admin:Creator|V knora-admin:ProjectMember")
+              body     <- write.sendWithWrongClass(iri, anythingUser2, lastModified(Instant.EPOCH)).flatMap(_.assert403)
+            } yield assertTrue(body.contains(s"You do not have the ${write.level} permission on resource <$iri>"))
+          },
+          test("a missing resource answers 404") {
+            val iri = "http://rdfh.ch/0001/" + UuidUtil.makeRandomBase64EncodedUuid
+            write
+              .send(iri, anythingUser2)
+              .flatMap(_.assert404)
+              .map(body => assertTrue(body.contains(s"Resource <$iri> was not found")))
+          },
+          test("the creator is permitted") {
+            for {
+              (iri, _) <- createThing(defaultPermissions)
+              _        <- write.send(iri, anythingUser1).flatMap(_.assert200)
+            } yield assertCompletes
+          },
+        )
+      }*,
+    ),
+    test(
+      "a Modify-only caller who changes the resource permissions gets 403, and a caller with ChangeRights succeeds",
+    ) {
+      val newPermissions = "\"knora-api:hasPermissions\" : \"CR knora-admin:Creator|D knora-admin:ProjectMember\""
+      for {
+        (iri, _) <- createThing("CR knora-admin:Creator|M knora-admin:ProjectMember")
+        denied   <- TestApiClient
+                    .putJsonLd(uri"/v2/resources", thingRequest(iri, newPermissions), anythingUser2)
+                    .flatMap(_.assert403)
+        _ <- TestApiClient
+               .putJsonLd(uri"/v2/resources", thingRequest(iri, newPermissions), anythingUser1)
+               .flatMap(_.assert200)
+      } yield assertTrue(denied.contains(s"You do not have the CR permission on resource <$iri>"))
+    },
+    test("an invalid permission literal answers 400 before the gate decides") {
+      for {
+        (iri, _) <- createThing("CR knora-admin:Creator|V knora-admin:ProjectMember")
+        _        <- TestApiClient
+               .putJsonLd(
+                 uri"/v2/resources",
+                 thingRequest(iri, "\"knora-api:hasPermissions\" : \"garbage\""),
+                 anythingUser2,
+               )
+               .flatMap(_.assert400)
+      } yield assertCompletes
+    },
+    test("deleting without Delete permission on a clean request answers 403") {
+      for {
+        (iri, created) <- createThing("CR knora-admin:Creator|M knora-admin:ProjectMember")
+        _              <- GatedWrite.Delete.send(iri, anythingUser2, lastModified(created)).flatMap(_.assert403)
+      } yield assertCompletes
+    },
+    suite("candelete")(
+      test("answers canDo false with the gate's reason for a hidden, a missing and a no-delete resource") {
+        val missingIri = "http://rdfh.ch/0001/" + UuidUtil.makeRandomBase64EncodedUuid
+        for {
+          (hiddenIri, _)   <- createThing("CR knora-admin:Creator")
+          (noDeleteIri, _) <- createThing("CR knora-admin:Creator|M knora-admin:ProjectMember")
+          hidden           <- canDelete(hiddenIri, anythingUser2)
+          missing          <- canDelete(missingIri, anythingUser2)
+          noDelete         <- canDelete(noDeleteIri, anythingUser2)
+        } yield assertTrue(
+          hidden == (false, s"You do not have permission to see resource <$hiddenIri>"),
+          missing == (false, s"Resource <$missingIri> was not found"),
+          noDelete == (false, s"You do not have the D permission on resource <$noDeleteIri>"),
+        )
+      },
+      test("gives a no-delete caller the gate's reason, not the class or in-use reason") {
+        for {
+          (iri, _) <- createThing("CR knora-admin:Creator|M knora-admin:ProjectMember")
+          _        <- TestApiClient
+                 .postJsonLd(
+                   uri"/v2/resources",
+                   s"""{
+                      |  "@type" : "anything:Thing",
+                      |  "knora-api:attachedToProject" : { "@id" : "http://rdfh.ch/projects/0001" },
+                      |  "anything:hasOtherThingValue" : {
+                      |    "@type" : "knora-api:LinkValue",
+                      |    "knora-api:linkValueHasTargetIri" : { "@id" : "$iri" }
+                      |  },
+                      |  "rdfs:label" : "thing linking to the resource",
+                      |  "@context" : {
+                      |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                      |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                      |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                      |  }
+                      |}""".stripMargin,
+                   anythingUser1,
+                 )
+                 .flatMap(_.assert200)
+          denied <-
+            TestApiClient
+              .getJsonLdDocument(
+                uri"/v2/resources/candelete?jsonLd=${thingRequest(iri).replace("\"anything:Thing\"", "\"anything:BlueThing\"")}",
+                anythingUser2,
+              )
+              .flatMap(_.assert200)
+          reason = denied.body.getString(KnoraApiV2Complex.CannotDoReason)
+        } yield assertTrue(reason == Right(Some(s"You do not have the D permission on resource <$iri>")))
+      },
+      test("answers 401 without credentials") {
+        TestApiClient
+          .getJsonLd(uri"/v2/resources/candelete?jsonLd=${thingRequest(aThingIri)}")
+          .flatMap(_.assert401)
+          .as(assertCompletes)
+      },
+    ),
+    test("update, authorship and delete of an already deleted resource answer 400, and erase still erases it") {
+      for {
+        (iri, created) <- createThing(defaultPermissions)
+        deleteDate      = Instant.parse(created).plusMillis(1)
+        _              <- TestApiClient
+               .postJsonLd(
+                 uri"/v2/resources/delete",
+                 thingRequest(iri, lastModified(created), dateField("knora-api:deleteDate", deleteDate)),
+                 anythingUser1,
+               )
+               .flatMap(_.assert200)
+        update <- TestApiClient
+                    .putJsonLd(
+                      uri"/v2/resources",
+                      thingRequest(iri, lastModified(deleteDate), """"rdfs:label" : "x""""),
+                      anythingUser1,
+                    )
+        authorship <- TestApiClient.putJsonLd(
+                        uri"/v2/resources/authorship",
+                        thingRequest(iri, lastModified(deleteDate), """"knora-api:hasResourceAuthorship" : []"""),
+                        anythingUser1,
+                      )
+        delete <- TestApiClient
+                    .postJsonLd(uri"/v2/resources/delete", thingRequest(iri, lastModified(deleteDate)), anythingUser1)
+        erase <- TestApiClient.postJsonLd(
+                   uri"/v2/resources/erase",
+                   thingRequest(iri, lastModified(deleteDate)),
+                   SharedTestDataADM.anythingAdminUser,
+                 )
+        afterErase <- TestApiClient.getJsonLd(uri"/v2/resourcespreview/$iri", anythingUser1)
+      } yield assertTrue(
+        List(update, authorship, delete, erase, afterErase).map(_.code.code) == List(400, 400, 400, 200, 404),
+      )
     },
   )
 }

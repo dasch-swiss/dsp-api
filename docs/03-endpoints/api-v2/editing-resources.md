@@ -163,7 +163,10 @@ If permissions are not given, configurable default permissions are used (see
 ).
 
 To create a resource, the user must have permission to create resources of that class in that project.
-Anonymous users cannot create resources; the request is refused with 401 Unauthorized.
+Anonymous users cannot create resources; the request is refused with 401 Unauthorized. A user without that permission
+gets 403 before the submitted values are validated, so a request that would also fail validation (a cross-project
+link, a disallowed license) answers 403, not 400. A permitted user gets 400 for invalid content, for example a custom
+IRI that already exists.
 
 The predicate `knora-api:attachedToUser` can be used to specify a creator other than the requesting user only if the
 requesting user is an administrator of the project or a system administrator. The specified creator must also have
@@ -266,7 +269,9 @@ want to change:
 To change the label, the user must have modify permission on the resource. To change the resource's permissions (a
 `knora-api:hasPermissions` that differs from the current one), the user must also have change rights permission on the resource, as when
 [changing a value's permissions](editing-values.md#updating-a-value); otherwise the request is
-refused with 403. An anonymous request is refused with 401.
+refused with 403. An anonymous request is refused with 401. A resource the user cannot view answers 403, and one
+that does not exist 404. The permissions are checked before the submitted class and dates, so a user without them
+gets 403 whatever class or `knora-api:lastModificationDate` the request names.
 
 Here is an example:
 
@@ -348,6 +353,23 @@ The optional property `knora-api:deleteDate`
 indicates when the resource was marked as deleted; if not given, the current time is used.
 
 The response is a JSON-LD document containing the predicate `knora-api:result` with a confirmation message.
+
+The user must have delete permission on the resource. An anonymous request is refused with 401, a resource the user
+cannot view answers 403, and one that does not exist 404. A user without delete permission gets 403 whatever else
+the request names; only a user with it gets 400 for a wrong class, a resource still in use or a bad delete date,
+and 409 for a stale `knora-api:lastModificationDate`.
+
+To ask whether a resource can be marked as deleted without doing it, send the same JSON-LD object as the URL-encoded
+query parameter `jsonLd`:
+
+```text
+HTTP GET to http://host/v2/resources/candelete?jsonLd=...
+```
+
+The response contains `knora-api:canDo`, and `knora-api:cannotDoReason` when it is `false`. The request needs
+credentials (401 without them); every other refusal answers 200 with `canDo: false`, while an internal error answers
+500. A resource that does not exist, is hidden from the user, or on which the user has no delete permission gives that
+reason before any class, conflict or in-use reason.
 
 ### Requesting Deleted Resources
 

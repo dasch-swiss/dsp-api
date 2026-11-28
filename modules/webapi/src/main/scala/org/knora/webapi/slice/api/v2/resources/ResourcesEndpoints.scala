@@ -30,10 +30,11 @@ object ResourcesBatchRequest {
 }
 
 final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphRoute, resourcesConfig: Resources) {
-  private val readResources         = "ReadResourcesService, per resource and value"
-  private val resourcesResponder    = "ResourcesResponderV2, per resource"
-  private val searchResponder       = "SearchResponderV2, per resource"
-  private val createResourceHandler = "CreateResourceV2Handler, on the project and resource class"
+  private val readResources      = "ReadResourcesService, per resource and value"
+  private val resourcesResponder = "ResourcesResponderV2, per resource"
+  private val searchResponder    = "SearchResponderV2, per resource"
+  private val createResourceGate = "ObjectAccess, on the project and resource class"
+  private val objectAccessGate   = "ObjectAccess, per resource"
 
   private val base = "v2" / "resources"
 
@@ -218,7 +219,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     )
 
   val getResourcesCanDelete = baseEndpoints
-    .objectAccessPolicyEndpoint(resourcesResponder)
+    .authenticatedObjectAccessPolicyEndpoint(objectAccessGate)
     .get
     .in(base / "candelete")
     .in(ApiV2.Inputs.formatOptions)
@@ -226,31 +227,36 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
     .description(
-      s"Check if a resource can be deleted. ${Policy.objectReadRequirement}",
+      "Check if a resource can be deleted. Answers `canDo: false` unless the caller has Delete object access " +
+        s"permission on the resource. ${Policy.objectWriteRequirement}",
     )
 
   val postResourcesDelete = baseEndpoints
-    .authenticatedObjectAccessPolicyEndpoint(resourcesResponder)
+    .authenticatedObjectAccessPolicyEndpoint(objectAccessGate)
     .post
     .in(base / "delete")
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description(s"Mark a resource as deleted. ${Policy.objectWriteRequirement}")
+    .description(
+      s"Mark a resource as deleted. Requires Delete object access permission on the resource. ${Policy.objectWriteRequirement}",
+    )
 
   val postResources = baseEndpoints
-    .authenticatedObjectAccessPolicyEndpoint(createResourceHandler)
+    .authenticatedObjectAccessPolicyEndpoint(createResourceGate)
     .post
     .in(base)
     .in(ApiV2.Inputs.formatOptions)
     .in(stringJsonBody)
     .out(ApiV2.Outputs.stringBodyFormatted)
     .out(ApiV2.Outputs.contentTypeHeader)
-    .description(s"Create a new resource. ${Policy.objectWriteRequirement}")
+    .description(
+      s"Create a new resource. Requires the project's create permission for the resource class. ${Policy.objectWriteRequirement}",
+    )
 
   val putResources = baseEndpoints
-    .authenticatedObjectAccessPolicyEndpoint(resourcesResponder)
+    .authenticatedObjectAccessPolicyEndpoint(objectAccessGate)
     .put
     .in(base)
     .in(ApiV2.Inputs.formatOptions)
@@ -263,7 +269,7 @@ final class ResourcesEndpoints(baseEndpoints: BaseEndpoints, graphConfig: GraphR
     )
 
   val putResourcesAuthorship = baseEndpoints
-    .authenticatedObjectAccessPolicyEndpoint(resourcesResponder)
+    .authenticatedObjectAccessPolicyEndpoint(objectAccessGate)
     .put
     .in(base / "authorship")
     .in(ApiV2.Inputs.formatOptions)

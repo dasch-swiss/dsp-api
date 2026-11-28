@@ -9,7 +9,6 @@ import sttp.tapir.ztapir.*
 import zio.*
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.v2.ValuesResponderV2
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.api.v2.StoredXmlServing
@@ -18,7 +17,6 @@ import org.knora.webapi.slice.common.ApiComplexV2JsonLdRequestParser
 import org.knora.webapi.slice.common.api.BaseEndpoints
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer
 import org.knora.webapi.slice.common.api.KnoraResponseRenderer.FormatOptions
-import org.knora.webapi.slice.resources.repo.service.ValueRepo
 import org.knora.webapi.slice.resources.service.ReadResourcesService
 
 final class ValuesServerEndpoints(endpoints: ValuesEndpoints, restService: ValuesRestService) {
@@ -35,7 +33,7 @@ final class ValuesServerEndpoints(endpoints: ValuesEndpoints, restService: Value
 object ValuesServerEndpoints {
   type Dependencies =
     ApiComplexV2JsonLdRequestParser & BaseEndpoints & KnoraProjectService & KnoraResponseRenderer &
-      ReadResourcesService & ResourceUtilV2 & StringFormatter & ValueRepo & ValuesResponderV2
+      ReadResourcesService & StringFormatter & ValuesResponderV2
 
   type Provided = ValuesServerEndpoints
 

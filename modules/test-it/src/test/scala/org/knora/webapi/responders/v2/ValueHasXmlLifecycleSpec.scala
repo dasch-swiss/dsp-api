@@ -14,11 +14,9 @@ import org.knora.webapi.E2EZSpec
 import org.knora.webapi.messages.v2.responder.resourcemessages.EraseResourceRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.*
 import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
-import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.common.ValueIri
 import org.knora.webapi.slice.common.api.AuthorizationRestService
 import org.knora.webapi.slice.common.api.TestCandidates
-import org.knora.webapi.slice.common.domain.InternalIri
 import org.knora.webapi.slice.resources.repo.service.ActiveValue
 import org.knora.webapi.slice.resources.repo.service.ResourceModel.ActiveResource
 import org.knora.webapi.slice.resources.repo.service.ValueRepo
@@ -116,8 +114,7 @@ class ValueHasXmlLifecycleSpec extends E2EZSpec {
         xmlAfter == xmlBefore,
       )
     },
-    // `reorder` calls `ValueRepo.reorderValues`, the method `ValuesRestService.reorderValues` calls, so the
-    // REST endpoint is covered by equivalence.
+    // `reorder` calls `ValuesResponderV2.reorderValues`, which `ValuesRestService.reorderValues` delegates to.
     test("reordering formatted values leaves their valueHasXml unchanged") {
       for {
         res       <- TestHelper.createResource
@@ -224,16 +221,14 @@ object ValueHasXmlLifecycleSpec {
 
   private def reorder(resource: ActiveResource, ordered: List[ActiveValue]): RIO[TestHelper, Unit] =
     for {
-      helper  <- ZIO.service[TestHelper]
-      project <- helper.knoraProjectService
-                   .findByShortcode(resource.shortcode)
-                   .someOrFail(IllegalStateException("Project not found"))
-      now <- Clock.instant
-      _   <- helper.valueRepo.reorderValues(
-             ProjectService.projectDataNamedGraphV2(project),
-             InternalIri(resource.iri.value),
+      helper <- ZIO.service[TestHelper]
+      uuid   <- Random.nextUUID
+      _      <- helper.valuesResponder.reorderValues(
+             resource.iri,
+             resource.ontologyIri.makeProperty("hasText"),
              ordered.map(_.iri),
-             now,
+             rootUser,
+             uuid,
            )
     } yield ()
 }

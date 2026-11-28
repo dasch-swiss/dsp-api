@@ -1,0 +1,6 @@
+# Main-source files that read elevated: check_authz.py rule 4, ADR-0013 Addendum 1, decision 16.
+# One `<path>  # reason` per line. A new entry needs review; no v2 resource or value write belongs here.
+modules/webapi/src/main/scala/org/knora/webapi/slice/resources/access/ObjectLoader.scala  # the object-access gate's loader; the gate decides before a write sees what it loads
+modules/webapi/src/main/scala/org/knora/webapi/slice/resources/service/BatchEditService.scala  # v3 batch edit: prefetch for its conflict checks after the caller's permission check; its writes go through the gated responders
+modules/webapi/src/main/scala/org/knora/webapi/slice/resources/service/ReadResourcesServiceLive.scala  # elevated read of region and image resources for region previews
+modules/webapi/src/main/scala/org/knora/webapi/slice/resources/service/ValueHasXmlRenderer.scala  # standoff tags built as SystemUser

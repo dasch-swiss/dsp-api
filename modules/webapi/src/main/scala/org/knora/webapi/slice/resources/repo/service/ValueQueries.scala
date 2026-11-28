@@ -143,11 +143,11 @@ private[service] object ValueQueries {
     )
   }
 
-  /** Renumber `knora-base:valueHasOrder` so it follows the given sequence, and touch the resource. */
+  /** Set `knora-base:valueHasOrder` of each value to its slot, and touch the resource. */
   def reorderValues(
     projectDataGraph: InternalIri,
     resourceIri: InternalIri,
-    orderedValueIris: List[ValueIri],
+    slots: List[(ValueIri, Int)],
     currentTime: Instant,
   ): Update = {
     val graph    = Iri.unsafeFrom(projectDataGraph.value)
@@ -171,8 +171,8 @@ private[service] object ValueQueries {
                |}
                |WHERE {
                |  VALUES (?item ?newOrder) {
-               |    ${orderedValueIris.zipWithIndex.map { case (valueIri, index) =>
-          sparql"(${Iri.unsafeFrom(valueIri.value)} ${Literal.int(index)})"
+               |    ${slots.map { case (valueIri, slot) =>
+          sparql"(${Iri.unsafeFrom(valueIri.value)} ${Literal.int(slot)})"
         }.joinLines}
                |  }
                |  OPTIONAL { ?item knora-base:valueHasOrder ?oldOrder }

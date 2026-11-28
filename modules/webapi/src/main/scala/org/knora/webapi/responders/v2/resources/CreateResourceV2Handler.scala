@@ -15,7 +15,6 @@ import dsp.valueobjects.UuidUtil
 import org.knora.webapi.*
 import org.knora.webapi.messages.*
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
-import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.util.*
 import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.*
@@ -27,12 +26,13 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.IriService
 import org.knora.webapi.responders.admin.PermissionsResponder
 import org.knora.webapi.responders.v2.*
-import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectRepo
+import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
 import org.knora.webapi.slice.admin.domain.service.KnoraUserRepo
 import org.knora.webapi.slice.admin.domain.service.ProjectService
 import org.knora.webapi.slice.api.admin.model.*
+import org.knora.webapi.slice.common.KnoraIris.ResourceClassIri
 import org.knora.webapi.slice.common.ResourceIri
 import org.knora.webapi.slice.common.StandoffMappingIri
 import org.knora.webapi.slice.common.ValueIri
@@ -41,6 +41,10 @@ import org.knora.webapi.slice.ontology.domain.model.Cardinality.ExactlyOne
 import org.knora.webapi.slice.ontology.domain.model.Cardinality.ZeroOrOne
 import org.knora.webapi.slice.ontology.domain.service.OntologyCacheHelpers
 import org.knora.webapi.slice.ontology.domain.service.OntologyRepo
+import org.knora.webapi.slice.resources.access.AccessRequest.CreateResource
+import org.knora.webapi.slice.resources.access.Grant
+import org.knora.webapi.slice.resources.access.NewResource
+import org.knora.webapi.slice.resources.access.ObjectAccess
 import org.knora.webapi.slice.resources.repo.model.FormattedTextValueType
 import org.knora.webapi.slice.resources.repo.model.ResourceReadyToCreate
 import org.knora.webapi.slice.resources.repo.model.StandoffAttribute
@@ -64,43 +68,50 @@ final class CreateResourceV2Handler(
   permissionsResponder: PermissionsResponder,
   valueValidator: ValueContentValidator,
   readResources: ReadResourcesService,
+  objectAccess: ObjectAccess,
+  projects: KnoraProjectService,
 )(implicit val stringFormatter: StringFormatter) {
 
   /**
-   * Creates a new resource.
+   * Creates a new resource. Only the public project lookup runs before the gate; the gate decides on the project's
+   * create permission for the class before the request's content is checked, so a caller without it gets 403, never
+   * a validation answer.
    *
    * @param createResourceRequestV2 the request to create the resource.
    * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
    */
-  def apply(createResourceRequestV2: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] =
-    triplestoreUpdate(createResourceRequestV2)
-
-  private def triplestoreUpdate(
-    createResourceRequestV2: CreateResourceRequestV2,
-  ): Task[ReadResourcesSequenceV2] =
+  def apply(createResourceRequestV2: CreateResourceRequestV2): Task[ReadResourcesSequenceV2] = {
+    val resource = createResourceRequestV2.createResource
     for {
-      _         <- ensureNotAnonymousUser(createResourceRequestV2.requestingUser)
-      _         <- valueValidator.validate(createResourceRequestV2).mapError(BadRequestException.apply)
-      _         <- ensureClassBelongsToProjectOntology(createResourceRequestV2)
-      projectIri = createResourceRequestV2.createResource.projectADM.id
-      shortcode  = createResourceRequestV2.createResource.projectADM.shortcode
-      _         <- ensureUserHasPermission(createResourceRequestV2, projectIri)
+      project <- projects
+                   .findById(resource.projectADM.id)
+                   .someOrFail(NotFoundException(s"Project <${resource.projectADM.id}> not found"))
+      resourceClass <-
+        ZIO.fromEither(ResourceClassIri.from(resource.resourceClassIri)).mapError(BadRequestException.apply)
+      created <- objectAccess.within(
+                   createResourceRequestV2.requestingUser,
+                   createResourceRequestV2.apiRequestID,
+                   CreateResource(project, resourceClass),
+                 )(create(createResourceRequestV2, _))
+    } yield created
+  }
 
-      resourceIriStr <-
+  private def create(request: CreateResourceRequestV2, grant: Grant[NewResource]): Task[ReadResourcesSequenceV2] =
+    for {
+      _                      <- valueValidator.validate(request).mapError(BadRequestException.apply)
+      _                      <- ensureClassBelongsToProjectOntology(request)
+      internalCreateResource <- ZIO.attempt(request.createResource.toOntologySchema(InternalSchema))
+      _                      <- checkStandoffLinkTargets(internalCreateResource.flatValues, grant.caller)
+      resourceIriStr         <-
         iriService.checkOrCreateEntityIri(
-          createResourceRequestV2.createResource.resourceIri.map(ri => stringFormatter.toSmartIri(ri.value)),
-          ResourceIri.makeNew(shortcode).value,
+          request.createResource.resourceIri.map(ri => stringFormatter.toSmartIri(ri.value)),
+          ResourceIri.makeNew(grant.target.project.shortcode).value,
         )
       resourceIri <- ZIO.fromEither(ResourceIri.from(resourceIriStr)).mapError(BadRequestException.apply)
-      taskResult  <- IriLocker.runWithIriLock(createResourceRequestV2.apiRequestID, resourceIriStr)(
-                      makeTask(createResourceRequestV2, resourceIri),
+      taskResult  <- IriLocker.runWithIriLock(request.apiRequestID, resourceIriStr)(
+                      makeTask(request, internalCreateResource, resourceIri),
                     )
     } yield taskResult
-
-  private def ensureNotAnonymousUser(user: User): Task[Unit] =
-    ZIO
-      .when(user.isAnonymousUser)(ZIO.fail(ForbiddenException("Anonymous users aren't allowed to create resources")))
-      .unit
 
   private def ensureClassBelongsToProjectOntology(createResourceRequestV2: CreateResourceRequestV2): Task[Unit] = for {
     projectIri             <- ZIO.succeed(createResourceRequestV2.createResource.projectADM.id)
@@ -131,24 +142,9 @@ final class CreateResourceV2Handler(
         )
   } yield ()
 
-  private def ensureUserHasPermission(createResourceRequestV2: CreateResourceRequestV2, projectIri: ProjectIri) = for {
-    internalResourceClassIri <-
-      ZIO.succeed(createResourceRequestV2.createResource.resourceClassIri.toOntologySchema(InternalSchema))
-    _ <-
-      ZIO
-        .fail(
-          ForbiddenException(
-            s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>",
-          ),
-        )
-        .unless(
-          createResourceRequestV2.requestingUser.permissions
-            .hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri.value),
-        )
-  } yield ()
-
   private def makeTask(
     createResourceRequestV2: CreateResourceRequestV2,
+    internalCreateResource: CreateResourceV2,
     resourceIri: ResourceIri,
   ): Task[ReadResourcesSequenceV2] =
     for {
@@ -156,15 +152,6 @@ final class CreateResourceV2Handler(
         ZIO
           .fail(DuplicateValueException(s"Resource IRI: '$resourceIri' already exists."))
           .whenZIO(iriService.checkIriExists(resourceIri.value))
-      // Convert the resource to the internal ontology schema.
-      internalCreateResource <- ZIO.attempt(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
-
-      // Check link targets and list nodes that should exist.
-      _ <- checkStandoffLinkTargets(
-             values = internalCreateResource.flatValues,
-             requestingUser = createResourceRequestV2.requestingUser,
-           )
-
       _ <- checkListNodes(internalCreateResource.flatValues)
 
       // Get the class IRIs of all the link targets in the request.
