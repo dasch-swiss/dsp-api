@@ -28,8 +28,41 @@ env:
 # `!startsWith(github.head_ref, 'release-please')`. A required check skipped by a job-level `if:`
 # counts as passing in branch protection, so the release PR stays mergeable. On `push` events
 # `github.head_ref` is empty, so ordinary main pushes run the test jobs as usual. See DEV-6678.
+#
+# The API jobs are skipped the same way for a PR that touches only `frontend/` (DEV-8062): they read
+# `needs.changes.outputs.api`. Never move this to a `paths:` filter: a workflow skipped by `paths:`
+# never reports, and a required check that never reports blocks the PR. The guards use
+# `!cancelled()` and test `!= 'false'`, so a skipped (push) or failed `changes` job runs the API
+# jobs instead of skipping them as passed.
 
 jobs:
+  # Whether a PR touches the API: `api` is true when any changed file lies outside `frontend/`,
+  # shared build files (`MODULE.bazel`, `.bazelrc`, `flake.nix`, `.github/`) included. On `push`
+  # the job is skipped and every job runs.
+  changes:
+    name: Detect changed components
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+    steps:
+      # The PR merge commit's first parent is the base tip, so HEAD^1..HEAD is the PR's own change.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+      - name: Classify the changed files
+        id: filter
+        # --no-renames lists a move's source path too: a move out of `modules/` into `frontend/`
+        # touches the API. quotePath=false keeps non-ASCII paths unquoted for the `^` anchor.
+        run: |
+          set -euo pipefail
+          files=$(git -c core.quotePath=false diff --no-renames --name-only HEAD^1 HEAD)
+          printf '%s\n' "$files"
+          # An empty diff yields one empty line, which counts as outside frontend/: api=true.
+          api=false
+          if grep -qv '^frontend/' <<<"$files"; then api=true; fi
+          echo "api=$api" | tee -a "$GITHUB_OUTPUT"
+
   # All pure-JVM unit tests run in a single job: one `bazel test` over every
   # module lets Bazel + the RBE backend parallelize the test actions internally,
   # instead of paying per-job (checkout + Nix + cache-restore + cold-JVM)
@@ -38,7 +71,8 @@ jobs:
   unit-tests:
     name: Build and Unit Test
     runs-on: ubuntu-latest
-    if: ${{ !startsWith(github.head_ref, 'release-please') }}
+    needs: changes
+    if: ${{ !cancelled() && !startsWith(github.head_ref, 'release-please') && needs.changes.outputs.api != 'false' }}
     steps:
       - name: Checkout (bootstrap so the local preparation action resolves)
         uses: actions/checkout@v5
@@ -98,7 +132,8 @@ jobs:
   test-it:
     name: Build and IT Test
     runs-on: ubuntu-latest
-    if: ${{ !startsWith(github.head_ref, 'release-please') }}
+    needs: changes
+    if: ${{ !cancelled() && !startsWith(github.head_ref, 'release-please') && needs.changes.outputs.api != 'false' }}
     concurrency:
       group: ${{ github.ref }}-it
       cancel-in-progress: true
@@ -156,7 +191,8 @@ jobs:
   test-e2e:
     name: Build and E2E Test
     runs-on: ubuntu-latest-large-runner
-    if: ${{ !startsWith(github.head_ref, 'release-please') }}
+    needs: changes
+    if: ${{ !cancelled() && !startsWith(github.head_ref, 'release-please') && needs.changes.outputs.api != 'false' }}
     concurrency:
       group: ${{ github.ref }}-e2e
       cancel-in-progress: true
@@ -212,7 +248,8 @@ jobs:
   test-docs-build:
     name: Docs Test
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
+    needs: changes
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') && needs.changes.outputs.api != 'false' }} # gate-only; release PRs (DEV-6678) and frontend-only PRs (DEV-8062) skipped
     steps:
       - name: Checkout (bootstrap so the local preparation action resolves)
         uses: actions/checkout@v5
@@ -232,6 +269,7 @@ jobs:
   check-formatting:
     name: Check formatting
     runs-on: ubuntu-latest
+    # Intentionally not gated on `changes`: `just check` lints every tracked file, `frontend/` included.
     if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
     steps:
       - name: Checkout (bootstrap so the local preparation action resolves)
@@ -262,7 +300,8 @@ jobs:
   docker-healthcheck:
     name: Run the healthcheck from the container
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') # gate-only, no coverage upload; release PRs skipped (DEV-6678)
+    needs: changes
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please') && needs.changes.outputs.api != 'false' }} # gate-only; release PRs (DEV-6678) and frontend-only PRs (DEV-8062) skipped
     steps:
       - name: Checkout (bootstrap so the local preparation action resolves)
         uses: actions/checkout@v5
