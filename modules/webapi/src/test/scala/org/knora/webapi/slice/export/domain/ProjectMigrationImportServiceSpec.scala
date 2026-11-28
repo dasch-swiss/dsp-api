@@ -271,6 +271,8 @@ class ProjectMigrationImportServiceSpec extends ZIOSpecDefault {
   ): DspIngestClient = new DspIngestClient {
     override def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse] =
       ZIO.die(new UnsupportedOperationException("not used in import tests"))
+    override def listAssets(shortcode: Shortcode): Task[Chunk[IngestAsset]] =
+      ZIO.die(new UnsupportedOperationException("not used in import tests"))
     override def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] =
       ZIO.die(new UnsupportedOperationException("not used in import tests"))
     override def eraseProject(shortcode: Shortcode): Task[Unit] =

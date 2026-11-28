@@ -13,6 +13,7 @@ import swiss.dasch.domain.ImportService
 import swiss.dasch.domain.ProjectService as IngestProjectService
 import swiss.dasch.domain.ProjectShortcode
 import swiss.dasch.infrastructure.IngestExecutor
+import zio.Chunk
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -42,8 +43,14 @@ final case class AssetInfoResponse(
   originalMimeType: Option[String] = None,
 )
 
+/** An asset as ingest stores it; `assetId` is the internal filename without its extension. */
+final case class IngestAsset(assetId: String, internalFilename: String, originalFilename: String)
+
 trait DspIngestClient {
   def getAssetInfo(shortcode: Shortcode, assetId: AssetId): Task[AssetInfoResponse]
+
+  /** Every asset in the project's folder; empty when the project has no folder. */
+  def listAssets(shortcode: Shortcode): Task[Chunk[IngestAsset]]
   def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]]
   def eraseProject(shortcode: Shortcode): Task[Unit]
   def importProject(shortcode: Shortcode, fileToImport: Path): Task[Path]
@@ -51,7 +58,7 @@ trait DspIngestClient {
 
 /**
  * Calls ingest in-process. A failed import is logged, not raised; erasing is gated by ingest's allow-erase-projects.
- * Export, import and erase run on the ingest executor.
+ * Listing, export, import and erase run on the ingest executor.
  */
 final class DspIngestClientLive(
   assetInfos: AssetInfoService,
@@ -86,6 +93,15 @@ final class DspIngestClientLive(
       r.internalMimeType,
       r.originalMimeType,
     )
+
+  def listAssets(shortcode: Shortcode): Task[Chunk[IngestAsset]] = executor.run {
+    ingestShortcode(shortcode).flatMap(
+      projects
+        .findAssetInfosOfProject(_)
+        .map(info => IngestAsset(info.assetRef.id.value, info.derivative.filename.value, info.originalFilename.value))
+        .runCollect,
+    )
+  }
 
   def exportProject(shortcode: Shortcode, outputFile: Path): Task[Option[Path]] = executor.run {
     for {
