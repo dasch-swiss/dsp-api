@@ -47,6 +47,14 @@ belongs here even when it touches another repo.
 - `docs/specs/` is excluded from the mkdocs site (`exclude_docs` in `mkdocs.yml`); specs are repo context, not
   published documentation. They are still tracked markdown, so `just check` lints them.
 
+## Learnings
+
+Learnings (the documents `/eng:workflows:compound` writes) live in `docs/learnings/<category>/<slug>.md`, beside
+`docs/specs/` and likewise excluded from the mkdocs site. They stay in this repo, never in `dasch-specs`, whatever
+the compounding skill's routing says, and land in the PR whose work they describe, as a `docs` commit scoped to the
+component they are about. Categories are the eng learnings categories (`configuration-errors`, `build-errors`,
+`test-setup`, ...), created on demand.
+
 ## Build System & Commands
 
 ### Core Build Tool
