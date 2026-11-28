@@ -186,7 +186,7 @@ jobs:
       - name: Run end-to-end tests
         # `just test-e2e` loads the PR's sipi/fuseki images (via its
         # docker-load-test-images prerequisite) before running the Bazel tests.
-        run: nix develop --command just test-e2e ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-e2e.json
+        run: nix develop --command just test-e2e ${{ steps.rbe.outputs.flags }} --build_event_json_file=bep-e2e.json --test_output=streamed --test_timeout=2400
       # BEP for offline RBE cache-hit-rate analysis (cf. the unit-tests job). The `:load`
       # prerequisites overwrite this file in turn, so it holds the `bazel test` invocation's metrics.
       - name: Upload build event JSON (cache-hit-rate analysis)
