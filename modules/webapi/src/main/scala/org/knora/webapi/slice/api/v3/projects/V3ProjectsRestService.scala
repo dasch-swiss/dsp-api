@@ -29,7 +29,10 @@ import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.User
 import org.knora.webapi.slice.admin.domain.model.Username
 import org.knora.webapi.slice.admin.domain.service.KnoraProjectService
+import org.knora.webapi.slice.admin.domain.service.UnreferencedAssetsService
 import org.knora.webapi.slice.admin.domain.service.UserService
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse
 import org.knora.webapi.slice.api.v3.BadRequest
 import org.knora.webapi.slice.api.v3.Conflict
 import org.knora.webapi.slice.api.v3.NotFound
@@ -58,6 +61,7 @@ final class V3ProjectsRestService(
   dataImportService: ProjectDataImportService,
   projectService: KnoraProjectService,
   userService: UserService,
+  unreferencedAssets: UnreferencedAssetsService,
   tracing: Tracing,
 ) {
 
@@ -367,6 +371,23 @@ final class V3ProjectsRestService(
           dataImportService.getImportStatus(importId).orElseFail(notFound(import_not_found, projectIri, importId))
       } yield DataTaskStatusResponse.from(state)
     }
+
+  def getUnreferencedAssets(
+    shortcode: Shortcode,
+    pageAndSize: PageAndSize,
+  ): IO[V3ErrorInfo, PagedResponse[UnreferencedAssetResponse]] =
+    for {
+      project <- projectService.findByShortcode(shortcode).orDie.someOrFail(NotFound.from(shortcode))
+      assets  <- unreferencedAssets.find(project).orDie
+      skipped  = ((pageAndSize.page.toLong - 1) * pageAndSize.size).min(assets.size.toLong).toInt
+      page     = assets.drop(skipped).take(pageAndSize.size)
+    } yield PagedResponse.from(
+      page.map(a =>
+        UnreferencedAssetResponse(a.assetId, a.internalFilename, a.originalFilename, a.referencedOnlyByDeletedResources),
+      ),
+      assets.size,
+      pageAndSize,
+    )
 
   def deleteProjectDataImport(projectIri: ProjectIri, importId: DataTaskId): IO[V3ErrorInfo, Unit] =
     failDataImportFeatureMissing.zipRight {

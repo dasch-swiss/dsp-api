@@ -22,7 +22,11 @@ import org.knora.webapi.slice.`export`.domain.DataTaskStatus
 import org.knora.webapi.slice.`export`.domain.ProjectDataImportService
 import org.knora.webapi.slice.`export`.domain.TaskCreator
 import org.knora.webapi.slice.admin.domain.model.KnoraProject.ProjectIri
+import org.knora.webapi.slice.admin.domain.model.KnoraProject.Shortcode
 import org.knora.webapi.slice.admin.domain.model.UserIri
+import org.knora.webapi.slice.api.PageAndSize
+import org.knora.webapi.slice.api.PagedResponse
+import org.knora.webapi.slice.api.admin.Codecs.TapirCodec
 import org.knora.webapi.slice.api.v3.*
 import org.knora.webapi.slice.common.api.ClosesOnUnreadBody
 import org.knora.webapi.slice.common.api.ClosesOnUnreadBodyRoute
@@ -38,6 +42,19 @@ final case class DataTaskStatusResponse(
   // The project user imported data is attributed to. Set for data-graph imports; absent for exports/migration imports.
   onBehalfOf: Option[UserIri] = None,
 )
+final case class UnreferencedAssetResponse(
+  assetId: String,
+  internalFilename: String,
+  originalFilename: String,
+  referencedOnlyByDeletedResources: Boolean,
+)
+object UnreferencedAssetResponse {
+  given JsonCodec[UnreferencedAssetResponse] = DeriveJsonCodec.gen[UnreferencedAssetResponse]
+
+  val example: UnreferencedAssetResponse =
+    UnreferencedAssetResponse("4sAf4AmPeeg-ZjDn3Tot1Zt", "4sAf4AmPeeg-ZjDn3Tot1Zt.jp2", "scan.tif", false)
+}
+
 object DataTaskStatusResponse {
   given JsonCodec[DataTaskStatusResponse] = DeriveJsonCodec.gen[DataTaskStatusResponse]
 
@@ -63,6 +80,11 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
   private val ImportSlotNote =
     "Only one import (bulk import or migration import) runs at a time on this server. " +
       "While one runs, a new import of either kind gets 409 `import_running`, also where it would otherwise get `import_exists`. "
+
+  private val shortcodePathVar = path[Shortcode](using TapirCodec.shortcode)
+    .name("shortcode")
+    .description("The shortcode of a project. Must be a 4 digit hexadecimal String.")
+    .example(Shortcode.unsafeFrom("0001"))
 
   private val exportIdPathVar = path[DataTaskId]("exportId")
   private val importIdPathVar = path[DataTaskId]("importId")
@@ -283,6 +305,24 @@ class V3ProjectsEndpoints(base: V3BaseEndpoint) extends EndpointHelper { self =>
       "Deletes an import. " +
         "Only imports in state failed or completed can be deleted. " +
         "If it is still in progress, the response will be 409 Conflict." +
+        s" ${Policy.SystemAdmin.requirement}",
+    )
+
+  val getProjectShortcodeAssetsUnreferenced = self.base
+    .systemAdminPolicy(oneOf(notFoundVariant(V3ErrorCode.project_not_found)))
+    .get
+    .in(ApiV3.basePath / "projects" / shortcodePathVar / "assets" / "unreferenced")
+    .in(PageAndSize.queryParams())
+    .out(
+      jsonBody[PagedResponse[UnreferencedAssetResponse]]
+        .example(PagedResponse.from(Seq(UnreferencedAssetResponse.example), 1, PageAndSize.Default)),
+    )
+    .description(
+      "Lists the project's assets that no live resource references, sorted by `assetId`. " +
+        "An asset is referenced when a file value in the project's data graph, a previous version included, " +
+        "names an internal filename whose part before the first `.` is the asset ID. " +
+        "An asset whose only references are held by deleted resources is listed with " +
+        "`referencedOnlyByDeletedResources` set to true. The report changes nothing." +
         s" ${Policy.SystemAdmin.requirement}",
     )
 }

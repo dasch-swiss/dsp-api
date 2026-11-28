@@ -88,6 +88,7 @@ scala_binary(
 scala_junit_test(
     name = "test",
     srcs = glob(["src/test/scala/**/*.scala"]),
+    data = ["//:docs/03-endpoints/ingest.md"],
     format = True,
     resource_strip_prefix = "modules/ingest/src/test/resources",
     resources = glob(["src/test/resources/**"]),

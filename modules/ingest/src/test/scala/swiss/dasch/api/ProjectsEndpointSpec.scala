@@ -389,6 +389,34 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
           info.originalFilename == "\u0101.mp3", // NFC "\u0101" = LATIN SMALL LETTER A WITH MACRON ("a" + U+0304)
         )
       },
+      testWithScope("should answer 400 naming the unsupported extension and the supported ones") {
+        val req = Request
+          .post(
+            URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "m-ds-kirche-18_1.gif"),
+            Body.fromString("x"),
+          )
+          .addHeader("Authorization", "Bearer fakeToken")
+        for {
+          response <- executeRequest(req)
+          body     <- response.body.asString
+          problem   = body.fromJson[ApiProblem.BadRequest]
+        } yield assertTrue(
+          response.status == Status.BadRequest,
+          problem.exists(_.errors.map(_.argument) == List("filename")),
+          problem.exists(_.errors.exists(e => e.reason.contains("'.gif'") && e.reason.contains("tif"))),
+        )
+      },
+      testWithScope("should answer 400 with the path reason for a filename with an encoded slash") {
+        val url = URL.decode("/projects/0666/assets/ingest/a%2Fb.tif").getOrElse(throw new Exception("Invalid URL"))
+        val req = Request.post(url, Body.fromString("x")).addHeader("Authorization", "Bearer fakeToken")
+        for {
+          response <- executeRequest(req)
+          body     <- response.body.asString
+        } yield assertTrue(
+          response.status == Status.BadRequest,
+          body.contains("Filename must not contain any path information"),
+        )
+      },
       testWithScope("should refuse ingesting without content") {
         val req = Request
           .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / "sample.mp3"), Body.empty)
@@ -405,6 +433,101 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
         }
       },
     )
+
+  private val assetIngestFailureSuite = {
+    def postAsset(filename: String, body: Body) =
+      executeRequest(
+        Request
+          .post(URL(Path.root / "projects" / "0666" / "assets" / "ingest" / filename), body)
+          .addHeader("Authorization", "Bearer fakeToken"),
+      )
+
+    suite("/projects/<shortcode>/asset/ingest/<filename> when ingest fails")(
+      testWithScope("answer 500 with a correlation_id and error_code, without the exception message") {
+        for {
+          response <- postAsset("sample.mp3", Body.fromString("tegxd"))
+          body     <- response.body.asString
+          problem   = body.fromJson[ApiProblem.InternalServerError]
+        } yield assertTrue(
+          response.status == Status.InternalServerError,
+          problem.exists(_.correlationId.matches("[0-9a-f]{32}")),
+          problem.exists(_.errorCode == "internal"),
+          !body.contains("/tmp/"),
+          !body.contains("Command failed"),
+        )
+      },
+      testWithScope("answer 422 with sipi's error_code when sipi cannot read the upload") {
+        for {
+          response <- postAsset("unreadable.jpg", Body.fromString("tegxd"))
+          body     <- response.body.asString
+          problem   = body.fromJson[ApiProblem.UnprocessableContent]
+        } yield assertTrue(
+          response.status == Status.UnprocessableEntity,
+          problem.exists(_.correlationId == "0af7651916cd43dd8448eb211c80319c"),
+          problem.exists(_.errorCode == "decode_failed"),
+          problem.exists(_.message == "unreadable.jpg: not a JPEG"),
+          !body.contains("/data/"),
+        )
+      },
+      testWithScope("answer 500 with sipi_killed when sipi is killed") {
+        for {
+          response <- postAsset("killed.jpg", Body.fromString("tegxd"))
+          body     <- response.body.asString
+          problem   = body.fromJson[ApiProblem.InternalServerError]
+        } yield assertTrue(
+          response.status == Status.InternalServerError,
+          problem.exists(_.errorCode == "sipi_killed"),
+          !body.contains("/data/"),
+        )
+      },
+      testWithScope("answer a JSON 500 and log the cause when the uploaded file is gone before its size is read") {
+        val filename = "gone-before-size.mp3"
+        for {
+          tempFolder  <- ZIO.serviceWithZIO[StorageService](_.getTempFolder())
+          deleteUpload = Files
+                           .walk(tempFolder)
+                           .filter(_.filename.toString == filename)
+                           .runForeach(Files.delete(_))
+                           .orDie
+          stream = zio.stream.ZStream.fromChunk(Chunk.fromArray("tegxd".getBytes)) ++
+                     zio.stream.ZStream.fromZIO(deleteUpload).drain
+          response <- postAsset(filename, Body.fromStreamChunked(stream))
+          body     <- response.body.asString
+          logs     <- zio.test.ZTestLogger.logOutput
+        } yield assertTrue(
+          response.status == Status.InternalServerError,
+          body.fromJson[ApiProblem.InternalServerError].isRight,
+          logs.exists(_.cause.prettyPrint.contains("NoSuchFileException")),
+        )
+      },
+    )
+  }
+
+  private val failingIngestService: ZLayer[Any, Nothing, IngestService] = ZLayer.succeed(
+    new IngestService {
+      def ingestFile(fileToIngest: zio.nio.file.Path, project: ProjectShortcode): zio.Task[Asset] =
+        fileToIngest.filename.toString match {
+          case name @ ("unreadable.jpg" | "killed.jpg") =>
+            val code = if (name == "killed.jpg") SipiCliError.killed else "decode_failed"
+            val path = "/data/0666/ab/1234.jpg.orig"
+            ZIO.fail(
+              SipiCliError(
+                phase = if (name == "killed.jpg") SipiReport.Phase.Internal else SipiReport.Phase.Read,
+                errorCode = code,
+                correlationId = "0af7651916cd43dd8448eb211c80319c",
+                target = SipiTarget.Upload,
+                message = s"$path: not a JPEG",
+                reportedPaths = List(path),
+                imageMeta = None,
+                exitCode = if (name == "killed.jpg") 137 else 1,
+                uploadFilename = Some(name),
+              ),
+            )
+          case _ =>
+            ZIO.fail(new java.io.IOException("Command failed: '/sbin/sipi convert /tmp/x/y.orig' ProcessOutput(...)"))
+        }
+    },
+  )
 
   private val projectsSuite = suite("/admin/projects/{shortcode}")(
     testWithScope("DELETE ./erase should delete the project folder") {
@@ -508,5 +631,29 @@ class ProjectsEndpointSpec extends ZIOSpecDefault {
     StorageServiceLive.layer,
     ZLayer.succeed(Features(allowEraseProjects = true)),
     FetchAssetPermissionsMock.layer(false),
+  ) + suite("ProjectsEndpoint with a failing ingest")(
+    assetIngestFailureSuite,
+  ).provide(
+    AssetInfoServiceLive.layer,
+    AuthServiceLive.layer,
+    AuthorizationHandlerLive.layer,
+    BaseEndpoints.layer,
+    BulkIngestService.layer,
+    CsvService.layer,
+    FileChecksumServiceLive.layer,
+    ImportServiceLive.layer,
+    failingIngestService,
+    MimeTypeGuesser.layer,
+    ProjectService.layer,
+    ProjectsEndpoints.layer,
+    ProjectsEndpointsHandler.layer,
+    ReportService.layer,
+    SpecConfigurations.ingestConfigLayer,
+    SpecConfigurations.ingestExecutorLayer,
+    SpecConfigurations.jwtConfigDisableAuthLayer,
+    SpecConfigurations.storageConfigLayer,
+    StorageServiceLive.layer,
+    ZLayer.succeed(Features(allowEraseProjects = true)),
+    FetchAssetPermissionsMock.layer(true),
   )
 }

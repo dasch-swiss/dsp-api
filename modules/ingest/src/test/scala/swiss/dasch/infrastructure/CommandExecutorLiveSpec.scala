@@ -28,14 +28,16 @@ class CommandExecutorLiveSpec extends ZIOSpecDefault {
   ) >>> CommandExecutorLive.layer
 
   val spec = suite("CommandExecutorLive")(
-    test("buildCommand with docker when useLocalDev is true") {
+    test("buildCommand with docker, passing the correlation ID before the image, when useLocalDev is true") {
       for {
-        cmd <- CommandExecutor
-                 .buildCommand("customCommand", "customParams")
-                 .provideSome[IngestExecutor & StorageService](devLayer)
+        cmd <- ZIO.logAnnotate(CorrelationId.annotationKey, "req-1")(
+                 CommandExecutor
+                   .buildCommand("customCommand", "customParams")
+                   .provideSome[IngestExecutor & StorageService](devLayer),
+               )
         assetDir <- StorageService.getAssetsBaseFolder().flatMap(_.toAbsolutePath)
         expected  =
-          s"docker run --entrypoint customCommand -v $assetDir:$assetDir sipi:local-dev customParams"
+          s"docker run --entrypoint customCommand -v $assetDir:$assetDir -e SIPI_CORRELATION_ID=req-1 sipi:local-dev customParams"
       } yield assertTrue(cmd.cmd.mkString(" ") == expected)
     },
     test("buildCommand without docker, through the oom_score_adj wrapper, when useLocalDev is false") {
@@ -59,6 +61,17 @@ class CommandExecutorLiveSpec extends ZIOSpecDefault {
         cmd      <- executor.buildCommand("cat", "/proc/self/oom_score_adj")
         out      <- executor.executeOrFail(cmd)
       } yield assertTrue(out.stdout.trim == "1000")
+    } @@ TestAspect.ifProp("os.name")(_.contains("Linux")),
+    test("a command gets the correlation ID of its scope in SIPI_CORRELATION_ID") {
+      for {
+        executor <- ZIO.service[CommandExecutor].provideSome[IngestExecutor & StorageService](prodLayer)
+        result   <- CorrelationId.withNew(for {
+                    id  <- CorrelationId.current
+                    cmd <- executor.buildCommand("printenv", "SIPI_CORRELATION_ID")
+                    out <- executor.executeOrFail(cmd)
+                  } yield (id, out))
+        (id, out) = result
+      } yield assertTrue(out.stdout.trim == id.value)
     } @@ TestAspect.ifProp("os.name")(_.contains("Linux")),
     test("log processing") {
       val logExample =

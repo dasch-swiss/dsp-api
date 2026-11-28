@@ -6,6 +6,7 @@
 package swiss.dasch.api
 
 import sttp.tapir.ztapir.ZServerEndpoint
+import swiss.dasch.api.HandlerFunctions.guarded
 import swiss.dasch.domain.*
 import zio.ZIO
 import zio.ZLayer
@@ -21,8 +22,10 @@ final class ReportEndpointsHandler(
   private val postAssetOverviewReportHandler: ZServerEndpoint[Any, Any] =
     reportEndpoints.postAssetOverviewReport.serverLogic(principal =>
       _ =>
-        authorizationHandler.ensureAdminScope(principal) *>
-          createAssetOverReports.forkDaemon.logError.as("work in progress"),
+        guarded {
+          authorizationHandler.ensureAdminScope(principal) *>
+            createAssetOverReports.forkDaemon.logError.as("work in progress")
+        },
     )
 
   private val createAssetOverReports: ZIO[Any, Throwable, Unit] =

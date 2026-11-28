@@ -204,6 +204,28 @@ class ApiComplexV2JsonLdRequestParserSpec extends ZIOSpecDefault {
         actual.propertyIri == sf.toSmartIri("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"),
       )
     },
+    test("updateValueV2fromJsonLd reports an empty text value when no permissions are given") {
+      for {
+        actual <- service(
+                    _.updateValueV2fromJsonLd(
+                      s"""
+                         |{
+                         |  "@id" : "http://rdfh.ch/0001/a-thing",
+                         |  "@type" : "ex:Thing",
+                         |  "ex:hasText" : {
+                         |    "@id" : "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw",
+                         |    "@type" : "ka:TextValue",
+                         |    "ka:valueAsString" : ""
+                         |  },
+                         |  "@context": {
+                         |    "ka": "http://api.knora.org/ontology/knora-api/v2#",
+                         |    "ex": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                         |  }
+                         |}""".stripMargin,
+                    ),
+                  ).exit
+      } yield assert(actual)(fails(containsString("Text value must not be empty")))
+    },
     test("should parse integer value") {
       for {
         actual <- service(

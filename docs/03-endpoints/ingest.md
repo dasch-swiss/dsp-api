@@ -30,10 +30,70 @@ route requires, answers `401`. The original download (`GET .../assets/{assetId}/
 requests and answers according to the asset's permissions. `/ingest/health`, `/ingest/info` and `/ingest/metrics`
 are public; `/ingest/metrics` returns the metrics of the whole API process.
 
+## Accepted file extensions
+
+An upload's filename must end in one of these extensions, in any case. Any other extension, GIF included, is
+answered with `400`, and the reason names the extension and lists the accepted ones. A filename with path
+information, such as a `/`, is answered with `400` too.
+
+| File type     | Extensions                                                        |
+|---------------|-------------------------------------------------------------------|
+| Still image   | `jp2`, `jpeg`, `jpg`, `jpx`, `png`, `tif`, `tiff`                 |
+| SVG image     | `svg`                                                             |
+| Moving image  | `mp4`                                                             |
+| Audio         | `mp3`, `mpeg`, `wav`                                              |
+| Archive       | `7z`, `gz`, `gzip`, `tar`, `tar.gz`, `tgz`, `z`, `zip`            |
+| Office, table | `csv`, `doc`, `docx`, `epub`, `pdf`, `ppt`, `pptx`, `xls`, `xlsx` |
+| Text          | `htm`, `html`, `json`, `odd`, `rng`, `txt`, `xml`, `xsd`, `xsl`   |
+
 ## Uploads larger than 1 MiB
 
 An upload body larger than 1 MiB must declare its size in a `Content-Length` header; the API then streams it to
 storage. A larger body sent with chunked transfer encoding (no `Content-Length`) is rejected with `413`.
+
+## Errors
+
+The ingest routes, except `/ingest/health`, `/ingest/info` and `/ingest/metrics`, answer these failures with a JSON
+body. `401`, `403`, `404` and `409` keep their own bodies.
+
+| Status | Meaning                                                                 | Body                                        |
+|--------|-------------------------------------------------------------------------|---------------------------------------------|
+| `400`  | The request is malformed, for example an empty upload                   | `errors`: a list of `argument` and `reason` |
+| `422`  | The request is well-formed, but the file content cannot be ingested     | `correlation_id`, `error_code`, `message`   |
+| `500`  | An internal error; the message is fixed text and holds no server detail | `correlation_id`, `error_code`, `message`   |
+
+The `422` and `500` bodies have the same fields:
+
+```json
+{
+  "correlation_id": "0af7651916cd43dd8448eb211c80319c",
+  "error_code": "unsupported_format",
+  "message": "File image.tif is not a supported file."
+}
+```
+
+- `correlation_id` identifies the request in the DSP-API logs and traces. Inside an API request it is the request's
+  trace ID. Give it to DaSCH support when you report a failure.
+- `error_code` is a stable, machine-readable code. Clients decide on it, not on `message`.
+- `message` is for people. It names the uploaded file, never a path on the server.
+
+DSP-API returns these `error_code` values:
+
+| `error_code`         | Status | Meaning                                                                  |
+|----------------------|--------|--------------------------------------------------------------------------|
+| `internal`           | `500`  | An unexpected failure; the cause is in the logs under the correlation ID |
+| `unsupported_format` | `422`  | The file type is not supported                                           |
+| `image_too_large`    | `422`  | The image header declares more pixels than the server accepts            |
+| `sipi_killed`        | `500`  | The image conversion was stopped, usually because it ran out of memory   |
+| `sipi_crashed`       | `500`  | The image conversion crashed                                             |
+| `sipi_no_report`     | `500`  | The image conversion failed without a report                             |
+
+When the image conversion reports its own error, its `error_code` is passed through. It answers `422` when the
+uploaded file cannot be read (`decode_failed`, `unsupported_format`, `malformed_input`, `metadata_parse_failed`),
+and `500` otherwise.
+
+A file that fails in a bulk ingest gets no HTTP answer: it is logged once with its path in the import folder, its own
+`correlation_id` and its `error_code`, as a warning when its content is rejected and as an error otherwise.
 
 ## Endpoint reference
 

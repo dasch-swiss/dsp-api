@@ -8,7 +8,6 @@ package swiss.dasch.api
 import sttp.capabilities.zio.ZioStreams
 import sttp.model.HeaderNames
 import sttp.model.StatusCode
-import sttp.tapir.Codec
 import sttp.tapir.CodecFormat
 import sttp.tapir.EndpointInput
 import sttp.tapir.codec.refined.*
@@ -211,15 +210,15 @@ final case class ProjectsEndpoints(base: BaseEndpoints) {
          |for the asset allows it, also to anonymous callers.""".stripMargin,
     )
 
-  given filenameCodec: Codec[String, AssetFilename, CodecFormat.TextPlain] =
-    Codec.string.mapEither(AssetFilename.from)(_.value)
   val postProjectAsset = base.secureEndpoint.post
-    .in(projects / shortcodePathVar / "assets" / "ingest" / path[AssetFilename]("filename"))
+    .in(projects / shortcodePathVar / "assets" / "ingest" / path[String]("filename"))
     .in(streamBinaryBody(ZioStreams)(CodecFormat.OctetStream()))
     .out(jsonBody[AssetInfoResponse])
     .tag("assets")
     .description(
       "Ingest a single asset file to the project. " +
+        "A filename with path information or an extension that is not accepted is answered with 400, " +
+        "whose reason names the extension and lists the accepted ones. " +
         writeScopeAuthorization,
     )
 

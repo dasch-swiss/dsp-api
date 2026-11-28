@@ -84,7 +84,7 @@ class V3ProjectsRestServiceSpec extends ZIOSpecDefault {
       tracing     <- ZIO.service[Tracing]
       exports      =
         new ProjectMigrationExportService(slot, null, projects, new ProjectMigrationStorageService(), triplestore)
-    } yield Env(new V3ProjectsRestService(exports, null, null, projects, null, tracing), slot)
+    } yield Env(new V3ProjectsRestService(exports, null, null, projects, null, null, tracing), slot)
 
   private def taskBy(creator: TaskCreator, status: DataTaskStatus): UIO[CurrentDataTask] =
     DataTaskId.makeNew.zipWith(Clock.instant)(CurrentDataTask.restore(_, project.id, status, creator, _))

@@ -104,6 +104,17 @@ class DspIngestClientLiveSpec extends ZIOSpecDefault {
         client(_.getAssetInfo(shortcode, assetId)).exit.map(assert(_)(failsWithA[NotFoundException]))
       },
     ).provide(ingestLayer(allowEraseProjects = false)),
+    suite("listAssets")(
+      test("lists the assets of the project folder") {
+        for {
+          _      <- saveAssetInfo
+          assets <- client(_.listAssets(shortcode))
+        } yield assertTrue(assets == Chunk(IngestAsset(assetId.value, s"$assetId.txt", "test.txt")))
+      },
+      test("is empty without a project folder") {
+        client(_.listAssets(shortcode)).map(assets => assertTrue(assets.isEmpty))
+      },
+    ).provide(ingestLayer(allowEraseProjects = false)),
     suite("exportProject")(
       test("writes the project's BagIt zip to the output file") {
         for {
