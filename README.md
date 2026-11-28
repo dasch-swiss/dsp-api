@@ -33,7 +33,8 @@ released under the [Apache License, Version 2.0](http://www.apache.org/licenses/
 Each developer machine should have the following prerequisites installed:
 
 * Linux or macOS
-* [Docker Desktop](https://www.docker.com/products/docker-desktop)
+* A Docker-compatible container runtime, for example [Docker Desktop](https://www.docker.com/products/docker-desktop),
+  [colima](https://github.com/abiosoft/colima) or [OrbStack](https://orbstack.dev/)
 * [Homebrew](https://brew.sh) (macOS)
 * [Nix](https://determinate.systems) (with flakes) and [direnv](https://direnv.net/)
 
@@ -86,9 +87,9 @@ just stack-up
 DSP-API listens on [http://localhost:3333](http://localhost:3333), and DSP-APP on
 [http://localhost:4200](http://localhost:4200).
 
-If the bring-up fails with a `mounts denied` error, add the repository directory to
-Docker Desktop's file-sharing allowlist. See
-[Setting up Docker](docs/05-internals/development/building-and-running.md#setting-up-docker).
+If the bring-up fails with a `mounts denied` error under Docker Desktop, add the repository directory to
+its file-sharing allowlist. See
+[Setting up Docker Desktop](docs/05-internals/development/building-and-running.md#setting-up-docker-desktop).
 
 Shut down DSP-API:
 

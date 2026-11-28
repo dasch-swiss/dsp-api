@@ -1,8 +1,25 @@
 # Building and Running
 
-## Setting up Docker
+## Container runtime
 
-1. Install [Docker](https://www.docker.com/)
+The integration tests, the e2e tests, the image loads and the local stack need a Docker-compatible container
+runtime. dsp-api does not require a specific one: Docker Desktop, [colima](https://github.com/abiosoft/colima),
+OrbStack and others all work, and each developer picks their own. Scripts and agents must not assume Docker
+Desktop. Check what a machine has before a run that needs containers:
+
+```shell
+docker context ls   # which runtime the docker CLI talks to
+docker info         # is the daemon reachable
+colima status       # when colima is installed
+```
+
+With colima, start the VM with `colima start`. A VM-based runtime (colima, lima) shares only `$HOME` with its VM,
+so bind mounts must come from under the home directory; the test targets already account for that (see
+`modules/test-it/BUILD.bazel`). The memory advice below applies to every runtime (`colima start --memory 22`).
+
+## Setting up Docker Desktop
+
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
 2. Go to Docker preferences and increase the memory allocation.
    ![screenshot 'Docker Desktop'](figures/dockerPreferences.png)
    The stack's memory usage is limited to ~20GB, though it should only use that much during heavy workloads. You should
