@@ -16,8 +16,9 @@ Conventional Commit that an agent or a developer can read through `git log` and 
   read well on `main`: squash trial-and-error and fixups into the commit they belong to, reword messages, reorder
   as needed. Working commits while you build are fine; they make rollback easy. Push the rewritten branch with
   `git push --force-with-lease`.
-- **One commit per PR by default**, enforced in CI. See
-  [One PR, several commits, or a stack](#one-pr-several-commits-or-a-stack).
+- **One commit per scope per slice.** A commit is one slice of work (a phase of a plan, or a feature within it)
+  inside one component of `ARCH-MAP.md`, whose scope it takes. A PR holds as many such commits as the work has
+  slices. See [Commit organization](#commit-organization).
 - **Update a branch by rebasing, never by merging `main` into it:**
 
       git fetch origin && git rebase origin/main && git push --force-with-lease
@@ -26,7 +27,14 @@ Conventional Commit that an agent or a developer can read through `git log` and 
   creates a merge commit, which the commit hygiene check rejects.
 - **At most 100 commits per PR.** GitHub's "Rebase and merge" is
   [limited to 100 commits](https://docs.github.com/en/repositories/creating-and-managing-repositories/repository-limits);
-  above that it refuses with "This branch cannot be rebased due to conflicts" although nothing conflicts.
+  above that it refuses with "This branch cannot be rebased due to conflicts" although nothing conflicts. Larger
+  work is cut into a stack at phase boundaries. CI enforces the limit; see [Enforcement](#enforcement).
+- **Comments cleaned before the merge.** In the same curation pass, every comment, doc comment and command help
+  string the branch adds or touches is held to `CONVENTIONS.md` § Comments: it describes the current state, carries
+  no journey, and cites only stable sources (an ADR, a `DEV-` id, a `docs/` page), never a plan or a spec, a plan
+  phase or a plan decision number. `eng:review:reference-reviewer`, bound in `eng.yaml`, checks each citation
+  against its source during review. Its findings are folded into the commits they belong to, never fixed in a
+  trailing commit.
 - **Every commit should build and pass its tests**, so that `git bisect` can land on any commit of `main`. This is a
   recommendation, not a check: CI tests only the head of a PR.
 
@@ -94,8 +102,7 @@ shipped. It earns a "Bug Fixes" changelog line precisely because deployers need 
 
 A bug you introduced earlier in the **same branch** is not a `fix:`. Fold it into the commit that introduced it
 (`git commit --fixup=<sha>`, then `git rebase -i --autosquash`) so it never lands on `main` and never generates a
-changelog entry for a bug nobody ever saw. With the one-commit default this is the normal case: you are amending,
-not accumulating.
+changelog entry for a bug nobody ever saw.
 
 Corollary: if you discover a genuine pre-existing `main` bug while doing unrelated work, give it its **own** `fix:`
 commit (and usually its own PR), don't bury it inside the `feat:` or `refactor:` you happened to be writing.
@@ -136,10 +143,10 @@ runs `just test-scripts`, the tests of the check's own scripts. It checks:
 - **Messages:** [`commitlint-rs`](https://github.com/KeisukeYamashita/commitlint-rs) against
   `.commitlintrc.yml`: one of the nine types, a scope, a non-empty subject. `fixup!` and
   `squash!` commits do not parse as Conventional Commits, so they fail here too.
-- **Count:** at most one commit, unless the PR description has a ticked `- [x] allow-many-commits` box. An unticked
-  box does not count. The check reruns when the description is edited.
-- **No merge commits on the branch.** `allow-many-commits` does not lift this; it is about independent commits,
-  which a merge commit is not.
+- **Count:** at most 100 commits, GitHub's rebase-merge limit, so the check fails with a clear message before the
+  merge button fails with a misleading one.
+- **No merge commits on the branch.** The count covers real commits only, so a branch whose only fault is a merge
+  is told about the merge rather than blamed for having too many commits.
 
 The check counts the commits between the PR's base branch and its head, so in a stack each PR is checked on its
 own commits only. Run the same checks locally before pushing (`commitlint` is in the Nix dev shell):
@@ -147,42 +154,56 @@ own commits only. Run the same checks locally before pushing (`commitlint` is in
     just commit-lint            # checks origin/main..HEAD
     just commit-lint <base-ref> # checks <base-ref>..HEAD, e.g. the layer below in a stack
 
-Locally the PR description is empty, so the one-commit cap applies strictly; set
-`PR_BODY='- [x] allow-many-commits'` to check a branch that keeps several commits.
-
 The `main` ruleset requires a linear history, so a merge commit cannot reach `main` itself. A second ruleset,
 "feature branches: linear history" (GitHub repository settings), refuses merge commits on every other branch.
 
-For agents, the Claude Code hook `.claude/hooks/pr-curation-reminder.sh` lists the branch's commits and repeats the
-curation rule before `gh pr create`, `gh pr merge` and `gh stack submit`. It is advisory and never blocks.
+For agents, the Claude Code hook `.claude/hooks/pr-curation-reminder.sh` runs `just commit-lint` before
+`gh pr create`, `gh pr merge` and `gh stack submit`, against the `--base` of `gh pr create` when one is given and
+`origin/main` otherwise, and hands its result, the branch's commits and the curation rule to the agent. It is
+advisory and never blocks.
 
 ## Commit organization
 
 ### Principle
 
-Start from the assumption that the whole PR is **one commit**. Group commits by user-visible impact, not by
-implementation journey, and ask: "would a developer deploying dsp-api care about this change?" If yes, it is a
-`feat:` or `fix:`, the changelog sections a deployer reads first. If no, it is one of the other types, which land in
-sections further down; squash those aggressively too, so each is a meaningful line on its own.
+Shape the history for the agent that reads it later. An agent asks two questions of it: "why is this line the way it
+is?" (`git blame`, then the commit body) and "how did this component get here?" (`git log -- <path>`). Both are
+answered best by **one commit per scope per slice**:
 
-### One PR, several commits, or a stack
+- **Too fine** (a commit per file, per fix, per review round) makes `git log -- <path>` a list of steps the agent
+  must replay to learn the current state, and each body explains one step rather than the design.
+- **Too coarse** (a multi-part PR as one commit) makes `git blame` land every line on one message that cannot
+  explain any of them.
 
-When the finished work does not fit one commit, take the first rule that matches:
+A slice is the unit the plan delivered: a phase, or a feature within it. Inside a slice, split by
+[component](#scopes), so each commit stays within one component's paths and its scope names that component. A
+shared piece a slice adds (in `common`, `testkit` or another module the others use) lands in its own commit ahead of
+the commits that use it, so no commit uses something that lands after it. Small work that is one slice in one scope
+is one commit.
+
+Then ask of each commit: "would a developer deploying dsp-api care about this change?" If yes, it is a `feat:` or
+`fix:`, the changelog sections a deployer reads first. If no, it is one of the other types.
+
+### One PR or a stack
+
+A plan whose curated commits fit under 100 ships as one PR. The commits carry the structure that separate PRs would
+otherwise carry, grouped per phase in history order, and the PR description has a **Review guide** with one section
+per phase. Take a separate PR or a stack only when the first rule that matches says so:
 
 1. **The parts would need different Motivation sections** (see the PR template) → **separate PRs**, each from
    `main`.
-2. **The parts depend on each other but should be reviewed separately** → a **stack** of PRs (see
-   [Stacked PRs](#stacked-prs)).
-3. **Only then: one PR with several commits.** Each commit is independent and self-contained and deserves its own
-   line in `main`'s history. Tick `allow-many-commits` and fill in the template's Review guide, one sub-section per
-   commit.
+2. **The part B builds on is already an open PR, or is ready for review while B is still unfinished** → a
+   **stack** (see [Stacked PRs](#stacked-prs)).
+3. **The work is over 100 commits** → a **stack**, cut at phase boundaries: each layer a group of whole phases that
+   builds and passes `just check` at its head. Never a cut by count in the middle of a phase.
 
-A reviewer asking for a split turns case 3 into case 2. In a stack the one-commit limit applies per PR.
+A diff above 300 files or 20,000 lines does not render in full on GitHub, so such a PR is reviewed from its
+checkout through the Review guide.
 
 ### Plans fold into the implementation commit
 
-A plan, PRD or execution journal committed with a PR (under `docs/specs/`) is part of the commit that implements it,
-not a separate `docs: add the plan` commit.
+A plan, PRD or execution journal committed with a PR (under `docs/specs/`) is part of the first commit that
+implements it, not a separate `docs: add the plan` commit.
 
 ### History lives in git, documents hold the current state
 
@@ -230,6 +251,9 @@ Rebase merge gives the merged commits new SHAs. After a lower layer merges, rest
 above (`gh stack sync`, or `gh stack rebase` and `gh stack push`); otherwise the next layer's commit hygiene check
 still counts the lower layer's old commits as its own. Curate each layer's commits before it merges, as for any PR.
 
+The stack merges bottom-up with `gh stack merge --rebase`. A layer with a PR above it is never merged with
+`--delete-branch`: deleting its branch closes the PR above.
+
 ## Pull requests
 
 ### PR description
@@ -246,9 +270,10 @@ The PR title does not land on `main` and is not checked; the commit subjects are
   history deliberately omits goes here, never into a commit. Record a hard-to-reverse decision as an ADR in
   `docs/adr/`. Delete the section if there were none.
 - **Gotchas:** actionable, "do X instead of Y", not "this is hard".
-- **Test Plan:** how the change was verified.
-- **Commit hygiene:** the curation box, and the `allow-many-commits` box when the PR keeps several commits.
-- **Review guide:** only with `allow-many-commits` ticked; one sub-section per commit, in history order.
+- **Learnings:** the learnings written for this work, or why there are none.
+- **Test Plan:** how each line of [Before a merge](#before-a-merge) was met, or why it does not apply.
+- **Commit hygiene:** the curation box.
+- **Review guide:** only for a PR with several phases; one section per phase, in history order.
 
 Start the description with `Fixes DEV-1234`, or `Part of DEV-1234` when the PR advances an umbrella issue it does
 not close. Create PRs as drafts.
@@ -264,18 +289,22 @@ not close. Create PRs as drafts.
 | Why the work was needed                     | PR Motivation section                                                       |
 | What was tried and failed                   | PR Challenges and Decisions section                                         |
 | Architecture decisions and their rationale  | PR Challenges and Decisions; a hard-to-reverse one as an ADR in `docs/adr/` |
-| What a reviewer should look at, per commit  | PR Review guide section (several commits only)                              |
+| What a reviewer should look at, per phase   | PR Review guide section (several phases only)                               |
 | Things to watch out for                     | PR Gotchas section                                                          |
 | Structured, searchable knowledge            | Optionally a learning, written by `/eng:workflows:compound`                 |
 
 ## Before a merge
 
-A PR merges only when every line holds for its current head. Say in its Test Plan how each was met, or why it does
-not apply.
+A PR or a stack merges only when every line holds for its current head. Say in its Test Plan how each was met, or
+why it does not apply; a skipped check is stated, never implied.
 
 1. **It stands on its own.** Nothing in it waits on later work.
-2. **The history is curated**, and `just commit-lint` (the `Commit hygiene` check) passes.
-3. **CI is green** at the head being merged.
-4. **It has been reviewed**, and every finding is either fixed or answered.
-5. **The description is filled in** per the template, with a Review guide when it keeps several commits.
-6. **Nothing is left only in text.** Every follow-up has a Linear issue.
+2. **The history is curated,** comments are cleaned, and `just commit-lint` (the `Commit hygiene` check) passes.
+3. **CI is green,** on every layer of a stack, at the head being merged.
+4. **The whole diff has had a review:** the reviewers `eng.yaml` resolves for its files, and no verified Critical or
+   Warning finding left.
+5. **A change someone can see has been seen.** When an HTML page dsp-api serves, or the published documentation
+   site, changes or becomes newly reachable: `eng:test-browser` on the running page, and
+   `eng:review:design-reviewer` and `eng:review:accessibility-reviewer` on the result.
+6. **Nothing is left only in text.** Every follow-up has a Linear issue, and every learning is written with
+   `/eng:workflows:compound` before the merge.

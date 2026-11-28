@@ -3,9 +3,9 @@
 # Tests for check-commit-count.sh.
 #
 # Dependency-free: needs only bash + git. The unit tests cover the two things
-# that actually carry risk — tick-aware override matching and the count
-# boundary; the integration tests build throwaway git repos so merge-base
-# behaviour is exercised against real git.
+# that carry risk, the count boundary and merge detection; the integration
+# tests build throwaway git repos so merge-base behaviour is exercised against
+# real git.
 #
 # Message-format rules are commitlint's, not ours, and are not tested here.
 #
@@ -67,39 +67,15 @@ make_repo() {
   printf '%s' "$dir"
 }
 
-# --- Unit: has_override ---------------------------------------------------
-
-# Consumed by has_override in the sourced script, not directly here.
-# shellcheck disable=SC2034
-OVERRIDE_TOKEN="allow-many-commits"
-
-assert_fail "override: empty body"                 has_override ""
-assert_ok   "override: exact token"                has_override "allow-many-commits"
-assert_ok   "override: case-insensitive"           has_override "Allow-Many-Commits"
-assert_ok   "override: token within prose"         has_override "please allow-many-commits for this PR"
-assert_ok   "override: ticked checkbox"            has_override "- [x] allow-many-commits"
-assert_ok   "override: ticked checkbox uppercase"  has_override "- [X] allow-many-commits"
-assert_fail "override: UNticked checkbox (template default)" has_override "- [ ] allow-many-commits"
-assert_ok   "override: ticked box amid template"   has_override "$(printf '## Summary\n- [ ] other thing\n- [x] allow-many-commits\n')"
-assert_fail "override: only unticked box present"  has_override "$(printf '## Summary\nstuff\n- [ ] allow-many-commits\n')"
-assert_fail "override: prefixed word (disallow-)"  has_override "disallow-many-commits-please"
-assert_fail "override: no hyphens"                 has_override "allowmanycommits"
-# The token on any line but its unticked box counts as ticked, so the template
-# must spell it nowhere else, its HTML comments included.
-assert_fail "override: the untouched PR template"  has_override "$(cat "$SCRIPT_DIR/../pull_request_template.md")"
-
 # --- Unit: check_count ----------------------------------------------------
 
 # Consumed by check_count in the sourced script, not directly here.
 # shellcheck disable=SC2034
-MAX_COMMITS=1
+MAX_COMMITS=100
 
-assert_ok   "count: 1 is the default maximum"      check_count 1 ""
-assert_fail "count: 2 fails without override"      check_count 2 ""
-assert_ok   "count: 2 with override passes"        check_count 2 "allow-many-commits"
-assert_ok   "count: 20 with override passes"       check_count 20 "let's allow-many-commits"
-assert_fail "count: 2 with UNticked template box still fails" check_count 2 "- [ ] allow-many-commits"
-assert_ok   "count: 2 with ticked box passes"      check_count 2 "- [x] allow-many-commits"
+assert_ok   "count: 1 passes"                      check_count 1
+assert_ok   "count: 100 is the maximum"            check_count 100
+assert_fail "count: 101 fails"                     check_count 101
 
 # --- Integration: compute_range (merge-base correctness) ------------------
 
@@ -155,14 +131,7 @@ assert_fail "no-merges: several merge commits fail" check_no_merges 3
 
 test_merge_commit_fails() {
   local repo; repo="$(make_merged_repo 1)"
-  ( cd "$repo" || exit 1; BASE_REF=base PR_BODY="" MAX_COMMITS=1 main )
-  local rc=$?; rm -rf "$repo"; return $rc
-}
-# The override says "these are several independent changes worth their own
-# lines on main". That is never true of a merge commit, so it must not lift this.
-test_override_does_not_excuse_a_merge() {
-  local repo; repo="$(make_merged_repo 1)"
-  ( cd "$repo" || exit 1; BASE_REF=base PR_BODY="- [x] allow-many-commits" MAX_COMMITS=1 main )
+  ( cd "$repo" || exit 1; BASE_REF=base MAX_COMMITS=1 main )
   local rc=$?; rm -rf "$repo"; return $rc
 }
 # A rebased branch is what the guidance asks for, and it has to pass.
@@ -171,7 +140,7 @@ test_rebased_branch_passes() {
   (
     cd "$repo" || exit 1
     git rebase -q base >/dev/null 2>&1
-    BASE_REF=base PR_BODY="" MAX_COMMITS=1 main
+    BASE_REF=base MAX_COMMITS=1 main
   )
   local rc=$?; rm -rf "$repo"; return $rc
 }
@@ -180,21 +149,20 @@ test_rebased_branch_passes() {
 test_merge_does_not_trip_the_cap() {
   local repo out
   repo="$(make_merged_repo 1)"
-  out="$( cd "$repo" && BASE_REF=base PR_BODY="" MAX_COMMITS=1 main 2>/dev/null )"
+  out="$( cd "$repo" && BASE_REF=base MAX_COMMITS=1 main 2>/dev/null )"
   rm -rf "$repo"
   case "$out" in *"commit count: 1 (max 1)"*) return 0 ;; *) return 1 ;; esac
 }
 # Two real commits plus a merge must still trip the cap.
 test_cap_still_applies_alongside_a_merge() {
   local repo; repo="$(make_merged_repo 2)"
-  ( cd "$repo" || exit 1; BASE_REF=base PR_BODY="" MAX_COMMITS=1 check_count \
-      "$(git rev-list --count --no-merges "$(compute_range base)")" "" )
+  ( cd "$repo" || exit 1; BASE_REF=base MAX_COMMITS=1 check_count \
+      "$(git rev-list --count --no-merges "$(compute_range base)")" )
   local rc=$?; rm -rf "$repo"; return $rc
 }
 assert_fail "merge: a merged-in base fails the gate"                test_merge_commit_fails
 assert_ok   "merge: the cap reports the real commit count, not the merge" test_merge_does_not_trip_the_cap
 assert_fail "merge: two real commits plus a merge still trip the cap"     test_cap_still_applies_alongside_a_merge
-assert_fail "merge: 'allow-many-commits' does not excuse a merge"   test_override_does_not_excuse_a_merge
 assert_ok   "merge: rebasing the same branch makes it pass"         test_rebased_branch_passes
 
 # --- Integration: main (end to end) --------------------------------------
@@ -205,7 +173,7 @@ test_main_single_commit() {
     cd "$repo" || exit 1
     git checkout -q -b feature
     git commit -q --allow-empty -m "feat(search): a"
-    BASE_REF=base PR_BODY="" MAX_COMMITS=1 main
+    BASE_REF=base MAX_COMMITS=1 main
   )
   local rc=$?; rm -rf "$repo"; return $rc
 }
@@ -216,24 +184,24 @@ test_main_two_commits() {
     git checkout -q -b feature
     git commit -q --allow-empty -m "feat(search): a"
     git commit -q --allow-empty -m "fix(search): b"
-    BASE_REF=base PR_BODY="" MAX_COMMITS=1 main
+    BASE_REF=base MAX_COMMITS=1 main
   )
   local rc=$?; rm -rf "$repo"; return $rc
 }
-test_main_two_commits_override() {
+test_main_default_cap() {
   local repo; repo="$(make_repo)"
   (
     cd "$repo" || exit 1
     git checkout -q -b feature
     git commit -q --allow-empty -m "feat(search): a"
     git commit -q --allow-empty -m "fix(search): b"
-    BASE_REF=base PR_BODY="- [x] allow-many-commits" MAX_COMMITS=1 main
+    env -u MAX_COMMITS BASE_REF=base bash "$SCRIPT_DIR/check-commit-count.sh"
   )
   local rc=$?; rm -rf "$repo"; return $rc
 }
 assert_ok   "main: single-commit branch passes"          test_main_single_commit
-assert_fail "main: 2 commits, no override, fails"        test_main_two_commits
-assert_ok   "main: 2 commits with ticked override passes" test_main_two_commits_override
+assert_fail "main: 2 commits over a cap of 1 fail"       test_main_two_commits
+assert_ok   "main: 2 commits pass under the default cap" test_main_default_cap
 
 # --- Summary --------------------------------------------------------------
 

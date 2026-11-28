@@ -6,7 +6,7 @@ name: Commit Hygiene
 #
 # The `Commit hygiene` job is deterministic:
 #   - commitlint-rs: type allowlist + mandatory scope (.commitlintrc.yml)
-#   - commit count: one commit unless `allow-many-commits` is ticked, and no
+#   - branch shape: at most 100 commits (GitHub's rebase-merge limit), and no
 #     merge commits on the branch
 #   - the tests of the .github/scripts gates (`just test-scripts`)
 #
@@ -16,9 +16,8 @@ name: Commit Hygiene
 on:
   pull_request:
     # `opened` covers PRs created directly as non-draft (ready_for_review does
-    # NOT fire for those); `edited` lets the `allow-many-commits` body override
-    # re-trigger the check.
-    types: [opened, ready_for_review, synchronize, reopened, edited]
+    # NOT fire for those).
+    types: [opened, ready_for_review, synchronize, reopened]
 
 permissions:
   contents: read
@@ -55,11 +54,10 @@ jobs:
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
         run: git fetch --no-tags origin "$BASE_BRANCH"
 
-      # Type allowlist + mandatory scope, then the one-commit cap. Runs the same
+      # Type allowlist + mandatory scope, then the branch shape. Runs the same
       # `just commit-lint` recipe developers run locally.
       - name: Check commit hygiene
         if: github.event.pull_request.draft == false
         uses: ./.github/actions/commit-lint
         with:
           base-ref: origin/${{ github.event.pull_request.base.ref }}
-          pr-body: ${{ github.event.pull_request.body }}

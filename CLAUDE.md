@@ -15,9 +15,10 @@ However, **do not use "Knora" in human-readable text**: PR titles, commit messag
 
 ## Commits and PRs
 
-PRs are rebase-merged, so every branch commit lands on `main` verbatim: curate the branch before merge, and land one
-`type(scope): subject` commit per PR unless the PR ticks `allow-many-commits`. The rules (types, scopes, commit
-bodies, stacks, PR description) are in `docs/development/commit-conventions.md`; check with `just commit-lint`.
+PRs are rebase-merged, so every branch commit lands on `main` verbatim: curate the branch before merge to one
+`type(scope): subject` commit per scope per slice, at most 100 per PR. The rules (types, scopes, commit bodies,
+stacks, PR description, the checks before a merge) are in `docs/development/commit-conventions.md`; check with
+`just commit-lint`.
 
 ## Specs
 
