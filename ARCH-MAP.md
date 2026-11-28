@@ -591,12 +591,12 @@ Fingerprint has not been re-verified since the schema 2 migration (2026-10-28) a
     `DspIngestClient`, `AbstractEntityRepo`, `CachingEntityRepo`, `EntityCache`, `ListsResponder`,
     `PermissionsResponder`, `AssetPermissionsResponder`, `AssetPermissionsCache`, `FairProjectsLive`,
     `ProjectDataGraphsLive`, `ViewRestrictionsRowCache`, `ViewRestrictionsAudience`, `ValueCountFold`,
-    `ViewRestrictionsClassification`
+    `ViewRestrictionsClassification`, `UnreferencedAssetsService`, `AssetReferencesRepo`
 - **Public interface**: `AdminModule.layer`, providing `AdminDomainModule.Provided` (`KnoraProjectService`,
     `KnoraUserService`, `KnoraGroupService`, `UserService`, `GroupService`, `ProjectService`,
     `ProjectEraseService`, `LegalInfoService`, `PasswordService`, `MaintenanceService`,
     `AdministrativePermissionService`, `DefaultObjectAccessPermissionService`, `ViewRestrictionsService`,
-    `ViewRestrictionsByPropertyService`, `KnoraUserToUserConverter`); the repo traits `KnoraProjectRepo`,
+    `ViewRestrictionsByPropertyService`, `KnoraUserToUserConverter`, `UnreferencedAssetsService`); the repo traits `KnoraProjectRepo`,
     `KnoraUserRepo`, `KnoraGroupRepo` with their `builtIn` sets; the domain value types `ProjectIri`,
     `Shortcode`, `Shortname`, `UserIri`, `GroupIri`, `Email`, `Username`, `Permission`, `PermissionIri`,
     `RestrictedView`, `InternalFilename`, `User`; `DspIngestClient`; the three responders as ZIO services.
