@@ -7,6 +7,10 @@ defaults:
   commands:
     test: just test-unit
     lint: just check
+  reviewers:
+    # The sources comments cite, against the stable-source rule in CONVENTIONS.md § Comments.
+    # In defaults because comments live in every file kind here.
+    - eng:review:reference-reviewer
 
 overrides:
   - when: "modules/**/*.scala"

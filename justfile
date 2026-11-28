@@ -107,7 +107,7 @@ test-scripts:
     done
     exit "$rc"
 
-# Run the commit check over `<base>..HEAD`: message rules, then the one-commit cap (docs/development/commit-conventions.md)
+# Run the commit check over `<base>..HEAD`: message rules, then the commit count and merge check (docs/development/commit-conventions.md)
 commit-lint $base="origin/main":
     #!/usr/bin/env bash
     # Feeds one message at a time on stdin instead of commitlint's `--from/--to`
@@ -117,10 +117,7 @@ commit-lint $base="origin/main":
     # empty range. `--no-merges` skips merge commits: message rules do not apply
     # to them, and check-commit-count.sh rejects them.
     #
-    # Both checks always run, so a branch with two problems reports both. The
-    # count check reads PR_BODY from the environment for the `allow-many-commits`
-    # override: CI passes the PR description; locally it is empty, so the cap
-    # applies strictly.
+    # Both checks always run, so a branch with two problems reports both.
     #
     # `base` reaches the script as an environment variable, never as text: a ref
     # name may contain `$`, quotes or parentheses.
