@@ -12,6 +12,10 @@ import zio.test.ZIOSpecDefault
 import zio.test.assertTrue
 import zio.test.check
 
+import java.nio.file.Files
+import java.nio.file.Paths
+import scala.jdk.CollectionConverters.*
+
 import org.knora.testrunner.DspZTestJUnitRunner
 
 @RunWith(classOf[DspZTestJUnitRunner])
@@ -59,6 +63,17 @@ class SupportedFileTypeSpec extends ZIOSpecDefault {
       check(Gen.fromIterable(withUpperCase(svg))) { ext =>
         assertTrue(SupportedFileType.fromPath(Path(s"test.$ext")).contains(SupportedFileType.SvgImage))
       }
+    },
+    test("allExtensions holds every extension once, sorted") {
+      val all = SupportedFileType.allExtensions
+      assertTrue(all == SupportedFileType.values.toSeq.flatMap(_.extensions).sorted, all.distinct == all)
+    },
+    test("The accepted extensions in docs/03-endpoints/ingest.md equal the supported ones") {
+      val lines   = Files.readAllLines(Paths.get("docs/03-endpoints/ingest.md")).asScala.toSeq
+      val section = lines.dropWhile(_ != "## Accepted file extensions").drop(1).takeWhile(!_.startsWith("## "))
+      val rows    = section.filter(_.startsWith("|")).drop(2)
+      val listed  = rows.map(_.split('|')(2)).flatMap("`([^`]+)`".r.findAllMatchIn(_).map(_.group(1)))
+      assertTrue(listed.nonEmpty, listed.sorted == SupportedFileType.allExtensions)
     },
     test("Unknown file extensions are not supported") {
       val sampleUnknown = Seq("iff", "m3u", "mob", "odf", "xslt")

@@ -30,6 +30,22 @@ route requires, answers `401`. The original download (`GET .../assets/{assetId}/
 requests and answers according to the asset's permissions. `/ingest/health`, `/ingest/info` and `/ingest/metrics`
 are public; `/ingest/metrics` returns the metrics of the whole API process.
 
+## Accepted file extensions
+
+An upload's filename must end in one of these extensions, in any case. Any other extension, GIF included, is
+answered with `400`, and the reason names the extension and lists the accepted ones. A filename with path
+information, such as a `/`, is answered with `400` too.
+
+| File type     | Extensions                                                        |
+|---------------|-------------------------------------------------------------------|
+| Still image   | `jp2`, `jpeg`, `jpg`, `jpx`, `png`, `tif`, `tiff`                 |
+| SVG image     | `svg`                                                             |
+| Moving image  | `mp4`                                                             |
+| Audio         | `mp3`, `mpeg`, `wav`                                              |
+| Archive       | `7z`, `gz`, `gzip`, `tar`, `tar.gz`, `tgz`, `z`, `zip`            |
+| Office, table | `csv`, `doc`, `docx`, `epub`, `pdf`, `ppt`, `pptx`, `xls`, `xlsx` |
+| Text          | `htm`, `html`, `json`, `odd`, `rng`, `txt`, `xml`, `xsd`, `xsl`   |
+
 ## Uploads larger than 1 MiB
 
 An upload body larger than 1 MiB must declare its size in a `Content-Length` header; the API then streams it to
@@ -52,7 +68,7 @@ The `422` and `500` bodies have the same fields:
 {
   "correlation_id": "0af7651916cd43dd8448eb211c80319c",
   "error_code": "unsupported_format",
-  "message": "File image.gif is not a supported file."
+  "message": "File image.tif is not a supported file."
 }
 ```
 
