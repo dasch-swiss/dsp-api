@@ -145,7 +145,10 @@ boundary questions, never import it here. Domain vocabulary: `CONTEXT.md` (index
 - [Nix](https://determinate.systems) (with flakes) + `direnv` — the only toolchain install needed;
   the dev shell it loads provides `bazel`, JDK Temurin 25, `just`, and `crane` (see "Bazel & the Nix
   dev shell" above)
-- Docker Desktop
+- A Docker-compatible container runtime: Docker Desktop, colima, OrbStack or another one; each developer picks
+  their own. **Never assume Docker Desktop.** Before a run that needs containers (`just test-it`, `just test-e2e`,
+  image loads, the local stack), check what is available, e.g. `docker context ls`, `docker info`,
+  `colima status`. See "Container runtime" in `docs/05-internals/development/building-and-running.md`.
 - If a Bazel command fails with "credentials not found in native keychain" while it pulls a base image, run it
   with `DOCKER_CONFIG="$(mktemp -d)"`. Cause and fix: `docs/05-internals/development/building-and-running.md`.
 
